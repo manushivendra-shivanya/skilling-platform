@@ -44,12 +44,22 @@ flowchart TD
     REVIEW --> MAINSHELL[Persistent Main Navigation Shell]
     START --> ROUTEGUARD[Session and Onboarding Route Policy]
     ROUTEGUARD --> MAINSHELL
-    MAINSHELL --> HOME[Home - PHASE 1.7 PREVIEW]
-    MAINSHELL --> LEARN[Learn - PHASE 1.9 PREVIEW]
-    MAINSHELL --> PRACTISE[Practise - PHASE 1.10 PREVIEW]
-    MAINSHELL --> JOBS[Jobs - PHASE 1.11 PREVIEW]
-    MAINSHELL --> ME[Me - PHASE 1.12 PREVIEW]
-    MAINSHELL --> COACH[AI Coach - PHASE 1.8 PLACEHOLDER]
+    MAINSHELL --> HOME[Home Dashboard]
+    HOME --> HOMECTRL[Home Dashboard Controller]
+    HOMECTRL --> HOMEREPO[Mock Home Dashboard Repository]
+    MAINSHELL --> LEARN[Learning]
+    LEARN --> LEARNCTRL[Learning Controller]
+    LEARNCTRL --> LEARNREPO[Mock Learning Repository]
+    MAINSHELL --> PRACTISE[Practice Demonstrations]
+    MAINSHELL --> JOBS[Mock Jobs]
+    JOBS --> JOBSCTRL[Jobs Controller]
+    JOBSCTRL --> JOBSREPO[Local Mock Jobs Repository]
+    JOBSREPO --> SECURESTORE
+    MAINSHELL --> ME[Candidate Profile]
+    ME --> ONBOARDCTRL
+    ME --> SESSIONREPO
+    MAINSHELL --> COACH[Local Scripted Coach]
+    COACH --> COACHCTRL[Coach Controller]
     MAINSHELL --> NOTIFICATIONS[Notifications - PLACEHOLDER]
 
     APP --> THEME[Material 3 Design System]

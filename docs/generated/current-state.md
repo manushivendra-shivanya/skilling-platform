@@ -31,6 +31,18 @@ Last updated: 2026-07-27
   required-field validation, versioned consent, review, and completion
 - Phase 1.6 protected, persistent five-tab navigation with global AI Coach and
   notification placeholder routes
+- Phase 1.7 mock-backed Home dashboard with refresh and explicit readiness,
+  progress, daily-mission, and pending-sync states
+- Phase 1.8 local scripted Coach with text conversation, reset, and honest
+  microphone and attachment boundaries
+- Phase 1.9 local Learning catalogue with offline, download, and completion
+  states
+- Phase 1.10 interactive unscored Practice demonstrations with transparent
+  feedback and failure messaging
+- Phase 1.11 searchable mock Jobs catalogue with consent-gated, encrypted local
+  application records
+- Phase 1.12 Profile summary, editable local details, privacy controls, help,
+  deletion-request boundary, and working logout
 - No production authentication, backend profile sync, resume upload, or voice
   recording yet
 
@@ -47,9 +59,9 @@ Last updated: 2026-07-27
 feature/flutter-foundation
 
 ### Latest verified milestone
-Phase 1.6 main navigation complete. Local validation and the authoritative
-GitHub Actions Android APK build pass for source commit `ecff5ad`. Device QC is
-pending.
+Phase 1 implementation is complete in the working tree through Phase 1.12.
+Formatting, analysis, and all 46 Flutter tests pass locally. The cumulative
+GitHub Actions Android build and device QC are pending.
 
 ### Phase 1.1 validation record
 - `flutter pub get` — passed
@@ -264,11 +276,47 @@ pending.
   active. Screen-content capture was not performed; visual device QC remains
   pending.
 
+### Phase 1.7-1.12 implementation
+- Home loads through a feature-first repository and controller, supports
+  loading, recoverable error, empty, refresh, populated, offline, and
+  pending-sync representations, and labels practice readiness as local mock
+  guidance rather than an employer score
+- Coach keeps a local scripted conversation, records only non-PII analytics,
+  supports reset confirmation, and clearly avoids microphone, file access,
+  uploads, and a production AI provider
+- Learning uses fixed mock units with local download and completion state,
+  offline messaging, empty and error recovery, and non-authoritative progress
+- Practice offers an interactive recommendation discrepancy exercise and
+  catalogue while explicitly keeping demonstrations unscored and separating
+  technical failure from candidate reliability
+- Jobs uses a searchable mock catalogue, transparent demo match explanations,
+  details sheets, explicit application consent, and candidate-isolated applied
+  identifiers in the encrypted secure-storage abstraction
+- Profile reads the encrypted onboarding draft, edits name and city locally,
+  exposes versioned terms and privacy records, keeps employer visibility and
+  notifications as local controls, and provides working secure-session logout
+- The persistent Phase 1.6 shell now hosts all six feature implementations;
+  state remains available while switching tabs and global Coach navigation
+  remains above the active branch
+
+### Phase 1 completion local validation record
+- `flutter pub get` — passed
+- `dart format .` — passed; 94 Dart files checked with no changes
+- `flutter analyze` — passed with no issues
+- `flutter test` — passed; 46 tests
+- Home populated/empty/error/refresh, Coach messaging/reset, Learning
+  offline/download/completion, Practice interaction, Jobs consent/persistence,
+  Profile editing/logout, retained tab state, protected routing, onboarding,
+  secure storage, accessibility, and narrow-screen coverage passed
+- `flutter build apk --debug` — attempted locally and reached the unchanged
+  Gradle build, which exited before project settings evaluation with
+  `The settings are not yet available for build`. GitHub Actions remains the
+  authoritative Android build validator.
+
 ### Next implementation
-After Phase 1.6 APK QC, implement Phase 1.7 from
-docs/20-codex-phase-execution.md: mock-backed Home dashboard with loading,
-empty, error, populated, refresh, accessibility, analytics, and pending-sync
-states.
+After cumulative Phase 1 APK and device QC, begin Phase 2.1 from
+docs/20-codex-phase-execution.md. Do not connect production services until the
+required backend configuration and secrets are approved.
 
 ## Known constraints
 - Android/Termux/Ubuntu PRoot environment cannot reliably run Android SDK host binaries
@@ -289,7 +337,9 @@ states.
   Phase 2 work
 - Resume upload and voice introduction are non-interactive placeholders; no
   storage or microphone permission is requested
-- Phase 1.6 tab destinations intentionally contain only transparent previews;
-  their product content is scheduled for Phases 1.7–1.12
-- The AI Coach and notifications routes are non-interactive placeholders; no
-  AI provider, microphone, upload, push token, or notification service is used
+- Home, Coach, Learning, Practice, Jobs, and Profile use local mock or encrypted
+  device data only; none of their displayed scores, matches, content, or
+  applications are authoritative backend records
+- Coach voice/attachment controls and notifications remain transparent
+  placeholders; no AI provider, microphone, upload, push token, or notification
+  service is used
