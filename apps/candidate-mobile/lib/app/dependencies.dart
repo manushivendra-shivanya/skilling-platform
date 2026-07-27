@@ -6,6 +6,8 @@ import '../core/logging/app_logger.dart';
 import '../core/network/connectivity_status.dart';
 import '../core/repositories/candidate_session_repository.dart';
 import '../core/storage/local_key_value_store.dart';
+import '../features/onboarding/data/local_onboarding_entry_repository.dart';
+import '../features/onboarding/domain/onboarding_entry_repository.dart';
 import '../features/splash/data/mock_app_startup_repository.dart';
 import '../features/splash/domain/app_startup_repository.dart';
 
@@ -37,4 +39,9 @@ final candidateSessionRepositoryProvider = Provider<CandidateSessionRepository>(
 
 final appStartupRepositoryProvider = Provider<AppStartupRepository>(
   (ref) => MockAppStartupRepository(),
+);
+
+final onboardingEntryRepositoryProvider = Provider<OnboardingEntryRepository>(
+  (ref) =>
+      LocalOnboardingEntryRepository(ref.watch(localKeyValueStoreProvider)),
 );

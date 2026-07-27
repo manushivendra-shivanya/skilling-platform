@@ -11,7 +11,7 @@ void main() {
     await tester.pumpCandidateApp();
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Open component gallery'));
+    await tester.tap(find.text('View design system'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
 
@@ -42,6 +42,6 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Open component gallery'), findsNothing);
+    expect(find.text('View design system'), findsNothing);
   });
 }

@@ -25,7 +25,6 @@ void main() {
     await tester.tap(find.text('Try again'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Your skilling journey starts here'), findsOneWidget);
-    expect(find.text('Low-data mode is active'), findsOneWidget);
+    expect(find.text('Choose your language'), findsOneWidget);
   });
 }

@@ -15,9 +15,13 @@ Last updated: 2026-07-27
 - Router-backed startup screen with loading, recoverable error, retry, and
   low-data-mode representations
 - Phase 1.2 Material 3 design system with shared tokens and production widgets
-- Development-only component gallery accessible from the startup screen in
+- Phase 1.3 branded splash, welcome, English/Hindi/Hinglish selection, and
+  sign-in choice flow
+- Development-only component gallery accessible from the welcome screen in
   development and staging configurations
-- No candidate onboarding, authentication, or production data flow yet
+- Phone OTP is clearly marked for Phase 1.4; Google sign-in is visibly planned
+  and disabled until configured
+- No production authentication or candidate data flow yet
 
 ### Android configuration
 - compileSdk 36
@@ -32,9 +36,9 @@ Last updated: 2026-07-27
 feature/flutter-foundation
 
 ### Latest verified milestone
-Phase 1.2 Material 3 design system complete. Local source validation and the
-authoritative GitHub Actions Android APK build pass for source commit
-`78a96e7`.
+Phase 1.2 Material 3 design system complete and verified. Phase 1.3 onboarding
+entry source, analysis, and tests pass locally; authoritative GitHub Actions APK
+validation is pending for the Phase 1.3 source commit.
 
 ### Phase 1.1 validation record
 - `flutter pub get` — passed
@@ -85,9 +89,34 @@ authoritative GitHub Actions Android APK build pass for source commit
   app and remove previously downloaded or extracted `app-debug.apk` files
   before installing the APK from the verified Phase 1.2 workflow run.
 
+### Phase 1.3 implementation
+- Low-bandwidth branded splash with startup loading, recoverable error, retry,
+  and automatic welcome navigation
+- Responsive welcome screen with an accessible primary language action
+- English, Hindi, and Hinglish language choices with repository-backed
+  selection preserved across forward and back navigation
+- Local analytics event for language selection with no candidate PII
+- Localised sign-in-choice copy for all three language modes
+- Phone sign-in action explains the Phase 1.4 boundary; Google sign-in is
+  disabled with an explicit availability message
+- Working privacy and terms summary sheets
+- Loading and recoverable storage error states
+
+### Phase 1.3 local validation record
+- `flutter pub get` — passed
+- `dart format .` — passed; 55 Dart files checked
+- `flutter analyze --no-pub` — passed with no issues
+- `flutter test --no-pub --reporter expanded` — passed; 19 tests
+- Hindi text expansion — onboarding flow passed at 320 logical pixels and 1.4x
+  text scaling
+- `flutter build apk --debug` — attempted locally and reached the unchanged
+  Gradle build, which exited before project settings evaluation with the
+  documented Gradle 9.1.0 host error. GitHub Actions remains authoritative.
+
 ### Next implementation
-Implement Phase 1.3 from docs/20-codex-phase-execution.md: splash, welcome,
-language selection, and sign-in choice using the shared design system.
+After Phase 1.3 APK QC, implement Phase 1.4 from
+docs/20-codex-phase-execution.md: development phone authentication, OTP entry,
+resend/error/timeout states, and secure session persistence abstraction.
 
 ## Known constraints
 - Android/Termux/Ubuntu PRoot environment cannot reliably run Android SDK host binaries
@@ -99,3 +128,6 @@ language selection, and sign-in choice using the shared design system.
   connected in Phase 1.1; the included adapters are intentionally local mocks
 - The component gallery is a development aid and is intentionally unavailable
   in production configuration
+- Selected language uses the Phase 1 in-memory storage adapter and therefore
+  persists through navigation, not an application process restart; durable
+  device storage is introduced with the Phase 1.4 session work

@@ -11,9 +11,18 @@ flowchart TD
 
     APP --> ROUTER[GoRouter]
     ROUTER --> START[Startup Feature]
+    ROUTER --> WELCOME[Welcome]
+    ROUTER --> LANGUAGE[English, Hindi, Hinglish Selection]
+    ROUTER --> SIGNIN[Sign-in Choice]
     ROUTER --> GALLERY[Component Gallery - DEVELOPMENT ONLY]
     START --> STARTCTRL[Startup Controller]
     STARTCTRL --> STARTREPO[Mock Startup Repository]
+    LANGUAGE --> LANGCTRL[Language Selection Controller]
+    LANGCTRL --> ENTRYREPO[Local Onboarding Entry Repository]
+    ENTRYREPO --> STORAGE
+    SIGNIN --> PHONE[Phone OTP - PHASE 1.4]
+    SIGNIN --> GOOGLE[Google Sign-in - PLANNED]
+    SIGNIN --> POLICY[Terms and Privacy Summaries]
 
     APP --> THEME[Material 3 Design System]
     THEME --> TOKENS[Colour, Type, Spacing, Radius, Elevation, Icons]

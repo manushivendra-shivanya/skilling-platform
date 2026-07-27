@@ -13,4 +13,10 @@ class AnalyticsEvent {
     name: 'screen_viewed',
     properties: {'screen_name': screenName},
   );
+
+  factory AnalyticsEvent.languageSelected(String languageCode) =>
+      AnalyticsEvent(
+        name: 'language_selected',
+        properties: {'language_code': languageCode},
+      );
 }

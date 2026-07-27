@@ -8,11 +8,20 @@ import '../../core/analytics/analytics_event.dart';
 import '../../core/analytics/analytics_tracker.dart';
 import '../../core/widgets/app_error_boundary.dart';
 import '../../features/dev_tools/presentation/design_system_gallery_screen.dart';
+import '../../features/onboarding/presentation/language_selection_screen.dart';
+import '../../features/onboarding/presentation/sign_in_choice_screen.dart';
+import '../../features/onboarding/presentation/welcome_screen.dart';
 import '../../features/splash/presentation/app_startup_screen.dart';
 import '../dependencies.dart';
 
 const appStartupRoutePath = '/';
 const appStartupRouteName = 'app-startup';
+const welcomeRoutePath = '/welcome';
+const welcomeRouteName = 'welcome';
+const languageSelectionRoutePath = '/welcome/language';
+const languageSelectionRouteName = 'language-selection';
+const signInChoiceRoutePath = '/welcome/sign-in';
+const signInChoiceRouteName = 'sign-in-choice';
 const designSystemGalleryRoutePath = '/dev/design-system';
 const designSystemGalleryRouteName = 'design-system-gallery';
 
@@ -35,11 +44,30 @@ GoRouter createAppRouter({
       GoRoute(
         path: appStartupRoutePath,
         name: appStartupRouteName,
-        builder: (context, state) => AppStartupScreen(
+        builder: (context, state) =>
+            AppStartupScreen(onReady: () => context.go(welcomeRoutePath)),
+      ),
+      GoRoute(
+        path: welcomeRoutePath,
+        name: welcomeRouteName,
+        builder: (context, state) => WelcomeScreen(
+          onContinue: () => context.push(languageSelectionRoutePath),
           onOpenComponentGallery: showDevelopmentTools
               ? () => context.push(designSystemGalleryRoutePath)
               : null,
         ),
+      ),
+      GoRoute(
+        path: languageSelectionRoutePath,
+        name: languageSelectionRouteName,
+        builder: (context, state) => LanguageSelectionScreen(
+          onContinue: () => context.push(signInChoiceRoutePath),
+        ),
+      ),
+      GoRoute(
+        path: signInChoiceRoutePath,
+        name: signInChoiceRouteName,
+        builder: (context, state) => const SignInChoiceScreen(),
       ),
       if (showDevelopmentTools)
         GoRoute(
