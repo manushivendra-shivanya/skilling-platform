@@ -11,6 +11,8 @@ Last updated: 2026-07-27
 - Application launch without crash
 - Phase 1.3 Saksham entry flow installation and launch confirmed during device
   QC
+- Phase 1.6 arm64 QC APK installed and launched through Wireless ADB on Samsung
+  S24 Ultra; visual navigation QC is pending candidate confirmation
 
 ### Current UI
 - Phase 1.1 application foundation replaces the default Flutter counter demo
@@ -252,6 +254,15 @@ pending.
   `phase-1.6-qc`
 - Arm64 QC APK SHA-256:
   `5ec2638cfd80b80bd7ac395c369438e29889410699058a4bd2a647cdf9d6afbe`
+- Wireless ADB identified the test device as Samsung `SM-S928B`
+- In-place installation was rejected because the phone contained an older
+  debug certificate. After explicit tester approval, only
+  `com.example.candidate_mobile` was removed; this cleared that test app's
+  local session and onboarding draft.
+- Clean arm64 installation completed successfully in 4.9 seconds, Android
+  launched the package, and process `com.example.candidate_mobile` remained
+  active. Screen-content capture was not performed; visual device QC remains
+  pending.
 
 ### Next implementation
 After Phase 1.6 APK QC, implement Phase 1.7 from
