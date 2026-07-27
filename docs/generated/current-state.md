@@ -9,6 +9,8 @@ Last updated: 2026-07-27
 - Android debug APK GitHub Actions workflow
 - Android APK installation on Samsung S24 Ultra
 - Application launch without crash
+- Phase 1.3 Saksham entry flow installation and launch confirmed during device
+  QC
 
 ### Current UI
 - Phase 1.1 application foundation replaces the default Flutter counter demo
@@ -21,6 +23,8 @@ Last updated: 2026-07-27
   development and staging configurations
 - Phone OTP is clearly marked for Phase 1.4; Google sign-in is visibly planned
   and disabled until configured
+- Phase 1.4 development phone entry, mock OTP verification, resend/expiry
+  states, secure session restoration, and logout
 - No production authentication or candidate data flow yet
 
 ### Android configuration
@@ -36,9 +40,10 @@ Last updated: 2026-07-27
 feature/flutter-foundation
 
 ### Latest verified milestone
-Phase 1.3 onboarding entry flow complete. Local validation and the
-authoritative GitHub Actions Android APK build pass for source commit
-`cad63f9`.
+Phase 1.3 onboarding entry flow complete and device-QC confirmed. Phase 1.4
+development authentication source, analysis, and tests pass locally;
+authoritative GitHub Actions APK validation is pending for the Phase 1.4 source
+commit.
 
 ### Phase 1.1 validation record
 - `flutter pub get` — passed
@@ -116,10 +121,34 @@ authoritative GitHub Actions Android APK build pass for source commit
   dependency resolution, static analysis, debug APK build, and
   `candidate-mobile-debug-apk` artifact upload all completed successfully.
 
+### Phase 1.4 implementation
+- Provider-neutral development authentication contract with a local mock
+  adapter; no production SMS provider or credentials
+- Indian mobile-number validation and explicit offline development notice
+- Six-digit OTP UI with the documented development code `123456`
+- Incorrect-code, expired-code, resend countdown, loading, and retry states
+- Candidate sessions serialized without phone numbers and persisted through a
+  secure key-value abstraction backed by `flutter_secure_storage`
+- Startup restores an authenticated session and skips the sign-in flow
+- Logout clears secure session state and returns to welcome
+- Authentication analytics record request/completion events without phone
+  numbers or other PII
+- Standard Flutter CocoaPods wiring retained for secure storage on iOS/macOS;
+  stale generated `jni` plugin references removed from Linux/Windows
+
+### Phase 1.4 local validation record
+- `flutter pub get` — passed
+- `dart format .` — passed; 66 Dart files checked
+- `flutter analyze --no-pub` — passed with no issues
+- `flutter test --no-pub --reporter expanded` — passed; 27 tests
+- `flutter build apk --debug` — attempted locally and reached the unchanged
+  Gradle build, which exited before project settings evaluation with the
+  documented Gradle 9.1.0 host error. GitHub Actions remains authoritative.
+
 ### Next implementation
-After Phase 1.3 APK QC, implement Phase 1.4 from
-docs/20-codex-phase-execution.md: development phone authentication, OTP entry,
-resend/error/timeout states, and secure session persistence abstraction.
+After Phase 1.4 APK QC, implement Phase 1.5 from
+docs/20-codex-phase-execution.md: resumable candidate onboarding, profile
+drafts, versioned consent, preferred roles, and offline visibility.
 
 ## Known constraints
 - Android/Termux/Ubuntu PRoot environment cannot reliably run Android SDK host binaries
@@ -131,6 +160,7 @@ resend/error/timeout states, and secure session persistence abstraction.
   connected in Phase 1.1; the included adapters are intentionally local mocks
 - The component gallery is a development aid and is intentionally unavailable
   in production configuration
-- Selected language uses the Phase 1 in-memory storage adapter and therefore
-  persists through navigation, not an application process restart; durable
-  device storage is introduced with the Phase 1.4 session work
+- Selected language still uses the Phase 1 in-memory adapter and persists
+  through navigation; authenticated session state uses secure device storage
+- Development OTP `123456` is intentionally local and must never be treated as
+  production authentication

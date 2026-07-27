@@ -55,7 +55,7 @@ void main() {
     },
   );
 
-  testWidgets('explains unavailable sign-in and opens policy summaries', (
+  testWidgets('opens development phone sign-in and policy summaries', (
     tester,
   ) async {
     await tester.pumpCandidateApp();
@@ -68,11 +68,10 @@ void main() {
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('Continue with phone'));
-    await tester.pump();
-    expect(
-      find.textContaining('Phone OTP sign-in will be enabled in Phase 1.4'),
-      findsOneWidget,
-    );
+    await tester.pumpAndSettle();
+    expect(find.text('Enter your mobile number'), findsOneWidget);
+    await tester.pageBack();
+    await tester.pumpAndSettle();
 
     expect(find.text('Planned — not configured yet'), findsOneWidget);
 

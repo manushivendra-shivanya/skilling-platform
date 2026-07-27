@@ -19,4 +19,10 @@ class AnalyticsEvent {
         name: 'language_selected',
         properties: {'language_code': languageCode},
       );
+
+  factory AnalyticsEvent.otpRequested() =>
+      const AnalyticsEvent(name: 'development_otp_requested');
+
+  factory AnalyticsEvent.developmentLoginCompleted() =>
+      const AnalyticsEvent(name: 'development_login_completed');
 }

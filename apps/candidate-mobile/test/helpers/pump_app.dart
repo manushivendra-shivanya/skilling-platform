@@ -3,6 +3,8 @@ import 'package:candidate_mobile/app/dependencies.dart';
 import 'package:candidate_mobile/app/theme/app_theme.dart';
 import 'package:candidate_mobile/core/analytics/analytics_tracker.dart';
 import 'package:candidate_mobile/core/config/app_environment.dart';
+import 'package:candidate_mobile/core/repositories/candidate_session_repository.dart';
+import 'package:candidate_mobile/features/authentication/domain/development_auth_repository.dart';
 import 'package:candidate_mobile/features/onboarding/domain/onboarding_entry_repository.dart';
 import 'package:candidate_mobile/features/splash/domain/app_startup_repository.dart';
 import 'package:flutter/material.dart';
@@ -13,6 +15,8 @@ extension CandidateAppPump on WidgetTester {
   Future<void> pumpCandidateApp({
     AppStartupRepository? startupRepository,
     OnboardingEntryRepository? onboardingEntryRepository,
+    CandidateSessionRepository? candidateSessionRepository,
+    DevelopmentAuthRepository? developmentAuthRepository,
     AnalyticsTracker? analyticsTracker,
     AppConfig config = const AppConfig.development(),
   }) {
@@ -25,6 +29,13 @@ extension CandidateAppPump on WidgetTester {
           if (onboardingEntryRepository != null)
             onboardingEntryRepositoryProvider.overrideWithValue(
               onboardingEntryRepository,
+            ),
+          candidateSessionRepositoryProvider.overrideWithValue(
+            candidateSessionRepository ?? InMemoryCandidateSessionRepository(),
+          ),
+          if (developmentAuthRepository != null)
+            developmentAuthRepositoryProvider.overrideWithValue(
+              developmentAuthRepository,
             ),
           if (analyticsTracker != null)
             analyticsTrackerProvider.overrideWithValue(analyticsTracker),

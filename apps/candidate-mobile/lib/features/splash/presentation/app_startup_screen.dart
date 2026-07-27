@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -6,12 +8,13 @@ import '../../../app/theme/app_spacing.dart';
 import '../../../core/errors/app_failure.dart';
 import '../../../core/widgets/app_chip.dart';
 import '../../../core/widgets/app_state_view.dart';
+import '../domain/app_startup_state.dart';
 import 'app_startup_controller.dart';
 
 class AppStartupScreen extends ConsumerStatefulWidget {
   const AppStartupScreen({this.onReady, super.key});
 
-  final VoidCallback? onReady;
+  final FutureOr<void> Function(AppStartupState state)? onReady;
 
   @override
   ConsumerState<AppStartupScreen> createState() => _AppStartupScreenState();
@@ -23,11 +26,12 @@ class _AppStartupScreenState extends ConsumerState<AppStartupScreen> {
   @override
   Widget build(BuildContext context) {
     ref.listen(appStartupControllerProvider, (previous, next) {
-      if (!_hasNavigated && next.hasValue && widget.onReady != null) {
+      final readyState = next.valueOrNull;
+      if (!_hasNavigated && readyState != null && widget.onReady != null) {
         _hasNavigated = true;
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted) {
-            widget.onReady!();
+            widget.onReady!(readyState);
           }
         });
       }

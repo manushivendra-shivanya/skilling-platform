@@ -14,6 +14,18 @@ final class StorageFailure extends AppFailure {
   const StorageFailure(super.message, {super.cause, super.stackTrace});
 }
 
+final class ValidationFailure extends AppFailure {
+  const ValidationFailure(super.message, {super.cause, super.stackTrace});
+}
+
+final class AuthenticationFailure extends AppFailure {
+  const AuthenticationFailure(super.message, {super.cause, super.stackTrace});
+}
+
+final class TimeoutFailure extends AppFailure {
+  const TimeoutFailure(super.message, {super.cause, super.stackTrace});
+}
+
 final class UnexpectedFailure extends AppFailure {
   const UnexpectedFailure(super.message, {super.cause, super.stackTrace});
 }

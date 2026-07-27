@@ -7,6 +7,9 @@ import 'package:go_router/go_router.dart';
 import '../../core/analytics/analytics_event.dart';
 import '../../core/analytics/analytics_tracker.dart';
 import '../../core/widgets/app_error_boundary.dart';
+import '../../features/authentication/presentation/authenticated_placeholder_screen.dart';
+import '../../features/authentication/presentation/otp_entry_screen.dart';
+import '../../features/authentication/presentation/phone_entry_screen.dart';
 import '../../features/dev_tools/presentation/design_system_gallery_screen.dart';
 import '../../features/onboarding/presentation/language_selection_screen.dart';
 import '../../features/onboarding/presentation/sign_in_choice_screen.dart';
@@ -22,6 +25,12 @@ const languageSelectionRoutePath = '/welcome/language';
 const languageSelectionRouteName = 'language-selection';
 const signInChoiceRoutePath = '/welcome/sign-in';
 const signInChoiceRouteName = 'sign-in-choice';
+const phoneEntryRoutePath = '/auth/phone';
+const phoneEntryRouteName = 'phone-entry';
+const otpEntryRoutePath = '/auth/otp';
+const otpEntryRouteName = 'otp-entry';
+const authenticatedRoutePath = '/auth/success';
+const authenticatedRouteName = 'authenticated';
 const designSystemGalleryRoutePath = '/dev/design-system';
 const designSystemGalleryRouteName = 'design-system-gallery';
 
@@ -44,8 +53,13 @@ GoRouter createAppRouter({
       GoRoute(
         path: appStartupRoutePath,
         name: appStartupRouteName,
-        builder: (context, state) =>
-            AppStartupScreen(onReady: () => context.go(welcomeRoutePath)),
+        builder: (context, state) => AppStartupScreen(
+          onReady: (startupState) => context.go(
+            startupState.session?.isAuthenticated == true
+                ? authenticatedRoutePath
+                : welcomeRoutePath,
+          ),
+        ),
       ),
       GoRoute(
         path: welcomeRoutePath,
@@ -67,7 +81,31 @@ GoRouter createAppRouter({
       GoRoute(
         path: signInChoiceRoutePath,
         name: signInChoiceRouteName,
-        builder: (context, state) => const SignInChoiceScreen(),
+        builder: (context, state) => SignInChoiceScreen(
+          onContinueWithPhone: () => context.push(phoneEntryRoutePath),
+        ),
+      ),
+      GoRoute(
+        path: phoneEntryRoutePath,
+        name: phoneEntryRouteName,
+        builder: (context, state) => PhoneEntryScreen(
+          onOtpRequested: () => context.push(otpEntryRoutePath),
+        ),
+      ),
+      GoRoute(
+        path: otpEntryRoutePath,
+        name: otpEntryRouteName,
+        builder: (context, state) => OtpEntryScreen(
+          onAuthenticated: () => context.go(authenticatedRoutePath),
+          onRequestNewOtp: () => context.go(phoneEntryRoutePath),
+        ),
+      ),
+      GoRoute(
+        path: authenticatedRoutePath,
+        name: authenticatedRouteName,
+        builder: (context, state) => AuthenticatedPlaceholderScreen(
+          onLoggedOut: () => context.go(welcomeRoutePath),
+        ),
       ),
       if (showDevelopmentTools)
         GoRoute(

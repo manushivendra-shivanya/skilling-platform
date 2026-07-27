@@ -6,6 +6,9 @@ import '../core/logging/app_logger.dart';
 import '../core/network/connectivity_status.dart';
 import '../core/repositories/candidate_session_repository.dart';
 import '../core/storage/local_key_value_store.dart';
+import '../core/storage/secure_key_value_store.dart';
+import '../features/authentication/data/mock_development_auth_repository.dart';
+import '../features/authentication/domain/development_auth_repository.dart';
 import '../features/onboarding/data/local_onboarding_entry_repository.dart';
 import '../features/onboarding/domain/onboarding_entry_repository.dart';
 import '../features/splash/data/mock_app_startup_repository.dart';
@@ -34,7 +37,17 @@ final connectivityRepositoryProvider = Provider<ConnectivityRepository>((ref) {
 });
 
 final candidateSessionRepositoryProvider = Provider<CandidateSessionRepository>(
-  (ref) => MockCandidateSessionRepository(),
+  (ref) =>
+      SecureCandidateSessionRepository(ref.watch(secureKeyValueStoreProvider)),
+);
+
+final secureKeyValueStoreProvider = Provider<SecureKeyValueStore>(
+  (ref) => FlutterSecureKeyValueStore(),
+);
+
+final developmentAuthRepositoryProvider = Provider<DevelopmentAuthRepository>(
+  (ref) =>
+      MockDevelopmentAuthRepository(!ref.watch(appConfigProvider).isProduction),
 );
 
 final appStartupRepositoryProvider = Provider<AppStartupRepository>(

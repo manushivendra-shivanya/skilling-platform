@@ -23,6 +23,14 @@ flowchart TD
     SIGNIN --> PHONE[Phone OTP - PHASE 1.4]
     SIGNIN --> GOOGLE[Google Sign-in - PLANNED]
     SIGNIN --> POLICY[Terms and Privacy Summaries]
+    PHONE --> PHONESCREEN[Phone Entry]
+    PHONESCREEN --> AUTHCTRL[Development Auth Controller]
+    AUTHCTRL --> MOCKOTP[Local Mock OTP Adapter]
+    AUTHCTRL --> OTPSCREEN[OTP, Resend, Expiry and Error States]
+    OTPSCREEN --> SESSIONREPO[Candidate Session Repository]
+    SESSIONREPO --> SECURESTORE[Flutter Secure Storage Adapter]
+    STARTCTRL --> SESSIONREPO
+    SESSIONREPO --> AUTHSUCCESS[Authenticated Phase Handoff and Logout]
 
     APP --> THEME[Material 3 Design System]
     THEME --> TOKENS[Colour, Type, Spacing, Radius, Elevation, Icons]
@@ -35,7 +43,7 @@ flowchart TD
     DI --> ANALYTICS[Local Mock Analytics]
     DI --> CONNECTIVITY[Mock Connectivity Repository]
     DI --> STORAGE[In-memory Key-value Store]
-    DI --> SESSION[Mock Candidate Session Repository]
+    DI --> SESSIONREPO
 
     GH[GitHub Repository] --> ACTIONS[GitHub Actions APK Build]
     ACTIONS --> APK[Android Debug APK]

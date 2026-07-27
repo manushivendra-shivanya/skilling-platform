@@ -18,9 +18,18 @@ class AppStartupController extends AsyncNotifier<AppStartupState> {
       ref.read(analyticsTrackerProvider).track(AnalyticsEvent.appOpened()),
     );
 
-    final result = await ref.read(appStartupRepositoryProvider).initialize();
-    return result.when(
+    final startupResult = await ref
+        .read(appStartupRepositoryProvider)
+        .initialize();
+    final startupState = startupResult.when(
       success: (state) => state,
+      failure: (failure) => throw failure,
+    );
+    final sessionResult = await ref
+        .read(candidateSessionRepositoryProvider)
+        .readSession();
+    return sessionResult.when(
+      success: (session) => startupState.copyWith(session: session),
       failure: (failure) => throw failure,
     );
   }

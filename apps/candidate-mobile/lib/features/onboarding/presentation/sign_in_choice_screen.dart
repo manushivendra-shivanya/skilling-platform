@@ -11,7 +11,9 @@ import '../domain/candidate_language.dart';
 import 'language_selection_controller.dart';
 
 class SignInChoiceScreen extends ConsumerWidget {
-  const SignInChoiceScreen({super.key});
+  const SignInChoiceScreen({required this.onContinueWithPhone, super.key});
+
+  final VoidCallback onContinueWithPhone;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -37,7 +39,10 @@ class SignInChoiceScreen extends ConsumerWidget {
                 actionLabel: null,
               );
             }
-            return _SignInChoiceContent(language: language);
+            return _SignInChoiceContent(
+              language: language,
+              onContinueWithPhone: onContinueWithPhone,
+            );
           },
         ),
       ),
@@ -46,9 +51,13 @@ class SignInChoiceScreen extends ConsumerWidget {
 }
 
 class _SignInChoiceContent extends StatelessWidget {
-  const _SignInChoiceContent({required this.language});
+  const _SignInChoiceContent({
+    required this.language,
+    required this.onContinueWithPhone,
+  });
 
   final CandidateLanguage language;
+  final VoidCallback onContinueWithPhone;
 
   @override
   Widget build(BuildContext context) {
@@ -83,12 +92,7 @@ class _SignInChoiceContent extends StatelessWidget {
           AppButton(
             label: copy.phoneLabel,
             leadingIcon: Icons.phone_android,
-            onPressed: () => showAppSnackBar(
-              context: context,
-              message:
-                  'Phone OTP sign-in will be enabled in Phase 1.4. No phone number is collected yet.',
-              tone: AppMessageTone.neutral,
-            ),
+            onPressed: onContinueWithPhone,
           ),
           const SizedBox(height: AppSpacing.sm),
           AppButton(
