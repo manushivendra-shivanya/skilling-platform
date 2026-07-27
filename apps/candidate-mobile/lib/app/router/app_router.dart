@@ -6,13 +6,18 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/analytics/analytics_event.dart';
 import '../../core/analytics/analytics_tracker.dart';
+import '../../core/repositories/candidate_session_repository.dart';
 import '../../core/widgets/app_error_boundary.dart';
 import '../../features/authentication/presentation/authenticated_placeholder_screen.dart';
 import '../../features/authentication/presentation/otp_entry_screen.dart';
 import '../../features/authentication/presentation/phone_entry_screen.dart';
 import '../../features/dev_tools/presentation/design_system_gallery_screen.dart';
-import '../../features/onboarding/presentation/language_selection_screen.dart';
+import '../../features/navigation/presentation/global_placeholder_screen.dart';
+import '../../features/navigation/presentation/main_destination_screen.dart';
+import '../../features/navigation/presentation/main_navigation_shell.dart';
+import '../../features/onboarding/domain/candidate_onboarding_repository.dart';
 import '../../features/onboarding/presentation/candidate_onboarding_screen.dart';
+import '../../features/onboarding/presentation/language_selection_screen.dart';
 import '../../features/onboarding/presentation/sign_in_choice_screen.dart';
 import '../../features/onboarding/presentation/welcome_screen.dart';
 import '../../features/splash/presentation/app_startup_screen.dart';
@@ -34,12 +39,30 @@ const authenticatedRoutePath = '/auth/success';
 const authenticatedRouteName = 'authenticated';
 const candidateOnboardingRoutePath = '/onboarding';
 const candidateOnboardingRouteName = 'candidate-onboarding';
+const homeRoutePath = '/home';
+const homeRouteName = 'home';
+const learnRoutePath = '/learn';
+const learnRouteName = 'learn';
+const practiseRoutePath = '/practise';
+const practiseRouteName = 'practise';
+const jobsRoutePath = '/jobs';
+const jobsRouteName = 'jobs';
+const profileRoutePath = '/me';
+const profileRouteName = 'me';
+const aiCoachRoutePath = '/coach';
+const aiCoachRouteName = 'ai-coach';
+const notificationsRoutePath = '/notifications';
+const notificationsRouteName = 'notifications';
 const designSystemGalleryRoutePath = '/dev/design-system';
 const designSystemGalleryRouteName = 'design-system-gallery';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   final router = createAppRouter(
     analyticsTracker: ref.watch(analyticsTrackerProvider),
+    candidateSessionRepository: ref.watch(candidateSessionRepositoryProvider),
+    candidateOnboardingRepository: ref.watch(
+      candidateOnboardingRepositoryProvider,
+    ),
     showDevelopmentTools: !ref.watch(appConfigProvider).isProduction,
   );
   ref.onDispose(router.dispose);
@@ -48,10 +71,24 @@ final appRouterProvider = Provider<GoRouter>((ref) {
 
 GoRouter createAppRouter({
   required AnalyticsTracker analyticsTracker,
+  required CandidateSessionRepository candidateSessionRepository,
+  required CandidateOnboardingRepository candidateOnboardingRepository,
   required bool showDevelopmentTools,
+  String? initialLocation,
 }) {
+  final rootNavigatorKey = GlobalKey<NavigatorState>(
+    debugLabel: 'root-navigator',
+  );
+
   return GoRouter(
+    navigatorKey: rootNavigatorKey,
+    initialLocation: initialLocation,
     observers: [AppRouteObserver(analyticsTracker)],
+    redirect: (context, state) => _redirectForCandidateState(
+      location: state.matchedLocation,
+      candidateSessionRepository: candidateSessionRepository,
+      candidateOnboardingRepository: candidateOnboardingRepository,
+    ),
     routes: [
       GoRoute(
         path: appStartupRoutePath,
@@ -115,7 +152,131 @@ GoRouter createAppRouter({
       GoRoute(
         path: candidateOnboardingRoutePath,
         name: candidateOnboardingRouteName,
-        builder: (context, state) => const CandidateOnboardingScreen(),
+        builder: (context, state) => CandidateOnboardingScreen(
+          onContinueToHome: () => context.go(homeRoutePath),
+        ),
+      ),
+      StatefulShellRoute.indexedStack(
+        builder: (context, state, navigationShell) => MainNavigationShell(
+          navigationShell: navigationShell,
+          analyticsTracker: analyticsTracker,
+          onOpenCoach: () => context.push(aiCoachRoutePath),
+          onOpenNotifications: () => context.push(notificationsRoutePath),
+        ),
+        branches: [
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: homeRoutePath,
+                name: homeRouteName,
+                builder: (context, state) => const MainDestinationScreen(
+                  key: ValueKey('home-destination'),
+                  title: 'Your career home',
+                  phaseLabel: 'Home dashboard • Phase 1.7',
+                  description:
+                      'Your daily mission, readiness, learning progress, and next action will come together here.',
+                  plannedItems: [
+                    'Daily mission and recommended next step',
+                    'Readiness and learning progress',
+                    'Job and application summaries',
+                  ],
+                ),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: learnRoutePath,
+                name: learnRouteName,
+                builder: (context, state) => const MainDestinationScreen(
+                  key: ValueKey('learn-destination'),
+                  title: 'Learn',
+                  phaseLabel: 'Learning shell • Phase 1.9',
+                  description:
+                      'Short, practical logistics learning will be organised into a personalised pathway.',
+                  plannedItems: [
+                    'Pathway overview and daily mission',
+                    'Short lessons and checkpoints',
+                    'Offline download and progress states',
+                  ],
+                ),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: practiseRoutePath,
+                name: practiseRouteName,
+                builder: (context, state) => const MainDestinationScreen(
+                  key: ValueKey('practise-destination'),
+                  title: 'Practise real work',
+                  phaseLabel: 'Practice shell • Phase 1.10',
+                  description:
+                      'Practise realistic warehouse and dispatch decisions before a scored assessment exists.',
+                  plannedItems: [
+                    'Simulation catalogue and recommendations',
+                    'Inventory discrepancy demonstration',
+                    'Attempt history and voice-practice entry',
+                  ],
+                ),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: jobsRoutePath,
+                name: jobsRouteName,
+                builder: (context, state) => const MainDestinationScreen(
+                  key: ValueKey('jobs-destination'),
+                  title: 'Jobs',
+                  phaseLabel: 'Jobs shell • Phase 1.11',
+                  description:
+                      'Discover logistics opportunities with clear match explanations and consent before sharing evidence.',
+                  plannedItems: [
+                    'Searchable job feed and filters',
+                    'Job details and match explanation',
+                    'Consented applications and status tracking',
+                  ],
+                ),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: profileRoutePath,
+                name: profileRouteName,
+                builder: (context, state) => const MainDestinationScreen(
+                  key: ValueKey('me-destination'),
+                  title: 'Me',
+                  phaseLabel: 'Profile shell • Phase 1.12',
+                  description:
+                      'Review your profile, consent, language, privacy controls, and future Career Passport.',
+                  plannedItems: [
+                    'Editable candidate details and preferences',
+                    'Consent, privacy, and visibility controls',
+                    'Support, logout, and account requests',
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+      GoRoute(
+        parentNavigatorKey: rootNavigatorKey,
+        path: aiCoachRoutePath,
+        name: aiCoachRouteName,
+        builder: (context, state) => GlobalPlaceholderScreen.aiCoach(),
+      ),
+      GoRoute(
+        parentNavigatorKey: rootNavigatorKey,
+        path: notificationsRoutePath,
+        name: notificationsRouteName,
+        builder: (context, state) => GlobalPlaceholderScreen.notifications(),
       ),
       if (showDevelopmentTools)
         GoRoute(
@@ -129,6 +290,56 @@ GoRouter createAppRouter({
     ),
   );
 }
+
+Future<String?> _redirectForCandidateState({
+  required String location,
+  required CandidateSessionRepository candidateSessionRepository,
+  required CandidateOnboardingRepository candidateOnboardingRepository,
+}) async {
+  final needsCandidateSession =
+      location == authenticatedRoutePath ||
+      location == candidateOnboardingRoutePath ||
+      _mainAndGlobalRoutePaths.contains(location);
+  if (!needsCandidateSession) {
+    return null;
+  }
+
+  final session = (await candidateSessionRepository.readSession()).when(
+    success: (value) => value,
+    failure: (_) => null,
+  );
+  if (session == null || !session.isAuthenticated) {
+    return welcomeRoutePath;
+  }
+
+  if (location == candidateOnboardingRoutePath) {
+    return null;
+  }
+
+  final draft = (await candidateOnboardingRepository.readDraft(
+    session.candidateId,
+  )).when(success: (value) => value, failure: (_) => null);
+  if (draft == null) {
+    return location == authenticatedRoutePath ? null : authenticatedRoutePath;
+  }
+  if (!draft.isCompleted) {
+    return location == authenticatedRoutePath ? null : authenticatedRoutePath;
+  }
+  if (location == authenticatedRoutePath) {
+    return homeRoutePath;
+  }
+  return null;
+}
+
+const _mainAndGlobalRoutePaths = {
+  homeRoutePath,
+  learnRoutePath,
+  practiseRoutePath,
+  jobsRoutePath,
+  profileRoutePath,
+  aiCoachRoutePath,
+  notificationsRoutePath,
+};
 
 class AppRouteObserver extends NavigatorObserver {
   AppRouteObserver(this._analyticsTracker);

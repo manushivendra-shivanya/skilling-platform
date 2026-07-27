@@ -41,6 +41,16 @@ flowchart TD
     ONBOARDCTRL --> DRAFTREPO[Candidate Onboarding Repository]
     DRAFTREPO --> SECURESTORE
     CONNECTIVITY --> ONBOARD
+    REVIEW --> MAINSHELL[Persistent Main Navigation Shell]
+    START --> ROUTEGUARD[Session and Onboarding Route Policy]
+    ROUTEGUARD --> MAINSHELL
+    MAINSHELL --> HOME[Home - PHASE 1.7 PREVIEW]
+    MAINSHELL --> LEARN[Learn - PHASE 1.9 PREVIEW]
+    MAINSHELL --> PRACTISE[Practise - PHASE 1.10 PREVIEW]
+    MAINSHELL --> JOBS[Jobs - PHASE 1.11 PREVIEW]
+    MAINSHELL --> ME[Me - PHASE 1.12 PREVIEW]
+    MAINSHELL --> COACH[AI Coach - PHASE 1.8 PLACEHOLDER]
+    MAINSHELL --> NOTIFICATIONS[Notifications - PLACEHOLDER]
 
     APP --> THEME[Material 3 Design System]
     THEME --> TOKENS[Colour, Type, Spacing, Radius, Elevation, Icons]

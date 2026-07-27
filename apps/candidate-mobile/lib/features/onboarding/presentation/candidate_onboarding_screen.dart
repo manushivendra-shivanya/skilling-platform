@@ -18,7 +18,9 @@ import '../domain/candidate_onboarding_draft.dart';
 import 'candidate_onboarding_controller.dart';
 
 class CandidateOnboardingScreen extends ConsumerStatefulWidget {
-  const CandidateOnboardingScreen({super.key});
+  const CandidateOnboardingScreen({required this.onContinueToHome, super.key});
+
+  final VoidCallback onContinueToHome;
 
   @override
   ConsumerState<CandidateOnboardingScreen> createState() =>
@@ -103,7 +105,7 @@ class _CandidateOnboardingScreenState
   Widget _buildContent(BuildContext context) {
     final draft = _workingDraft!;
     if (draft.currentStep == 10 || draft.isCompleted) {
-      return const _CompletionStep();
+      return _CompletionStep(onContinueToHome: widget.onContinueToHome);
     }
 
     return Column(
@@ -774,16 +776,19 @@ class _ReviewRow extends StatelessWidget {
 }
 
 class _CompletionStep extends StatelessWidget {
-  const _CompletionStep();
+  const _CompletionStep({required this.onContinueToHome});
+
+  final VoidCallback onContinueToHome;
 
   @override
   Widget build(BuildContext context) {
-    return const AppStateView(
+    return AppStateView(
       icon: AppIcons.success,
       title: 'Your profile is ready',
       message:
-          'Your onboarding details and consent versions are saved securely on this device. The Saksham home experience arrives in Phase 1.6.',
-      actionLabel: null,
+          'Your onboarding details and consent versions are saved securely on this device. Continue to your Saksham home.',
+      actionLabel: 'Go to home',
+      onAction: onContinueToHome,
     );
   }
 }

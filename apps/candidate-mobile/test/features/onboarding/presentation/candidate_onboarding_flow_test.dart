@@ -134,6 +134,9 @@ void main() {
     expect(find.text('Your profile is ready'), findsOneWidget);
     expect(repository.draft.isCompleted, isTrue);
     expect(repository.draft.hasCurrentRequiredConsents, isTrue);
+    await tester.tap(find.text('Go to home'));
+    await tester.pumpAndSettle();
+    expect(find.text('Your career home'), findsOneWidget);
   });
 
   testWidgets('onboarding remains usable with scaled text on a narrow screen', (

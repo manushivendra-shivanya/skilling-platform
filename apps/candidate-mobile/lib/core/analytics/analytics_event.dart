@@ -36,4 +36,15 @@ class AnalyticsEvent {
 
   factory AnalyticsEvent.onboardingCompleted() =>
       const AnalyticsEvent(name: 'candidate_onboarding_completed');
+
+  factory AnalyticsEvent.mainTabSelected(String tabName) => AnalyticsEvent(
+    name: 'main_tab_selected',
+    properties: {'tab_name': tabName},
+  );
+
+  factory AnalyticsEvent.globalActionOpened(String actionName) =>
+      AnalyticsEvent(
+        name: 'global_action_opened',
+        properties: {'action_name': actionName},
+      );
 }

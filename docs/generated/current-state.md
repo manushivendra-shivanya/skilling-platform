@@ -27,6 +27,8 @@ Last updated: 2026-07-27
   states, secure session restoration, and logout
 - Phase 1.5 resumable candidate onboarding with encrypted local drafts,
   required-field validation, versioned consent, review, and completion
+- Phase 1.6 protected, persistent five-tab navigation with global AI Coach and
+  notification placeholder routes
 - No production authentication, backend profile sync, resume upload, or voice
   recording yet
 
@@ -46,6 +48,10 @@ feature/flutter-foundation
 Phase 1.5 candidate onboarding complete. Local validation and the authoritative
 GitHub Actions Android APK build pass for source commit `e24b960`. Device QC is
 pending.
+
+### Current implementation milestone
+Phase 1.6 main navigation is implemented locally and awaits the authoritative
+GitHub Actions Android APK build and device QC.
 
 ### Phase 1.1 validation record
 - `flutter pub get` — passed
@@ -198,11 +204,46 @@ pending.
 - Arm64 QC APK SHA-256:
   `12bc584c84c8d82403473972f97292e64a15f39ab41482e2d02e7f4953c51bc9`
 
+### Phase 1.6 implementation
+- GoRouter `StatefulShellRoute.indexedStack` with persistent Home, Learn,
+  Practise, Jobs, and Me branches
+- Completed candidates enter Home automatically after startup; onboarding
+  completion now has a working **Go to home** action
+- Candidate-session and onboarding-completion route policy protects the five
+  tab roots, AI Coach, notifications, and onboarding from invalid direct entry
+- Named root paths (`/home`, `/learn`, `/practise`, `/jobs`, `/me`) establish
+  deep-link-ready destinations
+- Global `/coach` and `/notifications` routes open above the selected tab and
+  clearly state their placeholder boundaries
+- Android Back returns global routes to the selected tab and returns a
+  non-Home root tab to Home
+- Selecting the active tab resets that branch to its root; switching branches
+  preserves each branch widget/navigation state
+- Accessible Material 3 navigation labels, notification tooltip, and global
+  AI Coach action
+- Non-PII analytics record selected tab names and opened global actions
+- Honest per-destination Phase 1.7–1.12 previews; no future dashboard, AI,
+  learning, practice, job, or profile capability is presented as connected
+
+### Phase 1.6 local validation record
+- `flutter pub get` — passed
+- `dart format .` — passed; 77 Dart files checked
+- `flutter analyze --no-pub` — passed with no issues
+- `flutter test --no-pub --reporter expanded` — passed; 40 tests
+- Five destinations, retained tab UI state, onboarding-to-Home, protected
+  signed-out deep links, completed-candidate direct links, global-route Back,
+  non-Home Back-to-Home, analytics, and narrow 320-pixel/1.4x text-scale
+  coverage passed
+- `flutter build apk --debug --no-pub` — attempted locally and reached the
+  unchanged Gradle build, which exited before project settings evaluation with
+  the documented `The settings are not yet available for build` host error.
+  GitHub Actions remains authoritative.
+
 ### Next implementation
-After Phase 1.5 APK QC, implement Phase 1.6 from
-docs/20-codex-phase-execution.md: persistent five-tab navigation, global AI
-Coach entry, notification placeholder, deep-link-ready routes, and Android back
-navigation.
+After Phase 1.6 APK QC, implement Phase 1.7 from
+docs/20-codex-phase-execution.md: mock-backed Home dashboard with loading,
+empty, error, populated, refresh, accessibility, analytics, and pending-sync
+states.
 
 ## Known constraints
 - Android/Termux/Ubuntu PRoot environment cannot reliably run Android SDK host binaries
@@ -223,3 +264,7 @@ navigation.
   Phase 2 work
 - Resume upload and voice introduction are non-interactive placeholders; no
   storage or microphone permission is requested
+- Phase 1.6 tab destinations intentionally contain only transparent previews;
+  their product content is scheduled for Phases 1.7–1.12
+- The AI Coach and notifications routes are non-interactive placeholders; no
+  AI provider, microphone, upload, push token, or notification service is used
