@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '../../app/theme/app_colors.dart';
+import '../../app/theme/app_icons.dart';
+import 'app_state_view.dart';
+
 class AppErrorBoundary {
   const AppErrorBoundary._();
 
@@ -34,36 +38,13 @@ class AppErrorBoundaryContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Semantics(
-          liveRegion: true,
-          label: '$title. $message',
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.error_outline, size: 48),
-              const SizedBox(height: 16),
-              Text(
-                title,
-                style: Theme.of(context).textTheme.titleLarge,
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                message,
-                style: Theme.of(context).textTheme.bodyMedium,
-                textAlign: TextAlign.center,
-              ),
-              if (actionLabel != null && onAction != null) ...[
-                const SizedBox(height: 24),
-                FilledButton(onPressed: onAction, child: Text(actionLabel!)),
-              ],
-            ],
-          ),
-        ),
-      ),
+    return AppStateView(
+      icon: AppIcons.error,
+      iconColor: AppColors.error,
+      title: title,
+      message: message,
+      actionLabel: actionLabel,
+      onAction: onAction,
     );
   }
 }

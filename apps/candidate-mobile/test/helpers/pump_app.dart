@@ -1,8 +1,10 @@
 import 'package:candidate_mobile/app/app.dart';
 import 'package:candidate_mobile/app/dependencies.dart';
+import 'package:candidate_mobile/app/theme/app_theme.dart';
 import 'package:candidate_mobile/core/analytics/analytics_tracker.dart';
 import 'package:candidate_mobile/core/config/app_environment.dart';
 import 'package:candidate_mobile/features/splash/domain/app_startup_repository.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -10,17 +12,33 @@ extension CandidateAppPump on WidgetTester {
   Future<void> pumpCandidateApp({
     AppStartupRepository? startupRepository,
     AnalyticsTracker? analyticsTracker,
+    AppConfig config = const AppConfig.development(),
   }) {
     return pumpWidget(
       ProviderScope(
         overrides: [
-          appConfigProvider.overrideWithValue(const AppConfig.development()),
+          appConfigProvider.overrideWithValue(config),
           if (startupRepository != null)
             appStartupRepositoryProvider.overrideWithValue(startupRepository),
           if (analyticsTracker != null)
             analyticsTrackerProvider.overrideWithValue(analyticsTracker),
         ],
         child: const SkillingApp(),
+      ),
+    );
+  }
+
+  Future<void> pumpThemedWidget(
+    Widget child, {
+    TextScaler textScaler = TextScaler.noScaling,
+  }) {
+    return pumpWidget(
+      MaterialApp(
+        theme: buildAppTheme(),
+        home: MediaQuery(
+          data: MediaQueryData(textScaler: textScaler),
+          child: Scaffold(body: child),
+        ),
       ),
     );
   }

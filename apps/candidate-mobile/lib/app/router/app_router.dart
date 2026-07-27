@@ -7,29 +7,46 @@ import 'package:go_router/go_router.dart';
 import '../../core/analytics/analytics_event.dart';
 import '../../core/analytics/analytics_tracker.dart';
 import '../../core/widgets/app_error_boundary.dart';
+import '../../features/dev_tools/presentation/design_system_gallery_screen.dart';
 import '../../features/splash/presentation/app_startup_screen.dart';
 import '../dependencies.dart';
 
 const appStartupRoutePath = '/';
 const appStartupRouteName = 'app-startup';
+const designSystemGalleryRoutePath = '/dev/design-system';
+const designSystemGalleryRouteName = 'design-system-gallery';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   final router = createAppRouter(
     analyticsTracker: ref.watch(analyticsTrackerProvider),
+    showDevelopmentTools: !ref.watch(appConfigProvider).isProduction,
   );
   ref.onDispose(router.dispose);
   return router;
 });
 
-GoRouter createAppRouter({required AnalyticsTracker analyticsTracker}) {
+GoRouter createAppRouter({
+  required AnalyticsTracker analyticsTracker,
+  required bool showDevelopmentTools,
+}) {
   return GoRouter(
     observers: [AppRouteObserver(analyticsTracker)],
     routes: [
       GoRoute(
         path: appStartupRoutePath,
         name: appStartupRouteName,
-        builder: (context, state) => const AppStartupScreen(),
+        builder: (context, state) => AppStartupScreen(
+          onOpenComponentGallery: showDevelopmentTools
+              ? () => context.push(designSystemGalleryRoutePath)
+              : null,
+        ),
       ),
+      if (showDevelopmentTools)
+        GoRoute(
+          path: designSystemGalleryRoutePath,
+          name: designSystemGalleryRouteName,
+          builder: (context, state) => const DesignSystemGalleryScreen(),
+        ),
     ],
     errorBuilder: (context, state) => AppRouteErrorScreen(
       onReturnHome: () => context.go(appStartupRoutePath),

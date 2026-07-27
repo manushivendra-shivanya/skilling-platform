@@ -14,6 +14,9 @@ Last updated: 2026-07-27
 - Phase 1.1 application foundation replaces the default Flutter counter demo
 - Router-backed startup screen with loading, recoverable error, retry, and
   low-data-mode representations
+- Phase 1.2 Material 3 design system with shared tokens and production widgets
+- Development-only component gallery accessible from the startup screen in
+  development and staging configurations
 - No candidate onboarding, authentication, or production data flow yet
 
 ### Android configuration
@@ -29,8 +32,9 @@ Last updated: 2026-07-27
 feature/flutter-foundation
 
 ### Latest verified milestone
-Phase 1.1 application foundation complete. GitHub Actions built the Android
-debug APK successfully for commit `e879e7d`.
+Phase 1.1 application foundation complete. Phase 1.2 design system source,
+analysis, and widget tests pass locally; the authoritative GitHub Actions APK
+validation is pending for the Phase 1.2 commit.
 
 ### Phase 1.1 validation record
 - `flutter pub get` — passed
@@ -46,16 +50,33 @@ debug APK successfully for commit `e879e7d`.
   dependency resolution, static analysis, debug APK build, and artifact upload
   all completed successfully.
 
+### Phase 1.2 implementation
+- Brand, semantic colour, typography, spacing, radius, elevation, and icon
+  tokens
+- Accessible primary, secondary, text, destructive, loading, and disabled
+  button states
+- Shared text field, card, status chip, progress, and static skeleton widgets
+- Empty, error, offline, pending-sync, bottom-sheet, dialog, and snackbar
+  patterns
+- Development-only component gallery covering every Phase 1.2 component
+- Production configuration omits the component gallery route and entry point
+
+### Phase 1.2 local validation record
+- `flutter pub get` — passed
+- `dart format .` — passed; 46 Dart files checked
+- `flutter analyze` — passed with no issues
+- `flutter test --reporter expanded` — passed; 13 tests
+- Hindi text expansion — widget test passed at 320 logical pixels and 1.6x
+  text scaling
+- `flutter build apk --debug` — attempted locally and reached the unchanged
+  Gradle build, which exited before project settings evaluation with the same
+  documented Gradle 9.1.0 host error. GitHub Actions is the authoritative APK
+  validator.
+
 ### Next implementation
-After the GitHub Actions APK build passes, Phase 1.2 from
-docs/20-codex-phase-execution.md should build the reusable design system and
-development component gallery. Phase 1.1 now provides:
-- application bootstrap with environment configuration and safe error logging
-- Riverpod dependency composition and GoRouter startup route
-- feature-first launch module with a mock startup repository
-- typed `Result` and `AppFailure` models
-- local mock adapters for analytics, connectivity, storage, and sessions
-- an accessible framework error boundary and startup retry state
+After the Phase 1.2 GitHub Actions APK build passes, implement Phase 1.3 from
+docs/20-codex-phase-execution.md: splash, welcome, language selection, and
+sign-in choice using the shared design system.
 
 ## Known constraints
 - Android/Termux/Ubuntu PRoot environment cannot reliably run Android SDK host binaries
@@ -63,3 +84,5 @@ development component gallery. Phase 1.1 now provides:
 - macOS will be required for iOS build and signing
 - No external analytics, connectivity, authentication, or storage provider is
   connected in Phase 1.1; the included adapters are intentionally local mocks
+- The component gallery is a development aid and is intentionally unavailable
+  in production configuration

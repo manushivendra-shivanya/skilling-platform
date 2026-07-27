@@ -11,8 +11,16 @@ flowchart TD
 
     APP --> ROUTER[GoRouter]
     ROUTER --> START[Startup Feature]
+    ROUTER --> GALLERY[Component Gallery - DEVELOPMENT ONLY]
     START --> STARTCTRL[Startup Controller]
     STARTCTRL --> STARTREPO[Mock Startup Repository]
+
+    APP --> THEME[Material 3 Design System]
+    THEME --> TOKENS[Colour, Type, Spacing, Radius, Elevation, Icons]
+    THEME --> COMPONENTS[Accessible Shared Components]
+    COMPONENTS --> STATES[Loading, Empty, Error, Offline, Pending Sync]
+    GALLERY --> TOKENS
+    GALLERY --> COMPONENTS
 
     APP --> DI[Riverpod Dependency Composition]
     DI --> ANALYTICS[Local Mock Analytics]
