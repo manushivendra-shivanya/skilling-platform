@@ -9,6 +9,12 @@ import '../core/storage/local_key_value_store.dart';
 import '../core/storage/secure_key_value_store.dart';
 import '../features/authentication/data/mock_development_auth_repository.dart';
 import '../features/authentication/domain/development_auth_repository.dart';
+import '../features/home/data/mock_home_dashboard_repository.dart';
+import '../features/home/domain/home_dashboard_repository.dart';
+import '../features/jobs/data/local_mock_jobs_repository.dart';
+import '../features/jobs/domain/jobs_repository.dart';
+import '../features/learning/data/mock_learning_repository.dart';
+import '../features/learning/domain/learning_repository.dart';
 import '../features/onboarding/data/local_onboarding_entry_repository.dart';
 import '../features/onboarding/data/secure_candidate_onboarding_repository.dart';
 import '../features/onboarding/domain/candidate_onboarding_repository.dart';
@@ -67,3 +73,15 @@ final candidateOnboardingRepositoryProvider =
         ref.watch(secureKeyValueStoreProvider),
       ),
     );
+
+final homeDashboardRepositoryProvider = Provider<HomeDashboardRepository>(
+  (ref) => MockHomeDashboardRepository(),
+);
+
+final learningRepositoryProvider = Provider<LearningRepository>(
+  (ref) => MockLearningRepository(),
+);
+
+final jobsRepositoryProvider = Provider<JobsRepository>(
+  (ref) => LocalMockJobsRepository(ref.watch(secureKeyValueStoreProvider)),
+);

@@ -47,4 +47,13 @@ class AnalyticsEvent {
         name: 'global_action_opened',
         properties: {'action_name': actionName},
       );
+
+  factory AnalyticsEvent.homeDashboardRefreshed() =>
+      const AnalyticsEvent(name: 'home_dashboard_refreshed');
+
+  factory AnalyticsEvent.coachMessageSent() =>
+      const AnalyticsEvent(name: 'local_coach_message_sent');
+
+  factory AnalyticsEvent.mockApplicationCreated() =>
+      const AnalyticsEvent(name: 'mock_job_application_created');
 }

@@ -5,7 +5,12 @@ import 'package:candidate_mobile/core/analytics/analytics_tracker.dart';
 import 'package:candidate_mobile/core/config/app_environment.dart';
 import 'package:candidate_mobile/core/network/connectivity_status.dart';
 import 'package:candidate_mobile/core/repositories/candidate_session_repository.dart';
+import 'package:candidate_mobile/core/storage/secure_key_value_store.dart';
 import 'package:candidate_mobile/features/authentication/domain/development_auth_repository.dart';
+import 'package:candidate_mobile/features/home/domain/home_dashboard_repository.dart';
+import 'package:candidate_mobile/features/jobs/data/local_mock_jobs_repository.dart';
+import 'package:candidate_mobile/features/jobs/domain/jobs_repository.dart';
+import 'package:candidate_mobile/features/learning/domain/learning_repository.dart';
 import 'package:candidate_mobile/features/onboarding/data/secure_candidate_onboarding_repository.dart';
 import 'package:candidate_mobile/features/onboarding/domain/candidate_onboarding_repository.dart';
 import 'package:candidate_mobile/features/onboarding/domain/onboarding_entry_repository.dart';
@@ -23,6 +28,9 @@ extension CandidateAppPump on WidgetTester {
     DevelopmentAuthRepository? developmentAuthRepository,
     AnalyticsTracker? analyticsTracker,
     ConnectivityRepository? connectivityRepository,
+    HomeDashboardRepository? homeDashboardRepository,
+    LearningRepository? learningRepository,
+    JobsRepository? jobsRepository,
     AppConfig config = const AppConfig.development(),
   }) {
     return pumpWidget(
@@ -52,6 +60,16 @@ extension CandidateAppPump on WidgetTester {
             connectivityRepositoryProvider.overrideWithValue(
               connectivityRepository,
             ),
+          if (homeDashboardRepository != null)
+            homeDashboardRepositoryProvider.overrideWithValue(
+              homeDashboardRepository,
+            ),
+          if (learningRepository != null)
+            learningRepositoryProvider.overrideWithValue(learningRepository),
+          jobsRepositoryProvider.overrideWithValue(
+            jobsRepository ??
+                LocalMockJobsRepository(InMemorySecureKeyValueStore()),
+          ),
         ],
         child: const SkillingApp(),
       ),

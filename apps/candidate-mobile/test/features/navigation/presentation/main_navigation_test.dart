@@ -1,7 +1,10 @@
 import 'package:candidate_mobile/app/router/app_router.dart';
+import 'package:candidate_mobile/app/dependencies.dart';
 import 'package:candidate_mobile/app/theme/app_theme.dart';
 import 'package:candidate_mobile/core/analytics/analytics_tracker.dart';
 import 'package:candidate_mobile/core/repositories/candidate_session_repository.dart';
+import 'package:candidate_mobile/core/storage/secure_key_value_store.dart';
+import 'package:candidate_mobile/features/jobs/data/local_mock_jobs_repository.dart';
 import 'package:candidate_mobile/features/onboarding/data/secure_candidate_onboarding_repository.dart';
 import 'package:candidate_mobile/features/onboarding/domain/candidate_onboarding_draft.dart';
 import 'package:flutter/material.dart';
@@ -40,31 +43,38 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Your career home'), findsOneWidget);
+    expect(find.text('Today’s mission'), findsOneWidget);
     await tester.tap(find.text('Learn'));
     await tester.pumpAndSettle();
-    expect(find.text('Learning shell • Phase 1.9'), findsOneWidget);
+    expect(find.text('Your logistics pathway'), findsOneWidget);
 
-    await tester.tap(find.text('Show planned features'));
+    await tester.tap(find.text('Open lesson').first);
     await tester.pump();
-    expect(find.text('Short lessons and checkpoints'), findsOneWidget);
+    expect(find.text('Completed'), findsOneWidget);
 
     await tester.tap(find.text('Jobs'));
     await tester.pumpAndSettle();
-    expect(find.text('Jobs shell • Phase 1.11'), findsOneWidget);
+    expect(
+      find.text('Demo opportunities • No live employer connection'),
+      findsOneWidget,
+    );
 
     await tester.tap(find.text('Learn'));
     await tester.pumpAndSettle();
-    expect(find.text('Hide planned features'), findsOneWidget);
-    expect(find.text('Short lessons and checkpoints'), findsOneWidget);
+    expect(find.text('Completed'), findsOneWidget);
 
     await tester.tap(find.text('Practise'));
     await tester.pumpAndSettle();
-    expect(find.text('Practice shell • Phase 1.10'), findsOneWidget);
+    expect(find.text('Recommended practice'), findsOneWidget);
 
     await tester.tap(find.text('Me'));
     await tester.pumpAndSettle();
-    expect(find.text('Profile shell • Phase 1.12'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text('Privacy and consent'),
+      300,
+      scrollable: find.byType(Scrollable).last,
+    );
+    expect(find.text('Privacy and consent'), findsOneWidget);
     expect(
       analytics.events.map((event) => event.name),
       contains('main_tab_selected'),
@@ -85,7 +95,7 @@ void main() {
     await tester.binding.handlePopRoute();
     await tester.pumpAndSettle();
 
-    expect(find.text('Your career home'), findsOneWidget);
+    expect(find.text('Today’s mission'), findsOneWidget);
   });
 
   testWidgets('global Coach and notifications routes return to selected tab', (
@@ -104,14 +114,20 @@ void main() {
     expect(find.text('AI Career Coach'), findsWidgets);
     await tester.binding.handlePopRoute();
     await tester.pumpAndSettle();
-    expect(find.text('Jobs shell • Phase 1.11'), findsOneWidget);
+    expect(
+      find.text('Demo opportunities • No live employer connection'),
+      findsOneWidget,
+    );
 
     await tester.tap(find.byTooltip('Notifications'));
     await tester.pumpAndSettle();
     expect(find.text('No notifications yet'), findsWidgets);
     await tester.binding.handlePopRoute();
     await tester.pumpAndSettle();
-    expect(find.text('Jobs shell • Phase 1.11'), findsOneWidget);
+    expect(
+      find.text('Demo opportunities • No live employer connection'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('completed candidate can open a tab route directly', (
@@ -128,12 +144,22 @@ void main() {
 
     await tester.pumpWidget(
       ProviderScope(
+        overrides: [
+          candidateSessionRepositoryProvider.overrideWithValue(sessions),
+          candidateOnboardingRepositoryProvider.overrideWithValue(onboarding),
+          jobsRepositoryProvider.overrideWithValue(
+            LocalMockJobsRepository(InMemorySecureKeyValueStore()),
+          ),
+        ],
         child: MaterialApp.router(theme: buildAppTheme(), routerConfig: router),
       ),
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Jobs shell • Phase 1.11'), findsOneWidget);
+    expect(
+      find.text('Demo opportunities • No live employer connection'),
+      findsOneWidget,
+    );
     expect(find.text('Jobs'), findsWidgets);
   });
 
@@ -157,7 +183,10 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Choose your language'), findsOneWidget);
-    expect(find.text('Jobs shell • Phase 1.11'), findsNothing);
+    expect(
+      find.text('Demo opportunities • No live employer connection'),
+      findsNothing,
+    );
   });
 
   testWidgets('five-tab shell supports narrow scaled layouts', (tester) async {

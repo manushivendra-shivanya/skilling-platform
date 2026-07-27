@@ -16,7 +16,7 @@ Future<T?> showAppBottomSheet<T>({
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
-    builder: (context) => Padding(
+    builder: (context) => SingleChildScrollView(
       padding: EdgeInsets.fromLTRB(
         AppSpacing.xl,
         AppSpacing.xs,

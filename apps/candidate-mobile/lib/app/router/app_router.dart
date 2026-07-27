@@ -11,15 +11,20 @@ import '../../core/widgets/app_error_boundary.dart';
 import '../../features/authentication/presentation/authenticated_placeholder_screen.dart';
 import '../../features/authentication/presentation/otp_entry_screen.dart';
 import '../../features/authentication/presentation/phone_entry_screen.dart';
+import '../../features/coach/presentation/coach_screen.dart';
 import '../../features/dev_tools/presentation/design_system_gallery_screen.dart';
+import '../../features/home/presentation/home_dashboard_screen.dart';
+import '../../features/jobs/presentation/jobs_screen.dart';
+import '../../features/learning/presentation/learning_screen.dart';
 import '../../features/navigation/presentation/global_placeholder_screen.dart';
-import '../../features/navigation/presentation/main_destination_screen.dart';
 import '../../features/navigation/presentation/main_navigation_shell.dart';
 import '../../features/onboarding/domain/candidate_onboarding_repository.dart';
 import '../../features/onboarding/presentation/candidate_onboarding_screen.dart';
 import '../../features/onboarding/presentation/language_selection_screen.dart';
 import '../../features/onboarding/presentation/sign_in_choice_screen.dart';
 import '../../features/onboarding/presentation/welcome_screen.dart';
+import '../../features/practice/presentation/practice_screen.dart';
+import '../../features/profile/presentation/profile_screen.dart';
 import '../../features/splash/presentation/app_startup_screen.dart';
 import '../dependencies.dart';
 
@@ -169,17 +174,8 @@ GoRouter createAppRouter({
               GoRoute(
                 path: homeRoutePath,
                 name: homeRouteName,
-                builder: (context, state) => const MainDestinationScreen(
-                  key: ValueKey('home-destination'),
-                  title: 'Your career home',
-                  phaseLabel: 'Home dashboard • Phase 1.7',
-                  description:
-                      'Your daily mission, readiness, learning progress, and next action will come together here.',
-                  plannedItems: [
-                    'Daily mission and recommended next step',
-                    'Readiness and learning progress',
-                    'Job and application summaries',
-                  ],
+                builder: (context, state) => HomeDashboardScreen(
+                  onOpenCoach: () => context.push(aiCoachRoutePath),
                 ),
               ),
             ],
@@ -189,18 +185,7 @@ GoRouter createAppRouter({
               GoRoute(
                 path: learnRoutePath,
                 name: learnRouteName,
-                builder: (context, state) => const MainDestinationScreen(
-                  key: ValueKey('learn-destination'),
-                  title: 'Learn',
-                  phaseLabel: 'Learning shell • Phase 1.9',
-                  description:
-                      'Short, practical logistics learning will be organised into a personalised pathway.',
-                  plannedItems: [
-                    'Pathway overview and daily mission',
-                    'Short lessons and checkpoints',
-                    'Offline download and progress states',
-                  ],
-                ),
+                builder: (context, state) => const LearningScreen(),
               ),
             ],
           ),
@@ -209,18 +194,7 @@ GoRouter createAppRouter({
               GoRoute(
                 path: practiseRoutePath,
                 name: practiseRouteName,
-                builder: (context, state) => const MainDestinationScreen(
-                  key: ValueKey('practise-destination'),
-                  title: 'Practise real work',
-                  phaseLabel: 'Practice shell • Phase 1.10',
-                  description:
-                      'Practise realistic warehouse and dispatch decisions before a scored assessment exists.',
-                  plannedItems: [
-                    'Simulation catalogue and recommendations',
-                    'Inventory discrepancy demonstration',
-                    'Attempt history and voice-practice entry',
-                  ],
-                ),
+                builder: (context, state) => const PracticeScreen(),
               ),
             ],
           ),
@@ -229,18 +203,7 @@ GoRouter createAppRouter({
               GoRoute(
                 path: jobsRoutePath,
                 name: jobsRouteName,
-                builder: (context, state) => const MainDestinationScreen(
-                  key: ValueKey('jobs-destination'),
-                  title: 'Jobs',
-                  phaseLabel: 'Jobs shell • Phase 1.11',
-                  description:
-                      'Discover logistics opportunities with clear match explanations and consent before sharing evidence.',
-                  plannedItems: [
-                    'Searchable job feed and filters',
-                    'Job details and match explanation',
-                    'Consented applications and status tracking',
-                  ],
-                ),
+                builder: (context, state) => const JobsScreen(),
               ),
             ],
           ),
@@ -249,17 +212,8 @@ GoRouter createAppRouter({
               GoRoute(
                 path: profileRoutePath,
                 name: profileRouteName,
-                builder: (context, state) => const MainDestinationScreen(
-                  key: ValueKey('me-destination'),
-                  title: 'Me',
-                  phaseLabel: 'Profile shell • Phase 1.12',
-                  description:
-                      'Review your profile, consent, language, privacy controls, and future Career Passport.',
-                  plannedItems: [
-                    'Editable candidate details and preferences',
-                    'Consent, privacy, and visibility controls',
-                    'Support, logout, and account requests',
-                  ],
+                builder: (context, state) => ProfileScreen(
+                  onLoggedOut: () => context.go(welcomeRoutePath),
                 ),
               ),
             ],
@@ -270,7 +224,7 @@ GoRouter createAppRouter({
         parentNavigatorKey: rootNavigatorKey,
         path: aiCoachRoutePath,
         name: aiCoachRouteName,
-        builder: (context, state) => GlobalPlaceholderScreen.aiCoach(),
+        builder: (context, state) => const CoachScreen(),
       ),
       GoRoute(
         parentNavigatorKey: rootNavigatorKey,
