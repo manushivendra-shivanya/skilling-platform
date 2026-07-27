@@ -36,9 +36,9 @@ Last updated: 2026-07-27
 feature/flutter-foundation
 
 ### Latest verified milestone
-Phase 1.2 Material 3 design system complete and verified. Phase 1.3 onboarding
-entry source, analysis, and tests pass locally; authoritative GitHub Actions APK
-validation is pending for the Phase 1.3 source commit.
+Phase 1.3 onboarding entry flow complete. Local validation and the
+authoritative GitHub Actions Android APK build pass for source commit
+`cad63f9`.
 
 ### Phase 1.1 validation record
 - `flutter pub get` — passed
@@ -112,6 +112,9 @@ validation is pending for the Phase 1.3 source commit.
 - `flutter build apk --debug` — attempted locally and reached the unchanged
   Gradle build, which exited before project settings evaluation with the
   documented Gradle 9.1.0 host error. GitHub Actions remains authoritative.
+- GitHub Actions **Build Candidate Mobile APK** — passed for `cad63f9`:
+  dependency resolution, static analysis, debug APK build, and
+  `candidate-mobile-debug-apk` artifact upload all completed successfully.
 
 ### Next implementation
 After Phase 1.3 APK QC, implement Phase 1.4 from
