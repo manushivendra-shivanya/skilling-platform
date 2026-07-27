@@ -40,10 +40,9 @@ Last updated: 2026-07-27
 feature/flutter-foundation
 
 ### Latest verified milestone
-Phase 1.3 onboarding entry flow complete and device-QC confirmed. Phase 1.4
-development authentication source, analysis, and tests pass locally;
-authoritative GitHub Actions APK validation is pending for the Phase 1.4 source
-commit.
+Phase 1.4 development authentication complete. Local validation and the
+authoritative GitHub Actions Android APK build pass for source commit
+`db4ec52`.
 
 ### Phase 1.1 validation record
 - `flutter pub get` — passed
@@ -117,6 +116,9 @@ commit.
 - `flutter build apk --debug` — attempted locally and reached the unchanged
   Gradle build, which exited before project settings evaluation with the
   documented Gradle 9.1.0 host error. GitHub Actions remains authoritative.
+- GitHub Actions **Build Candidate Mobile APK** — passed for `db4ec52`:
+  dependency resolution, static analysis, debug APK build with secure-storage
+  plugin registration, and artifact upload all completed successfully.
 - GitHub Actions **Build Candidate Mobile APK** — passed for `cad63f9`:
   dependency resolution, static analysis, debug APK build, and
   `candidate-mobile-debug-apk` artifact upload all completed successfully.
