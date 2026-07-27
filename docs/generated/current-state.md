@@ -29,8 +29,8 @@ Last updated: 2026-07-27
 feature/flutter-foundation
 
 ### Latest verified milestone
-Installable APK foundation complete. Phase 1.1 source validation is complete;
-the authoritative GitHub Actions APK validation is pending for this commit.
+Phase 1.1 application foundation complete. GitHub Actions built the Android
+debug APK successfully for commit `e879e7d`.
 
 ### Phase 1.1 validation record
 - `flutter pub get` — passed
@@ -42,6 +42,9 @@ the authoritative GitHub Actions APK validation is pending for this commit.
   for build`. This occurred before Dart or Android source compilation and also
   reproduced with Java 17 and the direct Gradle task. GitHub Actions remains
   the authoritative APK validator for this repository.
+- GitHub Actions **Build Candidate Mobile APK** — passed for `e879e7d`:
+  dependency resolution, static analysis, debug APK build, and artifact upload
+  all completed successfully.
 
 ### Next implementation
 After the GitHub Actions APK build passes, Phase 1.2 from
