@@ -13,6 +13,8 @@ Last updated: 2026-07-27
   QC
 - Phase 1.6 arm64 QC APK installed and launched through Wireless ADB on Samsung
   S24 Ultra; visual navigation QC is pending candidate confirmation
+- Cumulative Phase 1.1-1.12 arm64 QC APK installed as an in-place update and
+  launched through Wireless ADB on Samsung S24 Ultra
 
 ### Current UI
 - Phase 1.1 application foundation replaces the default Flutter counter demo
@@ -59,9 +61,10 @@ Last updated: 2026-07-27
 feature/flutter-foundation
 
 ### Latest verified milestone
-Phase 1 implementation is complete in the working tree through Phase 1.12.
-Formatting, analysis, and all 46 Flutter tests pass locally. The cumulative
-GitHub Actions Android build and device QC are pending.
+Phase 1.1-1.12 implementation is complete. Formatting, analysis, and all 46
+Flutter tests pass locally. GitHub Actions run `30295690458` passed for commit
+`334152c`, and its ARM64 QC APK was verified, published, installed, and launched
+on the connected Samsung S24 Ultra.
 
 ### Phase 1.1 validation record
 - `flutter pub get` — passed
@@ -312,6 +315,25 @@ GitHub Actions Android build and device QC are pending.
   Gradle build, which exited before project settings evaluation with
   `The settings are not yet available for build`. GitHub Actions remains the
   authoritative Android build validator.
+
+### Phase 1 completion authoritative build and distribution
+- GitHub Actions **Build Candidate Mobile APK** run `30295690458` — passed for
+  commit `334152c`: dependency resolution, static analysis, universal debug APK
+  build, and artifact upload completed successfully
+- The 77,094,449-byte Actions artifact passed ZIP integrity validation after
+  parallel-range download
+- The universal 155 MB debug APK was reduced to an 84,468,608-byte Samsung
+  package by removing only armv7 and x86_64 native libraries; `arm64-v8a` is
+  the sole packaged ABI
+- The ARM64 APK passes zip alignment and Android APK Signature Scheme v2/v3
+  verification and is published in GitHub prerelease `phase-1-complete-qc`
+- ARM64 QC APK SHA-256:
+  `4f430a605fe4a88381c732e4dfc5118d403c6619d75f9ae191b986620e5bc0cf`
+- Wireless ADB updated `com.example.candidate_mobile` in place on Samsung
+  `SM-S928B` in 6.2 seconds, launched it, and confirmed the application process
+  remained active
+- Visual feature QC remains with the tester; automated validation and Android
+  installation/launch validation are complete
 
 ### Next implementation
 After cumulative Phase 1 APK and device QC, begin Phase 2.1 from
