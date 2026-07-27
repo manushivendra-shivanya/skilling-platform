@@ -3,15 +3,22 @@
 ```mermaid
 flowchart TD
     U[Candidate] --> APP[Flutter Candidate App]
-    APP --> MOCK[Mock Repositories]
 
-    APP --> ONB[Onboarding - PLANNED]
-    APP --> HOME[Home - PLANNED]
-    APP --> COACH[AI Coach Shell - PLANNED]
-    APP --> LEARN[Learning - PLANNED]
-    APP --> PRACTICE[Practice - PLANNED]
-    APP --> JOBS[Jobs - PLANNED]
-    APP --> PROFILE[Profile - PLANNED]
+    APP --> BOOT[Application Bootstrap]
+    BOOT --> CONFIG[App Environment]
+    BOOT --> LOG[Safe Debug Logger]
+    BOOT --> ERR[Framework Error Boundary]
+
+    APP --> ROUTER[GoRouter]
+    ROUTER --> START[Startup Feature]
+    START --> STARTCTRL[Startup Controller]
+    STARTCTRL --> STARTREPO[Mock Startup Repository]
+
+    APP --> DI[Riverpod Dependency Composition]
+    DI --> ANALYTICS[Local Mock Analytics]
+    DI --> CONNECTIVITY[Mock Connectivity Repository]
+    DI --> STORAGE[In-memory Key-value Store]
+    DI --> SESSION[Mock Candidate Session Repository]
 
     GH[GitHub Repository] --> ACTIONS[GitHub Actions APK Build]
     ACTIONS --> APK[Android Debug APK]
@@ -28,25 +35,4 @@ flowchart TD
     API -. Future .-> REDIS
     API -. Future .-> AI
     WEB -. Future .-> API
-
-
-## 2. Commit and push
-
-Run:
-
-```bash
-cd /root/skilling-platform
-
-git add AGENTS.md \
-  docs/19-codex-master-context.md \
-  docs/20-codex-phase-execution.md \
-  docs/generated/current-state.md \
-  docs/generated/block-diagram.md
-
-cd /root/skilling-platform
-
-git add AGENTS.md \
-  docs/19-codex-master-context.md \
-  docs/20-codex-phase-execution.md \
-  docs/generated/current-state.md \
-  docs/generated/block-diagram.md
+```
