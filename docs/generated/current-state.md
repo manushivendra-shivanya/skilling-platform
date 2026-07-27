@@ -43,13 +43,9 @@ Last updated: 2026-07-27
 feature/flutter-foundation
 
 ### Latest verified milestone
-Phase 1.4 development authentication complete. Local validation and the
-authoritative GitHub Actions Android APK build pass for source commit
-`db4ec52`.
-
-### Current implementation milestone
-Phase 1.5 candidate onboarding is implemented locally and awaits the
-authoritative GitHub Actions Android APK build and device QC.
+Phase 1.5 candidate onboarding complete. Local validation and the authoritative
+GitHub Actions Android APK build pass for source commit `e24b960`. Device QC is
+pending.
 
 ### Phase 1.1 validation record
 - `flutter pub get` — passed
@@ -186,6 +182,21 @@ authoritative GitHub Actions Android APK build and device QC.
   unchanged Gradle build, which exited before project settings evaluation with
   the documented `The settings are not yet available for build` host error.
   GitHub Actions remains authoritative.
+
+### Phase 1.5 authoritative build and distribution
+- GitHub Actions **Build Candidate Mobile APK** run `30290605615` — passed for
+  source commit `e24b960`: dependency resolution, static analysis, universal
+  debug APK build, and artifact upload completed successfully
+- The Actions universal debug APK is 148 MB because it includes Flutter debug
+  runtime binaries for arm64, armv7, and x86_64
+- A Samsung/arm64 QC APK was derived from that verified universal binary by
+  removing only the armv7 and x86_64 native-library directories, then
+  zip-aligning and re-signing with the project Mac debug certificate
+- The 80 MB arm64 APK contains only `arm64-v8a`, passes Android APK Signature
+  Scheme v2/v3 verification, and is published in GitHub prerelease
+  `phase-1.5-qc`
+- Arm64 QC APK SHA-256:
+  `12bc584c84c8d82403473972f97292e64a15f39ab41482e2d02e7f4953c51bc9`
 
 ### Next implementation
 After Phase 1.5 APK QC, implement Phase 1.6 from
