@@ -45,13 +45,9 @@ Last updated: 2026-07-27
 feature/flutter-foundation
 
 ### Latest verified milestone
-Phase 1.5 candidate onboarding complete. Local validation and the authoritative
-GitHub Actions Android APK build pass for source commit `e24b960`. Device QC is
+Phase 1.6 main navigation complete. Local validation and the authoritative
+GitHub Actions Android APK build pass for source commit `ecff5ad`. Device QC is
 pending.
-
-### Current implementation milestone
-Phase 1.6 main navigation is implemented locally and awaits the authoritative
-GitHub Actions Android APK build and device QC.
 
 ### Phase 1.1 validation record
 - `flutter pub get` — passed
@@ -238,6 +234,24 @@ GitHub Actions Android APK build and device QC.
   unchanged Gradle build, which exited before project settings evaluation with
   the documented `The settings are not yet available for build` host error.
   GitHub Actions remains authoritative.
+
+### Phase 1.6 authoritative build and distribution
+- GitHub Actions **Build Candidate Mobile APK** run `30292966735` — passed for
+  source commit `ecff5ad`: dependency resolution, static analysis, universal
+  debug APK build, and artifact upload completed successfully
+- The Actions universal debug APK remains 148 MB because it contains Flutter
+  debug runtime binaries for arm64, armv7, and x86_64
+- The successful Actions artifact was downloaded with verified parallel byte
+  ranges after the single GitHub connection slowed to approximately 40 KB/s;
+  the reconstructed ZIP passed archive integrity validation
+- A Samsung/arm64 QC APK was derived by removing only armv7 and x86_64 native
+  libraries, then zip-aligning and re-signing with the same project Mac debug
+  certificate used for the Phase 1.5 arm64 APK
+- The 80.5 MB APK contains only `arm64-v8a`, passes Android APK Signature
+  Scheme v2/v3 verification, and is published in GitHub prerelease
+  `phase-1.6-qc`
+- Arm64 QC APK SHA-256:
+  `5ec2638cfd80b80bd7ac395c369438e29889410699058a4bd2a647cdf9d6afbe`
 
 ### Next implementation
 After Phase 1.6 APK QC, implement Phase 1.7 from
