@@ -76,6 +76,15 @@ authoritative GitHub Actions Android APK build pass for source commit
   dependency resolution, static analysis, debug APK build, and
   `candidate-mobile-debug-apk` artifact upload all completed successfully.
 
+### APK distribution correction
+- A tester screenshot showed Flutter's original counter template, which is
+  absent from the local and remote Phase 1.2 source. Repeated downloads used
+  the generic `app-debug.apk` filename, making a stale APK easy to install.
+- The current GitHub credentials cannot update Actions workflow files, so the
+  artifact still contains the generic filename. Testers must uninstall the old
+  app and remove previously downloaded or extracted `app-debug.apk` files
+  before installing the APK from the verified Phase 1.2 workflow run.
+
 ### Next implementation
 Implement Phase 1.3 from docs/20-codex-phase-execution.md: splash, welcome,
 language selection, and sign-in choice using the shared design system.
@@ -83,6 +92,8 @@ language selection, and sign-in choice using the shared design system.
 ## Known constraints
 - Android/Termux/Ubuntu PRoot environment cannot reliably run Android SDK host binaries
 - GitHub Actions is the authoritative APK build path for mobile-only development
+- The generic `app-debug.apk` artifact filename can be confused with stale
+  downloads until GitHub workflow-write permission is available
 - macOS will be required for iOS build and signing
 - No external analytics, connectivity, authentication, or storage provider is
   connected in Phase 1.1; the included adapters are intentionally local mocks
