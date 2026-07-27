@@ -32,9 +32,9 @@ Last updated: 2026-07-27
 feature/flutter-foundation
 
 ### Latest verified milestone
-Phase 1.1 application foundation complete. Phase 1.2 design system source,
-analysis, and widget tests pass locally; the authoritative GitHub Actions APK
-validation is pending for the Phase 1.2 commit.
+Phase 1.2 Material 3 design system complete. Local source validation and the
+authoritative GitHub Actions Android APK build pass for source commit
+`78a96e7`.
 
 ### Phase 1.1 validation record
 - `flutter pub get` — passed
@@ -72,11 +72,13 @@ validation is pending for the Phase 1.2 commit.
   Gradle build, which exited before project settings evaluation with the same
   documented Gradle 9.1.0 host error. GitHub Actions is the authoritative APK
   validator.
+- GitHub Actions **Build Candidate Mobile APK** — passed for `78a96e7`:
+  dependency resolution, static analysis, debug APK build, and
+  `candidate-mobile-debug-apk` artifact upload all completed successfully.
 
 ### Next implementation
-After the Phase 1.2 GitHub Actions APK build passes, implement Phase 1.3 from
-docs/20-codex-phase-execution.md: splash, welcome, language selection, and
-sign-in choice using the shared design system.
+Implement Phase 1.3 from docs/20-codex-phase-execution.md: splash, welcome,
+language selection, and sign-in choice using the shared design system.
 
 ## Known constraints
 - Android/Termux/Ubuntu PRoot environment cannot reliably run Android SDK host binaries
