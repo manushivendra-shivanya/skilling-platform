@@ -12,6 +12,7 @@ import '../../features/authentication/presentation/otp_entry_screen.dart';
 import '../../features/authentication/presentation/phone_entry_screen.dart';
 import '../../features/dev_tools/presentation/design_system_gallery_screen.dart';
 import '../../features/onboarding/presentation/language_selection_screen.dart';
+import '../../features/onboarding/presentation/candidate_onboarding_screen.dart';
 import '../../features/onboarding/presentation/sign_in_choice_screen.dart';
 import '../../features/onboarding/presentation/welcome_screen.dart';
 import '../../features/splash/presentation/app_startup_screen.dart';
@@ -31,6 +32,8 @@ const otpEntryRoutePath = '/auth/otp';
 const otpEntryRouteName = 'otp-entry';
 const authenticatedRoutePath = '/auth/success';
 const authenticatedRouteName = 'authenticated';
+const candidateOnboardingRoutePath = '/onboarding';
+const candidateOnboardingRouteName = 'candidate-onboarding';
 const designSystemGalleryRoutePath = '/dev/design-system';
 const designSystemGalleryRouteName = 'design-system-gallery';
 
@@ -104,8 +107,15 @@ GoRouter createAppRouter({
         path: authenticatedRoutePath,
         name: authenticatedRouteName,
         builder: (context, state) => AuthenticatedPlaceholderScreen(
+          onContinueToOnboarding: () =>
+              context.push(candidateOnboardingRoutePath),
           onLoggedOut: () => context.go(welcomeRoutePath),
         ),
+      ),
+      GoRoute(
+        path: candidateOnboardingRoutePath,
+        name: candidateOnboardingRouteName,
+        builder: (context, state) => const CandidateOnboardingScreen(),
       ),
       if (showDevelopmentTools)
         GoRoute(

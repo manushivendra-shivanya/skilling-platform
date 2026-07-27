@@ -25,4 +25,15 @@ class AnalyticsEvent {
 
   factory AnalyticsEvent.developmentLoginCompleted() =>
       const AnalyticsEvent(name: 'development_login_completed');
+
+  factory AnalyticsEvent.onboardingStarted() =>
+      const AnalyticsEvent(name: 'candidate_onboarding_started');
+
+  factory AnalyticsEvent.onboardingStepSaved(int step) => AnalyticsEvent(
+    name: 'candidate_onboarding_step_saved',
+    properties: {'step': step},
+  );
+
+  factory AnalyticsEvent.onboardingCompleted() =>
+      const AnalyticsEvent(name: 'candidate_onboarding_completed');
 }

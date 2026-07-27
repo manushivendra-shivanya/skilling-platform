@@ -25,7 +25,10 @@ Last updated: 2026-07-27
   and disabled until configured
 - Phase 1.4 development phone entry, mock OTP verification, resend/expiry
   states, secure session restoration, and logout
-- No production authentication or candidate data flow yet
+- Phase 1.5 resumable candidate onboarding with encrypted local drafts,
+  required-field validation, versioned consent, review, and completion
+- No production authentication, backend profile sync, resume upload, or voice
+  recording yet
 
 ### Android configuration
 - compileSdk 36
@@ -43,6 +46,10 @@ feature/flutter-foundation
 Phase 1.4 development authentication complete. Local validation and the
 authoritative GitHub Actions Android APK build pass for source commit
 `db4ec52`.
+
+### Current implementation milestone
+Phase 1.5 candidate onboarding is implemented locally and awaits the
+authoritative GitHub Actions Android APK build and device QC.
 
 ### Phase 1.1 validation record
 - `flutter pub get` — passed
@@ -147,10 +154,44 @@ authoritative GitHub Actions Android APK build pass for source commit
   Gradle build, which exited before project settings evaluation with the
   documented Gradle 9.1.0 host error. GitHub Actions remains authoritative.
 
+### Phase 1.5 implementation
+- Ten-step candidate profile setup followed by a completion-success screen:
+  goal, personal information, location, education, experience, preferred
+  logistics roles, resume placeholder, voice-introduction placeholder,
+  consent centre, and profile review
+- Feature-first candidate onboarding domain model and repository contract
+- Candidate-isolated drafts serialized to the existing encrypted secure
+  key-value adapter; step position and entered data survive app reconstruction
+- Explicit validation for name, city/state, six-digit PIN code, education,
+  experience, preferred role, goal, and both required consent notices
+- Platform terms and privacy notice stored independently with immutable
+  purpose, version, and UTC acceptance timestamp
+- Offline banner explains that each completed step remains securely on device;
+  the normal state also states that saving occurs after every step
+- Resume and voice steps are honest placeholders: no file access, microphone
+  permission, recording, or upload occurs
+- Non-PII analytics for onboarding start, saved step number, and completion
+- Loading, recoverable storage error, validation error, review, and completion
+  states
+
+### Phase 1.5 local validation record
+- `flutter pub get` — passed
+- `dart format .` — passed; 73 Dart files checked
+- `flutter analyze --no-pub` — passed with no issues
+- `flutter test --no-pub --reporter expanded` — passed; 34 tests
+- Draft round-trip, candidate isolation, required validation, resume position,
+  offline visibility, versioned consent, end-to-end completion, and narrow
+  320-pixel/1.4x text-scale coverage passed
+- `flutter build apk --debug --no-pub` — attempted locally and reached the
+  unchanged Gradle build, which exited before project settings evaluation with
+  the documented `The settings are not yet available for build` host error.
+  GitHub Actions remains authoritative.
+
 ### Next implementation
-After Phase 1.4 APK QC, implement Phase 1.5 from
-docs/20-codex-phase-execution.md: resumable candidate onboarding, profile
-drafts, versioned consent, preferred roles, and offline visibility.
+After Phase 1.5 APK QC, implement Phase 1.6 from
+docs/20-codex-phase-execution.md: persistent five-tab navigation, global AI
+Coach entry, notification placeholder, deep-link-ready routes, and Android back
+navigation.
 
 ## Known constraints
 - Android/Termux/Ubuntu PRoot environment cannot reliably run Android SDK host binaries
@@ -166,3 +207,8 @@ drafts, versioned consent, preferred roles, and offline visibility.
   through navigation; authenticated session state uses secure device storage
 - Development OTP `123456` is intentionally local and must never be treated as
   production authentication
+- Candidate onboarding drafts and consent records are device-local Phase 1
+  data; server-side profile/consent persistence and cross-device sync remain
+  Phase 2 work
+- Resume upload and voice introduction are non-interactive placeholders; no
+  storage or microphone permission is requested

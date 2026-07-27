@@ -10,8 +10,13 @@ import 'candidate_session_controller.dart';
 import 'development_auth_controller.dart';
 
 class AuthenticatedPlaceholderScreen extends ConsumerWidget {
-  const AuthenticatedPlaceholderScreen({required this.onLoggedOut, super.key});
+  const AuthenticatedPlaceholderScreen({
+    required this.onContinueToOnboarding,
+    required this.onLoggedOut,
+    super.key,
+  });
 
+  final VoidCallback onContinueToOnboarding;
   final VoidCallback onLoggedOut;
 
   @override
@@ -38,6 +43,7 @@ class AuthenticatedPlaceholderScreen extends ConsumerWidget {
               );
             }
             return _AuthenticatedContent(
+              onContinueToOnboarding: onContinueToOnboarding,
               onLogout: () async {
                 final failure = await ref
                     .read(candidateSessionControllerProvider.notifier)
@@ -56,8 +62,12 @@ class AuthenticatedPlaceholderScreen extends ConsumerWidget {
 }
 
 class _AuthenticatedContent extends StatelessWidget {
-  const _AuthenticatedContent({required this.onLogout});
+  const _AuthenticatedContent({
+    required this.onContinueToOnboarding,
+    required this.onLogout,
+  });
 
+  final VoidCallback onContinueToOnboarding;
   final VoidCallback onLogout;
 
   @override
@@ -77,21 +87,14 @@ class _AuthenticatedContent extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.sm),
             Text(
-              'Your secure local session is ready. Candidate profile setup arrives in Phase 1.5.',
+              'Your secure local session is ready. Continue with your candidate profile.',
               style: Theme.of(context).textTheme.bodyLarge,
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: AppSpacing.xxl),
             AppButton(
               label: 'Continue to profile setup',
-              onPressed: null,
-              semanticLabel:
-                  'Continue to profile setup. Available in Phase 1.5.',
-            ),
-            const SizedBox(height: AppSpacing.xs),
-            const Text(
-              'Profile setup is planned for the next phase.',
-              textAlign: TextAlign.center,
+              onPressed: onContinueToOnboarding,
             ),
             const SizedBox(height: AppSpacing.xl),
             AppButton(

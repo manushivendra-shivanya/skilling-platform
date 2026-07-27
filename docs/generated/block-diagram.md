@@ -30,7 +30,17 @@ flowchart TD
     OTPSCREEN --> SESSIONREPO[Candidate Session Repository]
     SESSIONREPO --> SECURESTORE[Flutter Secure Storage Adapter]
     STARTCTRL --> SESSIONREPO
-    SESSIONREPO --> AUTHSUCCESS[Authenticated Phase Handoff and Logout]
+    SESSIONREPO --> AUTHSUCCESS[Authenticated Handoff and Logout]
+    AUTHSUCCESS --> ONBOARD[Candidate Onboarding Wizard]
+    ONBOARD --> GOAL[Goal and Personal Details]
+    ONBOARD --> PROFILE[Location, Education, Experience and Roles]
+    ONBOARD --> PLACEHOLDERS[Resume and Voice Placeholders]
+    ONBOARD --> CONSENT[Versioned Terms and Privacy Consent]
+    ONBOARD --> REVIEW[Profile Review and Completion]
+    ONBOARD --> ONBOARDCTRL[Onboarding Controller]
+    ONBOARDCTRL --> DRAFTREPO[Candidate Onboarding Repository]
+    DRAFTREPO --> SECURESTORE
+    CONNECTIVITY --> ONBOARD
 
     APP --> THEME[Material 3 Design System]
     THEME --> TOKENS[Colour, Type, Spacing, Radius, Elevation, Icons]

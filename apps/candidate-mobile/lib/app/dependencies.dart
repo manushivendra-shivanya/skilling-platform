@@ -10,6 +10,8 @@ import '../core/storage/secure_key_value_store.dart';
 import '../features/authentication/data/mock_development_auth_repository.dart';
 import '../features/authentication/domain/development_auth_repository.dart';
 import '../features/onboarding/data/local_onboarding_entry_repository.dart';
+import '../features/onboarding/data/secure_candidate_onboarding_repository.dart';
+import '../features/onboarding/domain/candidate_onboarding_repository.dart';
 import '../features/onboarding/domain/onboarding_entry_repository.dart';
 import '../features/splash/data/mock_app_startup_repository.dart';
 import '../features/splash/domain/app_startup_repository.dart';
@@ -58,3 +60,10 @@ final onboardingEntryRepositoryProvider = Provider<OnboardingEntryRepository>(
   (ref) =>
       LocalOnboardingEntryRepository(ref.watch(localKeyValueStoreProvider)),
 );
+
+final candidateOnboardingRepositoryProvider =
+    Provider<CandidateOnboardingRepository>(
+      (ref) => SecureCandidateOnboardingRepository(
+        ref.watch(secureKeyValueStoreProvider),
+      ),
+    );

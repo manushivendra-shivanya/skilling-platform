@@ -3,8 +3,10 @@ import 'package:candidate_mobile/app/dependencies.dart';
 import 'package:candidate_mobile/app/theme/app_theme.dart';
 import 'package:candidate_mobile/core/analytics/analytics_tracker.dart';
 import 'package:candidate_mobile/core/config/app_environment.dart';
+import 'package:candidate_mobile/core/network/connectivity_status.dart';
 import 'package:candidate_mobile/core/repositories/candidate_session_repository.dart';
 import 'package:candidate_mobile/features/authentication/domain/development_auth_repository.dart';
+import 'package:candidate_mobile/features/onboarding/domain/candidate_onboarding_repository.dart';
 import 'package:candidate_mobile/features/onboarding/domain/onboarding_entry_repository.dart';
 import 'package:candidate_mobile/features/splash/domain/app_startup_repository.dart';
 import 'package:flutter/material.dart';
@@ -16,8 +18,10 @@ extension CandidateAppPump on WidgetTester {
     AppStartupRepository? startupRepository,
     OnboardingEntryRepository? onboardingEntryRepository,
     CandidateSessionRepository? candidateSessionRepository,
+    CandidateOnboardingRepository? candidateOnboardingRepository,
     DevelopmentAuthRepository? developmentAuthRepository,
     AnalyticsTracker? analyticsTracker,
+    ConnectivityRepository? connectivityRepository,
     AppConfig config = const AppConfig.development(),
   }) {
     return pumpWidget(
@@ -33,12 +37,20 @@ extension CandidateAppPump on WidgetTester {
           candidateSessionRepositoryProvider.overrideWithValue(
             candidateSessionRepository ?? InMemoryCandidateSessionRepository(),
           ),
+          if (candidateOnboardingRepository != null)
+            candidateOnboardingRepositoryProvider.overrideWithValue(
+              candidateOnboardingRepository,
+            ),
           if (developmentAuthRepository != null)
             developmentAuthRepositoryProvider.overrideWithValue(
               developmentAuthRepository,
             ),
           if (analyticsTracker != null)
             analyticsTrackerProvider.overrideWithValue(analyticsTracker),
+          if (connectivityRepository != null)
+            connectivityRepositoryProvider.overrideWithValue(
+              connectivityRepository,
+            ),
         ],
         child: const SkillingApp(),
       ),
