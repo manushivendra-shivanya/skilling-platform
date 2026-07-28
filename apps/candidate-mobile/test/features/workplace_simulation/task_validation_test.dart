@@ -125,11 +125,13 @@ SimulationAttempt _attempt(String missionId, String missionVersion) =>
       attemptNumber: 1,
       scenarioSeed: 48127,
       state: MissionState.inProgress,
-      startedAt: DateTime.utc(2026, 7, 28),
-      elapsedSeconds: 0,
+      createdAt: DateTime.utc(2026, 7, 28),
+      shiftStartedAt: DateTime.utc(2026, 7, 28),
+      elapsedSimulationSeconds: 0,
       currentStageId: 'document-verification',
       completedTaskIds: const {},
       actions: const [],
+      auditEvents: const [],
     );
 
 LearnerAction _action(

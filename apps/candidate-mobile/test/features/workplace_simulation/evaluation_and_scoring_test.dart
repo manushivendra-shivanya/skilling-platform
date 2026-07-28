@@ -387,11 +387,13 @@ SimulationAttempt _attempt(MissionDefinition mission) => SimulationAttempt(
   attemptNumber: 1,
   scenarioSeed: 48127,
   state: MissionState.inProgress,
-  startedAt: DateTime.utc(2026, 7, 28, 10),
-  elapsedSeconds: 0,
+  createdAt: DateTime.utc(2026, 7, 28, 10),
+  shiftStartedAt: DateTime.utc(2026, 7, 28, 10),
+  elapsedSimulationSeconds: 0,
   currentStageId: 'document-verification',
   completedTaskIds: const {},
   actions: const [],
+  auditEvents: const [],
 );
 
 class _Run {

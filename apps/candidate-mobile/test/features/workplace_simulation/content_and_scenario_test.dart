@@ -28,6 +28,10 @@ void main() {
     expect(mission.versionedId, 'receive-incoming-shipment-01@1.0.0');
     expect(mission.stages, hasLength(6));
     expect(mission.tasks, hasLength(11));
+    expect(mission.briefing.supervisorTitle, 'Receiving Supervisor');
+    expect(mission.briefing.purchaseOrderNumber, 'PO-2026-001');
+    expect(mission.briefing.responsibilities, hasLength(6));
+    expect(mission.briefing.workplaceRules, hasLength(5));
     expect(competencies, hasLength(5));
     expect(remediation.single.id, 'micro-lesson-expiry-policy');
   });
@@ -109,9 +113,11 @@ SimulationAttempt _attempt(MissionState state) => SimulationAttempt(
   attemptNumber: 1,
   scenarioSeed: 48127,
   state: state,
-  startedAt: DateTime.utc(2026, 7, 28),
-  elapsedSeconds: 0,
+  createdAt: DateTime.utc(2026, 7, 28),
+  shiftStartedAt: null,
+  elapsedSimulationSeconds: 0,
   currentStageId: null,
   completedTaskIds: const {},
   actions: const [],
+  auditEvents: const [],
 );

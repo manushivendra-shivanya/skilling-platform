@@ -49,10 +49,68 @@ void main() {
           .read(workplaceSimulationControllerProvider)
           .requireValue;
       expect(state.attempt!.state, MissionState.briefing);
+      expect(state.attempt!.timerStatus, SimulationTimerStatus.notStarted);
+      expect(state.attempt!.shiftStartedAt, isNull);
       final firstAttemptId = state.attempt!.id;
 
-      expect(await controller.beginShift(), isNull);
-      expect(await controller.pause(), isNull);
+      expect(await controller.setBriefingAcknowledged(true), isNull);
+      state = container
+          .read(workplaceSimulationControllerProvider)
+          .requireValue;
+      expect(state.attempt!.briefingAcknowledgedAt, isNotNull);
+      expect(state.attempt!.shiftStartedAt, isNull);
+      final shiftStart = DateTime.utc(2026, 7, 28, 10);
+      expect(
+        await controller.beginShift(at: shiftStart),
+        BeginShiftResult.success,
+      );
+      state = container
+          .read(workplaceSimulationControllerProvider)
+          .requireValue;
+      expect(state.attempt!.shiftStartedAt, isNotNull);
+      expect(state.attempt!.timerStatus, SimulationTimerStatus.running);
+      expect(state.attempt!.currentStageId, 'document-verification');
+      expect(
+        state.attempt!.auditEvents.map((event) => event.type),
+        containsAllInOrder([
+          'attemptCreated',
+          'briefingAcknowledged',
+          'shiftStartRequested',
+          'shiftStarted',
+        ]),
+      );
+      final originalShiftStart = state.attempt!.shiftStartedAt;
+      expect(
+        await controller.beginShift(
+          at: shiftStart.add(const Duration(days: 1)),
+        ),
+        BeginShiftResult.alreadyStarted,
+      );
+      expect(
+        container
+            .read(workplaceSimulationControllerProvider)
+            .requireValue
+            .attempt!
+            .auditEvents
+            .where(
+              (event) => event.eventType == AttemptAuditEventType.shiftStarted,
+            ),
+        hasLength(1),
+      );
+      expect(
+        container
+            .read(workplaceSimulationControllerProvider)
+            .requireValue
+            .attempt!
+            .shiftStartedAt,
+        originalShiftStart,
+      );
+      expect(
+        await controller.pauseAttempt(
+          at: shiftStart.add(const Duration(seconds: 10)),
+        ),
+        isNull,
+      );
       expect(
         container
             .read(workplaceSimulationControllerProvider)
@@ -61,7 +119,17 @@ void main() {
             .state,
         MissionState.paused,
       );
-      expect(await controller.resume(), isNull);
+      state = container
+          .read(workplaceSimulationControllerProvider)
+          .requireValue;
+      expect(state.attempt!.elapsedSimulationSeconds, 10);
+      expect(state.attempt!.timerStatus, SimulationTimerStatus.paused);
+      expect(
+        await controller.resumeAttempt(
+          at: shiftStart.add(const Duration(seconds: 40)),
+        ),
+        isNull,
+      );
       expect(
         container
             .read(workplaceSimulationControllerProvider)
@@ -70,6 +138,23 @@ void main() {
             .state,
         MissionState.inProgress,
       );
+      expect(
+        await controller.pauseAttempt(
+          at: shiftStart.add(const Duration(seconds: 50)),
+        ),
+        isNull,
+      );
+      state = container
+          .read(workplaceSimulationControllerProvider)
+          .requireValue;
+      expect(state.attempt!.elapsedSimulationSeconds, 20);
+      expect(state.attempt!.timerStatus, SimulationTimerStatus.paused);
+      expect(
+        await controller.resumeAttempt(
+          at: shiftStart.add(const Duration(seconds: 60)),
+        ),
+        isNull,
+      );
 
       expect(await controller.submit(), isNull);
       state = container
@@ -77,6 +162,7 @@ void main() {
           .requireValue;
       expect(state.result!.status, MissionStatus.incomplete);
       expect(state.attempt!.state, MissionState.failed);
+      expect(state.attempt!.timerStatus, SimulationTimerStatus.stopped);
 
       expect(await controller.retry(scenarioSeed: 90210), isNull);
       state = container
@@ -131,6 +217,53 @@ void main() {
           .requireValue;
       expect(state.attempt!.actions, isEmpty);
       expect(state.attempt!.state, MissionState.briefing);
+    },
+  );
+
+  test(
+    'begin shift returns a typed acknowledgement result without starting time',
+    () async {
+      final container = ProviderContainer(
+        overrides: [
+          candidateSessionRepositoryProvider.overrideWithValue(
+            InMemoryCandidateSessionRepository(
+              session: const CandidateSession(
+                candidateId: 'unacknowledged-candidate',
+                isAuthenticated: true,
+              ),
+            ),
+          ),
+          simulationContentRepositoryProvider.overrideWithValue(
+            AssetSimulationContentRepository(),
+          ),
+          simulationAttemptRepositoryProvider.overrideWithValue(
+            InMemorySimulationAttemptRepository(),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+      await container.read(workplaceSimulationControllerProvider.future);
+      final controller = container.read(
+        workplaceSimulationControllerProvider.notifier,
+      );
+      await controller.startMission(scenarioSeed: 48127);
+
+      expect(
+        await controller.beginShift(),
+        BeginShiftResult.acknowledgementRequired,
+      );
+      final attempt = container
+          .read(workplaceSimulationControllerProvider)
+          .requireValue
+          .attempt!;
+      expect(attempt.state, MissionState.briefing);
+      expect(attempt.timerStatus, SimulationTimerStatus.notStarted);
+      expect(attempt.shiftStartedAt, isNull);
+      expect(
+        attempt.auditEvents.last.eventType,
+        AttemptAuditEventType.shiftStartRejected,
+      );
+      expect(attempt.actions, isEmpty);
     },
   );
 }
