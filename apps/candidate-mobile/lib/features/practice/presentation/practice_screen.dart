@@ -153,7 +153,7 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
               ),
               data: (state) => state.simulationScores.isEmpty
                   ? const SizedBox(
-                      height: 180,
+                      height: 220,
                       child: AppEmptyState(
                         title: 'No scored attempts',
                         message:

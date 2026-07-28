@@ -35,6 +35,8 @@ void main() {
   testWidgets('completed candidate enters all five persistent destinations', (
     tester,
   ) async {
+    await tester.binding.setSurfaceSize(const Size(800, 1000));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
     final analytics = InMemoryAnalyticsTracker();
     await tester.pumpCandidateApp(
       candidateSessionRepository: sessions,

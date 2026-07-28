@@ -98,6 +98,8 @@ void main() {
   testWidgets('Learning represents download, completion, and offline states', (
     tester,
   ) async {
+    await tester.binding.setSurfaceSize(const Size(800, 1000));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
     final connectivity = MockConnectivityRepository(
       initialStatus: ConnectivityStatus.offline,
     );
@@ -134,6 +136,8 @@ void main() {
   testWidgets('Practice demonstration is interactive and explicitly unscored', (
     tester,
   ) async {
+    await tester.binding.setSurfaceSize(const Size(800, 1000));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
     await tester.pumpCandidateApp(
       candidateSessionRepository: sessions,
       candidateOnboardingRepository: onboarding,
