@@ -10,7 +10,7 @@ class ActionEvaluationService {
     LearnerAction action, {
     GeneratedScenario? scenario,
   }) {
-    if (action.isTechnical) {
+    if (action.isTechnical || _isDraftBehaviour(action.actionType)) {
       return ActionOutcome(
         actionId: action.id,
         taskId: task.id,
@@ -54,6 +54,19 @@ class ActionEvaluationService {
     );
   }
 
+  bool _isDraftBehaviour(ActionType type) => {
+    ActionType.documentFindingAdded,
+    ActionType.documentFindingUpdated,
+    ActionType.documentFindingRemoved,
+    ActionType.documentReviewSubmitted,
+    ActionType.shipmentIdentityConfirmed,
+    ActionType.cartonCountRecorded,
+    ActionType.cartonCountUpdated,
+    ActionType.cartonCountRemoved,
+    ActionType.countMethodSelected,
+    ActionType.receivingCountSubmitted,
+  }.contains(type);
+
   bool _matches(
     TaskEvaluationRule rule,
     LearnerAction action,
@@ -63,6 +76,14 @@ class ActionEvaluationService {
     if (rule.targetId != null && rule.targetId != action.targetId) return false;
     for (final entry in rule.requiredPayload.entries) {
       if (action.payload[entry.key] != entry.value) return false;
+    }
+    if (rule.payloadMatchesTargetContent.isNotEmpty) {
+      final targetId = action.targetId;
+      if (scenario == null || targetId == null) return false;
+      final content = scenario.resource(targetId).content;
+      for (final entry in rule.payloadMatchesTargetContent.entries) {
+        if (action.payload[entry.key] != content[entry.value]) return false;
+      }
     }
     if (rule.targetHasIssue != null ||
         rule.targetLacksIssue != null ||

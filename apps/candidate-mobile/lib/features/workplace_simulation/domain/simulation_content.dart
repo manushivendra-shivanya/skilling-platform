@@ -460,6 +460,7 @@ class SimulationTask {
     required this.maximumPoints,
     required this.scoreCategoryId,
     required this.evaluationRules,
+    this.completeOnValidAction = false,
   });
 
   final String id;
@@ -475,6 +476,7 @@ class SimulationTask {
   final int maximumPoints;
   final String scoreCategoryId;
   final List<TaskEvaluationRule> evaluationRules;
+  final bool completeOnValidAction;
 
   factory SimulationTask.fromJson(JsonMap json) {
     final task = SimulationTask(
@@ -500,6 +502,7 @@ class SimulationTask {
           .mapList('evaluationRules')
           .map(TaskEvaluationRule.fromJson)
           .toList(growable: false),
+      completeOnValidAction: json.boolean('completeOnValidAction'),
     );
     final competencyWeight = task.competencyMappings.fold<double>(
       0,
@@ -539,6 +542,7 @@ class TaskEvaluationRule {
     this.targetHasIssue,
     this.targetLacksIssue,
     this.targetMustBeCompliant = false,
+    this.payloadMatchesTargetContent = const {},
   });
 
   final ActionType actionType;
@@ -552,6 +556,7 @@ class TaskEvaluationRule {
   final String? targetHasIssue;
   final String? targetLacksIssue;
   final bool targetMustBeCompliant;
+  final Map<String, String> payloadMatchesTargetContent;
 
   factory TaskEvaluationRule.fromJson(JsonMap json) => TaskEvaluationRule(
     actionType: ActionType.fromWireName(json.string('actionType')),
@@ -567,6 +572,12 @@ class TaskEvaluationRule {
     targetHasIssue: json.optionalString('targetHasIssue'),
     targetLacksIssue: json.optionalString('targetLacksIssue'),
     targetMustBeCompliant: json.boolean('targetMustBeCompliant'),
+    payloadMatchesTargetContent:
+        json['payloadMatchesTargetContent'] is Map<String, Object?>
+        ? json
+              .object('payloadMatchesTargetContent')
+              .map((key, value) => MapEntry(key, value as String))
+        : const {},
   );
 }
 

@@ -20,7 +20,10 @@ flowchart TD
     PRACTISE --> WMSCARD[Workplace Simulation Card]
     WMSCARD --> WMSENTRY[WMS Simulation Entry]
     WMSENTRY --> WMSBRIEF[Supervisor Briefing and Acknowledgement]
-    WMSBRIEF --> WMSHANDOFF[Screen 03 Handoff - no floor UI]
+    WMSBRIEF --> WMSOVERVIEW[Workplace Overview]
+    WMSOVERVIEW --> WMSDOC[Document Desk]
+    WMSDOC --> WMSDOCK[Receiving Dock]
+    WMSDOCK --> WMSINSPECT[Screen 06 Inspection Zone Placeholder]
 
     ENTRY --> AUTHCTRL[Authentication Controller]
     AUTHCTRL --> LOCALOTP[Development OTP Adapter]
@@ -55,6 +58,8 @@ flowchart TD
     WMSCTRL --> WMSSTATE[Mission State and Action Validation]
     WMSSTATE --> WMSTIMER[Operational Timer Lifecycle]
     WMSSTATE --> WMSAUDIT[Append-only Unscored Attempt Audit]
+    WMSSTATE --> WMSDRAFTS[Persisted Document and Count Drafts]
+    WMSDRAFTS --> WMSACTIONS[Append-only Scoreable Learner Actions]
     WMSCTRL --> WMSSCENARIO[Deterministic Seeded Scenario]
     WMSCTRL --> WMSSCORE[Scoring, Critical Errors and Remediation]
     WMSSCORE --> WMSEVIDENCE[Versioned Competency Evidence]
@@ -84,6 +89,10 @@ flowchart TD
 
     WMSENTRY --> WMSCTRL
     WMSBRIEF --> WMSCTRL
+    WMSOVERVIEW --> WMSCTRL
+    WMSDOC --> WMSCTRL
+    WMSDOCK --> WMSCTRL
+    WMSINSPECT --> WMSCTRL
 
     GH[GitHub Repository] --> ACTIONS[GitHub Actions APK Build]
     ACTIONS --> APK[Signed Android Debug APK]
@@ -101,4 +110,51 @@ flowchart TD
     API -. Future .-> REDIS
     API -. Future .-> AI
     WEB -. Future .-> API
+```
+
+## Proposed employability-platform context map
+
+This is a target-state proposal, not a representation of shipped code.
+
+```mermaid
+flowchart LR
+    CAND[Candidate Context] --> JOURNEY[Candidate Journey Orchestration]
+    CAREER[Career Context] --> DISCOVERY[Discovery and Diagnosis]
+    DISCOVERY --> JOURNEY
+    JOURNEY --> LEARNING[Learning Context]
+    JOURNEY --> SIM[Simulation Context / WMS]
+    LEARNING --> EVIDENCE[Competency and Evidence Context]
+    SIM --> EVIDENCE
+    EVIDENCE --> READY[Role-specific Readiness Projection]
+    READY --> MATCH[Employment and Matching Context]
+    MATCH --> PLACE[Placement Context]
+    PLACE --> OUTCOME[Employment and Progression Outcomes]
+    OUTCOME --> JOURNEY
+
+    PARTNER[Partner Context] --> LEARNING
+    PARTNER --> PLACE
+    INTEGRATION[Integration Anti-corruption Layer] --> PARTNER
+    INTEGRATION -. Authorised exchange .-> GOV[Government and Standards Platforms]
+    INTEGRATION -. Authorised exchange .-> ATS[Employer ATS / HRMS]
+
+    TRUST[Trust, Consent and Audit Context] --> CAND
+    TRUST --> EVIDENCE
+    TRUST --> MATCH
+    TRUST --> INTEGRATION
+
+    MOBILE[Flutter Candidate App] --> JOURNEY
+    PORTALS[Next.js Organisation Portals] --> PARTNER
+    PORTALS --> MATCH
+    PORTALS --> PLACE
+    API[NestJS Modular Monolith / BFF] --> CAND
+    API --> CAREER
+    API --> DISCOVERY
+    API --> LEARNING
+    API --> SIM
+    API --> EVIDENCE
+    API --> MATCH
+    API --> PLACE
+    API --> PARTNER
+    API --> INTEGRATION
+    API --> TRUST
 ```

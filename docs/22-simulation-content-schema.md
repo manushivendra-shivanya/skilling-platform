@@ -122,6 +122,8 @@ currentStageId
 completedTaskIds[]
 actions[]
 auditEvents[]
+documentReviewDraft
+receivingCountDraft
 ```
 
 `startedAt` is attempt creation time. `shiftStartedAt` remains null while the
@@ -131,6 +133,11 @@ transition.
 Scored learner actions and unscored audit events are separate append-only,
 continuously sequenced streams. Briefing acknowledgement, entry/resume and
 shift-start events do not affect competency scores.
+
+Operational drafts preserve current editable state and revision metadata.
+Submission appends final scoreable actions and may mark process tasks complete
+without asserting correctness. Repository implementations must commit the
+draft/submission, action stream, audit stream and derived progress atomically.
 
 ## Future remote compatibility
 

@@ -26,8 +26,8 @@ void main() {
     expect(pack.version, '1.0.0');
     expect(workplace.workstations, hasLength(6));
     expect(mission.versionedId, 'receive-incoming-shipment-01@1.0.0');
-    expect(mission.stages, hasLength(6));
-    expect(mission.tasks, hasLength(11));
+    expect(mission.stages, hasLength(7));
+    expect(mission.tasks, hasLength(13));
     expect(mission.briefing.supervisorTitle, 'Receiving Supervisor');
     expect(mission.briefing.purchaseOrderNumber, 'PO-2026-001');
     expect(mission.briefing.responsibilities, hasLength(6));

@@ -30,6 +30,10 @@ abstract interface class SimulationAttemptRepository {
 
   Future<void> saveAttempt(SimulationAttempt attempt);
 
+  /// Atomically persists an operational draft/submission together with its
+  /// append-only actions, audit events and derived attempt progress.
+  Future<void> commitOperationalUpdate(SimulationAttempt attempt);
+
   Future<SimulationAttempt> appendAction(LearnerAction action);
 
   Future<SimulationAttempt> appendAuditEvent(AttemptAuditEvent event);

@@ -60,8 +60,9 @@ Last updated: 2026-07-28
 - A UI-neutral Workplace Management Simulation v0.2 backbone provides
   versioned local content, deterministic scenarios, mission state, action
   validation, scoring, critical errors, remediation and evidence
-- Approved WMS Simulation Entry and Supervisor Briefing screens are available
-  from Practice; the operational workplace remains deferred to Screen 03
+- Approved WMS Screens 01–05 are available from Practice, with controller-owned
+  progression through entry, briefing, overview, document review and receiving
+  count; Screen 06 is an intentional Inspection Zone handoff placeholder
 
 ### Android configuration
 - compileSdk 36
@@ -76,9 +77,9 @@ Last updated: 2026-07-28
 feature/flutter-foundation
 
 ### Latest verified milestone
-The additive Workplace Management Simulation backbone is implemented and its
-approved Screen 01 entry and Screen 02 briefing are connected. The operational
-workplace is intentionally not implemented while Screen 03 is pending.
+The additive Workplace Management Simulation backbone and approved Screens
+01–05 are connected. Screen 06 proves the Inspection Zone unlock and route
+boundary without implementing inspection behaviour.
 
 ### Phase 1.1 validation record
 - `flutter pub get` — passed
@@ -610,10 +611,69 @@ workplace is intentionally not implemented while Screen 03 is pending.
 - ARM64 QC APK SHA-256:
   `f6a14f0a341f88f91e87b2f8b3ca7aeaf318ae6e803f2d116f701e54b4c00f93`
 
+### WMS Screens 03–06 implementation
+- Replaced the Screen 03 handoff with a responsive, accessible Workplace
+  Overview whose progress, station status, locked reasons and deterministic
+  recommendation come from the application controller
+- Added typed workstation-open and save-and-exit outcomes, atomic pause/resume
+  and exit persistence, and unscored workstation/lifecycle audit events
+- Added persisted, revisioned Document Review and Receiving Count drafts with
+  typed add, update, remove, save and submit commands
+- Added append-only draft and final learner-action evidence while keeping
+  correctness evaluation separate from structural process completion
+- Added Screen 04 Purchase Order/Delivery Note comparison and multiple editable
+  findings without answer reveal
+- Added Screen 05 shipment identity confirmation, per-carton counts, revision
+  metadata, partial progress and structural validation without exposing
+  expected physical quantities
+- Added canonical dynamic `/practise/workplace-simulation/:missionId/...`
+  routes and controlled locked-state handling for direct route access
+- Added the agreed Screen 06 Inspection Zone placeholder only; inspection,
+  barcode, quarantine, office, decision, reporting and results remain deferred
+- The application-level operational commit persists aggregate, progress,
+  actions and audits as one encrypted local value. A database transaction
+  adapter remains deferred until remote persistence is introduced.
+
+### WMS Screens 03–06 local validation
+- `dart format .` — passed; 155 Dart files checked
+- JSON syntax validation — passed for all WMS logistics documents
+- `flutter analyze --no-pub` — passed with no issues
+- Focused WMS and routing suite — passed; 26 tests covering content,
+  deterministic scenarios, scoring regression, typed commands, progression,
+  draft persistence, append-only streams, locked access, large text and the
+  Screen 01–03 flow
+- Full Flutter suite — 80 of 82 tests passed. The two unchanged
+  `Today’s mission` Home-navigation expectations remain the documented
+  baseline failures and do not import or exercise WMS.
+- `flutter build apk --debug --target-platform android-arm64 --no-pub` —
+  attempted locally, but the managed workspace denied Gradle’s lock-file write
+  under the user Gradle cache before project compilation. GitHub Actions
+  remains the authoritative Android build path.
+
 ### Next implementation
-Implement Screen 03 Workplace Overview only after its approved specification
-arrives. Do not infer workstation layout, attention states, unlocking,
-navigation or floor interaction from Screens 01–02.
+Implement the approved Screen 06 Inspection Zone interaction contract as the
+next coherent WMS milestone. Do not infer Barcode Station, Quarantine Zone,
+Receiving Office, final decision, report or results behaviour.
+
+## Target product architecture proposal
+
+- Added the proposed Flora AI Employability Infrastructure architecture in
+  `docs/23-ai-employability-infrastructure-platform.md`
+- Repositioned Workplace Management Simulation as the Simulation bounded
+  context within the wider candidate lifecycle without changing its approved
+  controller, action, audit, timing or scoring boundaries
+- Defined target Career, Candidate, Discovery, Learning, Simulation,
+  Competency, Employment, Placement, Partner, Integration and Trust contexts
+- Defined authority boundaries so Flora complements rather than duplicates
+  training providers, assessment agencies, SSCs, NSDC/NCVET, NCS, Skill India
+  Digital Hub, Apprenticeship India and State Skill Missions
+- Added phased product gates from WMS through discovery, competency passport,
+  employer/placement operations, controlled government integrations and
+  lifecycle-aware AI
+- Added ADR-0016 making Flutter the authoritative Candidate App platform and
+  corrected all legacy mobile-stack documentation references
+- This is documentation and planning only. No new employability-platform code,
+  integration, portal or production authority has been added
 
 ## Known constraints
 - Android/Termux/Ubuntu PRoot environment cannot reliably run Android SDK host binaries
@@ -646,5 +706,6 @@ navigation or floor interaction from Screens 01–02.
   Phase 2 records and narrowly scoped Phase 3 practice metadata; media
   authorisation, AI, employer, administrator and job-application operations
   remain behind the planned NestJS BFF
-- WMS Screens 01–02 are production-visible. Screen 03 and the playable
-  workplace tasks remain intentionally unavailable pending approved contracts.
+- WMS Screens 01–05 are production-visible. Screen 06 remains a placeholder;
+  Barcode Station, Quarantine Zone, Receiving Office, final decision, shift
+  report and results are intentionally unavailable pending approved contracts.

@@ -18,6 +18,22 @@ void main() {
       workplaceOverviewRoutePath,
       startsWith('$workplaceSimulationRoutePath/'),
     );
+    for (final path in [
+      workplaceDocumentDeskRoutePath,
+      workplaceReceivingDockRoutePath,
+      workplaceInspectionZoneRoutePath,
+    ]) {
+      expect(path, startsWith('$workplaceSimulationRoutePath/'));
+      expect(path, isNot(startsWith('/practice/')));
+    }
+    expect(workplaceSimulationRoutePattern, contains(':missionId'));
+    expect(workplaceDocumentDeskRoutePattern, contains(':missionId'));
+    expect(workplaceReceivingDockRoutePattern, contains(':missionId'));
+    expect(workplaceInspectionZoneRoutePattern, contains(':missionId'));
+    expect(
+      workplaceDocumentDeskPath('mission-2'),
+      '/practise/workplace-simulation/mission-2/document-desk',
+    );
   });
 
   testWidgets('opens the candidate welcome route after splash', (tester) async {

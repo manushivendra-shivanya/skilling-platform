@@ -119,13 +119,13 @@ void main() {
       final run = await _successfulRun();
       final adjusted = [
         for (final outcome in run.outcomes)
-          if (outcome.taskId == 'verify-documents')
+          if (outcome.taskId == 'record-document-finding')
             ActionOutcome(
               actionId: outcome.actionId,
               taskId: outcome.taskId,
               categoryId: outcome.categoryId,
               outcomeType: OutcomeType.partiallyCorrect,
-              pointsAwarded: 10,
+              pointsAwarded: 5,
               maximumPoints: outcome.maximumPoints,
               feedbackCode: outcome.feedbackCode,
               competencyImpacts: outcome.competencyImpacts,
@@ -281,24 +281,40 @@ Future<_Run> _successfulRun() async {
     targetId: 'delivery-note-dn-2026-001',
   );
   add(
-    'verify-documents',
-    ActionType.completeForm,
-    payload: const {
-      'shortageSku': 'SKU-1002',
-      'shortageQuantity': 2,
-      'unauthorizedSku': 'SKU-1094',
-    },
+    'record-document-finding',
+    ActionType.classifyIssue,
+    targetId: 'document-line-SKU-1002',
+    payload: const {'findingType': 'quantityMismatch'},
   );
   add(
-    'confirm-received-counts',
-    ActionType.countQuantity,
-    targetId: 'delivery-note-dn-2026-001',
-    payload: const {
-      'sku': 'SKU-1002',
-      'receivedQuantity': 18,
-      'shortageQuantity': 2,
-    },
+    'record-document-finding',
+    ActionType.classifyIssue,
+    targetId: 'document-line-SKU-1094',
+    payload: const {'findingType': 'unexpectedItem'},
   );
+  add(
+    'verify-documents',
+    ActionType.completeForm,
+    targetId: 'document-comparison-summary',
+    payload: const {'submitted': true},
+  );
+  add(
+    'confirm-delivery-identity',
+    ActionType.confirmAction,
+    targetId: 'delivery-note-dn-2026-001',
+    payload: const {'conclusion': 'matchesExpectedDelivery'},
+  );
+  for (final carton in _cartons(scenario)) {
+    add(
+      'confirm-received-counts',
+      ActionType.countQuantity,
+      targetId: carton.id,
+      payload: {
+        'physicalQuantity': carton.content['quantity'],
+        'countMethod': 'individual',
+      },
+    );
+  }
   for (final carton in _cartons(scenario)) {
     final issue = carton.issues.isEmpty ? null : carton.issues.single;
     add(

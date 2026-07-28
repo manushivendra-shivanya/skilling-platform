@@ -36,13 +36,14 @@ interaction decisions.
 - A UI-neutral Riverpod application controller.
 - Local logistics content for the first receiving mission.
 
-Version 0.2 originally excluded production screens. Approved Screen 01 and
-Screen 02 are now connected as a subsequent presentation slice.
+Version 0.2 originally excluded production screens. Approved Screens 01–05 are
+now connected as subsequent presentation slices, and Screen 06 is a controlled
+Inspection Zone placeholder.
 
 Still excluded:
 
-- Screen 03 workplace-floor interactions and later screens.
-- Assumptions about unspecified workstation or result behaviour.
+- Screen 06 inspection behaviour and later workstation workflows.
+- Assumptions about Barcode, Quarantine, Office or result behaviour.
 - Supabase schema or synchronization.
 - AI providers, NPCs, voice, Redis or BFF changes.
 - Changes to the existing Phase 2 simulation.
@@ -113,8 +114,20 @@ after the approved screen-by-screen interaction specification defines screen
 states, actions, validation display, navigation, failure handling,
 accessibility and exact results.
 
-The approved Simulation Entry and Supervisor Briefing presentation calls this
-controller. Attempt mutation remains outside Flutter widgets.
+The approved Simulation Entry, Supervisor Briefing, Workplace Overview,
+Document Desk and Receiving Dock presentations call this controller. Attempt
+mutation remains outside Flutter widgets.
+
+Document Review and Receiving Count are persisted aggregates. Their current
+drafts may be revised, while each meaningful learner action remains append-only.
+Structurally valid submission completes and unlocks the next process stage even
+when its evidence is incorrect; the unchanged scoring engine evaluates quality
+separately.
+
+Operational submission uses a repository `commitOperationalUpdate` boundary so
+draft state, actions, audits and derived progress are saved together. The local
+encrypted repository can provide this atomicity because an attempt is one
+stored value. A future database adapter must implement a real transaction.
 
 ## Persistence and future synchronization
 

@@ -30,7 +30,10 @@ import '../../features/splash/presentation/app_startup_screen.dart';
 import '../../features/voice/presentation/voice_interview_screen.dart';
 import '../../features/workplace_simulation/presentation/simulation_entry_screen.dart';
 import '../../features/workplace_simulation/presentation/supervisor_briefing_screen.dart';
-import '../../features/workplace_simulation/presentation/workplace_overview_handoff_screen.dart';
+import '../../features/workplace_simulation/presentation/document_desk_screen.dart';
+import '../../features/workplace_simulation/presentation/inspection_zone_handoff_screen.dart';
+import '../../features/workplace_simulation/presentation/receiving_dock_screen.dart';
+import '../../features/workplace_simulation/presentation/workplace_overview_screen.dart';
 import '../dependencies.dart';
 
 const appStartupRoutePath = '/';
@@ -71,15 +74,49 @@ const workplaceSimulationHubRoutePath = '/practise/workplace-simulation';
 const workplaceSimulationHubRouteName = 'workplace-simulation';
 const workplaceSimulationRoutePath =
     '/practise/workplace-simulation/receive-incoming-shipment-01';
+const workplaceSimulationRoutePattern =
+    '/practise/workplace-simulation/:missionId';
 const workplaceSimulationRouteName = 'workplace-simulation-entry';
 const workplaceBriefingRoutePath =
     '/practise/workplace-simulation/receive-incoming-shipment-01/briefing';
 const workplaceBriefingRouteName = 'workplace-simulation-briefing';
+const workplaceBriefingRoutePattern =
+    '/practise/workplace-simulation/:missionId/briefing';
 const workplaceOverviewRoutePath =
     '/practise/workplace-simulation/receive-incoming-shipment-01/workplace';
 const workplaceOverviewRouteName = 'workplace-simulation-workplace';
+const workplaceOverviewRoutePattern =
+    '/practise/workplace-simulation/:missionId/workplace';
+const workplaceDocumentDeskRoutePath =
+    '/practise/workplace-simulation/receive-incoming-shipment-01/document-desk';
+const workplaceDocumentDeskRouteName = 'workplace-simulation-document-desk';
+const workplaceDocumentDeskRoutePattern =
+    '/practise/workplace-simulation/:missionId/document-desk';
+const workplaceReceivingDockRoutePath =
+    '/practise/workplace-simulation/receive-incoming-shipment-01/receiving-dock';
+const workplaceReceivingDockRouteName = 'workplace-simulation-receiving-dock';
+const workplaceReceivingDockRoutePattern =
+    '/practise/workplace-simulation/:missionId/receiving-dock';
+const workplaceInspectionZoneRoutePath =
+    '/practise/workplace-simulation/receive-incoming-shipment-01/inspection-zone';
+const workplaceInspectionZoneRouteName = 'workplace-simulation-inspection-zone';
+const workplaceInspectionZoneRoutePattern =
+    '/practise/workplace-simulation/:missionId/inspection-zone';
 const designSystemGalleryRoutePath = '/dev/design-system';
 const designSystemGalleryRouteName = 'design-system-gallery';
+
+String workplaceSimulationPath(String missionId) =>
+    '$workplaceSimulationHubRoutePath/$missionId';
+String workplaceBriefingPath(String missionId) =>
+    '${workplaceSimulationPath(missionId)}/briefing';
+String workplaceOverviewPath(String missionId) =>
+    '${workplaceSimulationPath(missionId)}/workplace';
+String workplaceDocumentDeskPath(String missionId) =>
+    '${workplaceSimulationPath(missionId)}/document-desk';
+String workplaceReceivingDockPath(String missionId) =>
+    '${workplaceSimulationPath(missionId)}/receiving-dock';
+String workplaceInspectionZonePath(String missionId) =>
+    '${workplaceSimulationPath(missionId)}/inspection-zone';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   final router = createAppRouter(
@@ -278,30 +315,88 @@ GoRouter createAppRouter({
       ),
       GoRoute(
         parentNavigatorKey: rootNavigatorKey,
-        path: workplaceSimulationRoutePath,
+        path: workplaceSimulationRoutePattern,
         name: workplaceSimulationRouteName,
-        builder: (context, state) => SimulationEntryScreen(
-          onOpenBriefing: () => context.push(workplaceBriefingRoutePath),
-          onContinueWorkplace: () => context.go(workplaceOverviewRoutePath),
-          onExit: () => context.go(practiseRoutePath),
-        ),
+        builder: (context, state) {
+          final missionId = state.pathParameters['missionId']!;
+          return SimulationEntryScreen(
+            onOpenBriefing: () => context.push(
+              workplaceBriefingPath(missionId),
+            ),
+            onContinueWorkplace: () =>
+                context.go(workplaceOverviewPath(missionId)),
+            onExit: () => context.go(practiseRoutePath),
+          );
+        },
       ),
       GoRoute(
         parentNavigatorKey: rootNavigatorKey,
-        path: workplaceBriefingRoutePath,
+        path: workplaceBriefingRoutePattern,
         name: workplaceBriefingRouteName,
-        builder: (context, state) => SupervisorBriefingScreen(
-          onBackToEntry: () => context.go(workplaceSimulationRoutePath),
-          onOpenWorkplace: () => context.go(workplaceOverviewRoutePath),
-        ),
+        builder: (context, state) {
+          final missionId = state.pathParameters['missionId']!;
+          return SupervisorBriefingScreen(
+            onBackToEntry: () => context.go(workplaceSimulationPath(missionId)),
+            onOpenWorkplace: () =>
+                context.go(workplaceOverviewPath(missionId)),
+          );
+        },
       ),
       GoRoute(
         parentNavigatorKey: rootNavigatorKey,
-        path: workplaceOverviewRoutePath,
+        path: workplaceOverviewRoutePattern,
         name: workplaceOverviewRouteName,
-        builder: (context, state) => WorkplaceOverviewHandoffScreen(
-          onReturnToPractice: () => context.go(practiseRoutePath),
-        ),
+        builder: (context, state) {
+          final missionId = state.pathParameters['missionId']!;
+          return WorkplaceOverviewScreen(
+            missionId: missionId,
+            onOpenDocumentDesk: () =>
+                context.go(workplaceDocumentDeskPath(missionId)),
+            onOpenReceivingDock: () =>
+                context.go(workplaceReceivingDockPath(missionId)),
+            onOpenInspectionZone: () =>
+                context.go(workplaceInspectionZonePath(missionId)),
+            onReturnToPractice: () => context.go(practiseRoutePath),
+          );
+        },
+      ),
+      GoRoute(
+        parentNavigatorKey: rootNavigatorKey,
+        path: workplaceDocumentDeskRoutePattern,
+        name: workplaceDocumentDeskRouteName,
+        builder: (context, state) {
+          final missionId = state.pathParameters['missionId']!;
+          return DocumentDeskScreen(
+            missionId: missionId,
+            onBack: () => context.go(workplaceOverviewPath(missionId)),
+          );
+        },
+      ),
+      GoRoute(
+        parentNavigatorKey: rootNavigatorKey,
+        path: workplaceReceivingDockRoutePattern,
+        name: workplaceReceivingDockRouteName,
+        builder: (context, state) {
+          final missionId = state.pathParameters['missionId']!;
+          return ReceivingDockScreen(
+            missionId: missionId,
+            onBack: () => context.go(workplaceOverviewPath(missionId)),
+            onOpenInspectionZone: () =>
+                context.go(workplaceInspectionZonePath(missionId)),
+          );
+        },
+      ),
+      GoRoute(
+        parentNavigatorKey: rootNavigatorKey,
+        path: workplaceInspectionZoneRoutePattern,
+        name: workplaceInspectionZoneRouteName,
+        builder: (context, state) {
+          final missionId = state.pathParameters['missionId']!;
+          return InspectionZoneHandoffScreen(
+            missionId: missionId,
+            onBack: () => context.go(workplaceOverviewPath(missionId)),
+          );
+        },
       ),
       if (showDevelopmentTools)
         GoRoute(
@@ -324,7 +419,8 @@ Future<String?> _redirectForCandidateState({
   final needsCandidateSession =
       location == authenticatedRoutePath ||
       location == candidateOnboardingRoutePath ||
-      _mainAndGlobalRoutePaths.contains(location);
+      _mainAndGlobalRoutePaths.contains(location) ||
+      location.startsWith('$workplaceSimulationHubRoutePath/');
   if (!needsCandidateSession) {
     return null;
   }
@@ -370,6 +466,9 @@ const _mainAndGlobalRoutePaths = {
   workplaceSimulationRoutePath,
   workplaceBriefingRoutePath,
   workplaceOverviewRoutePath,
+  workplaceDocumentDeskRoutePath,
+  workplaceReceivingDockRoutePath,
+  workplaceInspectionZoneRoutePath,
 };
 
 class AppRouteObserver extends NavigatorObserver {

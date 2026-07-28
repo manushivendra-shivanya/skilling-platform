@@ -8,7 +8,7 @@ import 'package:candidate_mobile/features/workplace_simulation/data/local_simula
 import 'package:candidate_mobile/features/workplace_simulation/domain/simulation_enums.dart';
 import 'package:candidate_mobile/features/workplace_simulation/presentation/simulation_entry_screen.dart';
 import 'package:candidate_mobile/features/workplace_simulation/presentation/supervisor_briefing_screen.dart';
-import 'package:candidate_mobile/features/workplace_simulation/presentation/workplace_overview_handoff_screen.dart';
+import 'package:candidate_mobile/features/workplace_simulation/presentation/workplace_overview_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -56,7 +56,12 @@ void main() {
                       onOpenWorkplace: () =>
                           Navigator.of(briefingContext).pushReplacement(
                             MaterialPageRoute<void>(
-                              builder: (_) => WorkplaceOverviewHandoffScreen(
+                              builder: (_) => WorkplaceOverviewScreen(
+                                missionId:
+                                    WorkplaceSimulationController.missionId,
+                                onOpenDocumentDesk: () {},
+                                onOpenReceivingDock: () {},
+                                onOpenInspectionZone: () {},
                                 onReturnToPractice: () {},
                               ),
                             ),
@@ -105,9 +110,12 @@ void main() {
 
       await tester.ensureVisible(find.text('Begin Shift'));
       await tester.tap(find.text('Begin Shift'));
-      await tester.pumpAndSettle();
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
 
-      expect(find.text('Shift started'), findsOneWidget);
+      expect(find.text('Workplace Overview'), findsOneWidget);
+      expect(find.text('Document Desk'), findsOneWidget);
+      expect(find.textContaining('Recommended'), findsOneWidget);
       final active = await attempts.getActiveAttempt(
         'screen-candidate',
         WorkplaceSimulationController.missionId,

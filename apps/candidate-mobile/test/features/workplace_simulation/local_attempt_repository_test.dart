@@ -2,6 +2,7 @@ import 'package:candidate_mobile/core/storage/secure_key_value_store.dart';
 import 'package:candidate_mobile/features/workplace_simulation/data/local_simulation_attempt_repository.dart';
 import 'package:candidate_mobile/features/workplace_simulation/domain/simulation_enums.dart';
 import 'package:candidate_mobile/features/workplace_simulation/domain/simulation_runtime.dart';
+import 'package:candidate_mobile/features/workplace_simulation/domain/workplace_task_drafts.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -174,6 +175,74 @@ void main() {
       expect(restored.auditEvents, isEmpty);
     },
   );
+
+  test('persists operational drafts and their revision metadata', () async {
+    final repository = LocalSimulationAttemptRepository(
+      InMemorySecureKeyValueStore(),
+      clock: () => fixedTime,
+    );
+    final attempt = await repository.createAttempt(
+      candidateId: 'candidate-1',
+      missionId: 'mission-1',
+      missionVersion: '1.0.0',
+      scenarioSeed: 42,
+    );
+    final updated = attempt.copyWith(
+      documentReviewDraft: DocumentReviewDraft(
+        attemptId: attempt.id,
+        taskId: 'verify-documents',
+        findings: [
+          DocumentFinding(
+            id: 'finding-1',
+            sourceDocument: DocumentSource.both,
+            itemReference: 'SKU-1002',
+            findingType: DocumentFindingType.quantityMismatch,
+            learnerNotes: 'Check quantity',
+            createdAt: fixedTime,
+            updatedAt: fixedTime,
+            revisionNumber: 2,
+          ),
+        ],
+        status: OperationalDraftStatus.draft,
+        createdAt: fixedTime,
+        updatedAt: fixedTime,
+      ),
+      receivingCountDraft: ReceivingCountDraft(
+        attemptId: attempt.id,
+        taskId: 'confirm-received-counts',
+        shipmentConfirmed: true,
+        countEntries: [
+          ReceivingCountEntry(
+            id: 'count-1',
+            cartonId: 'carton-002',
+            sku: 'SKU-1002',
+            enteredQuantity: 18,
+            countMethod: CountMethod.individual,
+            learnerNotes: '',
+            createdAt: fixedTime,
+            updatedAt: fixedTime,
+            revisionNumber: 3,
+          ),
+        ],
+        status: OperationalDraftStatus.draft,
+        createdAt: fixedTime,
+        updatedAt: fixedTime,
+      ),
+    );
+
+    await repository.commitOperationalUpdate(updated);
+    final restored = await repository.getActiveAttempt(
+      'candidate-1',
+      'mission-1',
+    );
+
+    expect(restored!.documentReviewDraft!.findings.single.revisionNumber, 2);
+    expect(
+      restored.receivingCountDraft!.countEntries.single.enteredQuantity,
+      18,
+    );
+    expect(restored.receivingCountDraft!.countEntries.single.revisionNumber, 3);
+  });
 }
 
 AttemptAuditEvent _auditEvent(

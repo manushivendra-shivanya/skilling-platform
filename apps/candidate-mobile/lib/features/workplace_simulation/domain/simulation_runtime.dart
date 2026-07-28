@@ -1,5 +1,6 @@
 import 'simulation_content.dart';
 import 'simulation_enums.dart';
+import 'workplace_task_drafts.dart';
 
 class GeneratedScenario {
   const GeneratedScenario({
@@ -65,6 +66,8 @@ class SimulationAttempt {
     required this.completedTaskIds,
     required this.actions,
     required this.auditEvents,
+    this.documentReviewDraft,
+    this.receivingCountDraft,
     this.submittedAt,
     this.completedAt,
   });
@@ -89,6 +92,8 @@ class SimulationAttempt {
   final Set<String> completedTaskIds;
   final List<LearnerAction> actions;
   final List<AttemptAuditEvent> auditEvents;
+  final DocumentReviewDraft? documentReviewDraft;
+  final ReceivingCountDraft? receivingCountDraft;
 
   @Deprecated('Use createdAt')
   DateTime get startedAt => createdAt;
@@ -131,6 +136,8 @@ class SimulationAttempt {
     Set<String>? completedTaskIds,
     List<LearnerAction>? actions,
     List<AttemptAuditEvent>? auditEvents,
+    DocumentReviewDraft? documentReviewDraft,
+    ReceivingCountDraft? receivingCountDraft,
   }) => SimulationAttempt(
     id: id,
     candidateId: candidateId,
@@ -161,6 +168,8 @@ class SimulationAttempt {
     completedTaskIds: completedTaskIds ?? this.completedTaskIds,
     actions: actions ?? this.actions,
     auditEvents: auditEvents ?? this.auditEvents,
+    documentReviewDraft: documentReviewDraft ?? this.documentReviewDraft,
+    receivingCountDraft: receivingCountDraft ?? this.receivingCountDraft,
   );
 
   JsonMap toJson() => {
@@ -184,6 +193,8 @@ class SimulationAttempt {
     'completedTaskIds': completedTaskIds.toList(),
     'actions': actions.map((item) => item.toJson()).toList(),
     'auditEvents': auditEvents.map((item) => item.toJson()).toList(),
+    'documentReviewDraft': documentReviewDraft?.toJson(),
+    'receivingCountDraft': receivingCountDraft?.toJson(),
   };
 
   factory SimulationAttempt.fromJson(JsonMap json) => SimulationAttempt(
@@ -223,6 +234,12 @@ class SimulationAttempt {
               .map(AttemptAuditEvent.fromJson)
               .toList(growable: false)
         : const [],
+    documentReviewDraft: json['documentReviewDraft'] is JsonMap
+        ? DocumentReviewDraft.fromJson(json.object('documentReviewDraft'))
+        : null,
+    receivingCountDraft: json['receivingCountDraft'] is JsonMap
+        ? ReceivingCountDraft.fromJson(json.object('receivingCountDraft'))
+        : null,
   );
 }
 

@@ -60,7 +60,10 @@
       "icon": "inspection",
       "position": {"x": 0.48, "y": 0.22},
       "capabilities": ["inspect_item", "record_damage", "check_expiry"],
-      "unlockRequirements": [{"type": "task_completed", "referenceId": "confirm-received-counts"}]
+      "unlockRequirements": [
+        {"type": "task_completed", "referenceId": "confirm-delivery-identity"},
+        {"type": "task_completed", "referenceId": "confirm-received-counts"}
+      ]
     },
     {
       "id": "barcode-station",

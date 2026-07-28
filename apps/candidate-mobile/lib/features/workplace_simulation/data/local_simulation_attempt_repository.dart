@@ -87,7 +87,10 @@ class LocalSimulationAttemptRepository implements SimulationAttemptRepository {
         }
       }
       if (existing.shiftStartedAt != null &&
-          attempt.shiftStartedAt != existing.shiftStartedAt) {
+          (attempt.shiftStartedAt == null ||
+              !attempt.shiftStartedAt!.isAtSameMomentAs(
+                existing.shiftStartedAt!,
+              ))) {
         throw StateError('The shift start time cannot be overwritten');
       }
       if (attempt.auditEvents.length < existing.auditEvents.length) {
@@ -102,6 +105,10 @@ class LocalSimulationAttemptRepository implements SimulationAttemptRepository {
     }
     await _writeAttempt(attempt);
   }
+
+  @override
+  Future<void> commitOperationalUpdate(SimulationAttempt attempt) =>
+      saveAttempt(attempt);
 
   @override
   Future<SimulationAttempt> appendAction(LearnerAction action) async {
@@ -254,6 +261,10 @@ class InMemorySimulationAttemptRepository
   @override
   Future<SimulationAttempt> appendAuditEvent(AttemptAuditEvent event) =>
       _delegate.appendAuditEvent(event);
+
+  @override
+  Future<void> commitOperationalUpdate(SimulationAttempt attempt) =>
+      _delegate.commitOperationalUpdate(attempt);
 
   @override
   Future<SimulationAttempt> startShift({

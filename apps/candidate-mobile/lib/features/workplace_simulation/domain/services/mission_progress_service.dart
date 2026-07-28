@@ -15,7 +15,8 @@ class MissionProgressService {
     final task = mission.task(action.taskId);
     final successful =
         outcome.outcomeType == OutcomeType.correct ||
-        outcome.outcomeType == OutcomeType.partiallyCorrect;
+        outcome.outcomeType == OutcomeType.partiallyCorrect ||
+        task.completeOnValidAction;
     if (!successful) return attempt;
 
     final completed = {...attempt.completedTaskIds};

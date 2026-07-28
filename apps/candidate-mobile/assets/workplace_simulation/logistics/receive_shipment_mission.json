@@ -61,6 +61,7 @@
   "stages": [
     "mission-briefing",
     "document-verification",
+    "receiving-count",
     "physical-inspection",
     "exception-handling",
     "receiving-decision",
@@ -84,23 +85,33 @@
       "title": "Verify Shipment Documents",
       "workstationId": "document-desk",
       "instructions": "Compare the purchase order with the delivery note.",
-      "taskIds": ["open-purchase-order", "open-delivery-note", "verify-documents"],
+      "taskIds": ["open-purchase-order", "open-delivery-note", "record-document-finding", "verify-documents"],
+      "completionMode": "all_mandatory_tasks"
+    },
+    {
+      "id": "receiving-count",
+      "missionId": "receive-incoming-shipment-01",
+      "sequence": 3,
+      "title": "Confirm Delivered Stock",
+      "workstationId": "receiving-dock",
+      "instructions": "Confirm the delivery identity and count every carton.",
+      "taskIds": ["confirm-delivery-identity", "confirm-received-counts"],
       "completionMode": "all_mandatory_tasks"
     },
     {
       "id": "physical-inspection",
       "missionId": "receive-incoming-shipment-01",
-      "sequence": 3,
+      "sequence": 4,
       "title": "Inspect Delivered Stock",
       "workstationId": "inspection-zone",
       "instructions": "Count and inspect every carton without revealing hidden issues.",
-      "taskIds": ["confirm-received-counts", "inspect-cartons", "scan-barcodes"],
+      "taskIds": ["inspect-cartons", "scan-barcodes"],
       "completionMode": "all_mandatory_tasks"
     },
     {
       "id": "exception-handling",
       "missionId": "receive-incoming-shipment-01",
-      "sequence": 4,
+      "sequence": 5,
       "title": "Handle Exceptions",
       "workstationId": "quarantine-zone",
       "instructions": "Assign safe dispositions and separate problematic goods.",
@@ -110,7 +121,7 @@
     {
       "id": "receiving-decision",
       "missionId": "receive-incoming-shipment-01",
-      "sequence": 5,
+      "sequence": 6,
       "title": "Make the Receiving Decision",
       "workstationId": "receiving-office",
       "instructions": "Complete the discrepancy report before deciding.",
@@ -120,7 +131,7 @@
     {
       "id": "shift-report",
       "missionId": "receive-incoming-shipment-01",
-      "sequence": 6,
+      "sequence": 7,
       "title": "Complete Shift Report",
       "workstationId": "receiving-office",
       "instructions": "Notify the receiving supervisor with the audit trail.",
@@ -174,53 +185,109 @@
       }]
     },
     {
-      "id": "verify-documents",
+      "id": "record-document-finding",
       "stageId": "document-verification",
-      "taskType": "document_comparison",
-      "title": "Record Document Discrepancies",
-      "instructions": "Identify the shortage and unauthorised SKU.",
-      "mandatory": true,
-      "repeatable": false,
-      "availableActions": ["complete_form"],
-      "targetResourceIds": ["purchase-order-po-2026-001", "delivery-note-dn-2026-001"],
+      "taskType": "classify_issue",
+      "title": "Classify Document Findings",
+      "instructions": "Record each discrepancy found without answer reveal.",
+      "mandatory": false,
+      "repeatable": true,
+      "availableActions": ["classify_issue", "document_finding_added", "document_finding_updated", "document_finding_removed"],
+      "targetResourceIds": ["document-line-SKU-1001", "document-line-SKU-1002", "document-line-SKU-1003", "document-line-SKU-1004", "document-line-SKU-1094", "document-comparison-summary"],
       "competencyMappings": [
         {"competencyId": "document-verification", "weight": 0.7},
         {"competencyId": "inventory-accuracy", "weight": 0.3}
       ],
       "maximumPoints": 20,
       "scoreCategoryId": "document-verification",
+      "evaluationRules": [
+        {"actionType": "classify_issue", "targetId": "document-line-SKU-1002", "requiredPayload": {"findingType": "quantityMismatch"}, "outcomeType": "correct", "pointsAwarded": 10, "feedbackCode": "quantity_mismatch_identified", "correctActionLabel": "Recorded the quantity mismatch", "missedIssueCode": "quantity_shortage"},
+        {"actionType": "classify_issue", "targetId": "document-line-SKU-1094", "requiredPayload": {"findingType": "unexpectedItem"}, "outcomeType": "correct", "pointsAwarded": 10, "feedbackCode": "unexpected_sku_identified", "correctActionLabel": "Recorded the unexpected SKU", "missedIssueCode": "incorrect_sku"}
+      ]
+    },
+    {
+      "id": "verify-documents",
+      "stageId": "document-verification",
+      "taskType": "document_comparison",
+      "title": "Record Document Discrepancies",
+      "instructions": "Identify the shortage and unauthorised SKU.",
+      "mandatory": true,
+      "repeatable": true,
+      "completeOnValidAction": true,
+      "availableActions": ["complete_form"],
+      "targetResourceIds": ["document-comparison-summary"],
+      "competencyMappings": [
+        {"competencyId": "document-verification", "weight": 0.7},
+        {"competencyId": "inventory-accuracy", "weight": 0.3}
+      ],
+      "maximumPoints": 0,
+      "scoreCategoryId": "document-verification",
       "evaluationRules": [{
         "actionType": "complete_form",
-        "requiredPayload": {"shortageSku": "SKU-1002", "shortageQuantity": 2, "unauthorizedSku": "SKU-1094"},
+        "requiredPayload": {"submitted": true},
         "outcomeType": "correct",
-        "pointsAwarded": 20,
-        "feedbackCode": "document_discrepancies_identified",
-        "correctActionLabel": "Detected the quantity shortage and unauthorised SKU",
-        "missedIssueCode": "document_discrepancy"
+        "pointsAwarded": 0,
+        "feedbackCode": "document_findings_submitted",
+        "correctActionLabel": "Submitted the document comparison"
+      }]
+    },
+    {
+      "id": "confirm-delivery-identity",
+      "stageId": "receiving-count",
+      "taskType": "confirm_action",
+      "title": "Confirm Delivery Identity",
+      "instructions": "Confirm whether the physical delivery matches the expected supplier and references.",
+      "mandatory": true,
+      "repeatable": true,
+      "completeOnValidAction": true,
+      "availableActions": ["confirm_action", "shipment_identity_confirmed"],
+      "targetResourceIds": ["delivery-note-dn-2026-001"],
+      "competencyMappings": [{"competencyId": "inventory-accuracy", "weight": 1.0}],
+      "maximumPoints": 0,
+      "scoreCategoryId": "inventory-accuracy",
+      "evaluationRules": [{
+        "actionType": "confirm_action",
+        "requiredPayload": {"conclusion": "matchesExpectedDelivery"},
+        "outcomeType": "correct",
+        "pointsAwarded": 0,
+        "feedbackCode": "delivery_identity_confirmed",
+        "correctActionLabel": "Confirmed the expected delivery"
       }]
     },
     {
       "id": "confirm-received-counts",
-      "stageId": "physical-inspection",
+      "stageId": "receiving-count",
       "taskType": "count_quantity",
       "title": "Confirm Received Counts",
       "instructions": "Record the two-unit shortage accurately.",
       "mandatory": true,
-      "repeatable": false,
-      "availableActions": ["count_quantity"],
-      "targetResourceIds": ["delivery-note-dn-2026-001"],
+      "repeatable": true,
+      "completeOnValidAction": true,
+      "availableActions": ["count_quantity", "carton_count_recorded", "carton_count_updated", "carton_count_removed", "count_method_selected"],
+      "targetResourceIds": ["carton-001", "carton-002", "carton-003", "carton-004", "carton-005", "carton-006"],
       "competencyMappings": [{"competencyId": "inventory-accuracy", "weight": 1.0}],
       "maximumPoints": 20,
       "scoreCategoryId": "inventory-accuracy",
-      "evaluationRules": [{
-        "actionType": "count_quantity",
-        "requiredPayload": {"sku": "SKU-1002", "receivedQuantity": 18, "shortageQuantity": 2},
-        "outcomeType": "correct",
-        "pointsAwarded": 20,
-        "feedbackCode": "shortage_recorded",
-        "correctActionLabel": "Recorded the two-unit shortage",
-        "missedIssueCode": "quantity_shortage"
-      }]
+      "evaluationRules": [
+        {
+          "actionType": "count_quantity",
+          "requiredPayload": {"countMethod": "individual"},
+          "payloadMatchesTargetContent": {"physicalQuantity": "quantity"},
+          "outcomeType": "correct",
+          "pointsAwarded": 4,
+          "feedbackCode": "carton_count_verified",
+          "correctActionLabel": "Individually counted the carton"
+        },
+        {
+          "actionType": "count_quantity",
+          "requiredPayload": {"countMethod": "sealedCarton"},
+          "payloadMatchesTargetContent": {"physicalQuantity": "quantity"},
+          "outcomeType": "partially_correct",
+          "pointsAwarded": 2,
+          "feedbackCode": "carton_label_count_recorded",
+          "correctActionLabel": "Recorded the sealed-carton label count"
+        }
+      ]
     },
     {
       "id": "inspect-cartons",
@@ -418,8 +485,14 @@
         ]
       }
     },
+    {"id": "document-line-SKU-1001", "missionId": "receive-incoming-shipment-01", "resourceType": "inventory_item", "title": "SKU-1001 document line", "content": {"sku": "SKU-1001", "orderedQuantity": 30, "deliveredQuantity": 30}},
+    {"id": "document-line-SKU-1002", "missionId": "receive-incoming-shipment-01", "resourceType": "inventory_item", "title": "SKU-1002 document line", "content": {"sku": "SKU-1002", "orderedQuantity": 20, "deliveredQuantity": 18}},
+    {"id": "document-line-SKU-1003", "missionId": "receive-incoming-shipment-01", "resourceType": "inventory_item", "title": "SKU-1003 document line", "content": {"sku": "SKU-1003", "orderedQuantity": 40, "deliveredQuantity": 40}},
+    {"id": "document-line-SKU-1004", "missionId": "receive-incoming-shipment-01", "resourceType": "inventory_item", "title": "SKU-1004 document line", "content": {"sku": "SKU-1004", "orderedQuantity": 10, "deliveredQuantity": 10}},
+    {"id": "document-line-SKU-1094", "missionId": "receive-incoming-shipment-01", "resourceType": "inventory_item", "title": "SKU-1094 document line", "content": {"sku": "SKU-1094", "orderedQuantity": 0, "deliveredQuantity": 5}},
+    {"id": "document-comparison-summary", "missionId": "receive-incoming-shipment-01", "resourceType": "form", "title": "Document comparison summary", "content": {"allowsNoDiscrepancy": true}},
     {"id": "carton-001", "missionId": "receive-incoming-shipment-01", "resourceType": "carton", "title": "Carton 001", "content": {"sku": "SKU-1001", "productName": "LED Bulb 12W", "quantity": 10, "batchNumber": "BLB-260401", "barcode": "890100100001", "barcodeStatus": "readable", "packagingStatus": "intact", "expiryDate": null}},
-    {"id": "carton-002", "missionId": "receive-incoming-shipment-01", "resourceType": "carton", "title": "Carton 002", "content": {"sku": "SKU-1002", "productName": "Extension Board", "quantity": 10, "batchNumber": "EXT-260402", "barcode": "890100200002", "barcodeStatus": "readable", "packagingStatus": "intact", "expiryDate": null}},
+    {"id": "carton-002", "missionId": "receive-incoming-shipment-01", "resourceType": "carton", "title": "Carton 002", "content": {"sku": "SKU-1002", "productName": "Extension Board", "quantity": 20, "batchNumber": "EXT-260402", "barcode": "890100200002", "barcodeStatus": "readable", "packagingStatus": "intact", "expiryDate": null}},
     {"id": "carton-003", "missionId": "receive-incoming-shipment-01", "resourceType": "carton", "title": "Carton 003", "content": {"sku": "SKU-1003", "productName": "AA Battery Pack", "quantity": 10, "batchNumber": "BAT-260403", "barcode": "890100300003", "barcodeStatus": "readable", "packagingStatus": "intact", "expiryDate": "2028-03-18"}},
     {"id": "carton-004", "missionId": "receive-incoming-shipment-01", "resourceType": "carton", "title": "Carton 004", "content": {"sku": "SKU-1004", "productName": "Emergency Light", "quantity": 10, "batchNumber": "EML-260404", "barcode": "890100400004", "barcodeStatus": "readable", "packagingStatus": "intact", "expiryDate": null}},
     {"id": "carton-005", "missionId": "receive-incoming-shipment-01", "resourceType": "carton", "title": "Carton 005", "content": {"sku": "SKU-1001", "productName": "LED Bulb 12W", "quantity": 10, "batchNumber": "BLB-260405", "barcode": "890100100005", "barcodeStatus": "readable", "packagingStatus": "intact", "expiryDate": null}},
@@ -431,9 +504,9 @@
   "scenario": {
     "defaultSeed": 48127,
     "variationRules": [
-      {"type": "assign_issue", "issue": "packaging_damage", "severity": "major", "eligibleTargets": ["carton-001", "carton-002", "carton-003", "carton-004", "carton-005", "carton-006"], "count": 1},
+      {"type": "assign_issue", "issue": "quantity_shortage", "severity": "major", "eligibleTargets": ["carton-002"], "count": 1},
+      {"type": "assign_issue", "issue": "packaging_damage", "severity": "major", "eligibleTargets": ["carton-001", "carton-003", "carton-004", "carton-005", "carton-006"], "count": 1},
       {"type": "assign_issue", "issue": "unreadable_barcode", "severity": "major", "eligibleTargets": ["carton-001", "carton-002", "carton-003", "carton-004", "carton-005", "carton-006"], "count": 1},
-      {"type": "assign_issue", "issue": "quantity_shortage", "severity": "major", "eligibleTargets": ["carton-001", "carton-002", "carton-003", "carton-004", "carton-005", "carton-006"], "count": 1},
       {"type": "assign_issue", "issue": "incorrect_sku", "severity": "critical", "eligibleTargets": ["carton-001", "carton-002", "carton-003", "carton-004", "carton-005", "carton-006"], "count": 1},
       {"type": "assign_issue", "issue": "near_expiry", "severity": "major", "eligibleTargets": ["carton-001", "carton-002", "carton-003", "carton-004", "carton-005", "carton-006"], "count": 1}
     ]

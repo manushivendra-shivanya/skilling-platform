@@ -1,9 +1,11 @@
 import 'package:candidate_mobile/app/dependencies.dart';
 import 'package:candidate_mobile/core/repositories/candidate_session_repository.dart';
+import 'package:candidate_mobile/features/workplace_simulation/application/workplace_interaction_contracts.dart';
 import 'package:candidate_mobile/features/workplace_simulation/application/workplace_simulation_controller.dart';
 import 'package:candidate_mobile/features/workplace_simulation/data/asset_simulation_content_repository.dart';
 import 'package:candidate_mobile/features/workplace_simulation/data/local_simulation_attempt_repository.dart';
 import 'package:candidate_mobile/features/workplace_simulation/domain/simulation_enums.dart';
+import 'package:candidate_mobile/features/workplace_simulation/domain/workplace_task_drafts.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -264,6 +266,172 @@ void main() {
         AttemptAuditEventType.shiftStartRejected,
       );
       expect(attempt.actions, isEmpty);
+    },
+  );
+
+  test(
+    'typed operational commands unlock stations independent of correctness',
+    () async {
+      final attempts = InMemorySimulationAttemptRepository();
+      final container = ProviderContainer(
+        overrides: [
+          candidateSessionRepositoryProvider.overrideWithValue(
+            InMemoryCandidateSessionRepository(
+              session: const CandidateSession(
+                candidateId: 'operations-candidate',
+                isAuthenticated: true,
+              ),
+            ),
+          ),
+          simulationContentRepositoryProvider.overrideWithValue(
+            AssetSimulationContentRepository(),
+          ),
+          simulationAttemptRepositoryProvider.overrideWithValue(attempts),
+        ],
+      );
+      addTearDown(container.dispose);
+      await container.read(workplaceSimulationControllerProvider.future);
+      final controller = container.read(
+        workplaceSimulationControllerProvider.notifier,
+      );
+      await controller.startMission(scenarioSeed: 48127);
+      await controller.setBriefingAcknowledged(true);
+      expect(await controller.beginShift(), BeginShiftResult.success);
+
+      expect(
+        controller.workstationStatus('document-desk'),
+        WorkstationStatus.available,
+      );
+      expect(
+        controller.workstationStatus('receiving-dock'),
+        WorkstationStatus.locked,
+      );
+      expect(controller.recommendedWorkstationId, 'document-desk');
+      expect(
+        await controller.openWorkstation('receiving-dock'),
+        OpenWorkstationResult.workstationLocked,
+      );
+
+      expect(
+        await controller.addDocumentFinding(
+          const AddDocumentFindingCommand(
+            sourceDocument: DocumentSource.both,
+            itemReference: 'SKU-1001',
+            findingType: DocumentFindingType.other,
+          ),
+        ),
+        AddDocumentFindingResult.success,
+      );
+      final finding = controller.documentReviewDraft!.findings.single;
+      expect(
+        await controller.updateDocumentFinding(
+          UpdateDocumentFindingCommand(
+            findingId: finding.id,
+            sourceDocument: DocumentSource.both,
+            itemReference: finding.itemReference,
+            findingType: DocumentFindingType.documentMismatch,
+          ),
+        ),
+        UpdateDocumentFindingResult.success,
+      );
+      expect(controller.documentReviewDraft!.findings.single.revisionNumber, 2);
+      expect(
+        await controller.submitDocumentReview(
+          const SubmitDocumentReviewCommand(),
+        ),
+        SubmitDocumentReviewResult.success,
+      );
+      expect(
+        controller.workstationStatus('document-desk'),
+        WorkstationStatus.completed,
+      );
+      expect(
+        controller.workstationStatus('receiving-dock'),
+        WorkstationStatus.available,
+      );
+      expect(controller.recommendedWorkstationId, 'receiving-dock');
+      expect(
+        await controller.submitDocumentReview(
+          const SubmitDocumentReviewCommand(),
+        ),
+        SubmitDocumentReviewResult.alreadySubmitted,
+      );
+
+      expect(
+        await controller.confirmShipmentIdentity(
+          const ConfirmShipmentIdentityCommand(confirmed: true),
+        ),
+        ConfirmShipmentIdentityResult.success,
+      );
+      final state = container
+          .read(workplaceSimulationControllerProvider)
+          .requireValue;
+      for (final cartonId
+          in state.mission.task('confirm-received-counts').targetResourceIds) {
+        expect(
+          await controller.recordCartonCount(
+            RecordCartonCountCommand(
+              cartonId: cartonId,
+              enteredQuantity: 0,
+              countMethod: CountMethod.individual,
+            ),
+          ),
+          RecordCartonCountResult.success,
+        );
+      }
+      final firstCount = controller.receivingCountDraft!.countEntries.first;
+      expect(
+        await controller.updateCartonCount(
+          UpdateCartonCountCommand(
+            entryId: firstCount.id,
+            enteredQuantity: 1,
+            countMethod: CountMethod.individual,
+          ),
+        ),
+        UpdateCartonCountResult.success,
+      );
+      expect(
+        controller.receivingCountDraft!.countEntries.first.revisionNumber,
+        2,
+      );
+      expect(
+        await controller.submitReceivingCount(
+          const SubmitReceivingCountCommand(),
+        ),
+        SubmitReceivingCountResult.success,
+      );
+      expect(
+        controller.workstationStatus('receiving-dock'),
+        WorkstationStatus.completed,
+      );
+      expect(
+        controller.workstationStatus('inspection-zone'),
+        WorkstationStatus.available,
+      );
+      expect(controller.recommendedWorkstationId, 'inspection-zone');
+
+      final completedAttempt = container
+          .read(workplaceSimulationControllerProvider)
+          .requireValue
+          .attempt!;
+      expect(
+        completedAttempt.actions.map((action) => action.sequenceNumber),
+        orderedEquals(
+          List<int>.generate(
+            completedAttempt.actions.length,
+            (index) => index + 1,
+          ),
+        ),
+      );
+      expect(
+        completedAttempt.auditEvents.map((event) => event.sequenceNumber),
+        orderedEquals(
+          List<int>.generate(
+            completedAttempt.auditEvents.length,
+            (index) => index + 1,
+          ),
+        ),
+      );
     },
   );
 }
