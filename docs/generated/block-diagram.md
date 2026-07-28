@@ -16,6 +16,7 @@ flowchart TD
     ROUTER --> ONBOARD[Candidate Onboarding]
     ROUTER --> SHELL[Persistent Five-tab Shell]
     ROUTER --> DIAG[Career Diagnostic]
+    ROUTER --> VOICE[Recorded-turn Voice Interview]
 
     ENTRY --> AUTHCTRL[Authentication Controller]
     AUTHCTRL --> LOCALOTP[Development OTP Adapter]
@@ -45,11 +46,22 @@ flowchart TD
     SIMEVENTS --> SCORE[Deterministic Scoring]
     SCORE --> EVIDENCE[Competency Evidence]
 
+    VOICE --> CONSENT[Purpose-separated Voice Consent]
+    CONSENT --> MIC[Microphone Permission and Readiness]
+    MIC --> TURNS[Local AAC Recorded Turns]
+    TURNS --> QUEUE[Resumable Upload Contract and Pending Queue]
+    TURNS --> REVIEW[Candidate-reviewed Transcripts]
+    REVIEW --> DEVFEEDBACK[Transcript-only Development Evaluation]
+    DEVFEEDBACK --> HUMAN[Human Review Required]
+    DEVFEEDBACK --> DELETE[Candidate Audio Deletion]
+
     SUPAAUTH --> JOBSKILLS[(JobSkills Supabase)]
     SUPAPROFILE --> JOBSKILLS
     OFFLINE --> JOBSKILLS
     JOBSKILLS --> RLS[Candidate Ownership RLS]
     JOBSKILLS --> CATALOG[Read-only Published Taxonomy and Content]
+    JOBSKILLS --> VOICEDATA[Voice Schema, Prompt and Rubric Registry]
+    JOBSKILLS --> PRIVMEDIA[Private Voice Media Bucket]
 
     APP --> THEME[Material 3 Design System]
     THEME --> ACCESS[Accessible Shared Components]
@@ -65,6 +77,8 @@ flowchart TD
     AI[Python AI Services - PLANNED]
     WEB[Next.js Web Apps - PLANNED]
 
+    QUEUE -. Future signed resumable credentials .-> API
+    HUMAN -. Future reviewer workflow .-> API
     APP -. Consequential and privileged operations .-> API
     API -. Future .-> JOBSKILLS
     API -. Future .-> REDIS

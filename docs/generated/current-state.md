@@ -16,7 +16,9 @@ Last updated: 2026-07-28
 - Cumulative Phase 1.1-1.12 arm64 QC APK installed as an in-place update and
   launched through Wireless ADB on Samsung S24 Ultra
 - Phase 2 core candidate intelligence implementation and JobSkills database
-  migrations; release validation is in progress
+  migrations; GitHub build and ARM64 APK distribution passed
+- Phase 3.1 recorded-turn voice foundation and JobSkills voice schema; GitHub
+  build, ARM64 APK publication, clean installation and launch passed
 
 ### Current UI
 - Phase 1.1 application foundation replaces the default Flutter counter demo
@@ -51,8 +53,10 @@ Last updated: 2026-07-28
   consent, diagnostic, learning, simulation, score, and evidence sync
 - Secure local development and offline fallback remains available when
   Supabase configuration is absent
-- Resume parsing remains a provider-neutral adapter contract; resume upload and
-  voice recording are not connected yet
+- Resume parsing remains a provider-neutral adapter contract
+- Voice interview practice now provides permission education, real microphone
+  capture, reviewed transcripts, explainable development feedback, human-review
+  request, local deletion, and explicit offline/pending-upload states
 
 ### Android configuration
 - compileSdk 36
@@ -67,10 +71,10 @@ Last updated: 2026-07-28
 feature/flutter-foundation
 
 ### Latest verified milestone
-Phase 1.1-1.12 implementation is complete. Formatting, analysis, and all 46
-Flutter tests pass locally. GitHub Actions run `30295690458` passed for commit
-`334152c`, and its ARM64 QC APK was verified, published, installed, and launched
-on the connected Samsung S24 Ultra.
+Phase 3.1 recorded-turn voice foundation and JobSkills migrations are complete.
+GitHub Actions run `30327701922` passed for commit `f3c9fab`, and its verified
+ARM64 QC APK was published, clean-installed, launched, and confirmed active on
+the Samsung S24 Ultra. Visual candidate QC remains with the tester.
 
 ### Phase 1.1 validation record
 - `flutter pub get` — passed
@@ -422,11 +426,85 @@ on the connected Samsung S24 Ultra.
   and the previous Wireless Debugging endpoint `192.168.1.5:45367` refused the
   connection; installation and visual device QC remain pending a current ADB
   connection
+- The complete Phase 2 implementation is also present in the later cumulative
+  Phase 3.1 APK, which was clean-installed and launched successfully
+
+### Phase 3.1 implementation
+- Added a feature-first recorded-turn voice interview route from Home with
+  loading, recoverable error, offline, pending-upload and completed states
+- Added purpose-separated consent for recording, transcription, evaluation and
+  optional employer sharing; sharing defaults to disabled
+- Added microphone permission education, readiness check and real AAC-LC
+  recording through platform microphone APIs
+- Added three versioned logistics interview questions, per-turn controls,
+  interruption recovery and local audio deletion
+- Added a resumable media-upload repository contract and local queue;
+  production signed credentials and transfer remain behind the planned BFF
+- Added candidate-reviewed transcript entry because no production transcription
+  provider is configured; the app never fabricates transcript text
+- Added deterministic transcript-only development feedback across relevance,
+  operational correctness, structure, clarity and safe escalation
+- Evaluation records prompt `P-VOICE-EVALUATOR-001@1.0.0` and rubric
+  `voice-logistics-v1`, reports low confidence, and always requires human review
+- Accent, vocal emotion, personality, protected traits and technical failures
+  are excluded; no evaluation can reject or shortlist a candidate
+- Added non-PII analytics for consent, recorded turns, feedback and review
+  requests
+- ADR-0014 documents the recorded-turn, media and consequential AI boundary
+
+### Phase 3.1 JobSkills database
+- Applied two additive migrations to the separate JobSkills project; no ZHealth
+  project or files were accessed
+- Added 13 voice tables for versioned prompts/rubrics, consent, sessions, turns,
+  media metadata, transcripts, AI runs, evaluations, human review, feedback,
+  appeals and audit records
+- Added private `voice-media` storage with a 15 MB object limit and approved
+  audio MIME types
+- Deliberately exposed no authenticated `storage.objects` policy: the planned
+  BFF must authorise short-lived media credentials
+- Candidate tables use ownership RLS and least-privilege grants; AI-run and
+  audit tables remain closed to mobile clients
+- Supabase Security Advisor reports zero findings; Performance Advisor reports
+  only expected unused-index notices while the new tables contain no traffic
+
+### Phase 3.1 validation record
+- `flutter pub get` — passed
+- `dart format .` — passed; 120 files checked
+- `flutter analyze --no-pub` — passed with no issues
+- `flutter test --no-pub` — passed; 59 tests
+- Voice evaluation, secure interruption recovery/deletion and the complete
+  consent-to-human-review widget flow passed
+- Supabase migrations — applied successfully to JobSkills
+- Supabase Security Advisor — passed with zero findings
+- `flutter build apk --debug --no-pub` — attempted locally and reached the
+  unchanged Gradle 9.1 host failure, `The settings are not yet available for
+  build`, before Android source compilation; GitHub Actions remains
+  authoritative
+- GitHub Actions **Build Candidate Mobile APK** run `30327701922` — passed for
+  commit `f3c9fab`: dependency resolution, static analysis, debug APK build and
+  artifact upload completed successfully
+
+### Phase 3.1 APK verification
+- The 79,597,027-byte Actions artifact matched GitHub's SHA-256 digest and
+  passed ZIP integrity validation
+- The 150 MB universal debug APK was reduced to an 87,014,555-byte Samsung
+  package by removing only armv7 and x86_64 native libraries; `arm64-v8a` is
+  the sole packaged ABI
+- The ARM64 APK passes zip alignment and Android APK Signature Scheme v2/v3
+  verification
+- ARM64 QC APK SHA-256:
+  `9cf7ddedbe19109496e8382036641920f6175ec88d59e7a787589179bdb9735b`
+- The APK is published in GitHub prerelease `phase-3.1-voice-qc`
+- Wireless ADB connected to Samsung `SM-S928B` at `192.168.1.5:34801`;
+  clean incremental installation completed successfully in 9.1 seconds
+- Android launched `com.example.candidate_mobile/.MainActivity`, and the
+  application process remained active; visual feature QC remains with the
+  tester
 
 ### Next implementation
-Finish Phase 2 release validation and candidate device QC. After Phase 2 QC,
-begin Phase 3 as a separate milestone; do not start voice, employer, admin, AI
-provider, or consequential job-operation work automatically.
+After Phase 3.1 candidate QC, implement Phase 3.2 job application operations
+through the planned NestJS BFF. Employer and administrator portals remain
+Phase 3.3.
 
 ## Known constraints
 - Android/Termux/Ubuntu PRoot environment cannot reliably run Android SDK host binaries
@@ -446,13 +524,16 @@ provider, or consequential job-operation work automatically.
 - Candidate onboarding drafts remain available locally; profiles and consent
   can synchronize to JobSkills when the Supabase build configuration is
   supplied
-- Resume upload and voice introduction are non-interactive placeholders; no
-  storage or microphone permission is requested
+- Resume upload and onboarding voice introduction remain non-interactive
+  placeholders; voice interview practice is the only route that requests
+  microphone permission
 - Home, Coach, and Jobs remain local mock experiences. Diagnostic, learning,
   simulation, score, and evidence records use local-first persistence and can
   synchronize to candidate-owned JobSkills records when configured.
 - Coach voice/attachment controls and notifications remain transparent
-  placeholders; no AI provider, microphone, upload, push token, or notification
-  service is used
+  placeholders; the voice interview uses local capture but no AI provider,
+  remote upload, push token, or notification service is connected
 - The direct Supabase adapter is intentionally limited to candidate-owned
-  Phase 2 records and does not replace the planned NestJS BFF
+  Phase 2 records and narrowly scoped Phase 3 practice metadata; media
+  authorisation, AI, employer, administrator and job-application operations
+  remain behind the planned NestJS BFF
