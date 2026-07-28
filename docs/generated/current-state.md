@@ -649,6 +649,19 @@ boundary without implementing inspection behaviour.
   attempted locally, but the managed workspace denied Gradle’s lock-file write
   under the user Gradle cache before project compilation. GitHub Actions
   remains the authoritative Android build path.
+- GitHub Actions **Build Candidate Mobile APK** run `30395600323` — passed for
+  cumulative source commit `b6799a8`: dependency resolution, analysis,
+  universal debug APK build and artifact upload completed successfully
+- The verified universal APK was reduced to an 87,269,122-byte Samsung package
+  by removing only armv7 and x86_64 native libraries; `arm64-v8a` is the sole
+  packaged ABI
+- The arm64 APK passes ZIP alignment and Android APK Signature Scheme v2/v3
+  verification and is published in prerelease `wms-screen-03-06-qc`
+- ARM64 QC APK SHA-256:
+  `5467f2e3f9e64eeb4591b6e286561f68d8fedf756640a09b71884b7f26f8ccf8`
+- Wireless ADB updated `com.example.candidate_mobile` in place on Samsung
+  `SM-S928B` in 5.8 seconds, launched it and confirmed process `26108` remained
+  active; visual workflow QC remains with the tester
 
 ### Next implementation
 Implement the approved Screen 06 Inspection Zone interaction contract as the
