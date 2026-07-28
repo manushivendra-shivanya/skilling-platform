@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Client owns the loop · Backend owns the truth — ADR-003 demo</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;-webkit-tap-highlight-color:transparent;}
+  body{background:#0d1220;color:#e8edf5;min-height:100vh;padding:14px;}
+  h1{font-size:16px;font-weight:800;} .sub{font-size:12px;color:#9db3d4;margin:3px 0 12px;}
+  .wrap{display:grid;grid-template-columns:1fr 1fr;gap:12px;max-width:920px;margin:0 auto;}
+  @media(max-width:720px){.wrap{grid-template-columns:1fr;}}
+  .panel{background:#141d2c;border:1px solid #263450;border-radius:14px;padding:12px;}
+  .panel h2{font-size:12px;text-transform:uppercase;letter-spacing:.07em;color:#8aa0c2;margin-bottom:2px;}
+  .panel .tag{font-size:11px;color:#7fe0b0;margin-bottom:10px;}
+  .panel.client .tag{color:#5ea0ff;}
+
+  .controls{display:flex;flex-wrap:wrap;gap:12px;align-items:center;background:#101828;border:1px solid #263450;border-radius:10px;padding:9px 11px;margin-bottom:10px;font-size:12px;}
+  .controls label{display:flex;align-items:center;gap:7px;color:#bcd0ee;}
+  input[type=range]{accent-color:#2b6cff;} .lat{font-variant-numeric:tabular-nums;color:#5ea0ff;font-weight:700;}
+  .sw{position:relative;width:40px;height:22px;background:#243348;border-radius:99px;border:1px solid #33507a;cursor:pointer;transition:.15s;}
+  .sw.on{background:#7a3344;border-color:#b3556a;} .sw i{position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#cfe0ff;transition:.15s;}
+  .sw.on i{left:20px;}
+  .warn{font-size:11px;color:#ffb3b3;}
+
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+  .carton{position:relative;background:#1b2942;border:1px solid #2b3a54;border-radius:10px;padding:10px 8px;text-align:center;cursor:pointer;transition:.12s;}
+  .carton:hover{border-color:#3a5580;} .carton.sel{border-color:#5ea0ff;box-shadow:0 0 0 2px #2b6cff55;}
+  .carton .ic{font-size:24px;} .carton .id{font-size:11px;color:#bcd0ee;margin-top:2px;}
+  .carton .st{font-size:10px;margin-top:5px;min-height:14px;}
+  .carton.busy{opacity:.55;pointer-events:none;}
+  .carton .spin{position:absolute;top:6px;right:8px;width:12px;height:12px;border:2px solid #5ea0ff;border-top-color:transparent;border-radius:50%;animation:sp .7s linear infinite;display:none;}
+  .carton.busy .spin{display:block;} @keyframes sp{to{transform:rotate(360deg);}}
+  .pend{color:#ffd27f;} .ok{color:#37e0a0;} .bad{color:#ff6b6b;}
+
+  .actbar{margin-top:10px;display:flex;gap:6px;flex-wrap:wrap;min-height:34px;}
+  .actbar button{flex:1;min-width:64px;background:#243348;border:1px solid #33507a;color:#cfe0ff;border-radius:8px;padding:8px 6px;font-size:12px;font-weight:600;cursor:pointer;}
+  .actbar button:active{background:#2b6cff;}
+  .feel{margin-top:10px;font-size:11px;color:#9db3d4;display:flex;justify-content:space-between;}
+  .feel b{color:#e8edf5;font-variant-numeric:tabular-nums;}
+
+  .ledger{max-height:190px;overflow:auto;font-size:11.5px;}
+  .row{display:flex;gap:8px;padding:5px 0;border-bottom:1px solid #1c2740;}
+  .row .s{color:#6f83a6;width:26px;} .row .m{flex:1;} .row .b{font-weight:700;}
+  .meters{margin-top:10px;}
+  .meter{margin:7px 0;} .meter .lab{font-size:11px;color:#bcd0ee;display:flex;justify-content:space-between;}
+  .meter .bar{height:8px;background:#101828;border-radius:5px;overflow:hidden;margin-top:2px;} .meter .fill{height:100%;background:linear-gradient(90deg,#2b6cff,#37e0a0);width:0;transition:width .3s;}
+  .score{display:flex;gap:10px;margin-top:10px;}
+  .score div{flex:1;background:#101828;border:1px solid #263450;border-radius:9px;padding:8px;text-align:center;}
+  .score .n{font-size:19px;font-weight:800;} .score .k{font-size:10px;color:#8aa0c2;text-transform:uppercase;}
+  .note{font-size:11px;color:#8aa0c2;margin-top:10px;line-height:1.5;}
+</style>
+</head>
+<body>
+  <div style="max-width:920px;margin:0 auto 10px;">
+    <h1>Client owns the loop · Backend owns the truth</h1>
+    <div class="sub">ADR-003 demo — Receiving inspection. Cranking latency should never slow the tap. Only the backend panel is allowed to lag.</div>
+    <div class="controls">
+      <label>Network latency <input id="lat" type="range" min="0" max="2000" step="100" value="600"> <span class="lat" id="latV">600ms</span></label>
+      <label>Server in the loop <span class="sw" id="sw" onclick="toggleLoop()"><i></i></span> <span class="warn" id="warn"></span></label>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div class="panel client">
+      <h2>Presentation client (viewer / Flutter)</h2>
+      <div class="tag">● runs at 60fps · optimistic · never waits on network</div>
+      <div class="grid" id="grid"></div>
+      <div class="actbar" id="actbar"></div>
+      <div class="feel"><span>tap→response (client): <b id="feelC">—</b></span><span>tap→confirmed (backend): <b id="feelB">—</b></span></div>
+    </div>
+
+    <div class="panel">
+      <h2>Flora Backend (authoritative)</h2>
+      <div class="tag">● source of truth · append-only evidence · async</div>
+      <div class="ledger" id="ledger"></div>
+      <div class="meters" id="meters"></div>
+      <div class="score">
+        <div><div class="n ok" id="sComplete">0</div><div class="k">Actions (completion)</div></div>
+        <div><div class="n" id="sCorrect">100%</div><div class="k">Correctness (authoritative)</div></div>
+      </div>
+      <div class="note" id="note">Toggle "Server in the loop" and raise latency to feel the anti-pattern: the client freezes on every tap. Toggle it off — taps stay instant, only this panel lags.</div>
+    </div>
+  </div>
+
+<script>
+const CARTONS = [
+  { id:"C-01", bad:false }, { id:"C-02", bad:true,  reason:"crushed" },
+  { id:"C-03", bad:true,  reason:"wrong SKU" }, { id:"C-04", bad:false },
+  { id:"C-05", bad:true,  reason:"wet" }, { id:"C-06", bad:false },
+];
+const ACTIONS = [
+  { k:"inspect", label:"Inspect", comp:"goods_inspection" },
+  { k:"scan",    label:"Scan",    comp:"documentation" },
+  { k:"accept",  label:"Accept",  comp:"decision_making", decision:true },
+  { k:"report",  label:"Report",  comp:"decision_making", decision:true },
+];
+const COMPS = { goods_inspection:"Goods Inspection", documentation:"Documentation", decision_making:"Decision Making" };
+
+let latency=600, inLoop=false, sel=null, seq=0;
+const comp={goods_inspection:0,documentation:0,decision_making:0};
+let correct=0, wrong=0, actionsCount=0;
+
+function el(id){return document.getElementById(id);}
+function init(){
+  const g=el('grid');
+  CARTONS.forEach(c=>{ const d=document.createElement('div'); d.className='carton'; d.id='cx_'+c.id;
+    d.innerHTML=`<div class="ic">📦</div><div class="id">${c.id}</div><div class="st"></div><div class="spin"></div>`;
+    d.onclick=()=>select(c.id); g.appendChild(d); });
+  const m=el('meters'); m.innerHTML=Object.keys(COMPS).map(k=>
+    `<div class="meter"><div class="lab"><span>${COMPS[k]}</span><span id="mv_${k}">0</span></div><div class="bar"><div class="fill" id="mf_${k}"></div></div></div>`).join('');
+  el('lat').oninput=e=>{ latency=+e.target.value; el('latV').textContent=latency+'ms'; };
+  renderActs();
+}
+function select(id){ sel=id; document.querySelectorAll('.carton').forEach(x=>x.classList.remove('sel')); el('cx_'+id).classList.add('sel'); renderActs(); }
+function renderActs(){
+  const bar=el('actbar');
+  if(!sel){ bar.innerHTML='<span style="font-size:12px;color:#6f83a6;padding:8px">Tap a carton, then choose an action.</span>'; return; }
+  bar.innerHTML=''; ACTIONS.forEach(a=>{ const b=document.createElement('button'); b.textContent=a.label; b.onclick=()=>doAction(a); bar.appendChild(b); });
+}
+
+function doAction(a){
+  if(!sel) return;
+  const cartonId=sel, carton=CARTONS.find(c=>c.id===cartonId);
+  const t0=performance.now();
+  const card=el('cx_'+cartonId);
+
+  // ----- CLIENT: optimistic, instant -----
+  const localResult = a.decision ? (a.k==='report'? 'flagged':'accepted') : a.label.toLowerCase()+'ed';
+  card.querySelector('.st').innerHTML='<span class="pend">⏳ '+localResult+'</span>';
+
+  if(inLoop){ card.classList.add('busy'); }   // ANTI-PATTERN: block until server acks
+  else { el('feelC').textContent = Math.round(performance.now()-t0)+'ms'; }  // instant
+
+  const rec={ seq:++seq, action:a.k, comp:a.comp, decision:!!a.decision, cartonId, bad:carton.bad, t0 };
+
+  // ----- BACKEND: authoritative, async -----
+  setTimeout(()=>backend(rec, card), latency);
+}
+
+function backend(rec, card){
+  actionsCount++;
+  let status='confirmed', cls='ok', correctionMsg=null;
+  // evidence
+  comp[rec.comp]=Math.min(100, comp[rec.comp]+22);
+  // authoritative correctness on decisions
+  if(rec.decision){
+    const shouldReport = rec.bad;
+    const choseReport = rec.action==='report';
+    if(shouldReport===choseReport){ correct++; }
+    else { wrong++; status='corrected'; cls='bad';
+      correctionMsg = 'CORRECTION · expected '+(shouldReport?'Report':'Accept')+' for '+rec.cartonId; }
+  }
+  // append-only ledger (corrections are NEW entries, never edits)
+  addLedger(rec.seq, rec.cartonId, rec.action, status, cls);
+  if(correctionMsg) addLedger('↳', rec.cartonId, '', correctionMsg, 'bad', true);
+
+  // update authoritative UI
+  updateMeters();
+  el('sComplete').textContent=actionsCount;
+  const total=correct+wrong; el('sCorrect').textContent=(total? Math.round(correct/total*100):100)+'%';
+  el('sCorrect').className='n '+(wrong>correct?'bad':'ok');
+
+  // reflect on the card (non-blocking reconciliation)
+  const st=card.querySelector('.st');
+  st.innerHTML = status==='corrected' ? '<span class="bad">✗ corrected</span>' : '<span class="ok">✓ '+rec.action+'</span>';
+  if(inLoop){ card.classList.remove('busy'); el('feelC').textContent=Math.round(performance.now()-rec.t0)+'ms'; }
+  el('feelB').textContent=Math.round(performance.now()-rec.t0)+'ms';
+
+  console.log('LearnerAction', JSON.stringify({seq:rec.seq,action:rec.action,carton:rec.cartonId,status}));
+}
+
+function addLedger(s, carton, action, msg, cls, isCorr){
+  const l=el('ledger'); const d=document.createElement('div'); d.className='row';
+  const m = isCorr ? `<span class="${cls}">${msg}</span>` : `<span class="b ${cls}">${action||''}</span> · ${carton} <span class="${cls}">${msg}</span>`;
+  d.innerHTML=`<span class="s">${s}</span><span class="m">${m}</span>`;
+  l.prepend(d);
+}
+function updateMeters(){ for(const k in comp){ el('mv_'+k).textContent=comp[k]; el('mf_'+k).style.width=comp[k]+'%'; } }
+
+function toggleLoop(){ inLoop=!inLoop; el('sw').classList.toggle('on',inLoop);
+  el('warn').textContent = inLoop ? '⚠ anti-pattern: taps now block on the server' : ''; }
+
+init();
+</script>
+</body>
+</html>

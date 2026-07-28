@@ -1,0 +1,149 @@
+{
+  "meta": {
+    "pack": "Logistics",
+    "domain": "Distribution Warehouse",
+    "department": "Receiving",
+    "stage": "receiving.dock-verification",
+    "screen": "06",
+    "title": "Receiving Dock — Shipment Verification",
+    "type": "stage",
+    "version": "0.1.0",
+    "rendererAgnostic": true,
+    "note": "First true workplace-execution stage. Backend-authoritative contract. No rendering code. Consumed by the Flutter screen today and the future WebGL viewer; both build against this.",
+    "assessmentModel": "append-only LearnerAction"
+  },
+
+  "purpose": "Before unloading, the learner verifies the physical shipment matches the documentation, and decides whether unloading may begin. Transition from preparation to operational work.",
+
+  "learningObjectives": [
+    "Identify the correct delivery vehicle",
+    "Verify shipment identity",
+    "Confirm delivery documentation",
+    "Detect obvious issues before unloading",
+    "Decide whether unloading can begin"
+  ],
+
+  "input": {
+    "source": "screen05.shipment-confirmation",
+    "note": "Frozen hand-off shape consumed from Screen 05. Screen 06 reads the expected shipment truth from here; it never recomputes it.",
+    "expected": {
+      "supplier": "string",
+      "vehicleReg": "string",
+      "shipmentRef": "string",
+      "palletCount": "int",
+      "sealNumber": "string",
+      "poId": "string",
+      "deliveryNoteId": "string",
+      "documents": ["purchase_order", "delivery_note", "vehicle_manifest", "supplier_info"]
+    }
+  },
+
+  "environment": {
+    "area": "receiving_dock",
+    "objects": ["delivery_truck", "loading_dock", "dock_leveller", "dock_door", "pallets_in_truck", "safety_barriers"],
+    "ambient": ["driver_waiting", "supervisor_nearby", "receiving_office_behind"]
+  },
+
+  "interactions": [
+    { "id": "walk_around_truck",    "verb": "walk",          "competency": null },
+    { "id": "speak_driver",         "verb": "speak",         "target": "truck_driver" },
+    { "id": "view_vehicle_number",  "verb": "read",          "target": "delivery_truck" },
+    { "id": "check_seal",           "verb": "inspect",       "target": "delivery_truck" },
+    { "id": "open_documents",       "verb": "read",          "target": "documents" },
+    { "id": "compare_po_delivery",  "verb": "compare",       "target": ["purchase_order", "delivery_note"] },
+    { "id": "inspect_pallets",      "verb": "inspect",       "target": "pallets_in_truck" },
+    { "id": "report_issue",         "verb": "reportIssue" },
+    { "id": "request_unloading",    "verb": "submitDecision" }
+  ],
+
+  "npcs": {
+    "truck_driver": {
+      "role": "Truck Driver",
+      "answerable": ["delivery_reference", "supplier", "pallet_count", "seal_number"],
+      "revealsAnswers": true,
+      "note": "Driver states claimed values; the learner must still verify against documents/vehicle."
+    },
+    "supervisor": {
+      "role": "Supervisor",
+      "guidanceOnly": true,
+      "revealsAnswers": false,
+      "note": "Offers SOP guidance if asked; never gives the answer. Asking is not penalised."
+    }
+  },
+
+  "documents": ["purchase_order", "delivery_note", "vehicle_manifest", "supplier_info"],
+
+  "verificationChecklist": [
+    { "id": "supplier_match",         "check": "delivered supplier == PO supplier",          "via": ["compare_po_delivery", "speak_driver"], "competency": "document_verification" },
+    { "id": "vehicle_match",          "check": "vehicle registration == manifest",           "via": ["view_vehicle_number"],                 "competency": "attention_to_detail" },
+    { "id": "shipment_ref_match",     "check": "delivery reference == PO reference",          "via": ["compare_po_delivery", "speak_driver"], "competency": "document_verification" },
+    { "id": "pallet_count_match",     "check": "pallets in truck == documented count",        "via": ["inspect_pallets", "speak_driver"],     "competency": "attention_to_detail" },
+    { "id": "seal_intact",            "check": "security seal number matches and is unbroken","via": ["check_seal"],                          "competency": "safety_awareness" },
+    { "id": "documentation_complete", "check": "PO + Delivery Note + Manifest present",       "via": ["open_documents", "compare_po_delivery"],"competency": "document_verification" }
+  ],
+
+  "scenarios": [
+    { "id": "A", "name": "Everything correct",             "config": {},                                              "expectedOutcome": "approve_unloading", "criticalChecks": [] },
+    { "id": "B", "name": "Vehicle registration mismatch",  "config": { "vehicleReg": "mismatch" },                    "expectedOutcome": "escalate_issue",    "criticalChecks": ["vehicle_match"] },
+    { "id": "C", "name": "Broken security seal",           "config": { "seal": "broken" },                            "expectedOutcome": "escalate_issue",    "criticalChecks": ["seal_intact"] },
+    { "id": "D", "name": "Incorrect supplier",             "config": { "supplier": "wrong" },                         "expectedOutcome": "reject_shipment",   "criticalChecks": ["supplier_match"] },
+    { "id": "E", "name": "Missing delivery documentation", "config": { "missingDocs": ["delivery_note"] },            "expectedOutcome": "request_documents", "criticalChecks": ["documentation_complete"] },
+    { "id": "F", "name": "Visible pallet damage",          "config": { "palletDamage": true },                        "expectedOutcome": "record_damage_then_approve", "criticalChecks": ["pallet_count_match"] }
+  ],
+
+  "learnerActionsCatalog": [
+    { "action": "viewed_vehicle_registration", "competencies": ["attention_to_detail"] },
+    { "action": "compared_po_delivery",        "competencies": ["document_verification", "attention_to_detail"] },
+    { "action": "verified_seal",               "competencies": ["safety_awareness", "attention_to_detail"] },
+    { "action": "spoke_to_driver",             "competencies": ["communication"] },
+    { "action": "inspected_pallets",           "competencies": ["attention_to_detail", "safety_awareness"] },
+    { "action": "requested_documents",         "competencies": ["sop_compliance", "document_verification"] },
+    { "action": "recorded_damage",             "competencies": ["attention_to_detail", "sop_compliance"] },
+    { "action": "reported_discrepancy",        "competencies": ["decision_making", "sop_compliance"] },
+    { "action": "escalated_issue",             "competencies": ["decision_making", "sop_compliance"] },
+    { "action": "requested_unloading",         "competencies": ["decision_making"] },
+    { "action": "approved_unloading",          "competencies": ["decision_making", "sop_compliance"] }
+  ],
+
+  "competencies": [
+    { "id": "document_verification", "name": "Document Verification" },
+    { "id": "attention_to_detail",   "name": "Attention to Detail" },
+    { "id": "communication",         "name": "Communication" },
+    { "id": "decision_making",       "name": "Decision Making" },
+    { "id": "sop_compliance",        "name": "SOP Compliance" },
+    { "id": "safety_awareness",      "name": "Safety Awareness" }
+  ],
+
+  "completion": {
+    "validOutcomes": ["approve_unloading", "escalate_issue", "reject_shipment"],
+    "terminalMap": {
+      "approved_unloading": "approve_unloading",
+      "reported_discrepancy": "escalate_issue",
+      "escalated_issue": "escalate_issue",
+      "rejected_shipment": "reject_shipment"
+    },
+    "rule": "Stage completes when the learner reaches any valid terminal outcome via the correct workflow. request_documents / record_damage are intermediate resolutions that must be followed by a terminal outcome.",
+    "note": "Completion is following the workflow to a terminal decision. Correctness and competency are assessed SEPARATELY from the captured evidence — a learner can complete while scoring low."
+  },
+
+  "correctnessModel": {
+    "authority": "Flora Backend (reference logic in screen06 runner)",
+    "outcomeMatch": "chosen terminal outcome category == scenario.expectedOutcome",
+    "dueDiligence": "did the learner perform the verification(s) in scenario.criticalChecks BEFORE the terminal decision?",
+    "penalties": [
+      "approved unloading with an unresolved critical fault present → major error",
+      "reached a decision without performing the required checks → process gap (low due-diligence even if outcome happens to match)"
+    ],
+    "evidence": "append-only LearnerAction stream (seq, ts, action, target, competencies, result, meta)"
+  },
+
+  "output": {
+    "target": "screen07.unloading",
+    "shape": {
+      "decision": "approve_unloading | escalate_issue | reject_shipment",
+      "flags": ["pre_existing_damage", "documents_pending"],
+      "verifiedChecklist": "{ checklistItemId: boolean }",
+      "evidenceRef": "LearnerAction seq range for this stage"
+    }
+  }
+}

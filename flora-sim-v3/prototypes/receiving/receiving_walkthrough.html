@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<title>Receiving — Walkable Workplace (greybox)</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;}
+  html,body{height:100%;overflow:hidden;background:#0d1220;color:#e8edf5;}
+  #app{position:fixed;inset:0;} canvas{display:block;touch-action:none;}
+  .hud{position:fixed;z-index:10;pointer-events:none;}
+  #top{top:0;left:0;right:0;padding:calc(10px + env(safe-area-inset-top)) 12px 10px;background:linear-gradient(#0d1220ee,#0d122000);}
+  .row{display:flex;gap:6px;flex-wrap:wrap;align-items:center;}
+  .chip{background:#182236;border:1px solid #2b3a54;border-radius:999px;padding:4px 10px;font-size:11.5px;font-weight:600;}
+  .chip b{color:#5ea0ff;}
+  #scen{margin-top:8px;background:#241c0f;border:1px solid #4b3d24;border-radius:8px;padding:5px 10px;font-size:11.5px;color:#ffd27f;display:inline-block;}
+  #step{margin-top:8px;background:#141d2c;border:1px solid #263450;border-left:4px solid #37e0a0;border-radius:10px;padding:8px 11px;}
+  #step .k{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:#8aa0c2;}
+  #step .l{font-size:14px;font-weight:700;} #step .g{font-size:11.5px;color:#9db3d4;margin-top:1px;}
+  #area{position:fixed;top:calc(10px + env(safe-area-inset-top));right:12px;z-index:11;font-size:11px;color:#bcd0ee;background:#141d2c;border:1px solid #263450;border-radius:8px;padding:4px 9px;}
+
+  /* joystick */
+  #stick{position:fixed;left:18px;bottom:calc(20px + env(safe-area-inset-bottom));width:118px;height:118px;border-radius:50%;background:#18223688;border:1px solid #2b3a54;z-index:14;touch-action:none;}
+  #knob{position:absolute;left:39px;top:39px;width:40px;height:40px;border-radius:50%;background:#2b6cffcc;border:1px solid #5ea0ff;}
+  /* action */
+  #act{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(30px + env(safe-area-inset-bottom));z-index:15;display:flex;gap:8px;}
+  #act button{background:#2b6cff;color:#fff;border:none;border-radius:12px;padding:12px 18px;font-size:14px;font-weight:700;box-shadow:0 6px 20px #0007;}
+  #act button.sec{background:#243348;border:1px solid #33507a;color:#cfe0ff;}
+  #act.hidden{display:none;}
+  .hintbar{position:fixed;bottom:calc(148px + env(safe-area-inset-bottom));left:0;right:0;text-align:center;font-size:10.5px;color:#6f83a6;z-index:9;pointer-events:none;}
+
+  /* evidence log */
+  #log{position:fixed;right:12px;bottom:calc(20px + env(safe-area-inset-bottom));width:210px;max-width:56vw;z-index:13;background:#0f1826dd;border:1px solid #26405f;border-radius:10px;padding:8px;font-size:10.5px;}
+  #log .h{font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:#7fe0b0;margin-bottom:4px;}
+  #log .e{color:#a9c0e0;line-height:1.5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  #log .e b{color:#8ff0c0;}
+
+  .cover{position:fixed;inset:0;z-index:30;display:none;place-items:center;background:#0d1220f0;padding:20px;}
+  .cover.show{display:grid;}
+  .cover .card{text-align:center;background:#141d2c;border:1px solid #2b3a54;border-radius:18px;padding:24px;max-width:380px;width:100%;}
+  .cover h2{font-size:20px;margin-bottom:8px;}
+  .cover .two{display:flex;gap:12px;margin:14px 0;}
+  .cover .two div{flex:1;background:#101828;border:1px solid #263450;border-radius:12px;padding:12px;}
+  .cover .two .n{font-size:26px;font-weight:800;} .cover .two .k{font-size:11px;color:#8aa0c2;}
+  .ok{color:#37e0a0;} .bad{color:#ff6b6b;}
+  .cover p{font-size:12.5px;color:#a9c0e0;line-height:1.5;text-align:left;}
+  .cover .go{margin-top:14px;background:#2b6cff;color:#fff;border:none;border-radius:12px;padding:12px 20px;font-size:15px;font-weight:700;width:100%;}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div class="hud" id="top">
+  <div class="row">
+    <div class="chip">Step <b id="sn">1</b>/<span id="st">18</span></div>
+    <div class="chip">Evidence <b id="ev">0</b></div>
+  </div>
+  <div id="scen"></div>
+  <div id="step"><div class="k">Current task</div><div class="l" id="stepL">—</div><div class="g" id="stepG">—</div></div>
+</div>
+<div id="area">Area: —</div>
+
+<div class="hintbar">left stick to walk · drag to look · follow the green beacon</div>
+<div id="stick"><div id="knob"></div></div>
+<div id="act" class="hidden"></div>
+
+<div id="log"><div class="h">LearnerAction stream (append-only)</div><div id="logBody"></div></div>
+
+<div class="cover" id="done">
+  <div class="card">
+    <h2>Shift report</h2>
+    <div class="two">
+      <div><div class="n ok" id="dComp">0%</div><div class="k">Completion</div></div>
+      <div><div class="n" id="dCorr">0%</div><div class="k">Correctness</div></div>
+    </div>
+    <p id="dNote"></p>
+    <button class="go" onclick="location.reload()">Run shift again</button>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+/* ---- embedded slice of receiving.department.json (renderer consumes DATA) ---- */
+const AREAS = [
+  ["parking","Parking Area"],["security_gate","Security Gate"],["locker_room","Locker Room"],
+  ["time_clock","Time Clock"],["ppe_station","PPE Station"],["supervisor_office","Supervisor Office"],
+  ["receiving_office","Receiving Office"],["loading_dock","Loading Dock"],["truck_bay","Truck Bay"],
+  ["unloading_area","Unloading Area"],["inspection_zone","Inspection Zone"],["barcode_station","Barcode Station"],
+  ["damaged_goods","Damaged Goods Area"],["quarantine","Quarantine Area"],["exit","Exit"]
+];
+const PLACE = {
+  security_gate:{o:[],p:["Security Guard"]}, time_clock:{o:["Computer"],p:[]},
+  ppe_station:{o:["PPE"],p:[]}, supervisor_office:{o:["Computer","SOP"],p:["Supervisor"]},
+  receiving_office:{o:["Computer","Printer","PO","Delivery Note"],p:[]}, loading_dock:{o:["Dock Door"],p:[]},
+  truck_bay:{o:["Truck"],p:["Truck Driver"]}, unloading_area:{o:["Pallet","Carton","Forklift"],p:["Associate","Forklift Op"]},
+  inspection_zone:{o:["Checklist","Scale","Carton"],p:["Quality Inspector"]}, barcode_station:{o:["Scanner","Tablet","Carton"],p:[]},
+  damaged_goods:{o:["Carton","Incident Report"],p:[]}, quarantine:{o:["Pallet"],p:[]}
+};
+const FLOW = [
+  ["arrive","Arrive at workplace","parking","walk"],
+  ["clock_in","Clock in","time_clock","operate"],
+  ["wear_ppe","Wear PPE","ppe_station","wearPPE"],
+  ["briefing","Attend supervisor briefing","supervisor_office","speak"],
+  ["collect_docs","Collect receiving documents","receiving_office","pickUp"],
+  ["meet_vehicle","Meet delivery vehicle","truck_bay","speak"],
+  ["verify_vehicle","Verify vehicle","truck_bay","inspect"],
+  ["unload","Unload shipment","unloading_area","operate"],
+  ["inspect","Inspect goods","inspection_zone","inspect"],
+  ["count","Count cartons","inspection_zone","count"],
+  ["scan","Scan barcodes","barcode_station","scan"],
+  ["compare_docs","Compare PO and delivery note","barcode_station","compare"],
+  ["record_discrepancies","Record discrepancies","barcode_station","reportIssue"],
+  ["move_damaged","Move damaged goods","damaged_goods","place"],
+  ["decide","Decide: Accept / Partial / Reject","receiving_office","submitDecision"],
+  ["generate_grn","Generate receiving confirmation","receiving_office","operate"],
+  ["shift_report","Submit shift report","receiving_office","operate"],
+  ["feedback","Receive assessment feedback","exit","read"]
+];
+const SCENARIO = { id:"missing_cartons", name:"Missing cartons", expected:"partial_accept",
+  note:"PO says 40 cartons — only 36 arrived." };
+
+/* ---- world ---- */
+let renderer,scene,camera;
+const areaPos={}, beacon={};
+let yaw=0,pitch=0, stepIdx=0, evidence=0, decision=null;
+const actions=[], visited=new Set();
+const eye=1.62; const pos=new THREE.Vector3(0,eye,6);
+const stick={x:0,y:0};
+
+init();
+
+function init(){
+  renderer=new THREE.WebGLRenderer({antialias:true});
+  renderer.setPixelRatio(Math.min(devicePixelRatio,2)); renderer.setSize(innerWidth,innerHeight);
+  renderer.shadowMap.enabled=true; renderer.outputEncoding=THREE.sRGBEncoding;
+  document.getElementById('app').appendChild(renderer.domElement);
+  scene=new THREE.Scene(); scene.background=new THREE.Color(0x0d1220); scene.fog=new THREE.Fog(0x0d1220,30,80);
+  camera=new THREE.PerspectiveCamera(70,innerWidth/innerHeight,0.1,200);
+  scene.add(new THREE.HemisphereLight(0xcfe0ff,0x2a2f3a,0.95));
+  const sun=new THREE.DirectionalLight(0xfff2dd,1.0); sun.position.set(20,30,10); scene.add(sun);
+
+  const ground=new THREE.Mesh(new THREE.PlaneGeometry(120,120), new THREE.MeshStandardMaterial({color:0x2f3644}));
+  ground.rotation.x=-Math.PI/2; scene.add(ground);
+
+  buildAreas();
+  buildBeacon();
+  document.getElementById('scen').textContent='Scenario · '+SCENARIO.name+' — '+SCENARIO.note;
+  document.getElementById('st').textContent=FLOW.length;
+  setStep(0);
+  bindInput();
+  addEventListener('resize',onResize);
+  animate();
+}
+
+function label(text,bg,fg,scale){
+  const c=document.createElement('canvas'); c.width=256;c.height=64; const g=c.getContext('2d');
+  g.fillStyle=bg||'#101828'; g.fillRect(0,0,256,64); g.fillStyle=fg||'#e8fff4';
+  g.font='bold 30px sans-serif'; g.textAlign='center'; g.textBaseline='middle'; g.fillText(text,128,32);
+  const s=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),transparent:true}));
+  s.scale.set(scale||3,(scale||3)/4,1); return s;
+}
+function block(w,h,d,col){ const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d), new THREE.MeshStandardMaterial({color:col})); m.castShadow=true; return m; }
+
+function buildAreas(){
+  AREAS.forEach((a,i)=>{
+    const row=Math.floor(i/4), col=i%4;
+    const x=((row%2===0)?col:(3-col))*11 - 16.5;
+    const z=row*11 - 22;
+    areaPos[a[0]]=new THREE.Vector3(x,0,z);
+    // pad
+    const pad=new THREE.Mesh(new THREE.BoxGeometry(8,0.06,8), new THREE.MeshStandardMaterial({color:0x3a4152}));
+    pad.position.set(x,0.03,z); scene.add(pad);
+    // border
+    const b=new THREE.Mesh(new THREE.RingGeometry(3.9,4.2,4), new THREE.MeshBasicMaterial({color:0x2b3a54}));
+    // sign
+    const sign=label(a[1],'#101828','#bcd0ee',5); sign.position.set(x,3.2,z); scene.add(sign);
+    // placeholder objects + people
+    const pl=PLACE[a[0]];
+    if(pl){ pl.o.forEach((o,j)=>{ const bk=block(0.7,0.7,0.7,0x8a6a42); bk.position.set(x-2+j*1.1, 0.4, z-2); scene.add(bk);
+        const t=label(o,'#0f1826','#cfe0ff',1.7); t.position.set(x-2+j*1.1,1.1,z-2); scene.add(t); });
+      pl.p.forEach((p,j)=>{ const cap=new THREE.Mesh(new THREE.CapsuleGeometry(0.32,0.9,4,8), new THREE.MeshStandardMaterial({color:0x2b6cff}));
+        cap.position.set(x+1.5-j*1.2,0.95,z+2); scene.add(cap);
+        const t=label(p,'#12204a','#bfe9ff',1.9); t.position.set(x+1.5-j*1.2,2.0,z+2); scene.add(t); });
+    }
+  });
+}
+function buildBeacon(){
+  const g=new THREE.Group();
+  const beam=new THREE.Mesh(new THREE.CylinderGeometry(0.12,0.12,6,10), new THREE.MeshBasicMaterial({color:0x37e0a0,transparent:true,opacity:0.5}));
+  beam.position.y=3; g.add(beam);
+  const cone=new THREE.Mesh(new THREE.ConeGeometry(0.4,0.7,4), new THREE.MeshBasicMaterial({color:0x37e0a0}));
+  cone.rotation.x=Math.PI; cone.position.y=6.3; g.add(cone);
+  beacon.group=g; beacon.cone=cone; scene.add(g);
+}
+
+function setStep(i){
+  stepIdx=i;
+  if(i>=FLOW.length){ finish(); return; }
+  const f=FLOW[i];
+  document.getElementById('sn').textContent=i+1;
+  document.getElementById('stepL').textContent=f[1];
+  document.getElementById('stepG').textContent='Go to: '+areaName(f[2])+'  ·  action: '+f[3];
+  const p=areaPos[f[2]]; beacon.group.position.set(p.x,0,p.z);
+}
+function areaName(id){ const a=AREAS.find(x=>x[0]===id); return a?a[1]:id; }
+
+/* ---- actions / evidence ---- */
+function performStep(decisionValue){
+  const f=FLOW[stepIdx];
+  const rec={ seq:actions.length+1, ts:Date.now(), action:f[3], area:f[2], flowStep:f[0], scenarioId:SCENARIO.id, result:'ok' };
+  if(f[0]==='decide'){ rec.action='submitDecision'; rec.meta={decision:decisionValue}; decision=decisionValue;
+    rec.result = decisionValue===SCENARIO.expected ? 'ok':'error'; }
+  actions.push(rec); evidence++; visited.add(f[2]);
+  document.getElementById('ev').textContent=evidence;
+  logLine(rec);
+  console.log('LearnerAction', JSON.stringify(rec));
+  hideAct();
+  setStep(stepIdx+1);
+}
+function logLine(r){
+  const b=document.getElementById('logBody');
+  const d=document.createElement('div'); d.className='e';
+  d.innerHTML=`#${r.seq} <b>${r.action}</b> · ${areaName(r.area)}${r.meta?(' · '+r.meta.decision):''}`;
+  b.prepend(d); while(b.children.length>6) b.removeChild(b.lastChild);
+}
+
+/* ---- action button when in the right area ---- */
+function refreshAct(cur){
+  const f=FLOW[stepIdx]; const el=document.getElementById('act');
+  if(cur===f[2]){
+    if(f[0]==='decide'){
+      el.innerHTML=''; ['accept','partial_accept','reject'].forEach(d=>{ const btn=document.createElement('button');
+        btn.className='sec'; btn.textContent=d.replace('_',' '); btn.onclick=()=>performStep(d); el.appendChild(btn); });
+    } else {
+      el.innerHTML='<button id="doit">▶ '+f[3]+' — '+f[1]+'</button>';
+      document.getElementById('doit').onclick=()=>performStep();
+    }
+    el.classList.remove('hidden');
+  } else hideAct();
+}
+function hideAct(){ document.getElementById('act').classList.add('hidden'); }
+
+function finish(){
+  const completion=Math.round(visited.size / new Set(FLOW.map(f=>f[2])).size *100);
+  const compAll=Math.round((actions.length/FLOW.length)*100);
+  const correct = decision===SCENARIO.expected;
+  const errs=actions.filter(a=>a.result==='error').length;
+  const correctness=Math.max(0,100-errs*100/Math.max(1,actions.length)); // simple: penalise wrong actions
+  document.getElementById('dComp').textContent=compAll+'%';
+  const cc=document.getElementById('dCorr'); cc.textContent=Math.round(correctness)+'%'; cc.className='n '+(correct?'ok':'bad');
+  document.getElementById('dNote').innerHTML=
+    `You completed the shift, but completion and correctness are scored separately. `+
+    `Scenario was <b>${SCENARIO.name}</b> (correct call: <b>${SCENARIO.expected.replace('_',' ')}</b>); you chose <b>${(decision||'—').replace('_',' ')}</b>. `+
+    `${actions.length} actions logged as append-only evidence.`;
+  document.getElementById('done').classList.add('show');
+  console.log('SHIFT_EVIDENCE', JSON.stringify({scenario:SCENARIO.id, decision, expected:SCENARIO.expected, actions},null,2));
+}
+
+/* ---- input ---- */
+function bindInput(){
+  const s=document.getElementById('stick'), knob=document.getElementById('knob'); let sid=null;
+  const sMove=e=>{ if(sid===null)return; const r=s.getBoundingClientRect(); let dx=e.clientX-(r.left+r.width/2), dy=e.clientY-(r.top+r.height/2);
+    const mag=Math.hypot(dx,dy), max=44; if(mag>max){dx*=max/mag;dy*=max/mag;} knob.style.left=(39+dx)+'px'; knob.style.top=(39+dy)+'px';
+    stick.x=dx/max; stick.y=-dy/max; };
+  s.addEventListener('pointerdown',e=>{sid=e.pointerId; s.setPointerCapture(e.pointerId); sMove(e);});
+  s.addEventListener('pointermove',sMove);
+  s.addEventListener('pointerup',()=>{sid=null;stick.x=0;stick.y=0;knob.style.left='39px';knob.style.top='39px';});
+  s.addEventListener('pointercancel',()=>{sid=null;stick.x=0;stick.y=0;knob.style.left='39px';knob.style.top='39px';});
+
+  const cv=renderer.domElement; let look=null,lx=0,ly=0;
+  cv.addEventListener('pointerdown',e=>{look=e.pointerId;lx=e.clientX;ly=e.clientY;});
+  cv.addEventListener('pointermove',e=>{ if(look!==e.pointerId)return; yaw-=(e.clientX-lx)*0.004; pitch-=(e.clientY-ly)*0.004;
+    pitch=Math.max(-1.2,Math.min(1.2,pitch)); lx=e.clientX;ly=e.clientY; });
+  cv.addEventListener('pointerup',()=>look=null); cv.addEventListener('pointercancel',()=>look=null);
+
+  const keys={};
+  addEventListener('keydown',e=>keys[e.code]=1); addEventListener('keyup',e=>keys[e.code]=0);
+  bindInput.keys=keys;
+}
+function onResize(){ camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth,innerHeight); }
+
+/* ---- loop ---- */
+let last=performance.now();
+function animate(){ requestAnimationFrame(animate);
+  const now=performance.now(), dt=Math.min((now-last)/1000,0.033); last=now;
+  const keys=bindInput.keys||{};
+  const kx=(keys.KeyD||keys.ArrowRight?1:0)-(keys.KeyA||keys.ArrowLeft?1:0);
+  const ky=(keys.KeyW||keys.ArrowUp?1:0)-(keys.KeyS||keys.ArrowDown?1:0);
+  const mx=stick.x+kx, my=stick.y+ky;
+  const fwd=new THREE.Vector3(-Math.sin(yaw),0,-Math.cos(yaw));
+  const right=new THREE.Vector3(Math.cos(yaw),0,-Math.sin(yaw));
+  const sp=5.0;
+  pos.addScaledVector(fwd, my*sp*dt); pos.addScaledVector(right, mx*sp*dt);
+  pos.x=Math.max(-55,Math.min(55,pos.x)); pos.z=Math.max(-55,Math.min(55,pos.z));
+  camera.position.copy(pos); camera.rotation.set(pitch,yaw,0,'YXZ');
+
+  // current area
+  let cur=null,best=4.2;
+  for(const a of AREAS){ const p=areaPos[a[0]]; const d=Math.hypot(pos.x-p.x,pos.z-p.z); if(d<best){best=d;cur=a[0];} }
+  document.getElementById('area').textContent='Area: '+(cur?areaName(cur):'—');
+  refreshAct(cur);
+
+  if(beacon.cone){ beacon.cone.position.y=6.3+Math.sin(now*0.005)*0.2; beacon.group.rotation.y+=dt; }
+  renderer.render(scene,camera);
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,107 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Skilling Simulation Scenario",
+  "description": "Engine-agnostic definition that drives the WebGL runtime. One schema describes every scenario type (picking, forklift, inventory, dispatch, supervisory); the runtime branches on `type`. Authoring a new scenario = writing one of these, not writing code.",
+  "type": "object",
+  "required": ["id", "type", "title", "objectives", "scoring"],
+  "properties": {
+    "id":         { "type": "string", "description": "stable id, e.g. forklift.load-move.v1" },
+    "type":       { "type": "string", "enum": ["picking", "forklift", "inventory", "dispatch", "supervisory"] },
+    "title":      { "type": "string" },
+    "competency": { "type": "string", "description": "NCVET/DGT NOS reference this scenario assesses, e.g. LSC/Q3002" },
+    "locale":     { "type": "array", "items": { "type": "string" }, "default": ["en", "hi"], "description": "coach/UI languages" },
+
+    "environment": {
+      "type": "object",
+      "description": "world layout; fields used depend on type",
+      "properties": {
+        "floor":    { "type": "object", "properties": { "w": {"type":"number"}, "d": {"type":"number"} } },
+        "dropZone": { "type": "object", "properties": { "x": {"type":"number"}, "z": {"type":"number"}, "r": {"type":"number"} } },
+        "racks":    { "type": "array", "items": { "type": "object" } }
+      }
+    },
+
+    "actors": {
+      "type": "object",
+      "description": "type-specific entities, e.g. a forklift, a hand-scanner, totes, or shelf inventory",
+      "additionalProperties": true
+    },
+
+    "objectives": {
+      "type": "array",
+      "description": "ordered steps the learner must complete; the runtime advances through them",
+      "items": {
+        "type": "object",
+        "required": ["id", "text"],
+        "properties": {
+          "id":   { "type": "string" },
+          "text": { "type": "string", "description": "instruction shown/spoken to the learner" },
+          "check":{ "type": "string", "description": "runtime rule that marks it complete, e.g. 'engaged', 'inZone', 'skuScanned'" }
+        }
+      }
+    },
+
+    "exceptions": {
+      "type": "array",
+      "description": "injected decision points (damaged stock, wrong bin, blocked aisle, unsafe load)",
+      "items": { "type": "object", "properties": { "id": {"type":"string"}, "trigger": {"type":"string"}, "correctAction": {"type":"string"} } }
+    },
+
+    "scoring": {
+      "type": "object",
+      "description": "how the competency-evidence payload is computed; weights sum to 1",
+      "properties": {
+        "targetSec": { "type": "number" },
+        "weights":   { "type": "object", "description": "e.g. {accuracy, speed, stability, precision, exceptionHandling, errorRecovery}" }
+      }
+    },
+
+    "tuning": {
+      "type": "object",
+      "description": "feel parameters with sensible defaults; overridable live via the tuning panel and exportable back to the config",
+      "additionalProperties": { "type": "number" }
+    }
+  },
+
+  "examples": [
+    {
+      "id": "forklift.load-move.v1",
+      "type": "forklift",
+      "title": "Forklift — Load & Move",
+      "competency": "LSC/Q3002",
+      "environment": { "floor": { "w": 34, "d": 26 }, "dropZone": { "x": 9, "z": -6, "r": 2.4 } },
+      "actors": { "forklift": { "start": { "x": -9, "z": 7, "heading": -0.4 } }, "load": { "pallet": { "x": -1, "z": -5 }, "boxes": 3, "mass": 5 } },
+      "objectives": [
+        { "id": "engage",  "text": "Slide the forks under the pallet, then Lift", "check": "engaged" },
+        { "id": "deliver", "text": "Carry the load to the GREEN zone",           "check": "inZone" },
+        { "id": "place",   "text": "Lower the forks to place it",                 "check": "placed" }
+      ],
+      "scoring": { "targetSec": 45, "weights": { "stability": 0.5, "precision": 0.3, "time": 0.2 } },
+      "tuning": { "driveSpeed": 4.2, "reverseSpeed": 2.4, "turnRate": 1.8, "forkSpeed": 1.1, "camDist": 7.5 }
+    },
+    {
+      "id": "warehouse.picking.v2",
+      "type": "picking",
+      "title": "Order Picking",
+      "competency": "LSC/Q1001",
+      "environment": { "racks": [ { "bay": "A-01" }, { "bay": "A-02" }, { "bay": "A-03" } ] },
+      "actors": {
+        "shelfSku": { "A-01|1": "SKU-3300", "A-02|1": "SKU-4471", "A-03|1": "SKU-6602", "A-01|2": "SKU-1180", "A-02|2": "SKU-9035", "A-03|2": "SKU-7788" },
+        "totes": ["blue", "green"]
+      },
+      "objectives": [
+        { "id": "locate", "text": "Go to the labelled bin", "check": "atBin" },
+        { "id": "scan",   "text": "Scan to confirm the SKU", "check": "skuMatch" },
+        { "id": "qty",    "text": "Pick the correct quantity", "check": "qtyMatch" },
+        { "id": "deliver","text": "Drop into the correct tote", "check": "toteMatch" }
+      ],
+      "pickList": [
+        { "sku": "SKU-4471", "qty": 3, "bay": "A-02", "level": 1, "dest": "blue" },
+        { "sku": "SKU-1180", "qty": 2, "bay": "A-01", "level": 2, "dest": "green" },
+        { "sku": "SKU-6602", "qty": 1, "bay": "A-03", "level": 1, "dest": "blue", "exception": "damaged" },
+        { "sku": "SKU-9035", "qty": 4, "bay": "A-02", "level": 2, "dest": "green" }
+      ],
+      "scoring": { "targetSec": 48, "weights": { "accuracy": 0.4, "speed": 0.2, "exceptionHandling": 0.25, "errorRecovery": 0.15 } }
+    }
+  ]
+}

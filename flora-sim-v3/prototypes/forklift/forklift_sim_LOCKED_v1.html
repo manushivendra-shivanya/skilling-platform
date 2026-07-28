@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<title>Forklift — DSL-driven sim (Rapier physics)</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;}
+  html,body{height:100%;overflow:hidden;background:#0d1220;color:#e8edf5;}
+  #app{position:fixed;inset:0;} canvas{display:block;touch-action:none;}
+  .hud{position:fixed;z-index:10;pointer-events:none;}
+  #top{top:0;left:0;right:0;padding:calc(12px + env(safe-area-inset-top)) 14px 12px;background:linear-gradient(#0d1220ee,#0d122000);}
+  .row{display:flex;gap:7px;flex-wrap:wrap;align-items:center;}
+  .chip{background:#182236;border:1px solid #2b3a54;border-radius:999px;padding:5px 11px;font-size:12.5px;font-weight:600;}
+  .chip b{color:#5ea0ff;}
+  #obj{margin-top:9px;background:#141d2c;border:1px solid #263450;border-left:4px solid #f79433;border-radius:10px;padding:9px 12px;font-size:14px;font-weight:600;}
+  #obj small{display:block;font-size:11.5px;color:#9db3d4;font-weight:500;margin-top:2px;}
+  #phys{position:fixed;top:calc(10px + env(safe-area-inset-top));right:12px;z-index:11;font-size:10.5px;color:#7fe0b0;background:#0f2018;border:1px solid #244b39;border-radius:8px;padding:3px 8px;}
+  #phys.arc{color:#ffd27f;background:#241c0f;border-color:#4b3d24;}
+
+  /* controls */
+  .pad{position:fixed;bottom:calc(20px + env(safe-area-inset-bottom));z-index:12;}
+  #dpad{left:16px;width:150px;height:150px;}
+  #dpad button{position:absolute;width:50px;height:50px;border-radius:12px;background:#182236cc;border:1px solid #33507a;color:#cfe0ff;font-size:20px;font-weight:700;display:grid;place-items:center;}
+  #dpad .up{left:50px;top:0;} #dpad .down{left:50px;top:100px;} #dpad .left{left:0;top:50px;} #dpad .right{left:100px;top:50px;}
+  #lift{right:16px;display:flex;flex-direction:column;gap:12px;}
+  #lift button{width:74px;height:56px;border-radius:14px;background:#182236cc;border:1px solid #33507a;color:#cfe0ff;font-size:13px;font-weight:700;}
+  #lift button.act{background:#2b6cff;color:#fff;}
+  .fbar{position:fixed;right:100px;bottom:calc(22px + env(safe-area-inset-bottom));width:12px;height:120px;background:#101828;border:1px solid #2b3a54;border-radius:6px;z-index:12;overflow:hidden;}
+  .fbar .fl{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(#37e0a0,#2b6cff);}
+
+  #fb{position:fixed;top:34%;left:50%;transform:translate(-50%,-50%);z-index:20;pointer-events:none;font-size:34px;font-weight:800;opacity:0;transition:opacity .15s;text-shadow:0 4px 18px #000b;text-align:center;}
+  #fb.show{opacity:1;} #fb small{display:block;font-size:13px;font-weight:600;color:#dfe8f5;margin-top:4px;}
+  #coach{position:fixed;left:14px;right:14px;bottom:calc(184px + env(safe-area-inset-bottom));z-index:11;pointer-events:none;display:flex;gap:9px;align-items:center;background:#111a28dd;border:1px solid #26405f;border-radius:12px;padding:8px 11px;transition:opacity .25s;}
+  #coach.hidden{opacity:0;} #coach .av{width:28px;height:28px;border-radius:50%;flex:0 0 auto;display:grid;place-items:center;font-size:15px;background:radial-gradient(circle at 30% 30%,#f7a24a,#db6b14);}
+  #coach .txt{font-size:12.5px;line-height:1.3;}
+
+  #gear{position:fixed;right:12px;bottom:calc(150px + env(safe-area-inset-bottom));z-index:16;background:#182236cc;border:1px solid #33507a;color:#cfe0ff;border-radius:9px;padding:6px 10px;font-size:11.5px;font-weight:700;}
+  .tunepanel{position:fixed;right:12px;bottom:calc(186px + env(safe-area-inset-bottom));width:230px;max-width:82vw;z-index:16;background:#0f1826f5;border:1px solid #2b3a54;border-radius:12px;padding:11px;display:none;box-shadow:0 10px 40px #000a;}
+  .tunepanel.show{display:block;}
+  .tunepanel .th{font-size:11.5px;font-weight:700;color:#cfe0ff;margin-bottom:4px;}
+  .tunepanel label{display:block;font-size:11px;color:#a9c0e0;margin:8px 0 1px;}
+  .tunepanel label b{color:#5ea0ff;float:right;font-variant-numeric:tabular-nums;}
+  .tunepanel input{width:100%;accent-color:#2b6cff;}
+  .tunepanel .exp{width:100%;margin-top:9px;background:#2b6cff;color:#fff;border:none;border-radius:8px;padding:8px;font-size:11.5px;font-weight:700;}
+  .tunepanel textarea{width:100%;height:78px;margin-top:7px;background:#0a111d;color:#8ff0c0;border:1px solid #26405f;border-radius:7px;font-size:9.5px;font-family:monospace;padding:5px;display:none;resize:none;}
+  .tunepanel textarea.show{display:block;}
+
+  .cover{position:fixed;inset:0;z-index:30;display:none;place-items:center;background:#0d1220ee;padding:20px;}
+  .cover.show{display:grid;}
+  .cover .card{text-align:center;background:#141d2c;border:1px solid #2b3a54;border-radius:18px;padding:24px;max-width:360px;width:100%;}
+  .cover h2{font-size:21px;margin-bottom:6px;} .cover p{font-size:13px;color:#a9c0e0;line-height:1.5;}
+  .cover .go{margin-top:14px;background:#2b6cff;color:#fff;border:none;border-radius:12px;padding:12px 20px;font-size:15px;font-weight:700;width:100%;}
+  .grade{font-size:42px;font-weight:800;color:#37e0a0;margin:6px 0;}
+  .rubric .r{display:flex;gap:9px;align-items:center;margin:8px 0;} .rubric .lab{width:120px;font-size:12px;color:#bcd0ee;text-align:left;}
+  .rubric .bar{flex:1;height:9px;background:#101828;border-radius:6px;overflow:hidden;} .rubric .fill{height:100%;background:linear-gradient(90deg,#2b6cff,#37e0a0);}
+  .rubric .pct{width:36px;text-align:right;font-size:12px;font-weight:700;}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="phys" class="arc">physics: loading…</div>
+
+<div class="hud" id="top">
+  <div class="row">
+    <div class="chip">⏱ <b id="clock">0s</b></div>
+    <div class="chip">Load <b id="stab">3/3</b></div>
+    <div class="chip">Dist <b id="dist">–</b></div>
+  </div>
+  <div id="obj">Objective<small id="objTxt">Drive to the pallet</small></div>
+</div>
+
+<div id="fb"></div>
+<div id="coach"><div class="av">🚜</div><div class="txt" id="coachTxt">D-pad se chalao. Pallet ke neeche forks lagao, uthao, GREEN zone me le jao.</div></div>
+
+<div class="pad" id="dpad">
+  <button class="up" data-k="fwd">▲</button>
+  <button class="down" data-k="back">▼</button>
+  <button class="left" data-k="left">◀</button>
+  <button class="right" data-k="right">▶</button>
+</div>
+<div class="fbar"><div class="fl" id="forkFill" style="height:8%"></div></div>
+<div class="pad" id="lift">
+  <button data-k="lift">Lift ▲</button>
+  <button data-k="lower">Lower ▼</button>
+</div>
+
+<button id="gear" onclick="togglePanel()">⚙ Tune</button>
+<div class="tunepanel" id="tune">
+  <div class="th">Feel tuning</div>
+  <label>Drive speed <b id="v_dr">4.2</b><input type="range" min="2" max="8" step="0.2" value="4.2" oninput="setCfg('driveSpeed',this.value,'v_dr')"></label>
+  <label>Reverse speed <b id="v_rv">2.4</b><input type="range" min="1" max="5" step="0.2" value="2.4" oninput="setCfg('reverseSpeed',this.value,'v_rv')"></label>
+  <label>Turn rate <b id="v_tn">1.8</b><input type="range" min="0.6" max="3.5" step="0.1" value="1.8" oninput="setCfg('turnRate',this.value,'v_tn')"></label>
+  <label>Fork speed <b id="v_fk">1.1</b><input type="range" min="0.4" max="2.5" step="0.1" value="1.1" oninput="setCfg('forkSpeed',this.value,'v_fk')"></label>
+  <label>Camera distance <b id="v_cm">7.5</b><input type="range" min="4" max="12" step="0.5" value="7.5" oninput="setCfg('camDist',this.value,'v_cm')"></label>
+  <button class="exp" onclick="exportConfig()">Export values</button>
+  <textarea id="cfgout" readonly></textarea>
+</div>
+
+<div class="cover" id="done">
+  <div class="card">
+    <h2 id="doneH">Load delivered</h2>
+    <div class="grade" id="grade">A</div>
+    <div class="rubric" id="rubric"></div>
+    <p style="font-size:12px">Physics-driven run. The load could tip if you turned too hard — that instability is real Rapier dynamics, and it's exactly what your playtest feedback tunes.</p>
+    <button class="go" onclick="location.reload()">Run again</button>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script type="module">
+const T = window.THREE;
+
+/* ============================================================
+   SCENARIO DSL  — everything the sim builds comes from this object.
+   Same schema will describe picking / inventory / dispatch too;
+   the runtime branches on `type`. (picking stub shown at bottom.)
+   ============================================================ */
+const SCENARIO = {
+  id:'forklift.load-move.v1',
+  type:'forklift',
+  title:'Forklift — Load & Move',
+  competency:'NOS LSC/Q3002 · operate a powered industrial truck',
+  environment:{ floor:{ w:34, d:26 }, dropZone:{ x:9, z:-6, r:2.4 } },
+  forklift:{ start:{ x:-9, z:7, heading:-0.4 } },
+  load:{ pallet:{ x:-1, z:-5 }, boxes:3, boxSize:0.62, mass:5 },
+  objectives:[
+    { id:'engage',  text:'Slide the forks under the pallet, then Lift' },
+    { id:'deliver', text:'Carry the load to the GREEN zone' },
+    { id:'place',   text:'Lower the forks to place it in the zone' },
+  ],
+  scoring:{ targetSec:45, weights:{ stability:0.5, precision:0.3, time:0.2 } },
+  // feel defaults (editable live via the tuning panel, exportable)
+  tuning:{ driveSpeed:4.2, reverseSpeed:2.4, turnRate:1.8, forkSpeed:1.1, camDist:7.5, forkMin:0.15, forkMax:1.9 },
+};
+const CONFIG = Object.assign({}, SCENARIO.tuning);
+
+/* ---------- runtime ---------- */
+let renderer, scene, camera, sun;
+let RAPIER=null, physics='arcade', world=null;
+const boxes=[]; // {mesh, body}
+let forklift, forks, pallet, dropZone, forkHeight=CONFIG.forkMin;
+let carrying=false, placed=false, done=false, startT=0, stabilityLost=0;
+const input={fwd:0,back:0,left:0,right:0,lift:0,lower:0};
+const heading0=SCENARIO.forklift.start.heading;
+let heading=heading0, camYaw=heading0;
+
+init();
+
+async function init(){
+  renderer=new T.WebGLRenderer({antialias:true});
+  renderer.setPixelRatio(Math.min(devicePixelRatio,2)); renderer.setSize(innerWidth,innerHeight);
+  renderer.shadowMap.enabled=true; renderer.shadowMap.type=T.PCFSoftShadowMap; renderer.outputEncoding=T.sRGBEncoding;
+  document.getElementById('app').appendChild(renderer.domElement);
+  scene=new T.Scene(); scene.background=new T.Color(0x0d1220); scene.fog=new T.Fog(0x0d1220,22,46);
+  camera=new T.PerspectiveCamera(55, innerWidth/innerHeight, 0.1, 200);
+  scene.add(new T.HemisphereLight(0xcfe0ff,0x2a2f3a,0.9)); scene.add(new T.AmbientLight(0xffffff,0.22));
+  sun=new T.DirectionalLight(0xfff2dd,1.1); sun.position.set(10,16,8); sun.castShadow=true;
+  sun.shadow.mapSize.set(1024,1024); Object.assign(sun.shadow.camera,{left:-20,right:20,top:20,bottom:-20}); scene.add(sun);
+
+  // try Rapier
+  try{
+    const mod=await import('https://cdn.jsdelivr.net/npm/@dimforge/rapier3d-compat@0.14.0/rapier.mjs');
+    RAPIER=mod.default||mod; await RAPIER.init();
+    world=new RAPIER.World({x:0,y:-9.81,z:0}); physics='rapier';
+  }catch(e){ physics='arcade'; console.warn('[forklift] Rapier CDN unavailable → arcade fallback:', e&&e.message); }
+  const pb=document.getElementById('phys');
+  pb.textContent = physics==='rapier' ? 'physics: Rapier ✓' : 'physics: arcade (CDN blocked)';
+  pb.className = physics==='rapier' ? '' : 'arc';
+
+  buildFromScenario();
+  bindInput();
+  addEventListener('resize',onResize);
+  startT=performance.now();
+  animate();
+}
+
+function M(hex,r=0.85){ return new T.MeshStandardMaterial({color:hex,roughness:r}); }
+function box(w,h,d,mat){ const m=new T.Mesh(new T.BoxGeometry(w,h,d),mat); m.castShadow=true; m.receiveShadow=true; return m; }
+
+function buildFromScenario(){
+  const env=SCENARIO.environment;
+  // floor
+  const fl=box(env.floor.w,0.2,env.floor.d,M(0x3d4653,0.95)); fl.position.y=-0.1; scene.add(fl);
+  for(let i=-3;i<=3;i++){ const l=box(0.12,0.02,env.floor.d*0.9,M(0xf1d235,0.7)); l.position.set(i*3,0.01,0); if(i)scene.add(l); }
+  if(physics==='rapier'){ const g=world.createRigidBody(RAPIER.RigidBodyDesc.fixed());
+    world.createCollider(RAPIER.ColliderDesc.cuboid(env.floor.w/2,0.1,env.floor.d/2), g); }
+
+  // drop zone
+  const dz=SCENARIO.environment.dropZone;
+  const ring=new T.Mesh(new T.RingGeometry(dz.r-0.12,dz.r,40), new T.MeshBasicMaterial({color:0x37e0a0,side:T.DoubleSide,transparent:true,opacity:0.85}));
+  ring.rotation.x=-Math.PI/2; ring.position.set(dz.x,0.03,dz.z); scene.add(ring); dropZone=ring;
+  const dzfill=new T.Mesh(new T.CircleGeometry(dz.r,40), new T.MeshBasicMaterial({color:0x37e0a0,transparent:true,opacity:0.10}));
+  dzfill.rotation.x=-Math.PI/2; dzfill.position.set(dz.x,0.02,dz.z); scene.add(dzfill);
+
+  // some decorative racks
+  buildRack(-12,-9); buildRack(2,-11);
+
+  buildForklift();
+  buildLoad();
+  setObjective(0);
+}
+
+function buildRack(cx,cz){
+  const up=M(0xdb6b14,0.6), beam=M(0x3466b8,0.5);
+  for(const x of [cx-1.6,cx+1.6]) for(const z of [cz-0.5,cz+0.5]){ const u=box(0.1,3.2,0.1,up); u.position.set(x,1.6,z); scene.add(u); }
+  for(const y of [1.1,2.2]){ const b=box(3.2,0.1,0.1,beam); b.position.set(cx,y,cz-0.5); scene.add(b); const b2=b.clone(); b2.position.z=cz+0.5; scene.add(b2);
+    const c=box(0.6,0.55,0.6,M(0xb98a56)); c.position.set(cx,y+0.35,cz); scene.add(c); }
+}
+
+function buildForklift(){
+  forklift=new T.Group();
+  const body=box(1.1,0.7,1.7,M(0xe0a81e,0.6)); body.position.y=0.55; forklift.add(body);
+  const cab=box(0.9,0.8,0.8,M(0x2b3a54,0.5)); cab.position.set(0,1.2,-0.35); forklift.add(cab);
+  const mast=box(0.12,2.0,0.12,M(0x33507a)); mast.position.set(0,1.0,0.85); forklift.add(mast);
+  const mast2=mast.clone(); mast2.position.x=0.4; forklift.add(mast2); mast.position.x=-0.4;
+  // wheels
+  for(const x of [-0.55,0.55]) for(const z of [-0.6,0.6]){ const w=new T.Mesh(new T.CylinderGeometry(0.3,0.3,0.2,14),M(0x15181f,0.7)); w.rotation.z=Math.PI/2; w.position.set(x,0.3,z); w.castShadow=true; forklift.add(w); }
+  // forks (separate group, raised/lowered)
+  forks=new T.Group();
+  for(const x of [-0.3,0.3]){ const f=box(0.12,0.06,1.2,M(0x9aa3b0,0.5)); f.position.set(x,0,1.35); forks.add(f); }
+  const carriage=box(0.9,0.5,0.1,M(0x6b7686)); carriage.position.set(0,0.25,0.82); forks.add(carriage);
+  forklift.add(forks);
+  const s=SCENARIO.forklift.start; forklift.position.set(s.x,0,s.z); forklift.rotation.y=s.heading;
+  scene.add(forklift);
+  forkHeight=CONFIG.forkMin; forks.position.y=forkHeight;
+}
+
+function buildLoad(){
+  const p=SCENARIO.load.pallet;
+  pallet=new T.Group();
+  const deck=box(1.3,0.14,1.1,M(0xc7a06a)); pallet.add(deck);
+  for(let i=0;i<3;i++){ const blk=box(0.16,0.14,1.1,M(0xb18a54)); blk.position.set(-0.5+i*0.5,-0.14,0); pallet.add(blk); }
+  pallet.position.set(p.x,0.14,p.z); scene.add(pallet);
+
+  const n=SCENARIO.load.boxes, s=SCENARIO.load.boxSize;
+  const offs=[[-0.3,0.28,-0.2],[0.3,0.28,0.2],[0,0.28+s,0]];
+  for(let i=0;i<n;i++){
+    const col=[0xcf8a49,0xc99a5e,0xbb8f5c][i%3];
+    const m=box(s,s,s,M(col)); const o=offs[i]||[0,0.28+i*s,0];
+    m.position.set(p.x+o[0], 0.21+o[1], p.z+o[2]); scene.add(m);
+    let body=null;
+    if(physics==='rapier'){
+      body=world.createRigidBody(RAPIER.RigidBodyDesc.dynamic().setTranslation(m.position.x,m.position.y,m.position.z));
+      world.createCollider(RAPIER.ColliderDesc.cuboid(s/2,s/2,s/2).setDensity(SCENARIO.load.mass).setFriction(0.9), body);
+    }
+    boxes.push({mesh:m, body, off:o});
+  }
+}
+
+/* ---------- objective / coach ---------- */
+function setObjective(i){ document.getElementById('objTxt').textContent=SCENARIO.objectives[i].text; }
+function coach(m){ document.getElementById('coachTxt').textContent=m; document.getElementById('coach').classList.remove('hidden'); }
+function flash(t,sub,ok){ const f=document.getElementById('fb'); f.innerHTML=t+(sub?`<small>${sub}</small>`:''); f.style.color=ok?'#37e0a0':'#ff6b6b'; f.classList.add('show'); setTimeout(()=>f.classList.remove('show'),900); }
+
+/* ---------- input ---------- */
+function bindInput(){
+  const hook=(sel)=>document.querySelectorAll(sel+' button').forEach(b=>{
+    const k=b.dataset.k; const on=e=>{e.preventDefault(); input[k]=1; b.classList.add('act');}; const off=e=>{e.preventDefault(); input[k]=0; b.classList.remove('act');};
+    b.addEventListener('pointerdown',on); b.addEventListener('pointerup',off); b.addEventListener('pointerleave',off); b.addEventListener('pointercancel',off);
+  });
+  hook('#dpad'); hook('#lift');
+  const km={KeyW:'fwd',ArrowUp:'fwd',KeyS:'back',ArrowDown:'back',KeyA:'left',ArrowLeft:'left',KeyD:'right',ArrowRight:'right',KeyQ:'lower',KeyE:'lift'};
+  addEventListener('keydown',e=>{ if(km[e.code]){input[km[e.code]]=1;} });
+  addEventListener('keyup',e=>{ if(km[e.code]){input[km[e.code]]=0;} });
+}
+function onResize(){ camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth,innerHeight); }
+
+/* ---------- sim step ---------- */
+const _v=new T.Vector3(), _q=new T.Quaternion();
+function update(dt){
+  if(done) return;
+  // steering + drive (kinematic forklift)
+  const moving = input.fwd||input.back;
+  const turnDir = (input.left?1:0)-(input.right?1:0);
+  heading += turnDir*CONFIG.turnRate*dt*(moving?1:0.5);
+  const spd = input.fwd?CONFIG.driveSpeed : input.back?-CONFIG.reverseSpeed : 0;
+  const fwd=new T.Vector3(Math.sin(heading),0,Math.cos(heading));
+  forklift.position.addScaledVector(fwd, spd*dt);
+  // clamp to floor
+  const fw=SCENARIO.environment.floor.w/2-1, fd=SCENARIO.environment.floor.d/2-1;
+  forklift.position.x=Math.max(-fw,Math.min(fw,forklift.position.x));
+  forklift.position.z=Math.max(-fd,Math.min(fd,forklift.position.z));
+  forklift.rotation.y=heading;
+
+  // forks
+  const fdelta=(input.lift?1:0)-(input.lower?1:0);
+  forkHeight=Math.max(CONFIG.forkMin,Math.min(CONFIG.forkMax, forkHeight+fdelta*CONFIG.forkSpeed*dt));
+  forks.position.y=forkHeight;
+  document.getElementById('forkFill').style.height=(8+ (forkHeight-CONFIG.forkMin)/(CONFIG.forkMax-CONFIG.forkMin)*90)+'%';
+
+  // engage: forks under pallet & lifting
+  if(!carrying && !placed){
+    const forkTip=forklift.localToWorld(new T.Vector3(0,forkHeight,1.5));
+    const d=Math.hypot(forkTip.x-pallet.position.x, forkTip.z-pallet.position.z);
+    if(d<0.9 && forkHeight>0.35){ carrying=true; setObjective(1); coach('Load utha liya! Ab GREEN zone me le jao. Dheere mudo warna girega.'); flash('✓ ENGAGED','Load on forks',true); }
+  }
+
+  // carry: pallet follows forks (kinematic); boxes stay dynamic in Rapier
+  if(carrying && !placed){
+    const slot=forklift.localToWorld(new T.Vector3(0,forkHeight+0.07,1.35));
+    pallet.position.copy(slot); pallet.rotation.y=heading;
+  }
+
+  // step physics for the load
+  if(physics==='rapier'){
+    // drive dynamic boxes: if carrying, softly follow the pallet slots via kinematic-ish nudge? No—keep them dynamic.
+    // When NOT yet engaged the boxes rest on the pallet (also give pallet a kinematic body? we skip; boxes rest on floor-height stack).
+    world.step();
+    for(const b of boxes){ if(!b.body) continue; const t=b.body.translation(), r=b.body.rotation();
+      b.mesh.position.set(t.x,t.y,t.z); b.mesh.quaternion.set(r.x,r.y,r.z,r.w); }
+    // while carrying, apply the pallet motion to the boxes so they ride along (with real inertia -> can topple)
+    if(carrying && !placed){ const slot=pallet.position;
+      for(const b of boxes){ if(!b.body) continue; const t=b.body.translation();
+        const targ=new T.Vector3(slot.x+b.off[0], slot.y+0.07+b.off[1], slot.z+b.off[2]);
+        // spring the box toward its slot via velocity (lets hard turns overshoot -> topple)
+        const k=10; b.body.setLinvel({x:(targ.x-t.x)*k, y:(targ.y-t.y)*k, z:(targ.z-t.z)*k}, true);
+      }
+    }
+    // stability check
+    let on=0; for(const b of boxes){ const t=b.body?b.body.translation():{y:1,x:0,z:0};
+      const near=Math.hypot(t.x-pallet.position.x,t.z-pallet.position.z); if(t.y>0.4 && near<1.2) on++; }
+    if(boxes.length-on>stabilityLost){ stabilityLost=boxes.length-on; flash('⚠ BOX FELL','Slow down on turns',false); coach('Box gir gaya! Turns pe dheere chalao.'); }
+    document.getElementById('stab').textContent=(boxes.length-stabilityLost)+'/'+boxes.length;
+  } else {
+    // arcade: boxes rigidly ride the pallet, never fall
+    for(const b of boxes){ if(carrying){ const s=pallet.position; b.mesh.position.set(s.x+b.off[0], s.y+0.07+b.off[1], s.z+b.off[2]); b.mesh.rotation.y=heading; } }
+  }
+
+  // distance / place
+  const dz=SCENARIO.environment.dropZone;
+  const dd=Math.hypot(forklift.position.x-dz.x, forklift.position.z-dz.z);
+  document.getElementById('dist').textContent=carrying?dd.toFixed(1)+'m':'–';
+  if(carrying && !placed && dd<dz.r && forkHeight<0.5){
+    placed=true; setObjective(2); finish();
+  }
+  document.getElementById('clock').textContent=Math.round((performance.now()-startT)/1000)+'s';
+}
+
+function finish(){
+  done=true;
+  const secs=(performance.now()-startT)/1000;
+  const stability=(boxes.length-stabilityLost)/boxes.length;
+  const dz=SCENARIO.environment.dropZone;
+  const dd=Math.hypot(pallet.position.x-dz.x, pallet.position.z-dz.z);
+  const precision=Math.max(0,1-dd/dz.r);
+  const time=Math.max(0,Math.min(1, SCENARIO.scoring.targetSec/secs));
+  const w=SCENARIO.scoring.weights;
+  const overall=Math.round((stability*w.stability+precision*w.precision+time*w.time)*100);
+  const grade=overall>=90?'A':overall>=75?'B':overall>=60?'C':'D';
+  document.getElementById('grade').textContent=grade;
+  const rows=[['Load stability',stability],['Placement precision',precision],['Time',time]];
+  document.getElementById('rubric').innerHTML=rows.map(([k,v])=>{const p=Math.round(v*100);
+    return `<div class="r"><div class="lab">${k}</div><div class="bar"><div class="fill" style="width:${p}%"></div></div><div class="pct">${p}%</div></div>`;}).join('');
+  document.getElementById('done').classList.add('show');
+  console.log('COMPETENCY_EVIDENCE', JSON.stringify({scenario:SCENARIO.id, competency:SCENARIO.competency,
+    physics, stability:+stability.toFixed(2), precision:+precision.toFixed(2), timeScore:+time.toFixed(2),
+    boxesDropped:stabilityLost, totalSec:Math.round(secs), overall, grade, ts:Date.now()},null,2));
+}
+
+/* ---------- camera + loop ---------- */
+function updateCamera(dt){
+  camYaw += (heading-camYaw)*Math.min(1,dt*3);
+  const back=new T.Vector3(-Math.sin(camYaw),0,-Math.cos(camYaw));
+  const pos=forklift.position.clone().addScaledVector(back, CONFIG.camDist).add(new T.Vector3(0,CONFIG.camDist*0.62,0));
+  camera.position.lerp(pos, Math.min(1,dt*4));
+  camera.lookAt(forklift.position.x, 1.0, forklift.position.z);
+}
+let last=performance.now();
+function animate(){ requestAnimationFrame(animate);
+  const now=performance.now(), dt=Math.min((now-last)/1000,0.033); last=now;
+  update(dt); updateCamera(dt); renderer.render(scene,camera);
+}
+
+/* ---------- tuning panel ---------- */
+window.togglePanel=()=>document.getElementById('tune').classList.toggle('show');
+window.setCfg=(k,v,id)=>{ CONFIG[k]=parseFloat(v); const e=document.getElementById(id); if(e)e.textContent=v; };
+window.exportConfig=()=>{ const j=JSON.stringify(CONFIG,null,2); const ta=document.getElementById('cfgout'); ta.classList.add('show'); ta.value=j;
+  try{navigator.clipboard.writeText(j);}catch(e){} console.log('FEEL_CONFIG',j); coach('Values exported — paste them to me to bake in.'); };
+
+/* ============================================================
+   Same DSL, a different scenario type (runtime branch on `type`):
+   const PICKING = { id:'warehouse.picking.v2', type:'picking',
+     environment:{...}, racks:[...], pickList:[{sku,qty,bay,level,dest}], ... }
+   One schema → picking / forklift / inventory / dispatch.
+   ============================================================ */
+</script>
+</body>
+</html>

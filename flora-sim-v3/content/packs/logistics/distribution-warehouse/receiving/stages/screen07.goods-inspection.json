@@ -1,0 +1,133 @@
+{
+  "meta": {
+    "pack": "Logistics",
+    "domain": "Distribution Warehouse",
+    "department": "Receiving",
+    "stage": "receiving.goods-inspection",
+    "screen": "07",
+    "title": "Goods Inspection",
+    "type": "stage",
+    "version": "0.1.0",
+    "rendererAgnostic": true,
+    "flowPosition": "after 06 Receiving Dock, before 08 Barcode Scanning",
+    "note": "First stage requiring professional judgement, not just verification. Backend-authoritative. Output is an immutable Inspection Report consumed by Screen 08.",
+    "assessmentModel": "append-only LearnerAction"
+  },
+
+  "purpose": "The learner performs a detailed inspection of the received shipment before it is accepted into inventory, recording findings and deciding which items require quarantine.",
+
+  "learningObjectives": [
+    "Inspect cartons and pallets",
+    "Identify visible damage",
+    "Detect quantity discrepancies",
+    "Identify incorrect products",
+    "Check packaging condition",
+    "Record inspection findings",
+    "Decide which items require quarantine"
+  ],
+
+  "input": {
+    "source": "screen06.receiving-dock",
+    "note": "Consumes the dock decision + flags. If 06 flagged pre_existing_damage, that context carries in.",
+    "expected": {
+      "decision": "approve_unloading | escalate_issue",
+      "flags": ["pre_existing_damage", "documents_pending"],
+      "palletCount": "int",
+      "poLineItems": "[{ sku, qty, batch?, expiry? }]"
+    }
+  },
+
+  "environment": {
+    "area": "inspection_zone",
+    "objects": ["inspection_table", "pallets", "cartons", "barcode_scanner", "weighing_scale", "tape_measure", "camera_tablet", "damage_tags", "quarantine_trolley"],
+    "nearby": ["receiving_dock", "barcode_station", "quarantine_area"]
+  },
+
+  "workflow": ["receiving_dock", "inspection_zone", "inspect_each_pallet", "inspect_each_carton", "record_findings", "move_damaged_aside", "continue_inspection", "proceed_to_barcode_station"],
+
+  "tasks": {
+    "inspect_pallet":   { "observe": ["broken_pallet", "leaning_load", "water_damage", "broken_stretch_wrap", "missing_cartons"] },
+    "inspect_cartons":  { "check": ["tears", "crushed_corners", "wet_packaging", "open_cartons", "incorrect_labels", "missing_labels"] },
+    "inspect_products": { "check": ["correct_sku", "correct_product", "correct_quantity", "expiry_date", "manufacturing_date", "batch_number"] },
+    "record_finding":   { "fields": ["damageType", "severity", "quantityAffected", "notes", "photo?", "recommendedAction"] }
+  },
+
+  "findingTypes": {
+    "packaging": ["torn_carton", "crushed_carton", "wet_carton", "broken_pallet", "loose_stretch_wrap"],
+    "product":   ["wrong_sku", "wrong_quantity", "wrong_batch", "near_expiry", "expired", "damaged_product"],
+    "logistics": ["missing_carton", "extra_carton", "mixed_pallet", "unlabelled_carton"]
+  },
+  "severityScale": ["minor", "moderate", "major", "critical"],
+  "recommendedActions": ["accept", "quarantine", "reject", "record_and_accept"],
+
+  "npcs": {
+    "supervisor":       { "role": "Supervisor",       "guidanceOnly": true,  "example": "Remember to inspect every pallet before scanning." },
+    "quality_inspector":{ "role": "Quality Inspector", "optional": true,      "example": "What did you observe on this pallet?" },
+    "truck_driver":     { "role": "Truck Driver",      "claim": true,         "example": "The pallet looked fine when it left our warehouse." }
+  },
+
+  "objects": ["pallet", "carton", "damage_label", "inspection_form", "camera", "tablet", "clipboard", "quarantine_trolley"],
+
+  "learnerActionsCatalog": [
+    { "action": "selected_pallet",             "verb": "pickUp",  "competencies": ["goods_inspection"] },
+    { "action": "rotated_carton",              "verb": "operate", "competencies": ["observation_skills"] },
+    { "action": "zoomed_inspection",           "verb": "look",    "competencies": ["observation_skills", "attention_to_detail"] },
+    { "action": "opened_carton",               "verb": "open",    "competencies": ["goods_inspection"] },
+    { "action": "checked_expiry",              "verb": "read",    "competencies": ["quality_control", "attention_to_detail"] },
+    { "action": "recorded_damage",             "verb": "reportIssue", "competencies": ["digital_inspection_recording", "goods_inspection"] },
+    { "action": "tagged_carton",               "verb": "place",   "competencies": ["goods_inspection", "safe_handling"] },
+    { "action": "added_inspection_note",       "verb": "operate", "competencies": ["digital_inspection_recording"] },
+    { "action": "requested_quarantine",        "verb": "submitDecision", "competencies": ["decision_making", "quality_control"] },
+    { "action": "completed_pallet_inspection", "verb": "inspect", "competencies": ["goods_inspection", "inventory_accuracy"] }
+  ],
+
+  "competencies": {
+    "technical":  [ { "id": "goods_inspection", "name": "Goods Inspection" }, { "id": "quality_control", "name": "Quality Control" }, { "id": "inventory_accuracy", "name": "Inventory Accuracy" } ],
+    "behavioural":[ { "id": "observation_skills", "name": "Observation Skills" }, { "id": "attention_to_detail", "name": "Attention to Detail" }, { "id": "decision_making", "name": "Decision Making" } ],
+    "safety":     [ { "id": "safe_handling", "name": "Safe Handling" }, { "id": "ppe_compliance", "name": "PPE Compliance" } ],
+    "digital":    [ { "id": "digital_inspection_recording", "name": "Digital Inspection Recording" } ]
+  },
+
+  "scenarios": [
+    { "id": "A", "name": "Perfect shipment",                    "config": { "groundTruth": [] },                                                                                             "expectedResult": "no_findings" },
+    { "id": "B", "name": "One damaged carton",                  "config": { "groundTruth": [ { "item": "P1-C03", "type": "crushed_carton", "severity": "moderate", "qty": 1, "action": "quarantine" } ] }, "expectedResult": "record_damage" },
+    { "id": "C", "name": "Broken pallet, multiple damaged",     "config": { "groundTruth": [ { "item": "P2", "type": "broken_pallet", "severity": "major", "qty": 1, "action": "quarantine" }, { "item": "P2-C01", "type": "crushed_carton", "severity": "major", "qty": 3, "action": "quarantine" } ] }, "expectedResult": "record_all_affected" },
+    { "id": "D", "name": "Wrong SKU on one pallet",             "config": { "groundTruth": [ { "item": "P3", "type": "wrong_sku", "severity": "critical", "qty": 12, "action": "reject" } ] },        "expectedResult": "identify_incorrect_product" },
+    { "id": "E", "name": "Near-expiry products",               "config": { "groundTruth": [ { "item": "P1-C05", "type": "near_expiry", "severity": "moderate", "qty": 6, "action": "quarantine" } ] }, "expectedResult": "record_expiry_concern" },
+    { "id": "F", "name": "Missing cartons",                     "config": { "groundTruth": [ { "item": "P2", "type": "missing_carton", "severity": "major", "qty": 4, "action": "record_and_accept" } ] }, "expectedResult": "record_shortage" },
+    { "id": "G", "name": "Mixed shipment",                      "config": { "groundTruth": [ { "item": "P3", "type": "mixed_pallet", "severity": "major", "qty": 1, "action": "quarantine" } ] },       "expectedResult": "separate_affected_goods" }
+  ],
+
+  "assessmentRules": {
+    "measures": ["inspection_completeness", "correct_issue_identification", "false_positives", "missed_defects", "correct_severity_classification", "proper_documentation", "correct_quarantine_recommendations"],
+    "definitions": {
+      "inspection_completeness": "pallets inspected / pallets assigned",
+      "correct_issue_identification": "recorded findings that match a ground-truth defect (by item + type)",
+      "false_positives": "recorded findings with no matching ground-truth defect",
+      "missed_defects": "ground-truth defects with no matching recorded finding",
+      "correct_severity_classification": "matched findings whose severity equals ground truth",
+      "correct_quarantine_recommendations": "matched findings whose recommendedAction equals ground truth"
+    },
+    "note": "Completion and correctness remain separate. A learner may submit a complete report while missing defects or logging false positives."
+  },
+
+  "completion": {
+    "criteria": ["inspected_all_assigned_pallets", "recorded_all_identified_findings", "submitted_inspection_report", "classified_each_issue_with_action", "handed_over_to_barcode_station"],
+    "rule": "Stage completes on inspection-report submission after all assigned pallets are inspected.",
+    "note": "Completion = workflow followed to report submission. Correctness/competency computed separately from the evidence via assessmentRules."
+  },
+
+  "output": {
+    "target": "screen08.barcode-scanning",
+    "immutable": true,
+    "note": "The Inspection Report becomes an immutable part of the simulation attempt. Screen 08 consumes it to verify each inspected item digitally against the PO / inventory.",
+    "shape": {
+      "reportId": "string",
+      "findings": "[{ item, type, severity, quantityAffected, notes, photo?, recommendedAction }]",
+      "perItemStatus": "{ itemId: accepted | quarantined | rejected }",
+      "quarantineList": "[itemId]",
+      "palletsInspected": "int",
+      "evidenceRef": "LearnerAction seq range for this stage"
+    }
+  }
+}

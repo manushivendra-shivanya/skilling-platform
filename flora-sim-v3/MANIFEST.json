@@ -1,0 +1,43 @@
+{
+  "package": "flora-sim",
+  "version": "3.0.0",
+  "module": "logistics-supply-chain",
+  "firstDepartment": "receiving",
+  "date": "2026-07-28",
+  "stack": {
+    "client": "Flutter",
+    "backendAuthority": ["mission", "simulation", "assessment", "evidence", "competency"],
+    "renderer3d": "WebGL viewer (deferred) — Three.js via React Three Fiber; Babylon.js co-equal alt (see ADR-001 revision)",
+    "renderingAgnostic": true
+  },
+  "contents": {
+    "architecture": [
+      { "path": "docs/ADR-001-rendering-technology.md", "type": "decision", "status": "accepted+revised" },
+      { "path": "docs/ADR-002-simulation-content-model.md", "type": "decision", "status": "accepted" },
+      { "path": "docs/ADR-003-client-server-interaction-boundary.md", "type": "decision", "status": "accepted" }
+    ],
+    "content": [
+      { "path": "content/simulation.schema.json", "type": "schema", "version": "0.1" },
+      { "path": "content/packs/logistics/distribution-warehouse/receiving/receiving.department.json", "type": "department-data", "version": "0.1.0" },
+      { "path": "content/packs/logistics/distribution-warehouse/receiving/stages/screen06.receiving-dock.json", "type": "stage-contract", "version": "0.1.0" },
+      { "path": "content/packs/logistics/distribution-warehouse/receiving/stages/screen07.goods-inspection.json", "type": "stage-contract", "version": "0.1.0" }
+    ],
+    "tools": [
+      { "path": "tools/stage_runner.mjs", "type": "reference-runner", "run": "node tools/stage_runner.mjs", "note": "headless executor: computes completion vs correctness + evidence from a stage contract" }
+    ],
+    "prototypes": [
+      { "path": "prototypes/picking/warehouse_picking_v3_tuning.html", "type": "prototype", "engine": "three.js r128", "note": "picking + tuning panel" },
+      { "path": "prototypes/forklift/forklift_sim_LOCKED_v1.html", "type": "prototype", "engine": "three.js r128 + Rapier", "note": "LOCKED baseline" },
+      { "path": "prototypes/receiving/receiving_walkthrough.html", "type": "prototype", "engine": "three.js r128", "note": "walkable workplace greybox" },
+      { "path": "prototypes/boundary/boundary_demo.html", "type": "prototype", "engine": "vanilla (no CDN)", "note": "ADR-003 client-loop vs backend-truth, latency slider + in-loop toggle" }
+    ],
+    "assets": [
+      { "path": "assets/warehouse_aisle.glb" },
+      { "path": "assets/shelf_rack.glb" },
+      { "path": "assets/pallet.glb" },
+      { "path": "assets/cardboard_box.glb" },
+      { "path": "assets/tote.glb" }
+    ]
+  },
+  "notes": "Prototypes are raw Three.js proofs, not production. Production 3D = a WebGL viewer embedded in the Flutter client via WebView, consuming backend-authoritative state. Content + runtime + assessment live in Flora Backend."
+}
