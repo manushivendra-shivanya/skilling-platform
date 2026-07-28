@@ -10,6 +10,8 @@ import 'package:candidate_mobile/features/authentication/domain/development_auth
 import 'package:candidate_mobile/features/home/domain/home_dashboard_repository.dart';
 import 'package:candidate_mobile/features/jobs/data/local_mock_jobs_repository.dart';
 import 'package:candidate_mobile/features/jobs/domain/jobs_repository.dart';
+import 'package:candidate_mobile/features/intelligence/data/secure_candidate_intelligence_repository.dart';
+import 'package:candidate_mobile/features/intelligence/domain/candidate_intelligence_repository.dart';
 import 'package:candidate_mobile/features/learning/domain/learning_repository.dart';
 import 'package:candidate_mobile/features/onboarding/data/secure_candidate_onboarding_repository.dart';
 import 'package:candidate_mobile/features/onboarding/domain/candidate_onboarding_repository.dart';
@@ -31,6 +33,7 @@ extension CandidateAppPump on WidgetTester {
     HomeDashboardRepository? homeDashboardRepository,
     LearningRepository? learningRepository,
     JobsRepository? jobsRepository,
+    CandidateIntelligenceRepository? candidateIntelligenceRepository,
     AppConfig config = const AppConfig.development(),
   }) {
     return pumpWidget(
@@ -69,6 +72,10 @@ extension CandidateAppPump on WidgetTester {
           jobsRepositoryProvider.overrideWithValue(
             jobsRepository ??
                 LocalMockJobsRepository(InMemorySecureKeyValueStore()),
+          ),
+          candidateIntelligenceRepositoryProvider.overrideWithValue(
+            candidateIntelligenceRepository ??
+                InMemoryCandidateIntelligenceRepository(),
           ),
         ],
         child: const SkillingApp(),
