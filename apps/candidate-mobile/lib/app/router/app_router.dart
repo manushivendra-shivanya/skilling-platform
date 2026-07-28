@@ -28,6 +28,9 @@ import '../../features/practice/presentation/practice_screen.dart';
 import '../../features/profile/presentation/profile_screen.dart';
 import '../../features/splash/presentation/app_startup_screen.dart';
 import '../../features/voice/presentation/voice_interview_screen.dart';
+import '../../features/workplace_simulation/presentation/simulation_entry_screen.dart';
+import '../../features/workplace_simulation/presentation/supervisor_briefing_screen.dart';
+import '../../features/workplace_simulation/presentation/workplace_overview_handoff_screen.dart';
 import '../dependencies.dart';
 
 const appStartupRoutePath = '/';
@@ -64,6 +67,17 @@ const diagnosticRoutePath = '/diagnostic';
 const diagnosticRouteName = 'diagnostic';
 const voiceInterviewRoutePath = '/voice-interview';
 const voiceInterviewRouteName = 'voice-interview';
+const workplaceSimulationHubRoutePath = '/practise/workplace-simulation';
+const workplaceSimulationHubRouteName = 'workplace-simulation';
+const workplaceSimulationRoutePath =
+    '/practise/workplace-simulation/receive-incoming-shipment-01';
+const workplaceSimulationRouteName = 'workplace-simulation-entry';
+const workplaceBriefingRoutePath =
+    '/practise/workplace-simulation/receive-incoming-shipment-01/briefing';
+const workplaceBriefingRouteName = 'workplace-simulation-briefing';
+const workplaceOverviewRoutePath =
+    '/practise/workplace-simulation/receive-incoming-shipment-01/workplace';
+const workplaceOverviewRouteName = 'workplace-simulation-workplace';
 const designSystemGalleryRoutePath = '/dev/design-system';
 const designSystemGalleryRouteName = 'design-system-gallery';
 
@@ -203,7 +217,10 @@ GoRouter createAppRouter({
               GoRoute(
                 path: practiseRoutePath,
                 name: practiseRouteName,
-                builder: (context, state) => const PracticeScreen(),
+                builder: (context, state) => PracticeScreen(
+                  onOpenWorkplaceSimulation: () =>
+                      context.pushNamed(workplaceSimulationHubRouteName),
+                ),
               ),
             ],
           ),
@@ -231,6 +248,12 @@ GoRouter createAppRouter({
       ),
       GoRoute(
         parentNavigatorKey: rootNavigatorKey,
+        path: workplaceSimulationHubRoutePath,
+        name: workplaceSimulationHubRouteName,
+        redirect: (context, state) => workplaceSimulationRoutePath,
+      ),
+      GoRoute(
+        parentNavigatorKey: rootNavigatorKey,
         path: aiCoachRoutePath,
         name: aiCoachRouteName,
         builder: (context, state) => const CoachScreen(),
@@ -252,6 +275,33 @@ GoRouter createAppRouter({
         path: voiceInterviewRoutePath,
         name: voiceInterviewRouteName,
         builder: (context, state) => const VoiceInterviewScreen(),
+      ),
+      GoRoute(
+        parentNavigatorKey: rootNavigatorKey,
+        path: workplaceSimulationRoutePath,
+        name: workplaceSimulationRouteName,
+        builder: (context, state) => SimulationEntryScreen(
+          onOpenBriefing: () => context.push(workplaceBriefingRoutePath),
+          onContinueWorkplace: () => context.go(workplaceOverviewRoutePath),
+          onExit: () => context.go(practiseRoutePath),
+        ),
+      ),
+      GoRoute(
+        parentNavigatorKey: rootNavigatorKey,
+        path: workplaceBriefingRoutePath,
+        name: workplaceBriefingRouteName,
+        builder: (context, state) => SupervisorBriefingScreen(
+          onBackToEntry: () => context.go(workplaceSimulationRoutePath),
+          onOpenWorkplace: () => context.go(workplaceOverviewRoutePath),
+        ),
+      ),
+      GoRoute(
+        parentNavigatorKey: rootNavigatorKey,
+        path: workplaceOverviewRoutePath,
+        name: workplaceOverviewRouteName,
+        builder: (context, state) => WorkplaceOverviewHandoffScreen(
+          onReturnToPractice: () => context.go(practiseRoutePath),
+        ),
       ),
       if (showDevelopmentTools)
         GoRoute(
@@ -316,6 +366,10 @@ const _mainAndGlobalRoutePaths = {
   notificationsRoutePath,
   diagnosticRoutePath,
   voiceInterviewRoutePath,
+  workplaceSimulationHubRoutePath,
+  workplaceSimulationRoutePath,
+  workplaceBriefingRoutePath,
+  workplaceOverviewRoutePath,
 };
 
 class AppRouteObserver extends NavigatorObserver {

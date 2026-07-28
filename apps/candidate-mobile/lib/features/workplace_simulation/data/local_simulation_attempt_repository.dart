@@ -33,11 +33,17 @@ class LocalSimulationAttemptRepository implements SimulationAttemptRepository {
       attemptNumber: nextNumber,
       scenarioSeed: scenarioSeed,
       state: MissionState.notStarted,
-      startedAt: now,
-      elapsedSeconds: 0,
+      createdAt: now,
+      shiftStartedAt: null,
+      briefingAcknowledgedAt: null,
+      pausedAt: null,
+      timerResumedAt: null,
+      elapsedSimulationSeconds: 0,
+      timerStatus: SimulationTimerStatus.notStarted,
       currentStageId: null,
       completedTaskIds: const {},
       actions: const [],
+      auditEvents: const [],
     );
     await _store.write(counterKey, '$nextNumber');
     await _writeAttempt(attempt);
@@ -80,6 +86,19 @@ class LocalSimulationAttemptRepository implements SimulationAttemptRepository {
           throw StateError('Learner actions are append-only');
         }
       }
+      if (existing.shiftStartedAt != null &&
+          attempt.shiftStartedAt != existing.shiftStartedAt) {
+        throw StateError('The shift start time cannot be overwritten');
+      }
+      if (attempt.auditEvents.length < existing.auditEvents.length) {
+        throw StateError('Attempt audit events are append-only');
+      }
+      for (var index = 0; index < existing.auditEvents.length; index++) {
+        if (jsonEncode(existing.auditEvents[index].toJson()) !=
+            jsonEncode(attempt.auditEvents[index].toJson())) {
+          throw StateError('Attempt audit events are append-only');
+        }
+      }
     }
     await _writeAttempt(attempt);
   }
@@ -98,6 +117,61 @@ class LocalSimulationAttemptRepository implements SimulationAttemptRepository {
     final updated = active.copyWith(actions: [...active.actions, action]);
     await _writeAttempt(updated);
     return updated;
+  }
+
+  @override
+  Future<SimulationAttempt> appendAuditEvent(AttemptAuditEvent event) async {
+    final active = _activeCache[event.attemptId];
+    if (active == null) {
+      throw StateError('No active attempt exists for this audit event');
+    }
+    if (event.sequenceNumber != active.auditEvents.length + 1) {
+      throw const FormatException(
+        'Audit events must use continuous sequence numbers',
+      );
+    }
+    if (active.auditEvents.any((item) => item.id == event.id)) {
+      throw StateError('Audit event IDs must be unique');
+    }
+    final updated = active.copyWith(
+      auditEvents: [...active.auditEvents, event],
+    );
+    await _writeAttempt(updated);
+    return updated;
+  }
+
+  @override
+  Future<SimulationAttempt> startShift({
+    required SimulationAttempt startedAttempt,
+    required AttemptAuditEvent requestedEvent,
+    required AttemptAuditEvent startedEvent,
+  }) async {
+    final active = await getActiveAttempt(
+      startedAttempt.candidateId,
+      startedAttempt.missionId,
+    );
+    if (active == null || active.id != startedAttempt.id) {
+      throw StateError('The active attempt changed before shift start');
+    }
+    if (active.state != MissionState.briefing ||
+        active.shiftStartedAt != null ||
+        active.timerStatus != SimulationTimerStatus.notStarted) {
+      throw StateError('The active attempt is not ready to start');
+    }
+    final nextSequence = active.auditEventCount + 1;
+    if (requestedEvent.attemptId != active.id ||
+        startedEvent.attemptId != active.id ||
+        requestedEvent.sequenceNumber != nextSequence ||
+        startedEvent.sequenceNumber != nextSequence + 1 ||
+        requestedEvent.eventType != AttemptAuditEventType.shiftStartRequested ||
+        startedEvent.eventType != AttemptAuditEventType.shiftStarted) {
+      throw const FormatException('Invalid atomic shift-start audit events');
+    }
+    final persisted = startedAttempt.copyWith(
+      auditEvents: [...active.auditEvents, requestedEvent, startedEvent],
+    );
+    await _writeAttempt(persisted);
+    return persisted;
   }
 
   Future<SimulationAttempt> getActiveAttemptForAction(
@@ -144,11 +218,11 @@ class LocalSimulationAttemptRepository implements SimulationAttemptRepository {
   }
 
   Future<void> _writeAttempt(SimulationAttempt attempt) async {
-    _activeCache[attempt.id] = attempt;
     await _store.write(
       _activeKey(attempt.candidateId, attempt.missionId),
       jsonEncode(attempt.toJson()),
     );
+    _activeCache[attempt.id] = attempt;
   }
 
   String _activeKey(String candidateId, String missionId) =>
@@ -176,6 +250,21 @@ class InMemorySimulationAttemptRepository
   @override
   Future<SimulationAttempt> appendAction(LearnerAction action) =>
       _delegate.appendAction(action);
+
+  @override
+  Future<SimulationAttempt> appendAuditEvent(AttemptAuditEvent event) =>
+      _delegate.appendAuditEvent(event);
+
+  @override
+  Future<SimulationAttempt> startShift({
+    required SimulationAttempt startedAttempt,
+    required AttemptAuditEvent requestedEvent,
+    required AttemptAuditEvent startedEvent,
+  }) => _delegate.startShift(
+    startedAttempt: startedAttempt,
+    requestedEvent: requestedEvent,
+    startedEvent: startedEvent,
+  );
 
   @override
   Future<void> clearActiveAttempt(String candidateId, String missionId) =>

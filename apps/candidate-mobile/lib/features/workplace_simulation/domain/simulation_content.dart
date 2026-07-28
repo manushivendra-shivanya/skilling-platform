@@ -366,15 +366,50 @@ class MissionDefinition {
 }
 
 class MissionBriefing {
-  const MissionBriefing({required this.supervisorName, required this.message});
+  const MissionBriefing({
+    required this.supervisorTitle,
+    required this.message,
+    required this.shiftName,
+    required this.supplier,
+    required this.purchaseOrderNumber,
+    required this.deliveryReference,
+    required this.deliveryType,
+    required this.responsibilities,
+    required this.workplaceRules,
+    required this.rulesVersion,
+  });
 
-  final String supervisorName;
+  final String supervisorTitle;
   final String message;
+  final String shiftName;
+  final String supplier;
+  final String purchaseOrderNumber;
+  final String deliveryReference;
+  final String deliveryType;
+  final List<String> responsibilities;
+  final List<String> workplaceRules;
+  final String rulesVersion;
 
-  factory MissionBriefing.fromJson(JsonMap json) => MissionBriefing(
-    supervisorName: json.string('supervisorName'),
-    message: json.string('message'),
-  );
+  factory MissionBriefing.fromJson(JsonMap json) {
+    final briefing = MissionBriefing(
+      supervisorTitle: json.string('supervisorTitle'),
+      message: json.string('message'),
+      shiftName: json.string('shiftName'),
+      supplier: json.string('supplier'),
+      purchaseOrderNumber: json.string('purchaseOrderNumber'),
+      deliveryReference: json.string('deliveryReference'),
+      deliveryType: json.string('deliveryType'),
+      responsibilities: json.stringList('responsibilities'),
+      workplaceRules: json.stringList('workplaceRules'),
+      rulesVersion: json.string('rulesVersion'),
+    );
+    if (briefing.message.trim().isEmpty ||
+        briefing.responsibilities.isEmpty ||
+        briefing.workplaceRules.isEmpty) {
+      throw const FormatException('Mission briefing content is incomplete');
+    }
+    return briefing;
+  }
 }
 
 class MissionStage {

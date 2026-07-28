@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/dependencies.dart';
@@ -20,6 +22,17 @@ final workplaceSimulationControllerProvider =
       WorkplaceSimulationState
     >(WorkplaceSimulationController.new);
 
+enum BeginShiftResult {
+  success,
+  acknowledgementRequired,
+  alreadyStarting,
+  alreadyStarted,
+  invalidState,
+  contentInvalid,
+  scenarioUnavailable,
+  persistenceFailure,
+}
+
 class WorkplaceSimulationController
     extends AsyncNotifier<WorkplaceSimulationState> {
   static const packId = 'logistics-foundation';
@@ -35,6 +48,8 @@ class WorkplaceSimulationController
   final _scoring = const MissionScoringService();
 
   String? _candidateId;
+  Future<void> _auditQueue = Future.value();
+  bool _isStartingShift = false;
 
   @override
   Future<WorkplaceSimulationState> build() async {
@@ -104,10 +119,31 @@ class WorkplaceSimulationController
             candidateId: candidateId,
             missionId: current.mission.id,
             missionVersion: current.mission.version,
-            scenarioSeed: scenarioSeed ?? current.mission.scenario.defaultSeed,
+            scenarioSeed:
+                scenarioSeed ??
+                DateTime.now().microsecondsSinceEpoch.remainder(0x7fffffff),
           );
-      final briefing = _stateService.transition(attempt, MissionState.briefing);
+      var briefing = _stateService.transition(attempt, MissionState.briefing);
       await ref.read(simulationAttemptRepositoryProvider).saveAttempt(briefing);
+      briefing = await _appendAuditEvent(
+        briefing,
+        AttemptAuditEventType.missionSelected,
+        screenId: 'simulation-entry',
+      );
+      briefing = await _appendAuditEvent(
+        briefing,
+        AttemptAuditEventType.attemptCreated,
+        screenId: 'simulation-entry',
+        payload: {
+          'attemptNumber': briefing.attemptNumber,
+          'scenarioSeed': briefing.scenarioSeed,
+        },
+      );
+      briefing = await _appendAuditEvent(
+        briefing,
+        AttemptAuditEventType.simulationEntryOpened,
+        screenId: 'simulation-entry',
+      );
       state = AsyncData(
         current.copyWith(
           attempt: briefing,
@@ -122,14 +158,229 @@ class WorkplaceSimulationController
     });
   }
 
-  Future<AppFailure?> beginShift() => _transition(
-    MissionState.inProgress,
-    currentStageId: 'document-verification',
+  Future<AppFailure?> recordSimulationEntryOpened() => _recordAuditEvent(
+    AttemptAuditEventType.simulationEntryOpened,
+    screenId: 'simulation-entry',
   );
 
-  Future<AppFailure?> pause() => _transition(MissionState.paused);
+  Future<AppFailure?> recordBriefingOpened() => _recordAuditEvent(
+    AttemptAuditEventType.briefingOpened,
+    screenId: 'supervisor-briefing',
+  );
 
-  Future<AppFailure?> resume() => _transition(MissionState.inProgress);
+  Future<AppFailure?> recordMissionDetailsOpened({required String screenId}) =>
+      _recordAuditEvent(
+        AttemptAuditEventType.missionDetailsOpened,
+        screenId: screenId,
+      );
+
+  Future<AppFailure?> continueMission() {
+    return _guard(() async {
+      final current = _requireState();
+      var attempt = _requireAttempt(current);
+      if (attempt.state == MissionState.completed ||
+          attempt.state == MissionState.failed ||
+          attempt.state == MissionState.notStarted) {
+        throw StateError('This attempt cannot be continued');
+      }
+      attempt = await _appendAuditEvent(
+        attempt,
+        AttemptAuditEventType.attemptResumeRequested,
+        screenId: 'simulation-entry',
+      );
+      if (attempt.state == MissionState.paused) {
+        attempt = await _resumeTimer(attempt, screenId: 'simulation-entry');
+      }
+      attempt = await _appendAuditEvent(
+        attempt,
+        AttemptAuditEventType.attemptResumed,
+        screenId: 'simulation-entry',
+      );
+      state = AsyncData(current.copyWith(attempt: attempt));
+    });
+  }
+
+  Future<AppFailure?> setBriefingAcknowledged(bool acknowledged) {
+    return _guard(() async {
+      final current = _requireState();
+      final attempt = _requireAttempt(current);
+      if (attempt.state != MissionState.briefing) {
+        throw StateError('The briefing can be acknowledged only before work');
+      }
+      if (attempt.briefingAcknowledged == acknowledged) return;
+      final updated = await _appendAuditEvent(
+        attempt,
+        acknowledged
+            ? AttemptAuditEventType.briefingAcknowledged
+            : AttemptAuditEventType.briefingAcknowledgementRemoved,
+        screenId: 'supervisor-briefing',
+        payload: {
+          'acknowledged': acknowledged,
+          'rulesVersion': current.mission.briefing.rulesVersion,
+        },
+      );
+      final now = DateTime.now();
+      final timestamped = updated.copyWith(
+        briefingAcknowledgedAt: acknowledged ? now : null,
+        clearBriefingAcknowledgedAt: !acknowledged,
+      );
+      await ref
+          .read(simulationAttemptRepositoryProvider)
+          .saveAttempt(timestamped);
+      state = AsyncData(current.copyWith(attempt: timestamped));
+    });
+  }
+
+  Future<BeginShiftResult> beginShift({DateTime? at}) async {
+    if (_isStartingShift) return BeginShiftResult.alreadyStarting;
+    final current = state.valueOrNull;
+    final attempt = current?.attempt;
+    if (current == null || attempt == null) {
+      return BeginShiftResult.contentInvalid;
+    }
+    if (current.mission.briefing.responsibilities.isEmpty ||
+        current.mission.briefing.workplaceRules.isEmpty ||
+        current.mission.stages.isEmpty) {
+      return _rejectShiftStart(
+        current,
+        attempt,
+        BeginShiftResult.contentInvalid,
+      );
+    }
+    if (attempt.shiftStartedAt != null) {
+      return _rejectShiftStart(
+        current,
+        attempt,
+        BeginShiftResult.alreadyStarted,
+      );
+    }
+    if (attempt.state != MissionState.briefing) {
+      return _rejectShiftStart(current, attempt, BeginShiftResult.invalidState);
+    }
+    if (!attempt.briefingAcknowledged) {
+      return _rejectShiftStart(
+        current,
+        attempt,
+        BeginShiftResult.acknowledgementRequired,
+      );
+    }
+    if (current.scenario == null) {
+      return _rejectShiftStart(
+        current,
+        attempt,
+        BeginShiftResult.scenarioUnavailable,
+      );
+    }
+
+    _isStartingShift = true;
+    var working = attempt;
+    try {
+      final persisted = await ref
+          .read(simulationAttemptRepositoryProvider)
+          .getActiveAttempt(working.candidateId, working.missionId);
+      if (persisted == null ||
+          persisted.state != MissionState.briefing ||
+          persisted.shiftStartedAt != null) {
+        return BeginShiftResult.invalidState;
+      }
+      final shiftStart = at ?? DateTime.now();
+      final started = _stateService
+          .transition(persisted, MissionState.inProgress, at: shiftStart)
+          .copyWith(
+            shiftStartedAt: shiftStart,
+            timerResumedAt: shiftStart,
+            clearPausedAt: true,
+            elapsedSimulationSeconds: 0,
+            timerStatus: SimulationTimerStatus.running,
+            currentStageId: 'document-verification',
+          );
+      final requestedEvent = _createAuditEvent(
+        persisted,
+        AttemptAuditEventType.shiftStartRequested,
+        screenId: 'supervisor-briefing',
+        sequenceNumber: persisted.auditEventCount + 1,
+        occurredAt: shiftStart,
+      );
+      final startedEvent = _createAuditEvent(
+        started,
+        AttemptAuditEventType.shiftStarted,
+        screenId: 'supervisor-briefing',
+        sequenceNumber: persisted.auditEventCount + 2,
+        occurredAt: shiftStart,
+      );
+      working = await ref
+          .read(simulationAttemptRepositoryProvider)
+          .startShift(
+            startedAttempt: started,
+            requestedEvent: requestedEvent,
+            startedEvent: startedEvent,
+          );
+      state = AsyncData(current.copyWith(attempt: working));
+      return BeginShiftResult.success;
+    } catch (_) {
+      try {
+        working = await _appendAuditEvent(
+          working,
+          AttemptAuditEventType.shiftStartFailed,
+          screenId: 'supervisor-briefing',
+        );
+        state = AsyncData(current.copyWith(attempt: working));
+      } catch (_) {
+        // The original persisted attempt remains authoritative.
+      }
+      return BeginShiftResult.persistenceFailure;
+    } finally {
+      _isStartingShift = false;
+    }
+  }
+
+  Future<AppFailure?> pauseAttempt({DateTime? at}) {
+    return _guard(() async {
+      final current = _requireState();
+      var attempt = _requireAttempt(current);
+      if (attempt.state != MissionState.inProgress ||
+          attempt.timerStatus != SimulationTimerStatus.running) {
+        throw StateError('Only a running attempt can be paused');
+      }
+      final pausedAt = at ?? DateTime.now();
+      final resumedAt = attempt.timerResumedAt ?? attempt.shiftStartedAt!;
+      attempt = _stateService
+          .transition(attempt, MissionState.paused, at: pausedAt)
+          .copyWith(
+            pausedAt: pausedAt,
+            clearTimerResumedAt: true,
+            elapsedSimulationSeconds:
+                attempt.elapsedSimulationSeconds +
+                pausedAt.difference(resumedAt).inSeconds,
+            timerStatus: SimulationTimerStatus.paused,
+          );
+      await ref.read(simulationAttemptRepositoryProvider).saveAttempt(attempt);
+      attempt = await _appendAuditEvent(
+        attempt,
+        AttemptAuditEventType.attemptPaused,
+        screenId: 'workplace',
+      );
+      state = AsyncData(current.copyWith(attempt: attempt));
+    });
+  }
+
+  Future<AppFailure?> resumeAttempt({DateTime? at}) {
+    return _guard(() async {
+      final current = _requireState();
+      final resumed = await _resumeTimer(
+        _requireAttempt(current),
+        at: at,
+        screenId: 'workplace',
+      );
+      state = AsyncData(current.copyWith(attempt: resumed));
+    });
+  }
+
+  @Deprecated('Use pauseAttempt')
+  Future<AppFailure?> pause() => pauseAttempt();
+
+  @Deprecated('Use resumeAttempt')
+  Future<AppFailure?> resume() => resumeAttempt();
 
   Future<AppFailure?> recordAction({
     required String stageId,
@@ -156,7 +407,8 @@ class WorkplaceSimulationController
         targetId: targetId,
         payload: payload,
         sequenceNumber: attempt.actionCount + 1,
-        simulationTimeSeconds: simulationTimeSeconds ?? attempt.elapsedSeconds,
+        simulationTimeSeconds:
+            simulationTimeSeconds ?? currentElapsedSimulationSeconds(attempt),
         createdAt: now,
         isTechnical: isTechnical,
       );
@@ -197,7 +449,13 @@ class WorkplaceSimulationController
       var attempt = _requireAttempt(current);
       final scenario = current.scenario;
       if (scenario == null) throw StateError('Scenario is not generated');
-      attempt = _stateService.transition(attempt, MissionState.submitted);
+      final stoppedAt = DateTime.now();
+      attempt = _stopTimer(attempt, stoppedAt);
+      attempt = _stateService.transition(
+        attempt,
+        MissionState.submitted,
+        at: stoppedAt,
+      );
       await ref.read(simulationAttemptRepositoryProvider).saveAttempt(attempt);
       final inspectionComplete =
           attempt.completedTaskIds.contains('inspect-cartons') &&
@@ -235,6 +493,15 @@ class WorkplaceSimulationController
     return _guard(() async {
       final current = _requireState();
       final candidateId = _requireCandidate();
+      final previous = current.attempt;
+      if (previous != null) {
+        final retryRequested = await _appendAuditEvent(
+          previous,
+          AttemptAuditEventType.retryRequested,
+          screenId: 'simulation-entry',
+        );
+        state = AsyncData(current.copyWith(attempt: retryRequested));
+      }
       await ref
           .read(simulationAttemptRepositoryProvider)
           .clearActiveAttempt(candidateId, current.mission.id);
@@ -249,6 +516,14 @@ class WorkplaceSimulationController
       );
       final failure = await startMission(scenarioSeed: scenarioSeed);
       if (failure != null) throw failure;
+      final retryState = _requireState();
+      final retryAttempt = _requireAttempt(retryState);
+      final updated = await _appendAuditEvent(
+        retryAttempt,
+        AttemptAuditEventType.retryAttemptCreated,
+        screenId: 'simulation-entry',
+      );
+      state = AsyncData(retryState.copyWith(attempt: updated));
     });
   }
 
@@ -259,15 +534,150 @@ class WorkplaceSimulationController
     return _progress.progress(current.mission, attempt);
   }
 
-  Future<AppFailure?> _transition(MissionState next, {String? currentStageId}) {
+  int currentElapsedSimulationSeconds(
+    SimulationAttempt attempt, {
+    DateTime? at,
+  }) {
+    if (attempt.timerStatus != SimulationTimerStatus.running) {
+      return attempt.elapsedSimulationSeconds;
+    }
+    final resumedAt = attempt.timerResumedAt ?? attempt.shiftStartedAt;
+    if (resumedAt == null) return attempt.elapsedSimulationSeconds;
+    final additional = (at ?? DateTime.now()).difference(resumedAt).inSeconds;
+    return attempt.elapsedSimulationSeconds + (additional < 0 ? 0 : additional);
+  }
+
+  Future<AppFailure?> _recordAuditEvent(
+    AttemptAuditEventType type, {
+    required String screenId,
+    JsonMap payload = const {},
+  }) {
     return _guard(() async {
       final current = _requireState();
-      final attempt = _stateService
-          .transition(_requireAttempt(current), next)
-          .copyWith(currentStageId: currentStageId);
-      await ref.read(simulationAttemptRepositoryProvider).saveAttempt(attempt);
-      state = AsyncData(current.copyWith(attempt: attempt));
+      final updated = await _appendAuditEvent(
+        _requireAttempt(current),
+        type,
+        screenId: screenId,
+        payload: payload,
+      );
+      state = AsyncData(current.copyWith(attempt: updated));
     });
+  }
+
+  Future<SimulationAttempt> _appendAuditEvent(
+    SimulationAttempt attempt,
+    AttemptAuditEventType type, {
+    required String screenId,
+    String? targetId,
+    JsonMap payload = const {},
+  }) {
+    final result = Completer<SimulationAttempt>();
+    _auditQueue = _auditQueue.then((_) async {
+      try {
+        final repository = ref.read(simulationAttemptRepositoryProvider);
+        final active =
+            await repository.getActiveAttempt(
+              attempt.candidateId,
+              attempt.missionId,
+            ) ??
+            attempt;
+        final eventNumber = active.auditEventCount + 1;
+        final updated = await repository.appendAuditEvent(
+          _createAuditEvent(
+            active,
+            type,
+            screenId: screenId,
+            targetId: targetId,
+            sequenceNumber: eventNumber,
+            payload: payload,
+          ),
+        );
+        result.complete(updated);
+      } catch (error, stackTrace) {
+        result.completeError(error, stackTrace);
+      }
+    });
+    return result.future;
+  }
+
+  AttemptAuditEvent _createAuditEvent(
+    SimulationAttempt attempt,
+    AttemptAuditEventType type, {
+    required String screenId,
+    required int sequenceNumber,
+    String? targetId,
+    JsonMap payload = const {},
+    DateTime? occurredAt,
+  }) => AttemptAuditEvent(
+    id: '${attempt.id}-event-$sequenceNumber',
+    attemptId: attempt.id,
+    missionId: attempt.missionId,
+    missionVersion: attempt.missionVersion,
+    eventType: type,
+    screenId: screenId,
+    targetId: targetId,
+    sequenceNumber: sequenceNumber,
+    simulationElapsedSeconds: currentElapsedSimulationSeconds(
+      attempt,
+      at: occurredAt,
+    ),
+    occurredAt: occurredAt ?? DateTime.now(),
+    payload: payload,
+  );
+
+  Future<BeginShiftResult> _rejectShiftStart(
+    WorkplaceSimulationState current,
+    SimulationAttempt attempt,
+    BeginShiftResult result,
+  ) async {
+    try {
+      final updated = await _appendAuditEvent(
+        attempt,
+        AttemptAuditEventType.shiftStartRejected,
+        screenId: 'supervisor-briefing',
+        payload: {'reason': result.name},
+      );
+      state = AsyncData(current.copyWith(attempt: updated));
+    } catch (_) {
+      return BeginShiftResult.persistenceFailure;
+    }
+    return result;
+  }
+
+  Future<SimulationAttempt> _resumeTimer(
+    SimulationAttempt attempt, {
+    DateTime? at,
+    required String screenId,
+  }) async {
+    if (attempt.state != MissionState.paused ||
+        attempt.timerStatus != SimulationTimerStatus.paused) {
+      throw StateError('Only a paused attempt can be resumed');
+    }
+    final resumedAt = at ?? DateTime.now();
+    var resumed = _stateService
+        .transition(attempt, MissionState.inProgress, at: resumedAt)
+        .copyWith(
+          clearPausedAt: true,
+          timerResumedAt: resumedAt,
+          timerStatus: SimulationTimerStatus.running,
+        );
+    await ref.read(simulationAttemptRepositoryProvider).saveAttempt(resumed);
+    resumed = await _appendAuditEvent(
+      resumed,
+      AttemptAuditEventType.attemptResumedFromPause,
+      screenId: screenId,
+    );
+    return resumed;
+  }
+
+  SimulationAttempt _stopTimer(SimulationAttempt attempt, DateTime stoppedAt) {
+    final elapsed = currentElapsedSimulationSeconds(attempt, at: stoppedAt);
+    return attempt.copyWith(
+      elapsedSimulationSeconds: elapsed,
+      timerStatus: SimulationTimerStatus.stopped,
+      clearPausedAt: true,
+      clearTimerResumedAt: true,
+    );
   }
 
   List<ActionOutcome> _evaluateActions(

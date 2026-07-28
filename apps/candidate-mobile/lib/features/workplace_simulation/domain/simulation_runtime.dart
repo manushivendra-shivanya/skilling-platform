@@ -54,11 +54,17 @@ class SimulationAttempt {
     required this.attemptNumber,
     required this.scenarioSeed,
     required this.state,
-    required this.startedAt,
-    required this.elapsedSeconds,
+    required this.createdAt,
+    required this.shiftStartedAt,
+    this.briefingAcknowledgedAt,
+    this.pausedAt,
+    this.timerResumedAt,
+    this.elapsedSimulationSeconds = 0,
+    this.timerStatus = SimulationTimerStatus.notStarted,
     required this.currentStageId,
     required this.completedTaskIds,
     required this.actions,
+    required this.auditEvents,
     this.submittedAt,
     this.completedAt,
   });
@@ -70,25 +76,61 @@ class SimulationAttempt {
   final int attemptNumber;
   final int scenarioSeed;
   final MissionState state;
-  final DateTime startedAt;
+  final DateTime createdAt;
+  final DateTime? briefingAcknowledgedAt;
+  final DateTime? shiftStartedAt;
+  final DateTime? pausedAt;
+  final DateTime? timerResumedAt;
   final DateTime? submittedAt;
   final DateTime? completedAt;
-  final int elapsedSeconds;
+  final int elapsedSimulationSeconds;
+  final SimulationTimerStatus timerStatus;
   final String? currentStageId;
   final Set<String> completedTaskIds;
   final List<LearnerAction> actions;
+  final List<AttemptAuditEvent> auditEvents;
+
+  @Deprecated('Use createdAt')
+  DateTime get startedAt => createdAt;
+
+  @Deprecated('Use elapsedSimulationSeconds')
+  int get elapsedSeconds => elapsedSimulationSeconds;
 
   int get actionCount => actions.length;
+  int get auditEventCount => auditEvents.length;
+
+  bool get briefingAcknowledged {
+    for (final event in auditEvents.reversed) {
+      if (event.eventType == AttemptAuditEventType.briefingAcknowledged) {
+        return true;
+      }
+      if (event.eventType ==
+          AttemptAuditEventType.briefingAcknowledgementRemoved) {
+        return false;
+      }
+    }
+    return false;
+  }
 
   SimulationAttempt copyWith({
     MissionState? state,
+    DateTime? shiftStartedAt,
+    bool clearShiftStartedAt = false,
+    DateTime? briefingAcknowledgedAt,
+    bool clearBriefingAcknowledgedAt = false,
+    DateTime? pausedAt,
+    bool clearPausedAt = false,
+    DateTime? timerResumedAt,
+    bool clearTimerResumedAt = false,
     DateTime? submittedAt,
     DateTime? completedAt,
-    int? elapsedSeconds,
+    int? elapsedSimulationSeconds,
+    SimulationTimerStatus? timerStatus,
     String? currentStageId,
     bool clearCurrentStage = false,
     Set<String>? completedTaskIds,
     List<LearnerAction>? actions,
+    List<AttemptAuditEvent>? auditEvents,
   }) => SimulationAttempt(
     id: id,
     candidateId: candidateId,
@@ -97,15 +139,28 @@ class SimulationAttempt {
     attemptNumber: attemptNumber,
     scenarioSeed: scenarioSeed,
     state: state ?? this.state,
-    startedAt: startedAt,
+    createdAt: createdAt,
+    shiftStartedAt: clearShiftStartedAt
+        ? null
+        : shiftStartedAt ?? this.shiftStartedAt,
+    briefingAcknowledgedAt: clearBriefingAcknowledgedAt
+        ? null
+        : briefingAcknowledgedAt ?? this.briefingAcknowledgedAt,
+    pausedAt: clearPausedAt ? null : pausedAt ?? this.pausedAt,
+    timerResumedAt: clearTimerResumedAt
+        ? null
+        : timerResumedAt ?? this.timerResumedAt,
     submittedAt: submittedAt ?? this.submittedAt,
     completedAt: completedAt ?? this.completedAt,
-    elapsedSeconds: elapsedSeconds ?? this.elapsedSeconds,
+    elapsedSimulationSeconds:
+        elapsedSimulationSeconds ?? this.elapsedSimulationSeconds,
+    timerStatus: timerStatus ?? this.timerStatus,
     currentStageId: clearCurrentStage
         ? null
         : currentStageId ?? this.currentStageId,
     completedTaskIds: completedTaskIds ?? this.completedTaskIds,
     actions: actions ?? this.actions,
+    auditEvents: auditEvents ?? this.auditEvents,
   );
 
   JsonMap toJson() => {
@@ -116,13 +171,19 @@ class SimulationAttempt {
     'attemptNumber': attemptNumber,
     'scenarioSeed': scenarioSeed,
     'state': state.wireName,
-    'startedAt': startedAt.toUtc().toIso8601String(),
+    'createdAt': createdAt.toUtc().toIso8601String(),
+    'shiftStartedAt': shiftStartedAt?.toUtc().toIso8601String(),
+    'briefingAcknowledgedAt': briefingAcknowledgedAt?.toUtc().toIso8601String(),
+    'pausedAt': pausedAt?.toUtc().toIso8601String(),
+    'timerResumedAt': timerResumedAt?.toUtc().toIso8601String(),
     'submittedAt': submittedAt?.toUtc().toIso8601String(),
     'completedAt': completedAt?.toUtc().toIso8601String(),
-    'elapsedSeconds': elapsedSeconds,
+    'elapsedSimulationSeconds': elapsedSimulationSeconds,
+    'timerStatus': timerStatus.wireName,
     'currentStageId': currentStageId,
     'completedTaskIds': completedTaskIds.toList(),
     'actions': actions.map((item) => item.toJson()).toList(),
+    'auditEvents': auditEvents.map((item) => item.toJson()).toList(),
   };
 
   factory SimulationAttempt.fromJson(JsonMap json) => SimulationAttempt(
@@ -133,17 +194,113 @@ class SimulationAttempt {
     attemptNumber: json.integer('attemptNumber'),
     scenarioSeed: json.integer('scenarioSeed'),
     state: MissionState.fromWireName(json.string('state')),
-    startedAt: DateTime.parse(json.string('startedAt')),
+    createdAt: DateTime.parse(
+      json.optionalString('createdAt') ?? json.string('startedAt'),
+    ),
+    shiftStartedAt: _optionalDate(json.optionalString('shiftStartedAt')),
+    briefingAcknowledgedAt: _optionalDate(
+      json.optionalString('briefingAcknowledgedAt'),
+    ),
+    pausedAt: _optionalDate(json.optionalString('pausedAt')),
+    timerResumedAt: _optionalDate(json.optionalString('timerResumedAt')),
     submittedAt: _optionalDate(json.optionalString('submittedAt')),
     completedAt: _optionalDate(json.optionalString('completedAt')),
-    elapsedSeconds: json.integer('elapsedSeconds'),
+    elapsedSimulationSeconds: json['elapsedSimulationSeconds'] is int
+        ? json.integer('elapsedSimulationSeconds')
+        : json.integer('elapsedSeconds'),
+    timerStatus: json['timerStatus'] is String
+        ? SimulationTimerStatus.fromWireName(json.string('timerStatus'))
+        : _legacyTimerStatus(json),
     currentStageId: json.optionalString('currentStageId'),
     completedTaskIds: json.stringList('completedTaskIds').toSet(),
     actions: json
         .mapList('actions')
         .map(LearnerAction.fromJson)
         .toList(growable: false),
+    auditEvents: json['auditEvents'] is List
+        ? json
+              .mapList('auditEvents')
+              .map(AttemptAuditEvent.fromJson)
+              .toList(growable: false)
+        : const [],
   );
+}
+
+class AttemptAuditEvent {
+  const AttemptAuditEvent({
+    required this.id,
+    required this.attemptId,
+    required this.missionId,
+    required this.missionVersion,
+    required this.eventType,
+    required this.screenId,
+    required this.sequenceNumber,
+    required this.simulationElapsedSeconds,
+    required this.occurredAt,
+    this.targetId,
+    this.payload = const {},
+  });
+
+  final String id;
+  final String attemptId;
+  final String missionId;
+  final String missionVersion;
+  final AttemptAuditEventType eventType;
+  final String screenId;
+  final String? targetId;
+  final int sequenceNumber;
+  final int simulationElapsedSeconds;
+  final DateTime occurredAt;
+  final JsonMap payload;
+
+  String get type => eventType.name;
+  DateTime get timestamp => occurredAt;
+
+  JsonMap toJson() => {
+    'id': id,
+    'attemptId': attemptId,
+    'missionId': missionId,
+    'missionVersion': missionVersion,
+    'eventType': eventType.name,
+    'screenId': screenId,
+    'targetId': targetId,
+    'sequenceNumber': sequenceNumber,
+    'simulationElapsedSeconds': simulationElapsedSeconds,
+    'occurredAt': occurredAt.toUtc().toIso8601String(),
+    'payload': payload,
+  };
+
+  factory AttemptAuditEvent.fromJson(JsonMap json) => AttemptAuditEvent(
+    id: json.string('id'),
+    attemptId: json.string('attemptId'),
+    missionId: json.optionalString('missionId') ?? '',
+    missionVersion: json.optionalString('missionVersion') ?? '',
+    eventType: AttemptAuditEventType.fromWireName(
+      json.optionalString('eventType') ?? json.string('type'),
+    ),
+    screenId: json.optionalString('screenId') ?? 'unknown',
+    targetId: json.optionalString('targetId'),
+    sequenceNumber: json.integer('sequenceNumber'),
+    simulationElapsedSeconds: json['simulationElapsedSeconds'] is int
+        ? json.integer('simulationElapsedSeconds')
+        : 0,
+    occurredAt: DateTime.parse(
+      json.optionalString('occurredAt') ?? json.string('timestamp'),
+    ),
+    payload: json.object('payload'),
+  );
+}
+
+SimulationTimerStatus _legacyTimerStatus(JsonMap json) {
+  final state = MissionState.fromWireName(json.string('state'));
+  if (json.optionalString('shiftStartedAt') == null) {
+    return SimulationTimerStatus.notStarted;
+  }
+  if (state == MissionState.paused) return SimulationTimerStatus.paused;
+  if (state == MissionState.completed || state == MissionState.failed) {
+    return SimulationTimerStatus.stopped;
+  }
+  return SimulationTimerStatus.running;
 }
 
 class LearnerAction {

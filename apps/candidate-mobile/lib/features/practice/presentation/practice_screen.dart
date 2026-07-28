@@ -12,9 +12,13 @@ import '../../../core/widgets/app_state_view.dart';
 import '../../intelligence/domain/candidate_intelligence.dart';
 import '../../intelligence/domain/simulation_scoring_engine.dart';
 import '../../intelligence/presentation/candidate_intelligence_controller.dart';
+import '../../workplace_simulation/application/workplace_simulation_controller.dart';
+import '../../workplace_simulation/domain/simulation_enums.dart';
 
 class PracticeScreen extends ConsumerStatefulWidget {
-  const PracticeScreen({super.key});
+  const PracticeScreen({required this.onOpenWorkplaceSimulation, super.key});
+
+  final VoidCallback onOpenWorkplaceSimulation;
 
   @override
   ConsumerState<PracticeScreen> createState() => _PracticeScreenState();
@@ -83,6 +87,31 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
             ],
           ),
         ),
+        const SizedBox(height: AppSpacing.md),
+        ref
+            .watch(workplaceSimulationControllerProvider)
+            .when(
+              loading: () => const _WorkplaceSimulationCard(
+                actionLabel: 'Loading simulation',
+              ),
+              error: (error, stackTrace) => const _WorkplaceSimulationCard(
+                actionLabel: 'Simulation unavailable',
+                unavailable: true,
+              ),
+              data: (state) {
+                final attempt = state.attempt;
+                final actionLabel = attempt == null
+                    ? 'Start Simulation'
+                    : attempt.state == MissionState.completed ||
+                          attempt.state == MissionState.failed
+                    ? 'Retry Simulation'
+                    : 'Continue Simulation';
+                return _WorkplaceSimulationCard(
+                  actionLabel: actionLabel,
+                  onPressed: widget.onOpenWorkplaceSimulation,
+                );
+              },
+            ),
         const SizedBox(height: AppSpacing.md),
         Text(
           'Recommended practice',
@@ -177,6 +206,54 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
                     ),
             ),
       ],
+    );
+  }
+}
+
+class _WorkplaceSimulationCard extends StatelessWidget {
+  const _WorkplaceSimulationCard({
+    required this.actionLabel,
+    this.onPressed,
+    this.unavailable = false,
+  });
+
+  final String actionLabel;
+  final VoidCallback? onPressed;
+  final bool unavailable;
+
+  @override
+  Widget build(BuildContext context) {
+    return AppCard(
+      backgroundColor: AppColors.brandSoft,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            'Workplace Simulation',
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          const Text(
+            'Complete realistic workplace missions and build verified competency evidence.',
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          const Text(
+            'Receive an Incoming Shipment\n'
+            'Logistics • Warehouse Associate • Beginner • Approximately 20 minutes',
+          ),
+          if (unavailable) ...[
+            const SizedBox(height: AppSpacing.sm),
+            const Text('Workplace simulation content is unavailable.'),
+          ],
+          const SizedBox(height: AppSpacing.md),
+          AppButton(
+            label: actionLabel,
+            semanticLabel: '$actionLabel button for Workplace Simulation.',
+            leadingIcon: Icons.factory_outlined,
+            onPressed: onPressed,
+          ),
+        ],
+      ),
     );
   }
 }

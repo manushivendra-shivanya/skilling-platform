@@ -25,8 +25,29 @@
   "estimatedDurationMinutes": 20,
   "missionType": "guided_shift",
   "briefing": {
-    "supervisorName": "Receiving Supervisor",
-    "message": "Good morning. Apex Consumer Products is delivering stock against purchase order PO-2026-001. Inspect the delivery carefully, record every discrepancy and prevent non-compliant goods from entering available inventory."
+    "supervisorTitle": "Receiving Supervisor",
+    "message": "Good morning. Apex Consumer Products is delivering stock against purchase order PO-2026-001. Inspect the delivery carefully, record every discrepancy and prevent non-compliant goods from entering available inventory.",
+    "shiftName": "Morning Shift",
+    "supplier": "Apex Consumer Products",
+    "purchaseOrderNumber": "PO-2026-001",
+    "deliveryReference": "DN-2026-001",
+    "deliveryType": "Scheduled supplier delivery",
+    "responsibilities": [
+      "Verify shipment documents",
+      "Inspect incoming stock",
+      "Identify discrepancies",
+      "Separate problematic stock",
+      "Complete the receiving discrepancy report",
+      "Make the final receiving decision"
+    ],
+    "workplaceRules": [
+      "Damaged goods cannot enter available inventory.",
+      "Items not listed on the purchase order must not be accepted.",
+      "Unreadable barcodes require hold or escalation.",
+      "Quantity discrepancies must be recorded.",
+      "Required inspections cannot be skipped."
+    ],
+    "rulesVersion": "1.0.0"
   },
   "objectives": [
     "Verify shipment documents",

@@ -15,6 +15,50 @@ enum MissionState {
       values.firstWhere((item) => item.wireName == value);
 }
 
+enum SimulationTimerStatus {
+  notStarted('not_started'),
+  running('running'),
+  paused('paused'),
+  stopped('stopped');
+
+  const SimulationTimerStatus(this.wireName);
+  final String wireName;
+
+  static SimulationTimerStatus fromWireName(String value) =>
+      values.firstWhere((item) => item.wireName == value);
+}
+
+enum AttemptAuditEventType {
+  simulationEntryOpened,
+  missionSelected,
+  attemptCreated,
+  attemptResumeRequested,
+  attemptResumed,
+  retryRequested,
+  retryAttemptCreated,
+  entryLoadFailed,
+  briefingOpened,
+  missionDetailsOpened,
+  briefingAcknowledged,
+  briefingAcknowledgementRemoved,
+  shiftStartRequested,
+  shiftStarted,
+  shiftStartRejected,
+  shiftStartFailed,
+  attemptPaused,
+  attemptResumedFromPause,
+  screenLoadFailed,
+  attemptExited;
+
+  static AttemptAuditEventType fromWireName(String value) {
+    final normalized = value.replaceAllMapped(
+      RegExp(r'_([a-z])'),
+      (match) => match.group(1)!.toUpperCase(),
+    );
+    return values.firstWhere((item) => item.name == normalized);
+  }
+}
+
 enum MissionStatus {
   passed('passed'),
   retryRecommended('retry_recommended'),

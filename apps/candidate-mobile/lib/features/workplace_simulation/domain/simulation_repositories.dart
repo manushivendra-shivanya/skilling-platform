@@ -32,6 +32,14 @@ abstract interface class SimulationAttemptRepository {
 
   Future<SimulationAttempt> appendAction(LearnerAction action);
 
+  Future<SimulationAttempt> appendAuditEvent(AttemptAuditEvent event);
+
+  Future<SimulationAttempt> startShift({
+    required SimulationAttempt startedAttempt,
+    required AttemptAuditEvent requestedEvent,
+    required AttemptAuditEvent startedEvent,
+  });
+
   Future<void> saveResult(String candidateId, SimulationResult result);
 
   Future<SimulationResult?> getResult(String candidateId, String attemptId);
