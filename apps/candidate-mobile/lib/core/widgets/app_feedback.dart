@@ -15,6 +15,7 @@ Future<T?> showAppBottomSheet<T>({
   return showModalBottomSheet<T>(
     context: context,
     isScrollControlled: true,
+    useRootNavigator: true,
     useSafeArea: true,
     builder: (context) => SingleChildScrollView(
       padding: EdgeInsets.fromLTRB(
