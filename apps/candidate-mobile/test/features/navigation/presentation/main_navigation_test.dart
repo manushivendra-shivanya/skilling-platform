@@ -48,9 +48,11 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Your logistics pathway'), findsOneWidget);
 
+    await tester.ensureVisible(find.text('Open lesson').first);
     await tester.tap(find.text('Open lesson').first);
     await tester.pumpAndSettle();
     expect(find.text('Inventory accuracy basics'), findsWidgets);
+    await tester.ensureVisible(find.text('Close'));
     await tester.tap(find.text('Close'));
     await tester.pumpAndSettle();
     expect(find.text('Completed'), findsOneWidget);

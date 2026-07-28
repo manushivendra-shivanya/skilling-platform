@@ -39,10 +39,13 @@ void main() {
       homeDashboardRepository: repository,
     );
     await tester.pumpAndSettle();
-    expect(find.text('Practice readiness'), findsOneWidget);
+    expect(find.text('Open career diagnostic'), findsOneWidget);
 
     repository.setResponse(const Success(null));
-    await tester.drag(find.text('Practice readiness'), const Offset(0, 500));
+    await tester.drag(
+      find.text('Open career diagnostic'),
+      const Offset(0, 500),
+    );
     await tester.pump();
     await tester.pumpAndSettle();
     expect(find.text('Your journey starts here'), findsOneWidget);
@@ -113,8 +116,13 @@ void main() {
       findsOneWidget,
     );
     await tester.tap(find.text('Download').first);
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Open lesson').first);
     await tester.tap(find.text('Open lesson').first);
-    await tester.pump();
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Close'));
+    await tester.tap(find.text('Close'));
+    await tester.pumpAndSettle();
     expect(find.text('Downloaded'), findsOneWidget);
     expect(find.text('Completed'), findsOneWidget);
     expect(
@@ -135,8 +143,12 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.textContaining('not scored assessments'), findsOneWidget);
+    await tester.ensureVisible(find.text('Start demonstration'));
     await tester.tap(find.text('Start demonstration'));
     await tester.pumpAndSettle();
+    await tester.ensureVisible(
+      find.text('Recount, preserve records, and escalate the mismatch'),
+    );
     await tester.tap(
       find.text('Recount, preserve records, and escalate the mismatch'),
     );

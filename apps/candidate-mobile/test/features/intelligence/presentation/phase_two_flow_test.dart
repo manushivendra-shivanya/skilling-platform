@@ -107,9 +107,10 @@ void main() {
     await tester.tap(find.text('Escalate the documented exception'));
     await tester.pumpAndSettle();
 
-    expect(find.text('100%'), findsOneWidget);
+    expect(find.text('100%'), findsWidgets);
     expect(find.textContaining('audit trail'), findsOneWidget);
     expect(intelligence.state.simulationScores, hasLength(1));
+    expect(intelligence.state.simulationScores.single.totalScore, 100);
     expect(intelligence.state.evidence, hasLength(2));
   });
 }
