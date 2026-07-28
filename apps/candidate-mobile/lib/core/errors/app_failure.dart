@@ -22,6 +22,10 @@ final class AuthenticationFailure extends AppFailure {
   const AuthenticationFailure(super.message, {super.cause, super.stackTrace});
 }
 
+final class PermissionFailure extends AppFailure {
+  const PermissionFailure(super.message, {super.cause, super.stackTrace});
+}
+
 final class TimeoutFailure extends AppFailure {
   const TimeoutFailure(super.message, {super.cause, super.stackTrace});
 }

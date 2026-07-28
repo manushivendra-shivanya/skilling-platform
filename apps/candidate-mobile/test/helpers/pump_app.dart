@@ -17,6 +17,9 @@ import 'package:candidate_mobile/features/onboarding/data/secure_candidate_onboa
 import 'package:candidate_mobile/features/onboarding/domain/candidate_onboarding_repository.dart';
 import 'package:candidate_mobile/features/onboarding/domain/onboarding_entry_repository.dart';
 import 'package:candidate_mobile/features/splash/domain/app_startup_repository.dart';
+import 'package:candidate_mobile/features/voice/data/record_voice_capture_repository.dart';
+import 'package:candidate_mobile/features/voice/data/secure_voice_interview_repository.dart';
+import 'package:candidate_mobile/features/voice/domain/voice_interview_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -34,6 +37,8 @@ extension CandidateAppPump on WidgetTester {
     LearningRepository? learningRepository,
     JobsRepository? jobsRepository,
     CandidateIntelligenceRepository? candidateIntelligenceRepository,
+    VoiceInterviewRepository? voiceInterviewRepository,
+    VoiceCaptureRepository? voiceCaptureRepository,
     AppConfig config = const AppConfig.development(),
   }) {
     return pumpWidget(
@@ -76,6 +81,12 @@ extension CandidateAppPump on WidgetTester {
           candidateIntelligenceRepositoryProvider.overrideWithValue(
             candidateIntelligenceRepository ??
                 InMemoryCandidateIntelligenceRepository(),
+          ),
+          voiceInterviewRepositoryProvider.overrideWithValue(
+            voiceInterviewRepository ?? InMemoryVoiceInterviewRepository(),
+          ),
+          voiceCaptureRepositoryProvider.overrideWithValue(
+            voiceCaptureRepository ?? InMemoryVoiceCaptureRepository(),
           ),
         ],
         child: const SkillingApp(),

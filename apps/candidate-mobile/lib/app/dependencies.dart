@@ -27,6 +27,9 @@ import '../features/onboarding/domain/candidate_onboarding_repository.dart';
 import '../features/onboarding/domain/onboarding_entry_repository.dart';
 import '../features/splash/data/mock_app_startup_repository.dart';
 import '../features/splash/domain/app_startup_repository.dart';
+import '../features/voice/data/record_voice_capture_repository.dart';
+import '../features/voice/data/secure_voice_interview_repository.dart';
+import '../features/voice/domain/voice_interview_repository.dart';
 
 final appConfigProvider = Provider<AppConfig>(
   (ref) => const AppConfig.development(),
@@ -113,3 +116,19 @@ final candidateIntelligenceRepositoryProvider =
       }
       return local;
     });
+
+final voiceInterviewRepositoryProvider = Provider<VoiceInterviewRepository>(
+  (ref) =>
+      SecureVoiceInterviewRepository(ref.watch(secureKeyValueStoreProvider)),
+);
+
+final voiceCaptureRepositoryProvider = Provider<VoiceCaptureRepository>((ref) {
+  final repository = RecordVoiceCaptureRepository();
+  ref.onDispose(repository.dispose);
+  return repository;
+});
+
+final resumableMediaUploadRepositoryProvider =
+    Provider<ResumableMediaUploadRepository>(
+      (ref) => const LocalQueuedMediaUploadRepository(),
+    );

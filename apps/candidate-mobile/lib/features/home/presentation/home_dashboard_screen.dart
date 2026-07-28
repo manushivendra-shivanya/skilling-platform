@@ -18,11 +18,13 @@ class HomeDashboardScreen extends ConsumerWidget {
   const HomeDashboardScreen({
     required this.onOpenCoach,
     required this.onOpenDiagnostic,
+    required this.onOpenVoiceInterview,
     super.key,
   });
 
   final VoidCallback onOpenCoach;
   final VoidCallback onOpenDiagnostic;
+  final VoidCallback onOpenVoiceInterview;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -52,6 +54,7 @@ class HomeDashboardScreen extends ConsumerWidget {
           dashboard: value,
           onOpenCoach: onOpenCoach,
           onOpenDiagnostic: onOpenDiagnostic,
+          onOpenVoiceInterview: onOpenVoiceInterview,
           onRefresh: () =>
               ref.read(homeDashboardControllerProvider.notifier).refresh(),
         );
@@ -65,12 +68,14 @@ class _HomeContent extends StatelessWidget {
     required this.dashboard,
     required this.onOpenCoach,
     required this.onOpenDiagnostic,
+    required this.onOpenVoiceInterview,
     required this.onRefresh,
   });
 
   final HomeDashboard dashboard;
   final VoidCallback onOpenCoach;
   final VoidCallback onOpenDiagnostic;
+  final VoidCallback onOpenVoiceInterview;
   final Future<void> Function() onRefresh;
 
   @override
@@ -109,6 +114,37 @@ class _HomeContent extends StatelessWidget {
                 AppButton(
                   label: 'Open career diagnostic',
                   onPressed: onOpenDiagnostic,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          AppCard(
+            backgroundColor: AppColors.infoSoft,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const Icon(
+                  Icons.record_voice_over_outlined,
+                  size: 40,
+                  color: AppColors.brand,
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  'Voice interview practice',
+                  style: Theme.of(context).textTheme.titleLarge,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                const Text(
+                  'Record three logistics answers, review the transcript, and receive transparent development feedback.',
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: AppSpacing.md),
+                AppButton(
+                  label: 'Start voice practice',
+                  leadingIcon: Icons.mic_none_outlined,
+                  onPressed: onOpenVoiceInterview,
                 ),
               ],
             ),

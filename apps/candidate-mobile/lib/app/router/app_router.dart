@@ -27,6 +27,7 @@ import '../../features/onboarding/presentation/welcome_screen.dart';
 import '../../features/practice/presentation/practice_screen.dart';
 import '../../features/profile/presentation/profile_screen.dart';
 import '../../features/splash/presentation/app_startup_screen.dart';
+import '../../features/voice/presentation/voice_interview_screen.dart';
 import '../dependencies.dart';
 
 const appStartupRoutePath = '/';
@@ -61,6 +62,8 @@ const notificationsRoutePath = '/notifications';
 const notificationsRouteName = 'notifications';
 const diagnosticRoutePath = '/diagnostic';
 const diagnosticRouteName = 'diagnostic';
+const voiceInterviewRoutePath = '/voice-interview';
+const voiceInterviewRouteName = 'voice-interview';
 const designSystemGalleryRoutePath = '/dev/design-system';
 const designSystemGalleryRouteName = 'design-system-gallery';
 
@@ -180,6 +183,8 @@ GoRouter createAppRouter({
                 builder: (context, state) => HomeDashboardScreen(
                   onOpenCoach: () => context.push(aiCoachRoutePath),
                   onOpenDiagnostic: () => context.push(diagnosticRoutePath),
+                  onOpenVoiceInterview: () =>
+                      context.push(voiceInterviewRoutePath),
                 ),
               ),
             ],
@@ -241,6 +246,12 @@ GoRouter createAppRouter({
         path: diagnosticRoutePath,
         name: diagnosticRouteName,
         builder: (context, state) => const DiagnosticScreen(),
+      ),
+      GoRoute(
+        parentNavigatorKey: rootNavigatorKey,
+        path: voiceInterviewRoutePath,
+        name: voiceInterviewRouteName,
+        builder: (context, state) => const VoiceInterviewScreen(),
       ),
       if (showDevelopmentTools)
         GoRoute(
@@ -304,6 +315,7 @@ const _mainAndGlobalRoutePaths = {
   aiCoachRoutePath,
   notificationsRoutePath,
   diagnosticRoutePath,
+  voiceInterviewRoutePath,
 };
 
 class AppRouteObserver extends NavigatorObserver {

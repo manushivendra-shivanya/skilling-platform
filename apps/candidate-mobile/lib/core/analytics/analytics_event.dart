@@ -73,4 +73,19 @@ class AnalyticsEvent {
         name: 'simulation_submitted',
         properties: {'simulation_version': simulationVersion},
       );
+
+  factory AnalyticsEvent.voiceConsentGranted() =>
+      const AnalyticsEvent(name: 'voice_consent_granted');
+
+  factory AnalyticsEvent.voiceTurnRecorded(int turn) =>
+      AnalyticsEvent(name: 'voice_turn_recorded', properties: {'turn': turn});
+
+  factory AnalyticsEvent.voiceFeedbackReady(String rubricVersion) =>
+      AnalyticsEvent(
+        name: 'voice_feedback_ready',
+        properties: {'rubric_version': rubricVersion},
+      );
+
+  factory AnalyticsEvent.voiceHumanReviewRequested() =>
+      const AnalyticsEvent(name: 'voice_human_review_requested');
 }
