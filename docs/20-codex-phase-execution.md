@@ -416,6 +416,28 @@ Acceptance:
 
 ---
 
+# Inter-phase milestone — WMS approved entry and briefing
+
+Build:
+- Screen 01 Simulation Entry from approved specification 1.0
+- Screen 02 Supervisor Briefing from approved specification 1.0
+- Practice entry and protected GoRouter routes under `/practise`
+- Separate attempt-creation and shift-timer timestamps
+- Append-only unscored audit events
+- Mandatory briefing acknowledgement and duplicate-start protection
+- Explicit Screen 03 handoff without operational UI assumptions
+
+Acceptance:
+- A new or retry attempt receives a fresh deterministic scenario seed
+- The timer does not start on entry or while reading the briefing
+- Begin Shift requires acknowledgement and application-layer validation
+- Successful start atomically persists `inProgress`, the
+  document-verification stage, timer start and exactly one `shiftStarted` event
+- Loading, empty, error, offline and accessible 200% text states are represented
+- Existing Phase 2 Practice functionality remains available
+
+---
+
 # Phase 3 — Voice, Jobs and Employer Operations
 
 ## Phase 3.1 — Recorded-turn voice foundation

@@ -17,6 +17,10 @@ flowchart TD
     ROUTER --> SHELL[Persistent Five-tab Shell]
     ROUTER --> DIAG[Career Diagnostic]
     ROUTER --> VOICE[Recorded-turn Voice Interview]
+    PRACTISE --> WMSCARD[Workplace Simulation Card]
+    WMSCARD --> WMSENTRY[WMS Simulation Entry]
+    WMSENTRY --> WMSBRIEF[Supervisor Briefing and Acknowledgement]
+    WMSBRIEF --> WMSHANDOFF[Screen 03 Handoff - no floor UI]
 
     ENTRY --> AUTHCTRL[Authentication Controller]
     AUTHCTRL --> LOCALOTP[Development OTP Adapter]
@@ -46,9 +50,11 @@ flowchart TD
     SIMEVENTS --> SCORE[Deterministic Scoring]
     SCORE --> EVIDENCE[Competency Evidence]
 
-    WMSCTRL[UI-neutral Workplace Simulation Controller - not routed]
+    WMSCTRL[Workplace Simulation Controller]
     WMSCTRL --> WMSCONTENT[Versioned Local Workplace Content]
     WMSCTRL --> WMSSTATE[Mission State and Action Validation]
+    WMSSTATE --> WMSTIMER[Operational Timer Lifecycle]
+    WMSSTATE --> WMSAUDIT[Append-only Unscored Attempt Audit]
     WMSCTRL --> WMSSCENARIO[Deterministic Seeded Scenario]
     WMSCTRL --> WMSSCORE[Scoring, Critical Errors and Remediation]
     WMSSCORE --> WMSEVIDENCE[Versioned Competency Evidence]
@@ -76,7 +82,8 @@ flowchart TD
     ACCESS --> STATES[Loading, Empty, Error, Offline and Pending Sync]
     APP --> ANALYTICS[Local Non-PII Analytics]
 
-    WMSCTRL -. Future Approved Interaction Contract .-> PRACTISE
+    WMSENTRY --> WMSCTRL
+    WMSBRIEF --> WMSCTRL
 
     GH[GitHub Repository] --> ACTIONS[GitHub Actions APK Build]
     ACTIONS --> APK[Signed Android Debug APK]

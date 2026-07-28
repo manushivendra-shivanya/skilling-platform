@@ -59,8 +59,9 @@ Last updated: 2026-07-28
   request, local deletion, and explicit offline/pending-upload states
 - A UI-neutral Workplace Management Simulation v0.2 backbone provides
   versioned local content, deterministic scenarios, mission state, action
-  validation, scoring, critical errors, remediation and evidence. It is not
-  routed into production UI.
+  validation, scoring, critical errors, remediation and evidence
+- Approved WMS Simulation Entry and Supervisor Briefing screens are available
+  from Practice; the operational workplace remains deferred to Screen 03
 
 ### Android configuration
 - compileSdk 36
@@ -75,10 +76,9 @@ Last updated: 2026-07-28
 feature/flutter-foundation
 
 ### Latest verified milestone
-The additive Workplace Management Simulation v0.2 backbone is implemented and
-locally validated behind stable interfaces. Phase 3.1 remains the latest
-production-visible milestone. The WMS is intentionally not routed while the
-approved screen-by-screen interaction specification is pending.
+The additive Workplace Management Simulation backbone is implemented and its
+approved Screen 01 entry and Screen 02 briefing are connected. The operational
+workplace is intentionally not implemented while Screen 03 is pending.
 
 ### Phase 1.1 validation record
 - `flutter pub get` — passed
@@ -556,11 +556,54 @@ approved screen-by-screen interaction specification is pending.
 - No ADB device or Wireless Debugging service was discoverable, so installation
   remains pending; the APK contains no new WMS production screen by design
 
+### WMS Screen 01–02 implementation
+- Added a state-aware Workplace Simulation card and professional Simulation
+  Entry route under the existing `/practise` hierarchy with workplace,
+  role, mission, progress, objectives, Mission Details and a single state-aware
+  Start, Continue or Retry action
+- Added Supervisor Briefing with role-based supervisor identity, shipment
+  summary, approved message, responsibilities, workplace rules, mandatory
+  acknowledgement and disabled/loading Begin Shift states
+- Added protected entry, briefing and temporary workplace-handoff routes
+  without changing the approved five-tab navigation
+- Added persisted `createdAt`, `briefingAcknowledgedAt`, `shiftStartedAt`,
+  `pausedAt`, `timerResumedAt`, `completedAt`,
+  `elapsedSimulationSeconds` and typed `timerStatus` lifecycle state; reading
+  and paused time are excluded from elapsed simulation time
+- Added candidate-owned, append-only, continuously sequenced unscored audit
+  events with attempt, mission/version, screen, optional target, event type,
+  elapsed duration, occurrence time and JSON-compatible non-sensitive payload
+- Kept `LearnerAction` as the only scoreable behavioural stream; audit events
+  have no scoring or critical-error dependency
+- Added typed Begin Shift outcomes, in-flight duplicate protection and an
+  atomic repository start operation so the timer and `shiftStarted` audit
+  event cannot be partially persisted
+- Added fresh retry seeds, audit-backed local analytics, offline messaging,
+  48 dp controls, logical semantics, restrained motion and reduced-motion
+  handling
+- Screen 03 operational floor remains explicitly unimplemented; the handoff
+  states that no workstation UI has been invented
+
+### WMS Screen 01–02 local validation
+- `dart format .` — passed with no outstanding changes
+- `flutter analyze --no-pub` — passed with no issues
+- Focused WMS, routing and Phase 2 regression suite — passed; 25 tests,
+  including injected persistence failure rollback
+- Complete entry-to-briefing-to-shift widget flow passed at 200% text scaling
+- Full Flutter suite — 79 of 81 tests passed. The two remaining
+  `Today’s mission` Home-navigation expectations are unchanged baseline
+  failures reproduced at `bc11641`; neither exercises WMS
+- `flutter build apk --debug --target-platform android-arm64` — attempted
+  locally after successful dependency resolution and failed in Gradle 9.1
+  settings evaluation with `The settings are not yet available for build`
+  before Android source compilation
+- GitHub Actions remains the authoritative Android build and is recorded after
+  the source commit is pushed
+
 ### Next implementation
-After the approved screen-by-screen interaction specification arrives, apply
-it as the WMS presentation and navigation layer without changing these domain
-contracts. If that contract is not yet available, resume Phase 3.2 job
-application operations through the planned NestJS BFF.
+Implement Screen 03 Workplace Overview only after its approved specification
+arrives. Do not infer workstation layout, attention states, unlocking,
+navigation or floor interaction from Screens 01–02.
 
 ## Known constraints
 - Android/Termux/Ubuntu PRoot environment cannot reliably run Android SDK host binaries
@@ -593,6 +636,5 @@ application operations through the planned NestJS BFF.
   Phase 2 records and narrowly scoped Phase 3 practice metadata; media
   authorisation, AI, employer, administrator and job-application operations
   remain behind the planned NestJS BFF
-- The WMS v0.2 backbone has no production UI. Its APK is suitable only for
-  installation/regression validation until the interaction contract is
-  implemented.
+- WMS Screens 01–02 are production-visible. Screen 03 and the playable
+  workplace tasks remain intentionally unavailable pending approved contracts.

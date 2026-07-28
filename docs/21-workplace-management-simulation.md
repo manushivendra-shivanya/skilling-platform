@@ -4,8 +4,7 @@
 
 The Workplace Management Simulation (WMS) is an additive, content-driven
 simulation capability for practising observable workplace decisions. It does
-not replace the existing Phase 2 Practice simulation and is not yet connected
-to production navigation.
+not replace the existing Phase 2 Practice simulation.
 
 The engine boundary is industry-neutral. Logistics is the first authored
 content pack, not an architectural constraint.
@@ -37,10 +36,13 @@ interaction decisions.
 - A UI-neutral Riverpod application controller.
 - Local logistics content for the first receiving mission.
 
-Excluded:
+Version 0.2 originally excluded production screens. Approved Screen 01 and
+Screen 02 are now connected as a subsequent presentation slice.
 
-- Production screens, routes and navigation.
-- Assumptions about final gestures, screen composition or result presentation.
+Still excluded:
+
+- Screen 03 workplace-floor interactions and later screens.
+- Assumptions about unspecified workstation or result behaviour.
 - Supabase schema or synchronization.
 - AI providers, NPCs, voice, Redis or BFF changes.
 - Changes to the existing Phase 2 simulation.
@@ -111,7 +113,8 @@ after the approved screen-by-screen interaction specification defines screen
 states, actions, validation display, navigation, failure handling,
 accessibility and exact results.
 
-Minimal tests are the only harness in v0.2.
+The approved Simulation Entry and Supervisor Briefing presentation calls this
+controller. Attempt mutation remains outside Flutter widgets.
 
 ## Persistence and future synchronization
 
