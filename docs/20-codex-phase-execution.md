@@ -328,6 +328,61 @@ Acceptance:
 - Resume parsing adapter
 - Analytics events
 
+## Phase 2.1 — Environment, authentication and candidate records
+
+Build:
+- Environment-gated Supabase bootstrap
+- Provider-neutral production phone authentication adapter
+- Candidate profile persistence
+- Versioned consent persistence
+- Secure local fallback for development and offline use
+
+## Phase 2.2 — Taxonomy and diagnostic
+
+Build:
+- Versioned role and competency taxonomy
+- Versioned logistics diagnostic definition
+- Deterministic diagnostic runtime
+- Explainable competency-gap results
+- Recommended role and pathway
+
+## Phase 2.3 — Learning pathway and offline progress
+
+Build:
+- Versioned learning pathway and content model
+- Lesson detail and checkpoint experience
+- Download and completion state
+- Candidate-owned progress persistence
+- Local-first pending-sync behaviour
+
+## Phase 2.4 — Simulation runtime and event batching
+
+Build:
+- Versioned inventory-discrepancy simulation
+- Ordered candidate and technical events
+- Idempotent event persistence
+- Offline attempt preservation and later synchronization
+- Explicit separation of technical failures from candidate actions
+
+## Phase 2.5 — Scoring, evidence and integration boundaries
+
+Build:
+- Deterministic, explainable scoring
+- Candidate competency evidence generation
+- Evidence history in the candidate profile
+- Resume parsing repository contract without provider credentials
+- Non-PII analytics for diagnostic, learning and simulation events
+
+## Phase 2.6 — Security and release hardening
+
+Validate:
+- Row-level security and least-privilege grants
+- Candidate ownership and immutable published reference data
+- Database security and performance advisors
+- Loading, empty, offline, pending-sync and error states
+- Unit, repository, widget and end-to-end feature tests
+- Android build, signed ARM64 QC APK, installation and launch
+
 ## Exit criteria
 Candidate can authenticate, create a persistent profile, complete a logistics diagnostic, receive an explainable pathway, complete learning content and perform at least one scored simulation.
 

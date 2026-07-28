@@ -1,6 +1,6 @@
 # Current Repository State
 
-Last updated: 2026-07-27
+Last updated: 2026-07-28
 
 ## Status
 
@@ -15,6 +15,8 @@ Last updated: 2026-07-27
   S24 Ultra; visual navigation QC is pending candidate confirmation
 - Cumulative Phase 1.1-1.12 arm64 QC APK installed as an in-place update and
   launched through Wireless ADB on Samsung S24 Ultra
+- Phase 2 core candidate intelligence implementation and JobSkills database
+  migrations; release validation is in progress
 
 ### Current UI
 - Phase 1.1 application foundation replaces the default Flutter counter demo
@@ -45,8 +47,12 @@ Last updated: 2026-07-27
   application records
 - Phase 1.12 Profile summary, editable local details, privacy controls, help,
   deletion-request boundary, and working logout
-- No production authentication, backend profile sync, resume upload, or voice
-  recording yet
+- Environment-gated Supabase phone authentication and candidate-owned profile,
+  consent, diagnostic, learning, simulation, score, and evidence sync
+- Secure local development and offline fallback remains available when
+  Supabase configuration is absent
+- Resume parsing remains a provider-neutral adapter contract; resume upload and
+  voice recording are not connected yet
 
 ### Android configuration
 - compileSdk 36
@@ -335,10 +341,66 @@ on the connected Samsung S24 Ultra.
 - Visual feature QC remains with the tester; automated validation and Android
   installation/launch validation are complete
 
+### Phase 2 implementation
+- Environment-gated Supabase initialization accepts only a project URL and
+  modern `sb_publishable_` client key; no secret or service-role credential is
+  stored in Flutter
+- Supabase phone OTP and candidate profile/consent repositories implement the
+  existing provider-neutral contracts, while secure local adapters remain the
+  default when remote configuration is absent
+- Immutable, versioned role, competency, diagnostic, pathway, learning, and
+  simulation definitions seed a logistics candidate-intelligence foundation
+- The accessible career diagnostic records four competency signals and
+  returns explainable role gaps and a recommended learning pathway; it does
+  not use personality scoring or automated rejection
+- Learning units now include real local lesson/checkpoint content, download
+  state, completion state, and local-first progress synchronization
+- Practice includes a scored inventory-discrepancy simulation with ordered
+  events, deterministic accuracy/escalation/sequence scoring, transparent
+  feedback, attempt history, and generated competency evidence
+- Technical interruption events are stored for reliability analysis and
+  explicitly excluded from candidate scores
+- Profile shows generated evidence and pending synchronization state
+- Resume parsing is represented by a provider-neutral repository contract; no
+  resume processor, credential, file upload, or unsupported accuracy claim was
+  introduced
+- Non-PII analytics cover diagnostic completion, learning progress, and
+  simulation submission
+- ADR-0013 preserves the planned NestJS BFF for privileged, consequential,
+  employer, administrator, AI, resume-processing, and cross-candidate
+  operations
+
+### Phase 2 JobSkills database
+- Applied three versioned migrations to the separate Supabase project
+  `JobSkills` (`qoairksjpwkhwqxeollj`); no ZHealth project or files were
+  accessed
+- Added 17 public tables for candidate profiles, consent, taxonomy,
+  diagnostics, pathways, learning, simulations, scores, evidence, and
+  resume-parse job metadata
+- All public tables have row-level security enabled; candidate records require
+  `auth.uid()` ownership and published reference definitions are read-only to
+  mobile clients
+- Simulation events use ordered, idempotent persistence and scores reference
+  their attempt
+- Revoked client execution of the pre-existing
+  `public.rls_auto_enable()` security-definer function and added missing
+  foreign-key indexes
+- Supabase Security Advisor reports zero findings; Performance Advisor reports
+  only expected unused-index informational findings while the new tables are
+  empty
+
+### Phase 2 validation record
+- `dart format .` — passed in the isolated workspace
+- `flutter analyze --no-pub` — passed with no issues in the isolated workspace
+- Supabase migrations — applied successfully to JobSkills
+- Supabase Security Advisor — passed with zero findings
+- Full Flutter tests, GitHub Actions Android build, signed ARM64 packaging, and
+  connected-device installation are pending the release-validation step
+
 ### Next implementation
-After cumulative Phase 1 APK and device QC, begin Phase 2.1 from
-docs/20-codex-phase-execution.md. Do not connect production services until the
-required backend configuration and secrets are approved.
+Finish Phase 2 release validation and candidate device QC. After Phase 2 QC,
+begin Phase 3 as a separate milestone; do not start voice, employer, admin, AI
+provider, or consequential job-operation work automatically.
 
 ## Known constraints
 - Android/Termux/Ubuntu PRoot environment cannot reliably run Android SDK host binaries
@@ -346,22 +408,25 @@ required backend configuration and secrets are approved.
 - The generic `app-debug.apk` artifact filename can be confused with stale
   downloads until GitHub workflow-write permission is available
 - macOS will be required for iOS build and signing
-- No external analytics, connectivity, authentication, or storage provider is
-  connected in Phase 1.1; the included adapters are intentionally local mocks
+- External analytics and connectivity adapters remain local mocks. Supabase
+  authentication and candidate-owned data adapters are available only in a
+  build configured with the JobSkills URL and publishable key.
 - The component gallery is a development aid and is intentionally unavailable
   in production configuration
 - Selected language still uses the Phase 1 in-memory adapter and persists
   through navigation; authenticated session state uses secure device storage
 - Development OTP `123456` is intentionally local and must never be treated as
   production authentication
-- Candidate onboarding drafts and consent records are device-local Phase 1
-  data; server-side profile/consent persistence and cross-device sync remain
-  Phase 2 work
+- Candidate onboarding drafts remain available locally; profiles and consent
+  can synchronize to JobSkills when the Supabase build configuration is
+  supplied
 - Resume upload and voice introduction are non-interactive placeholders; no
   storage or microphone permission is requested
-- Home, Coach, Learning, Practice, Jobs, and Profile use local mock or encrypted
-  device data only; none of their displayed scores, matches, content, or
-  applications are authoritative backend records
+- Home, Coach, and Jobs remain local mock experiences. Diagnostic, learning,
+  simulation, score, and evidence records use local-first persistence and can
+  synchronize to candidate-owned JobSkills records when configured.
 - Coach voice/attachment controls and notifications remain transparent
   placeholders; no AI provider, microphone, upload, push token, or notification
   service is used
+- The direct Supabase adapter is intentionally limited to candidate-owned
+  Phase 2 records and does not replace the planned NestJS BFF

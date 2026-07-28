@@ -5,88 +5,68 @@ flowchart TD
     U[Candidate] --> APP[Flutter Candidate App]
 
     APP --> BOOT[Application Bootstrap]
-    BOOT --> CONFIG[App Environment]
+    BOOT --> CONFIG[Build-time Environment]
+    CONFIG --> LOCALMODE[Secure Local Development Mode]
+    CONFIG -->|URL and publishable key| SUPAINIT[Supabase Initialization]
     BOOT --> LOG[Safe Debug Logger]
     BOOT --> ERR[Framework Error Boundary]
 
-    APP --> ROUTER[GoRouter]
-    ROUTER --> START[Startup Feature]
-    ROUTER --> WELCOME[Welcome]
-    ROUTER --> LANGUAGE[English, Hindi, Hinglish Selection]
-    ROUTER --> SIGNIN[Sign-in Choice]
-    ROUTER --> GALLERY[Component Gallery - DEVELOPMENT ONLY]
-    START --> STARTCTRL[Startup Controller]
-    STARTCTRL --> STARTREPO[Mock Startup Repository]
-    LANGUAGE --> LANGCTRL[Language Selection Controller]
-    LANGCTRL --> ENTRYREPO[Local Onboarding Entry Repository]
-    ENTRYREPO --> STORAGE
-    SIGNIN --> PHONE[Phone OTP - PHASE 1.4]
-    SIGNIN --> GOOGLE[Google Sign-in - PLANNED]
-    SIGNIN --> POLICY[Terms and Privacy Summaries]
-    PHONE --> PHONESCREEN[Phone Entry]
-    PHONESCREEN --> AUTHCTRL[Development Auth Controller]
-    AUTHCTRL --> MOCKOTP[Local Mock OTP Adapter]
-    AUTHCTRL --> OTPSCREEN[OTP, Resend, Expiry and Error States]
-    OTPSCREEN --> SESSIONREPO[Candidate Session Repository]
-    SESSIONREPO --> SECURESTORE[Flutter Secure Storage Adapter]
-    STARTCTRL --> SESSIONREPO
-    SESSIONREPO --> AUTHSUCCESS[Authenticated Handoff and Logout]
-    AUTHSUCCESS --> ONBOARD[Candidate Onboarding Wizard]
-    ONBOARD --> GOAL[Goal and Personal Details]
-    ONBOARD --> PROFILE[Location, Education, Experience and Roles]
-    ONBOARD --> PLACEHOLDERS[Resume and Voice Placeholders]
-    ONBOARD --> CONSENT[Versioned Terms and Privacy Consent]
-    ONBOARD --> REVIEW[Profile Review and Completion]
-    ONBOARD --> ONBOARDCTRL[Onboarding Controller]
-    ONBOARDCTRL --> DRAFTREPO[Candidate Onboarding Repository]
-    DRAFTREPO --> SECURESTORE
-    CONNECTIVITY --> ONBOARD
-    REVIEW --> MAINSHELL[Persistent Main Navigation Shell]
-    START --> ROUTEGUARD[Session and Onboarding Route Policy]
-    ROUTEGUARD --> MAINSHELL
-    MAINSHELL --> HOME[Home Dashboard]
-    HOME --> HOMECTRL[Home Dashboard Controller]
-    HOMECTRL --> HOMEREPO[Mock Home Dashboard Repository]
-    MAINSHELL --> LEARN[Learning]
-    LEARN --> LEARNCTRL[Learning Controller]
-    LEARNCTRL --> LEARNREPO[Mock Learning Repository]
-    MAINSHELL --> PRACTISE[Practice Demonstrations]
-    MAINSHELL --> JOBS[Mock Jobs]
-    JOBS --> JOBSCTRL[Jobs Controller]
-    JOBSCTRL --> JOBSREPO[Local Mock Jobs Repository]
-    JOBSREPO --> SECURESTORE
-    MAINSHELL --> ME[Candidate Profile]
-    ME --> ONBOARDCTRL
-    ME --> SESSIONREPO
-    MAINSHELL --> COACH[Local Scripted Coach]
-    COACH --> COACHCTRL[Coach Controller]
-    MAINSHELL --> NOTIFICATIONS[Notifications - PLACEHOLDER]
+    APP --> ROUTER[GoRouter and Protected Navigation]
+    ROUTER --> ENTRY[Welcome, Language and Sign-in]
+    ROUTER --> ONBOARD[Candidate Onboarding]
+    ROUTER --> SHELL[Persistent Five-tab Shell]
+    ROUTER --> DIAG[Career Diagnostic]
+
+    ENTRY --> AUTHCTRL[Authentication Controller]
+    AUTHCTRL --> LOCALOTP[Development OTP Adapter]
+    AUTHCTRL --> SUPAAUTH[Supabase Phone Auth Adapter]
+    ONBOARD --> PROFILECTRL[Candidate Profile and Consent Controller]
+    PROFILECTRL --> LOCALPROFILE[Secure Local Profile Adapter]
+    PROFILECTRL --> SUPAPROFILE[Supabase Profile Adapter]
+
+    SHELL --> HOME[Home]
+    SHELL --> LEARN[Learning]
+    SHELL --> PRACTISE[Practice]
+    SHELL --> JOBS[Jobs]
+    SHELL --> ME[Profile and Evidence]
+    SHELL --> COACH[Local Scripted Coach]
+
+    DIAG --> INTELCTRL[Candidate Intelligence Controller]
+    LEARN --> INTELCTRL
+    PRACTISE --> INTELCTRL
+    ME --> INTELCTRL
+    INTELCTRL --> LOCALINTEL[Encrypted Local State and Pending Sync]
+    INTELCTRL --> OFFLINE[Offline-first Supabase Repository]
+
+    DIAG --> DIAGENGINE[Versioned Deterministic Diagnostic Engine]
+    DIAGENGINE --> PATHWAY[Explainable Role Gaps and Pathway]
+    LEARN --> CONTENT[Versioned Content, Download and Progress]
+    PRACTISE --> SIMEVENTS[Ordered Simulation Event Batch]
+    SIMEVENTS --> SCORE[Deterministic Scoring]
+    SCORE --> EVIDENCE[Competency Evidence]
+
+    SUPAAUTH --> JOBSKILLS[(JobSkills Supabase)]
+    SUPAPROFILE --> JOBSKILLS
+    OFFLINE --> JOBSKILLS
+    JOBSKILLS --> RLS[Candidate Ownership RLS]
+    JOBSKILLS --> CATALOG[Read-only Published Taxonomy and Content]
 
     APP --> THEME[Material 3 Design System]
-    THEME --> TOKENS[Colour, Type, Spacing, Radius, Elevation, Icons]
-    THEME --> COMPONENTS[Accessible Shared Components]
-    COMPONENTS --> STATES[Loading, Empty, Error, Offline, Pending Sync]
-    GALLERY --> TOKENS
-    GALLERY --> COMPONENTS
-
-    APP --> DI[Riverpod Dependency Composition]
-    DI --> ANALYTICS[Local Mock Analytics]
-    DI --> CONNECTIVITY[Mock Connectivity Repository]
-    DI --> STORAGE[In-memory Key-value Store]
-    DI --> SESSIONREPO
+    THEME --> ACCESS[Accessible Shared Components]
+    ACCESS --> STATES[Loading, Empty, Error, Offline and Pending Sync]
+    APP --> ANALYTICS[Local Non-PII Analytics]
 
     GH[GitHub Repository] --> ACTIONS[GitHub Actions APK Build]
-    ACTIONS --> APK[Android Debug APK]
+    ACTIONS --> APK[Signed Android Debug APK]
     APK --> DEVICE[Samsung S24 Ultra]
 
-    API[NestJS API - PLANNED]
-    DB[Supabase PostgreSQL - PLANNED]
+    API[NestJS BFF - PLANNED]
     REDIS[Redis - PLANNED]
     AI[Python AI Services - PLANNED]
     WEB[Next.js Web Apps - PLANNED]
 
-    APP -. Future .-> API
-    API -. Future .-> DB
+    APP -. Consequential and privileged operations .-> API
+    API -. Future .-> JOBSKILLS
     API -. Future .-> REDIS
     API -. Future .-> AI
     WEB -. Future .-> API
