@@ -128,7 +128,7 @@ void main() {
     expect(find.text('Downloaded'), findsOneWidget);
     expect(find.text('Mark incomplete'), findsOneWidget);
     expect(
-      find.textContaining('not an authoritative qualification'),
+      find.textContaining('not an employer qualification'),
       findsOneWidget,
     );
   });
