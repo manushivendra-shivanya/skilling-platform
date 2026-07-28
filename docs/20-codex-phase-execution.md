@@ -388,6 +388,34 @@ Candidate can authenticate, create a persistent profile, complete a logistics di
 
 ---
 
+# Inter-phase milestone — Workplace Management Simulation v0.2 backbone
+
+Build:
+- Industry-neutral workplace-simulation domain and content contracts
+- Versioned local logistics content pack and first receiving mission
+- Deterministic scenario generation and explicit mission state machine
+- Action validation, evaluation, scoring and critical-error services
+- Competency evidence and remediation generation
+- Candidate-isolated local attempt persistence
+- UI-neutral application controller
+
+Constraints:
+- Preserve the existing Phase 2 Practice simulation
+- Add no production route or screen until the approved screen-by-screen
+  interaction specification is available
+- Add no Supabase, BFF, Redis, AI or voice dependency for this milestone
+
+Acceptance:
+- Same mission version and seed reproduce the same scenario
+- Audit actions are append-only, candidate-owned and continuously sequenced
+- Technical events never reduce candidate scores
+- Critical errors, incomplete attempts, retry outcomes and remediation are
+  deterministic and tested
+- Content references and scoring weights are validated
+- Existing Android and GitHub Actions pipelines remain unchanged
+
+---
+
 # Phase 3 — Voice, Jobs and Employer Operations
 
 ## Phase 3.1 — Recorded-turn voice foundation

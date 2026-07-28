@@ -57,6 +57,10 @@ Last updated: 2026-07-28
 - Voice interview practice now provides permission education, real microphone
   capture, reviewed transcripts, explainable development feedback, human-review
   request, local deletion, and explicit offline/pending-upload states
+- A UI-neutral Workplace Management Simulation v0.2 backbone provides
+  versioned local content, deterministic scenarios, mission state, action
+  validation, scoring, critical errors, remediation and evidence. It is not
+  routed into production UI.
 
 ### Android configuration
 - compileSdk 36
@@ -71,10 +75,10 @@ Last updated: 2026-07-28
 feature/flutter-foundation
 
 ### Latest verified milestone
-Phase 3.1 recorded-turn voice foundation and JobSkills migrations are complete.
-GitHub Actions run `30327701922` passed for commit `f3c9fab`, and its verified
-ARM64 QC APK was published, clean-installed, launched, and confirmed active on
-the Samsung S24 Ultra. Visual candidate QC remains with the tester.
+The additive Workplace Management Simulation v0.2 backbone is implemented and
+locally validated behind stable interfaces. Phase 3.1 remains the latest
+production-visible milestone. The WMS is intentionally not routed while the
+approved screen-by-screen interaction specification is pending.
 
 ### Phase 1.1 validation record
 - `flutter pub get` — passed
@@ -501,10 +505,47 @@ the Samsung S24 Ultra. Visual candidate QC remains with the tester.
   application process remained active; visual feature QC remains with the
   tester
 
+### Workplace Management Simulation v0.2 backbone
+- Added industry-neutral, typed pack, workplace, role, competency, mission,
+  task, resource, scenario, scoring, critical-error, remediation, attempt,
+  action, result and evidence contracts
+- Added a versioned logistics content pack and first receive-shipment mission
+  with six workstations, eleven tasks, six carton templates, five deterministic
+  issue types, weighted scoring and six critical-error rules
+- Added deterministic scenario generation keyed by mission version and seed
+- Added an explicit state machine, candidate-action validation, content-driven
+  evaluation, progress calculation, deterministic scoring, critical-error
+  handling, remediation and competency evidence
+- Added candidate-isolated encrypted local attempts with append-only,
+  continuously sequenced audit actions and fresh retry identifiers
+- Added a UI-neutral Riverpod controller behind stable content and attempt
+  repository interfaces
+- Preserved the existing Phase 2 production Practice simulation; no WMS route,
+  production screen, Supabase migration, BFF, Redis, AI or voice dependency
+  was introduced
+- ADR-0015 records the additive engine and deferred-presentation decision
+
+### Workplace Management Simulation v0.2 local validation
+- `dart format .` — passed; no outstanding changes
+- JSON content syntax validation — passed for all five content documents
+- `flutter analyze --no-pub` — passed with no issues
+- Focused WMS test suite — passed; 16 tests covering content references,
+  deterministic variation, state transitions, append-only ownership,
+  validation, scoring, critical errors, evidence and controller retry
+- Full Flutter suite — 73 of 75 tests passed. The two failures are existing
+  Home-navigation expectations and reproduce unchanged at prior released
+  commit `bc11641`; neither test imports or exercises the WMS feature
+- `flutter build apk --debug --no-pub` — attempted locally and reached the
+  unchanged Gradle 9.1 host failure, `The settings are not yet available for
+  build`, before Android source compilation
+- GitHub Actions remains the authoritative Android build and its result is
+  recorded after the remote build completes
+
 ### Next implementation
-After Phase 3.1 candidate QC, implement Phase 3.2 job application operations
-through the planned NestJS BFF. Employer and administrator portals remain
-Phase 3.3.
+After the approved screen-by-screen interaction specification arrives, apply
+it as the WMS presentation and navigation layer without changing these domain
+contracts. If that contract is not yet available, resume Phase 3.2 job
+application operations through the planned NestJS BFF.
 
 ## Known constraints
 - Android/Termux/Ubuntu PRoot environment cannot reliably run Android SDK host binaries
@@ -537,3 +578,6 @@ Phase 3.3.
   Phase 2 records and narrowly scoped Phase 3 practice metadata; media
   authorisation, AI, employer, administrator and job-application operations
   remain behind the planned NestJS BFF
+- The WMS v0.2 backbone has no production UI. Its APK is suitable only for
+  installation/regression validation until the interaction contract is
+  implemented.

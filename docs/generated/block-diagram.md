@@ -46,6 +46,14 @@ flowchart TD
     SIMEVENTS --> SCORE[Deterministic Scoring]
     SCORE --> EVIDENCE[Competency Evidence]
 
+    WMSCTRL[UI-neutral Workplace Simulation Controller - not routed]
+    WMSCTRL --> WMSCONTENT[Versioned Local Workplace Content]
+    WMSCTRL --> WMSSTATE[Mission State and Action Validation]
+    WMSCTRL --> WMSSCENARIO[Deterministic Seeded Scenario]
+    WMSCTRL --> WMSSCORE[Scoring, Critical Errors and Remediation]
+    WMSSCORE --> WMSEVIDENCE[Versioned Competency Evidence]
+    WMSCTRL --> WMSLOCAL[Candidate-owned Encrypted Local Attempts]
+
     VOICE --> CONSENT[Purpose-separated Voice Consent]
     CONSENT --> MIC[Microphone Permission and Readiness]
     MIC --> TURNS[Local AAC Recorded Turns]
@@ -67,6 +75,8 @@ flowchart TD
     THEME --> ACCESS[Accessible Shared Components]
     ACCESS --> STATES[Loading, Empty, Error, Offline and Pending Sync]
     APP --> ANALYTICS[Local Non-PII Analytics]
+
+    WMSCTRL -. Future Approved Interaction Contract .-> PRACTISE
 
     GH[GitHub Repository] --> ACTIONS[GitHub Actions APK Build]
     ACTIONS --> APK[Signed Android Debug APK]
