@@ -599,6 +599,16 @@ workplace is intentionally not implemented while Screen 03 is pending.
   before Android source compilation
 - GitHub Actions remains the authoritative Android build and is recorded after
   the source commit is pushed
+- GitHub Actions **Build Candidate Mobile APK** run `30381388413` — passed for
+  cumulative source commit `0d85f00`: dependency resolution, analysis,
+  universal debug APK build and artifact upload completed successfully
+- The verified universal artifact digest is
+  `a4d654da682c2f2ab6b30ef2b5780d95ec60ac631ee114556fa0442ac36bd0b5`
+- The 87,174,914-byte Samsung QC package retains only `arm64-v8a`, passes ZIP
+  alignment and Android APK Signature Scheme v2/v3 verification, and is
+  published in prerelease `wms-screen-01-02-qc`
+- ARM64 QC APK SHA-256:
+  `f6a14f0a341f88f91e87b2f8b3ca7aeaf318ae6e803f2d116f701e54b4c00f93`
 
 ### Next implementation
 Implement Screen 03 Workplace Overview only after its approved specification
