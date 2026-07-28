@@ -538,8 +538,23 @@ approved screen-by-screen interaction specification is pending.
 - `flutter build apk --debug --no-pub` — attempted locally and reached the
   unchanged Gradle 9.1 host failure, `The settings are not yet available for
   build`, before Android source compilation
-- GitHub Actions remains the authoritative Android build and its result is
-  recorded after the remote build completes
+- GitHub Actions **Build Candidate Mobile APK** run `30373557367` — passed for
+  commit `96607e2`: dependency resolution, static analysis, debug APK build
+  and artifact upload completed successfully
+
+### Workplace Management Simulation v0.2 APK verification
+- The 79,648,286-byte Actions artifact matched GitHub's SHA-256 digest and
+  passed ZIP integrity validation
+- The 151 MB universal debug APK was reduced to an 87,080,706-byte Samsung
+  package by removing only armv7 and x86_64 native libraries; `arm64-v8a` is
+  the sole packaged ABI
+- The ARM64 APK passes zip alignment and Android APK Signature Scheme v2/v3
+  verification
+- ARM64 QC APK SHA-256:
+  `9393264ea00734d04506d694f8df2200eae7315ff377ed5fcd3109d6a1d8631c`
+- The APK is published in GitHub prerelease `wms-v0.2-backbone-qc`
+- No ADB device or Wireless Debugging service was discoverable, so installation
+  remains pending; the APK contains no new WMS production screen by design
 
 ### Next implementation
 After the approved screen-by-screen interaction specification arrives, apply
