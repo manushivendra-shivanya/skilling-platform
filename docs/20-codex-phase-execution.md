@@ -390,6 +390,42 @@ Candidate can authenticate, create a persistent profile, complete a logistics di
 
 # Phase 3 — Voice, Jobs and Employer Operations
 
+## Phase 3.1 — Recorded-turn voice foundation
+
+Build:
+- Purpose-separated recording, transcription, evaluation and sharing consent
+- Microphone permission education and readiness test
+- Turn-based recording with interruption recovery and local deletion
+- Resumable upload repository contract and visible pending-upload state
+- Candidate-reviewed transcript flow
+- Versioned prompt and rubric registry
+- Structured, transcript-only development evaluation
+- Candidate feedback and human-review request
+- Private media, evaluation, appeal and audit schema with least-privilege RLS
+
+Acceptance:
+- Technical failures never reduce candidate feedback
+- Accent, emotion, personality and protected traits are excluded
+- Every transcript is candidate-reviewed before evaluation
+- Development evaluation cannot reject or shortlist
+- AI-provider, raw-media and reviewer operations remain behind the planned BFF
+
+## Phase 3.2 — Job application operations
+
+Build:
+- Authoritative job matching inputs and explanations
+- Consent-gated job application APIs
+- Application tracking and withdrawal
+- Idempotent consequential mutations through the NestJS BFF
+
+## Phase 3.3 — Employer and administrator operations
+
+Build:
+- Tenant-isolated employer portal v1
+- Evidence review and human shortlist workflow
+- Administrator prompt, rubric, appeal and review controls
+- Audit and operational dashboards
+
 ## Scope
 - Audio permissions
 - Microphone test
