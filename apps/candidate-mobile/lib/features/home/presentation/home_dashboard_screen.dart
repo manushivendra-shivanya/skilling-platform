@@ -15,9 +15,14 @@ import '../domain/home_dashboard_repository.dart';
 import 'home_dashboard_controller.dart';
 
 class HomeDashboardScreen extends ConsumerWidget {
-  const HomeDashboardScreen({required this.onOpenCoach, super.key});
+  const HomeDashboardScreen({
+    required this.onOpenCoach,
+    required this.onOpenDiagnostic,
+    super.key,
+  });
 
   final VoidCallback onOpenCoach;
+  final VoidCallback onOpenDiagnostic;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -46,6 +51,7 @@ class HomeDashboardScreen extends ConsumerWidget {
         return _HomeContent(
           dashboard: value,
           onOpenCoach: onOpenCoach,
+          onOpenDiagnostic: onOpenDiagnostic,
           onRefresh: () =>
               ref.read(homeDashboardControllerProvider.notifier).refresh(),
         );
@@ -58,11 +64,13 @@ class _HomeContent extends StatelessWidget {
   const _HomeContent({
     required this.dashboard,
     required this.onOpenCoach,
+    required this.onOpenDiagnostic,
     required this.onRefresh,
   });
 
   final HomeDashboard dashboard;
   final VoidCallback onOpenCoach;
+  final VoidCallback onOpenDiagnostic;
   final Future<void> Function() onRefresh;
 
   @override
@@ -85,6 +93,27 @@ class _HomeContent extends StatelessWidget {
             AppPendingSyncBanner(pendingCount: dashboard.pendingSyncCount),
           ],
           const SizedBox(height: AppSpacing.lg),
+          AppCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  'Your career pathway',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                const Text(
+                  'Complete a four-question logistics diagnostic for an explainable role and learning recommendation.',
+                ),
+                const SizedBox(height: AppSpacing.md),
+                AppButton(
+                  label: 'Open career diagnostic',
+                  onPressed: onOpenDiagnostic,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
           AppCard(
             backgroundColor: AppColors.brandSoft,
             child: Column(
@@ -154,7 +183,9 @@ class _HomeContent extends StatelessWidget {
               contentPadding: EdgeInsets.zero,
               leading: Icon(Icons.work_outline),
               title: Text('Job matches'),
-              subtitle: Text('Mock job recommendations arrive in Phase 1.11.'),
+              subtitle: Text(
+                'Three transparent demo opportunities are available in Jobs.',
+              ),
             ),
           ),
         ],

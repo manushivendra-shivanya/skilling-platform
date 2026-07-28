@@ -56,4 +56,21 @@ class AnalyticsEvent {
 
   factory AnalyticsEvent.mockApplicationCreated() =>
       const AnalyticsEvent(name: 'mock_job_application_created');
+
+  factory AnalyticsEvent.diagnosticCompleted(String definitionVersion) =>
+      AnalyticsEvent(
+        name: 'diagnostic_completed',
+        properties: {'definition_version': definitionVersion},
+      );
+
+  factory AnalyticsEvent.learningProgressSaved(String unitId) => AnalyticsEvent(
+    name: 'learning_progress_saved',
+    properties: {'unit_id': unitId},
+  );
+
+  factory AnalyticsEvent.simulationSubmitted(String simulationVersion) =>
+      AnalyticsEvent(
+        name: 'simulation_submitted',
+        properties: {'simulation_version': simulationVersion},
+      );
 }

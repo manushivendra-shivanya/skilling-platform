@@ -1,25 +1,37 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../app/dependencies.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_spacing.dart';
+import '../../../core/analytics/analytics_event.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_feedback.dart';
 import '../../../core/widgets/app_state_view.dart';
+import '../../intelligence/domain/candidate_intelligence.dart';
+import '../../intelligence/domain/simulation_scoring_engine.dart';
+import '../../intelligence/presentation/candidate_intelligence_controller.dart';
 
-class PracticeScreen extends StatefulWidget {
+class PracticeScreen extends ConsumerStatefulWidget {
   const PracticeScreen({super.key});
 
   @override
-  State<PracticeScreen> createState() => _PracticeScreenState();
+  ConsumerState<PracticeScreen> createState() => _PracticeScreenState();
 }
 
-class _PracticeScreenState extends State<PracticeScreen> {
+class _PracticeScreenState extends ConsumerState<PracticeScreen> {
   bool _demoOpen = false;
+  bool _scoredOpen = false;
   String? _selectedDecision;
 
   @override
   Widget build(BuildContext context) {
+    if (_scoredOpen) {
+      return _ScoredInventorySimulation(
+        onClose: () => setState(() => _scoredOpen = false),
+      );
+    }
     if (_demoOpen) {
       return _InventoryDemo(
         selectedDecision: _selectedDecision,
@@ -47,6 +59,28 @@ class _PracticeScreenState extends State<PracticeScreen> {
           ),
           child: const Text(
             'Practice demonstrations are not scored assessments and create no employer evidence.',
+          ),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        AppCard(
+          backgroundColor: AppColors.brandSoft,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                'Scored inventory simulation',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+              const SizedBox(height: AppSpacing.xs),
+              const Text(
+                'Immutable v1 scenario with ordered events, deterministic scoring, explanations, and evidence.',
+              ),
+              const SizedBox(height: AppSpacing.md),
+              AppButton(
+                label: 'Start scored simulation',
+                onPressed: () => setState(() => _scoredOpen = true),
+              ),
+            ],
           ),
         ),
         const SizedBox(height: AppSpacing.md),
@@ -104,14 +138,267 @@ class _PracticeScreenState extends State<PracticeScreen> {
         const SizedBox(height: AppSpacing.xl),
         Text('Attempt history', style: Theme.of(context).textTheme.titleLarge),
         const SizedBox(height: AppSpacing.sm),
-        const SizedBox(
-          height: 180,
-          child: AppEmptyState(
-            title: 'No scored attempts',
-            message:
-                'Demonstrations do not appear as assessed evidence or affect reliability.',
+        ref
+            .watch(candidateIntelligenceControllerProvider)
+            .when(
+              loading: () => const AppStateView(
+                icon: Icons.hourglass_top,
+                title: 'Loading attempts',
+                message: 'Restoring your scored simulation history.',
+              ),
+              error: (error, stackTrace) => const AppErrorState(
+                title: 'Attempt history unavailable',
+                message:
+                    'Retry from this tab when your secure data is available.',
+              ),
+              data: (state) => state.simulationScores.isEmpty
+                  ? const SizedBox(
+                      height: 180,
+                      child: AppEmptyState(
+                        title: 'No scored attempts',
+                        message:
+                            'Demonstrations do not appear as assessed evidence or affect reliability.',
+                      ),
+                    )
+                  : Column(
+                      children: [
+                        for (final score in state.simulationScores.reversed)
+                          AppCard(
+                            child: ListTile(
+                              contentPadding: EdgeInsets.zero,
+                              leading: const Icon(Icons.verified_outlined),
+                              title: Text(
+                                'Inventory simulation • ${score.totalScore}%',
+                              ),
+                              subtitle: Text(score.explanation),
+                            ),
+                          ),
+                      ],
+                    ),
+            ),
+      ],
+    );
+  }
+}
+
+class _ScoredInventorySimulation extends ConsumerStatefulWidget {
+  const _ScoredInventorySimulation({required this.onClose});
+
+  final VoidCallback onClose;
+
+  @override
+  ConsumerState<_ScoredInventorySimulation> createState() =>
+      _ScoredInventorySimulationState();
+}
+
+class _ScoredInventorySimulationState
+    extends ConsumerState<_ScoredInventorySimulation> {
+  final List<SimulationEvent> _events = [];
+  var _step = 0;
+  var _saving = false;
+  SimulationScore? _score;
+
+  @override
+  Widget build(BuildContext context) {
+    if (_saving) {
+      return const AppStateView(
+        icon: Icons.calculate_outlined,
+        title: 'Scoring simulation',
+        message: 'Applying the published deterministic rubric.',
+      );
+    }
+    if (_score != null) {
+      return _buildResult(_score!);
+    }
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.xl,
+        AppSpacing.md,
+        AppSpacing.xl,
+        112,
+      ),
+      children: [
+        Text(
+          'Inventory discrepancy assessment',
+          style: Theme.of(context).textTheme.headlineSmall,
+        ),
+        const SizedBox(height: AppSpacing.xs),
+        const Text('Scenario v1 • System: 24 units • Physical count: 21 units'),
+        const SizedBox(height: AppSpacing.md),
+        const AppCard(
+          backgroundColor: AppColors.infoSoft,
+          child: Text(
+            'Only your selected operational actions are scored. Network or app failures are recorded separately and never reduce reliability.',
           ),
         ),
+        const SizedBox(height: AppSpacing.lg),
+        if (_step == 0) ...[
+          Text('Step 1: verify', style: Theme.of(context).textTheme.titleLarge),
+          const Text('Choose the first action.'),
+          const SizedBox(height: AppSpacing.md),
+          AppButton(
+            label: 'Recount the physical stock',
+            onPressed: () =>
+                _record('decision_selected', {'decision': 'recount'}),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          AppButton(
+            label: 'Overwrite the system quantity',
+            variant: AppButtonVariant.secondary,
+            onPressed: () =>
+                _record('decision_selected', {'decision': 'overwrite'}),
+          ),
+        ] else if (_step == 1) ...[
+          Text(
+            'Step 2: audit trail',
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
+          const Text('What do you do with the two records?'),
+          const SizedBox(height: AppSpacing.md),
+          AppButton(
+            label: 'Preserve both values and count notes',
+            onPressed: () => _record('records_preserved', const {}),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          AppButton(
+            label: 'Discard the original record',
+            variant: AppButtonVariant.secondary,
+            onPressed: () => _record('record_discarded', const {}),
+          ),
+        ] else ...[
+          Text(
+            'Step 3: escalation',
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
+          const Text('Choose the final response.'),
+          const SizedBox(height: AppSpacing.md),
+          AppButton(
+            label: 'Escalate the documented exception',
+            onPressed: () => _record('exception_escalated', const {}),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          AppButton(
+            label: 'Leave it for the next shift',
+            variant: AppButtonVariant.secondary,
+            onPressed: () => _record('exception_ignored', const {}),
+          ),
+        ],
+        const SizedBox(height: AppSpacing.xl),
+        TextButton.icon(
+          onPressed: _recordTechnicalFailure,
+          icon: const Icon(Icons.wifi_off_outlined),
+          label: const Text('Record a demo network interruption'),
+        ),
+      ],
+    );
+  }
+
+  void _record(String type, Map<String, Object?> payload) {
+    setState(() {
+      _events.add(
+        SimulationEvent(
+          sequence: _events.length + 1,
+          type: type,
+          payload: payload,
+          clientTime: DateTime.now(),
+        ),
+      );
+      _step += 1;
+    });
+    if (_step == 3) {
+      _submit();
+    }
+  }
+
+  void _recordTechnicalFailure() {
+    setState(() {
+      _events.add(
+        SimulationEvent(
+          sequence: _events.length + 1,
+          type: 'network_interrupted',
+          payload: const {},
+          clientTime: DateTime.now(),
+          isTechnical: true,
+        ),
+      );
+    });
+    showAppSnackBar(
+      context: context,
+      message: 'Technical event recorded separately with zero score penalty.',
+    );
+  }
+
+  Future<void> _submit() async {
+    setState(() => _saving = true);
+    final now = DateTime.now();
+    final score = SimulationScoringEngine.scoreInventoryDiscrepancy(
+      attemptId: 'inventory-${now.microsecondsSinceEpoch}',
+      events: _events,
+      completedAt: now,
+    );
+    final failure = await ref
+        .read(candidateIntelligenceControllerProvider.notifier)
+        .saveSimulation(score);
+    if (!mounted) return;
+    setState(() {
+      _saving = false;
+      if (failure == null) _score = score;
+    });
+    if (failure != null) {
+      showAppSnackBar(
+        context: context,
+        message: failure.message,
+        tone: AppMessageTone.error,
+      );
+    } else {
+      await ref
+          .read(analyticsTrackerProvider)
+          .track(AnalyticsEvent.simulationSubmitted(score.simulationVersion));
+    }
+  }
+
+  Widget _buildResult(SimulationScore score) {
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.xl,
+        AppSpacing.md,
+        AppSpacing.xl,
+        112,
+      ),
+      children: [
+        Text(
+          'Simulation result',
+          style: Theme.of(context).textTheme.headlineSmall,
+        ),
+        const SizedBox(height: AppSpacing.md),
+        AppCard(
+          backgroundColor: AppColors.brandSoft,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '${score.totalScore}%',
+                style: Theme.of(context).textTheme.displaySmall,
+              ),
+              Text(score.explanation),
+            ],
+          ),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        for (final dimension in score.dimensionScores.entries)
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            title: Text(dimension.key.replaceAll('_', ' ')),
+            trailing: Text('${dimension.value}%'),
+          ),
+        const SizedBox(height: AppSpacing.sm),
+        Text('Next improvement: ${score.improvement}'),
+        const SizedBox(height: AppSpacing.sm),
+        const Text(
+          'This evidence is explainable and reviewable. It must not be used as the sole basis for an employer rejection.',
+        ),
+        const SizedBox(height: AppSpacing.lg),
+        AppButton(label: 'Return to practice', onPressed: widget.onClose),
       ],
     );
   }

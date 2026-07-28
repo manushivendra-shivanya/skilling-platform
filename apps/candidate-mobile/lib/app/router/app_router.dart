@@ -15,6 +15,7 @@ import '../../features/coach/presentation/coach_screen.dart';
 import '../../features/dev_tools/presentation/design_system_gallery_screen.dart';
 import '../../features/home/presentation/home_dashboard_screen.dart';
 import '../../features/jobs/presentation/jobs_screen.dart';
+import '../../features/intelligence/presentation/diagnostic_screen.dart';
 import '../../features/learning/presentation/learning_screen.dart';
 import '../../features/navigation/presentation/global_placeholder_screen.dart';
 import '../../features/navigation/presentation/main_navigation_shell.dart';
@@ -58,6 +59,8 @@ const aiCoachRoutePath = '/coach';
 const aiCoachRouteName = 'ai-coach';
 const notificationsRoutePath = '/notifications';
 const notificationsRouteName = 'notifications';
+const diagnosticRoutePath = '/diagnostic';
+const diagnosticRouteName = 'diagnostic';
 const designSystemGalleryRoutePath = '/dev/design-system';
 const designSystemGalleryRouteName = 'design-system-gallery';
 
@@ -176,6 +179,7 @@ GoRouter createAppRouter({
                 name: homeRouteName,
                 builder: (context, state) => HomeDashboardScreen(
                   onOpenCoach: () => context.push(aiCoachRoutePath),
+                  onOpenDiagnostic: () => context.push(diagnosticRoutePath),
                 ),
               ),
             ],
@@ -231,6 +235,12 @@ GoRouter createAppRouter({
         path: notificationsRoutePath,
         name: notificationsRouteName,
         builder: (context, state) => GlobalPlaceholderScreen.notifications(),
+      ),
+      GoRoute(
+        parentNavigatorKey: rootNavigatorKey,
+        path: diagnosticRoutePath,
+        name: diagnosticRouteName,
+        builder: (context, state) => const DiagnosticScreen(),
       ),
       if (showDevelopmentTools)
         GoRoute(
@@ -293,6 +303,7 @@ const _mainAndGlobalRoutePaths = {
   profileRoutePath,
   aiCoachRoutePath,
   notificationsRoutePath,
+  diagnosticRoutePath,
 };
 
 class AppRouteObserver extends NavigatorObserver {

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../core/analytics/analytics_tracker.dart';
 import '../core/config/app_environment.dart';
@@ -23,6 +24,13 @@ Future<void> bootstrap({
       logger ?? DebugAppLogger(enabled: resolvedConfig.enableLogging);
   final resolvedAnalyticsTracker =
       analyticsTracker ?? InMemoryAnalyticsTracker();
+
+  if (resolvedConfig.hasSupabaseConfiguration) {
+    await Supabase.initialize(
+      url: resolvedConfig.supabaseUrl,
+      publishableKey: resolvedConfig.supabasePublishableKey,
+    );
+  }
 
   FlutterError.onError = (details) {
     resolvedLogger.error(

@@ -7,6 +7,7 @@ import '../../../app/theme/app_spacing.dart';
 import '../../../core/errors/app_failure.dart';
 import '../../../core/network/connectivity_status.dart';
 import '../../../core/widgets/app_card.dart';
+import '../../../core/widgets/app_feedback.dart';
 import '../../../core/widgets/app_progress.dart';
 import '../../../core/widgets/app_skeleton.dart';
 import '../../../core/widgets/app_state_view.dart';
@@ -85,7 +86,7 @@ class _LearningContent extends ConsumerWidget {
         ),
         const SizedBox(height: AppSpacing.xs),
         const Text(
-          'Demo progress is stored only for this app session and is not an authoritative qualification.',
+          'Progress is stored securely, works offline, and syncs when a configured backend is available. Completion alone is not an employer qualification.',
         ),
         const SizedBox(height: AppSpacing.xl),
         for (final unit in state.units) ...[
@@ -99,6 +100,12 @@ class _LearningContent extends ConsumerWidget {
             onComplete: () => ref
                 .read(learningControllerProvider.notifier)
                 .toggleComplete(unit.id),
+            onOpen: () async {
+              await _showLesson(context, unit);
+              await ref
+                  .read(learningControllerProvider.notifier)
+                  .toggleComplete(unit.id);
+            },
           ),
           const SizedBox(height: AppSpacing.md),
         ],
@@ -114,6 +121,7 @@ class _LessonCard extends StatelessWidget {
     required this.completed,
     required this.onDownload,
     required this.onComplete,
+    required this.onOpen,
   });
 
   final LearningUnit unit;
@@ -121,6 +129,7 @@ class _LessonCard extends StatelessWidget {
   final bool completed;
   final VoidCallback onDownload;
   final VoidCallback onComplete;
+  final VoidCallback onOpen;
 
   @override
   Widget build(BuildContext context) {
@@ -138,7 +147,7 @@ class _LessonCard extends StatelessWidget {
             ),
           Text(unit.title, style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: AppSpacing.xs),
-          Text('${unit.durationMinutes} min • Mock lesson'),
+          Text('${unit.durationMinutes} min • Content v${unit.version}'),
           const SizedBox(height: AppSpacing.md),
           Wrap(
             spacing: AppSpacing.sm,
@@ -152,9 +161,9 @@ class _LessonCard extends StatelessWidget {
                 label: Text(downloaded ? 'Downloaded' : 'Download'),
               ),
               FilledButton.icon(
-                onPressed: onComplete,
+                onPressed: completed ? onComplete : onOpen,
                 icon: Icon(completed ? Icons.check_circle : Icons.play_arrow),
-                label: Text(completed ? 'Completed' : 'Open lesson'),
+                label: Text(completed ? 'Mark incomplete' : 'Open lesson'),
               ),
             ],
           ),
@@ -162,6 +171,32 @@ class _LessonCard extends StatelessWidget {
       ),
     );
   }
+}
+
+Future<void> _showLesson(BuildContext context, LearningUnit unit) async {
+  await showAppBottomSheet<void>(
+    context: context,
+    title: unit.title,
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(unit.content),
+        const SizedBox(height: AppSpacing.lg),
+        const Text(
+          'Checkpoint: Which action preserves an audit trail during an exception?',
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        const AppCard(
+          backgroundColor: AppColors.successSoft,
+          child: Text(
+            'Record the original and observed values before escalating or correcting.',
+          ),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        const AppBottomSheetCloseButton(),
+      ],
+    ),
+  );
 }
 
 class _LearningLoadingView extends StatelessWidget {

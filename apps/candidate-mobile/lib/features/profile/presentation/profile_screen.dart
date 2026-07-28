@@ -9,8 +9,11 @@ import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_feedback.dart';
 import '../../../core/widgets/app_skeleton.dart';
 import '../../../core/widgets/app_state_view.dart';
+import '../../../core/widgets/app_status_banner.dart';
 import '../../authentication/presentation/candidate_session_controller.dart';
 import '../../authentication/presentation/development_auth_controller.dart';
+import '../../intelligence/domain/candidate_intelligence.dart';
+import '../../intelligence/presentation/candidate_intelligence_controller.dart';
 import '../../onboarding/domain/candidate_onboarding_draft.dart';
 import '../../onboarding/presentation/candidate_onboarding_controller.dart';
 
@@ -46,6 +49,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 
   Widget _buildProfile(CandidateOnboardingDraft draft) {
+    final intelligence = ref
+        .watch(candidateIntelligenceControllerProvider)
+        .valueOrNull;
     return ListView(
       padding: const EdgeInsets.fromLTRB(
         AppSpacing.xl,
@@ -57,6 +63,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         Text(draft.fullName, style: Theme.of(context).textTheme.headlineSmall),
         const SizedBox(height: AppSpacing.xxs),
         Text('${draft.city}, ${draft.state}'),
+        if (intelligence != null && intelligence.pendingSyncCount > 0) ...[
+          const SizedBox(height: AppSpacing.md),
+          AppPendingSyncBanner(pendingCount: intelligence.pendingSyncCount),
+        ],
         const SizedBox(height: AppSpacing.md),
         AppButton(
           label: 'Edit personal details',
@@ -80,12 +90,27 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               label: 'Preferred roles',
               value: draft.preferredRoles.map((role) => role.label).join(', '),
             ),
-            const _DetailRow(
+            _DetailRow(
               label: 'Evidence',
-              value: 'No verified evidence yet',
+              value: intelligence == null || intelligence.evidence.isEmpty
+                  ? 'No assessed evidence yet'
+                  : '${intelligence.evidence.length} explainable records',
             ),
           ],
         ),
+        if (intelligence != null && intelligence.evidence.isNotEmpty) ...[
+          const SizedBox(height: AppSpacing.md),
+          _Section(
+            title: 'Readiness evidence',
+            children: [
+              for (final item in intelligence.evidence.reversed.take(4))
+                _EvidenceRow(item: item),
+              const Text(
+                'Evidence shows observed platform work. It is not a personality score and cannot be the sole basis for rejection.',
+              ),
+            ],
+          ),
+        ],
         const SizedBox(height: AppSpacing.md),
         _Section(
           title: 'Privacy and consent',
@@ -96,7 +121,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               onChanged: (value) => setState(() => _employerVisibility = value),
               title: const Text('Employer profile visibility'),
               subtitle: const Text(
-                'Local preview only. No employer receives data in Phase 1.',
+                'Off by default. A separate employer-sharing grant is required before any evidence is shared.',
               ),
             ),
             _DetailRow(
@@ -133,7 +158,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   setState(() => _notificationsEnabled = value),
               title: const Text('Notification preference'),
               subtitle: const Text(
-                'Local preview only. No push token is registered.',
+                'Stored as a preference only. No push token is registered yet.',
               ),
             ),
             ListTile(
@@ -214,6 +239,25 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         tone: AppMessageTone.error,
       );
     }
+  }
+}
+
+class _EvidenceRow extends StatelessWidget {
+  const _EvidenceRow({required this.item});
+
+  final EvidenceRecord item;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      leading: const Icon(Icons.verified_outlined),
+      title: Text(
+        LogisticsIntelligenceCatalog.competencyName(item.competencyCode),
+      ),
+      subtitle: Text('${item.sourceType} • ${item.explanation}'),
+      trailing: Text('${item.score}%'),
+    );
   }
 }
 
