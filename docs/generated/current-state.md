@@ -390,12 +390,38 @@ on the connected Samsung S24 Ultra.
   empty
 
 ### Phase 2 validation record
-- `dart format .` — passed in the isolated workspace
-- `flutter analyze --no-pub` — passed with no issues in the isolated workspace
+- `flutter pub get` — passed
+- `dart format .` — passed; 110 files checked with no changes
+- `flutter analyze --no-pub` — passed with no issues
+- `flutter test --no-pub --reporter expanded` — passed; 55 tests
+- Diagnostic, deterministic scoring, secure repository, offline learning,
+  simulation evidence, existing Phase 1 navigation, authentication,
+  onboarding, accessibility, and narrow-screen flows all passed
 - Supabase migrations — applied successfully to JobSkills
 - Supabase Security Advisor — passed with zero findings
-- Full Flutter tests, GitHub Actions Android build, signed ARM64 packaging, and
-  connected-device installation are pending the release-validation step
+- `flutter build apk --debug --no-pub` — attempted locally and reached the
+  unchanged Gradle 9.1 host failure, `The settings are not yet available for
+  build`, before source compilation
+- GitHub Actions **Build Candidate Mobile APK** run `30324795201` — passed for
+  commit `568afe8`: dependency resolution, analysis, debug APK build, and
+  artifact upload completed successfully
+
+### Phase 2 APK verification
+- The 79,403,186-byte Actions artifact passed ZIP integrity validation and
+  contained a 157,601,739-byte universal debug APK
+- The Samsung QC package was derived from that verified APK by removing only
+  armv7 and x86_64 native libraries, retaining `arm64-v8a`, zip-aligning, and
+  re-signing with the same project debug certificate used for earlier QC
+  builds
+- The ARM64 APK passes Android APK Signature Scheme v2/v3 verification
+- ARM64 QC APK SHA-256:
+  `c8215600a8f68af447052dcaf93ca7c39e708bc44fb6c82eb4717c928acfe679`
+- The 86,803,328-byte ARM64 APK is published in GitHub prerelease
+  `phase-2-complete-qc`
+- Connected-device installation was attempted, but ADB reported no USB device
+  and the previous Wireless Debugging endpoint `192.168.1.5:45367` refused the
+  connection; installation and visual device QC remain pending a current ADB
+  connection
 
 ### Next implementation
 Finish Phase 2 release validation and candidate device QC. After Phase 2 QC,
