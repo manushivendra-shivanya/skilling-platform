@@ -1,0 +1,99 @@
+{
+  "id": "central-distribution-centre",
+  "packId": "logistics-foundation",
+  "name": "Central Distribution Centre",
+  "workplaceType": "warehouse",
+  "description": "A regional warehouse receiving, storing and dispatching consumer products.",
+  "departments": ["receiving"],
+  "operationalRules": [
+    "All incoming shipments require document verification.",
+    "Damaged goods cannot enter available inventory.",
+    "Unverified goods must remain on hold.",
+    "Quantity discrepancies must be recorded."
+  ],
+  "departmentDefinitions": [
+    {
+      "id": "receiving",
+      "workplaceId": "central-distribution-centre",
+      "name": "Receiving Department",
+      "description": "Handles incoming goods and supplier deliveries.",
+      "workstations": [
+        "receiving-dock",
+        "document-desk",
+        "inspection-zone",
+        "barcode-station",
+        "quarantine-zone",
+        "receiving-office"
+      ],
+      "processes": ["incoming-shipment-receipt"]
+    }
+  ],
+  "workstationDefinitions": [
+    {
+      "id": "receiving-dock",
+      "departmentId": "receiving",
+      "name": "Receiving Dock",
+      "workstationType": "receiving",
+      "description": "Confirm delivered cartons and quantities.",
+      "icon": "receiving_dock",
+      "position": {"x": 0.12, "y": 0.22},
+      "capabilities": ["count_quantity", "inspect_item"],
+      "unlockRequirements": [{"type": "task_completed", "referenceId": "verify-documents"}]
+    },
+    {
+      "id": "document-desk",
+      "departmentId": "receiving",
+      "name": "Document Desk",
+      "workstationType": "documents",
+      "description": "Compare the purchase order and delivery note.",
+      "icon": "document",
+      "position": {"x": 0.12, "y": 0.74},
+      "capabilities": ["read_document", "document_comparison"],
+      "unlockRequirements": []
+    },
+    {
+      "id": "inspection-zone",
+      "departmentId": "receiving",
+      "name": "Inspection Zone",
+      "workstationType": "inspection",
+      "description": "Inspect packaging, quantity, labels, batch and expiry.",
+      "icon": "inspection",
+      "position": {"x": 0.48, "y": 0.22},
+      "capabilities": ["inspect_item", "record_damage", "check_expiry"],
+      "unlockRequirements": [{"type": "task_completed", "referenceId": "confirm-received-counts"}]
+    },
+    {
+      "id": "barcode-station",
+      "departmentId": "receiving",
+      "name": "Barcode Station",
+      "workstationType": "barcode",
+      "description": "Check whether every barcode is readable and authorised.",
+      "icon": "barcode",
+      "position": {"x": 0.48, "y": 0.74},
+      "capabilities": ["scan_barcode"],
+      "unlockRequirements": [{"type": "task_completed", "referenceId": "inspect-cartons"}]
+    },
+    {
+      "id": "quarantine-zone",
+      "departmentId": "receiving",
+      "name": "Quarantine Zone",
+      "workstationType": "quarantine",
+      "description": "Separate non-compliant and unverified stock.",
+      "icon": "quarantine",
+      "position": {"x": 0.84, "y": 0.22},
+      "capabilities": ["select_disposition", "move_item"],
+      "unlockRequirements": [{"type": "task_completed", "referenceId": "scan-barcodes"}]
+    },
+    {
+      "id": "receiving-office",
+      "departmentId": "receiving",
+      "name": "Receiving Office",
+      "workstationType": "office",
+      "description": "Complete the discrepancy report and receiving decision.",
+      "icon": "office",
+      "position": {"x": 0.84, "y": 0.74},
+      "capabilities": ["complete_form", "make_decision", "confirm_action"],
+      "unlockRequirements": [{"type": "task_completed", "referenceId": "assign-dispositions"}]
+    }
+  ]
+}

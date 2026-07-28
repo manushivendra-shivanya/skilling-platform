@@ -1,0 +1,10 @@
+{
+  "id": "logistics-foundation",
+  "version": "1.0.0",
+  "industry": "logistics_supply_chain",
+  "title": "Logistics Workplace Foundation",
+  "status": "published",
+  "defaultLocale": "en",
+  "supportedLocales": ["en"],
+  "minimumEngineVersion": "1.0.0"
+}

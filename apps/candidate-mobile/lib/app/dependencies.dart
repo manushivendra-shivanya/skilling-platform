@@ -30,6 +30,9 @@ import '../features/splash/domain/app_startup_repository.dart';
 import '../features/voice/data/record_voice_capture_repository.dart';
 import '../features/voice/data/secure_voice_interview_repository.dart';
 import '../features/voice/domain/voice_interview_repository.dart';
+import '../features/workplace_simulation/data/asset_simulation_content_repository.dart';
+import '../features/workplace_simulation/data/local_simulation_attempt_repository.dart';
+import '../features/workplace_simulation/domain/simulation_repositories.dart';
 
 final appConfigProvider = Provider<AppConfig>(
   (ref) => const AppConfig.development(),
@@ -131,4 +134,16 @@ final voiceCaptureRepositoryProvider = Provider<VoiceCaptureRepository>((ref) {
 final resumableMediaUploadRepositoryProvider =
     Provider<ResumableMediaUploadRepository>(
       (ref) => const LocalQueuedMediaUploadRepository(),
+    );
+
+final simulationContentRepositoryProvider =
+    Provider<SimulationContentRepository>(
+      (ref) => AssetSimulationContentRepository(),
+    );
+
+final simulationAttemptRepositoryProvider =
+    Provider<SimulationAttemptRepository>(
+      (ref) => LocalSimulationAttemptRepository(
+        ref.watch(secureKeyValueStoreProvider),
+      ),
     );

@@ -1,0 +1,15 @@
+[
+  {
+    "id": "micro-lesson-expiry-policy",
+    "title": "Handling Near-Expiry Inventory",
+    "contentType": "micro_lesson",
+    "estimatedDurationMinutes": 4,
+    "competencyId": "goods-inspection",
+    "triggerConditions": [{"type": "missed_issue", "issueType": "near_expiry"}],
+    "learningObjectives": [
+      "Recognise near-expiry stock",
+      "Apply shelf-life policy",
+      "Choose the correct disposition"
+    ]
+  }
+]
