@@ -55,32 +55,33 @@ class LearningController extends AsyncNotifier<LearningState> {
   Future<void> toggleDownload(String id) async {
     final value = state.valueOrNull;
     if (value == null) return;
+    final intelligenceController = ref.read(
+      candidateIntelligenceControllerProvider.notifier,
+    );
     final ids = {...value.downloadedIds};
     if (!ids.add(id)) ids.remove(id);
     state = AsyncData(value.copyWith(downloadedIds: ids));
-    await ref
-        .read(candidateIntelligenceControllerProvider.notifier)
-        .updateLearning(
-          downloadedUnitIds: ids,
-          completedUnitIds: value.completedIds,
-        );
+    await intelligenceController.updateLearning(
+      downloadedUnitIds: ids,
+      completedUnitIds: value.completedIds,
+    );
   }
 
   Future<void> toggleComplete(String id) async {
     final value = state.valueOrNull;
     if (value == null) return;
+    final intelligenceController = ref.read(
+      candidateIntelligenceControllerProvider.notifier,
+    );
+    final analyticsTracker = ref.read(analyticsTrackerProvider);
     final ids = {...value.completedIds};
     if (!ids.add(id)) ids.remove(id);
     state = AsyncData(value.copyWith(completedIds: ids));
-    await ref
-        .read(candidateIntelligenceControllerProvider.notifier)
-        .updateLearning(
-          downloadedUnitIds: value.downloadedIds,
-          completedUnitIds: ids,
-        );
-    await ref
-        .read(analyticsTrackerProvider)
-        .track(AnalyticsEvent.learningProgressSaved(id));
+    await intelligenceController.updateLearning(
+      downloadedUnitIds: value.downloadedIds,
+      completedUnitIds: ids,
+    );
+    await analyticsTracker.track(AnalyticsEvent.learningProgressSaved(id));
   }
 
   void retry() => ref.invalidateSelf();
