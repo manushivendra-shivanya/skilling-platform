@@ -21,7 +21,7 @@ Create one file per decision under `docs/adr/` using `NNNN-title.md`.
 
 ## Required Initial ADRs
 1. Monorepo tool and package manager
-2. Next.js and React Native application boundaries
+2. Next.js web and Flutter mobile application boundaries
 3. API runtime and BFF strategy
 4. PostgreSQL ORM/query layer
 5. Authentication and OTP provider abstraction

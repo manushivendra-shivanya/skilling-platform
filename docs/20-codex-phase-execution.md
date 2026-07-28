@@ -1,5 +1,30 @@
 # Codex Phase Execution Plan
 
+## Strategic evolution gate — AI Employability Infrastructure
+
+The target product architecture is defined in
+`docs/23-ai-employability-infrastructure-platform.md`.
+
+This is currently an architecture proposal, not implementation authority.
+Workplace Management Simulation remains the active implementation stream and
+becomes the Simulation bounded context within the wider platform.
+
+Before adding Career, Competency Passport, Employer, Placement Partner or
+Government platform code:
+
+1. Approve the bounded-context map and authority boundaries.
+2. Approve canonical Role, Competency, Evidence and Readiness semantics.
+3. Record ADRs for sharing consent, employer decision boundaries and external
+   source-of-truth rules.
+4. Correct legacy architecture references that conflict with the approved
+   Flutter mobile pipeline.
+5. Select one coherent lifecycle vertical slice using the decision gates in
+   document 23.
+
+Do not couple current WMS domain/application code to future portals or external
+government systems. WMS should expose a stable evidence-generation boundary
+after the current approved screen milestone.
+
 ## Execution rules
 
 Codex must:

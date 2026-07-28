@@ -1,7 +1,10 @@
 # 09 — Candidate Mobile App
 
 ## Technology Direction
-React Native with Expo and TypeScript. Android is the first operational priority; iOS remains supported from the same codebase. Native modules may be introduced for audio, security, or performance where justified.
+Flutter with Dart, Riverpod, GoRouter and Material 3. Android is the first
+operational priority; iOS remains supported from the same codebase. Platform
+channels or native plugins may be introduced for audio, security or performance
+only where justified and isolated behind repository interfaces.
 
 ## Navigation
 Bottom tabs:
