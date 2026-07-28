@@ -57,7 +57,7 @@ void main() {
     await tester.ensureVisible(find.text('Close'));
     await tester.tap(find.text('Close'));
     await tester.pumpAndSettle();
-    expect(find.text('Completed'), findsOneWidget);
+    expect(find.text('Mark incomplete'), findsOneWidget);
 
     await tester.tap(find.text('Jobs'));
     await tester.pumpAndSettle();
@@ -68,7 +68,7 @@ void main() {
 
     await tester.tap(find.text('Learn'));
     await tester.pumpAndSettle();
-    expect(find.text('Completed'), findsOneWidget);
+    expect(find.text('Mark incomplete'), findsOneWidget);
 
     await tester.tap(find.text('Practise'));
     await tester.pumpAndSettle();

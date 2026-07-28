@@ -126,7 +126,7 @@ void main() {
     await tester.tap(find.text('Close'));
     await tester.pumpAndSettle();
     expect(find.text('Downloaded'), findsOneWidget);
-    expect(find.text('Completed'), findsOneWidget);
+    expect(find.text('Mark incomplete'), findsOneWidget);
     expect(
       find.textContaining('not an authoritative qualification'),
       findsOneWidget,
