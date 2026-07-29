@@ -410,6 +410,64 @@ void main() {
       );
       expect(controller.recommendedWorkstationId, 'inspection-zone');
 
+      for (final cartonId
+          in state.mission.task('inspect-cartons').targetResourceIds) {
+        expect(
+          await controller.recordCartonInspection(
+            RecordCartonInspectionCommand(
+              cartonId: cartonId,
+              finding: CartonFinding.compliant,
+            ),
+          ),
+          RecordCartonInspectionResult.success,
+        );
+      }
+      final firstInspection =
+          controller.inspectionDraft!.cartonInspections.first;
+      expect(
+        await controller.updateCartonInspection(
+          UpdateCartonInspectionCommand(
+            entryId: firstInspection.id,
+            finding: CartonFinding.packagingDamage,
+          ),
+        ),
+        UpdateCartonInspectionResult.success,
+      );
+      expect(
+        controller.inspectionDraft!.cartonInspections.first.revisionNumber,
+        2,
+      );
+      for (final cartonId
+          in state.mission.task('scan-barcodes').targetResourceIds) {
+        expect(
+          await controller.recordBarcodeScan(
+            RecordBarcodeScanCommand(
+              cartonId: cartonId,
+              status: BarcodeStatus.readable,
+            ),
+          ),
+          RecordBarcodeScanResult.success,
+        );
+      }
+      expect(
+        await controller.saveInspectionDraft(
+          const SaveInspectionDraftCommand(),
+        ),
+        SaveInspectionDraftResult.success,
+      );
+      expect(
+        await controller.submitInspection(const SubmitInspectionCommand()),
+        SubmitInspectionResult.success,
+      );
+      expect(
+        controller.workstationStatus('inspection-zone'),
+        WorkstationStatus.completed,
+      );
+      expect(
+        await controller.submitInspection(const SubmitInspectionCommand()),
+        SubmitInspectionResult.alreadySubmitted,
+      );
+
       final completedAttempt = container
           .read(workplaceSimulationControllerProvider)
           .requireValue

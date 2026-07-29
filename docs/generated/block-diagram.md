@@ -23,7 +23,8 @@ flowchart TD
     WMSBRIEF --> WMSOVERVIEW[Workplace Overview]
     WMSOVERVIEW --> WMSDOC[Document Desk]
     WMSDOC --> WMSDOCK[Receiving Dock]
-    WMSDOCK --> WMSINSPECT[Screen 06 Inspection Zone Placeholder]
+    WMSDOCK --> WMSINSPECT[Screen 06 Inspection Zone]
+    WMSINSPECT --> WMSQUARANTINE[Quarantine Zone - not yet built]
 
     ENTRY --> AUTHCTRL[Authentication Controller]
     AUTHCTRL --> LOCALOTP[Development OTP Adapter]

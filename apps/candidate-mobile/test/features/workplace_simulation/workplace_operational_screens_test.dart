@@ -4,7 +4,7 @@ import 'package:candidate_mobile/core/repositories/candidate_session_repository.
 import 'package:candidate_mobile/features/workplace_simulation/application/workplace_simulation_controller.dart';
 import 'package:candidate_mobile/features/workplace_simulation/data/asset_simulation_content_repository.dart';
 import 'package:candidate_mobile/features/workplace_simulation/data/local_simulation_attempt_repository.dart';
-import 'package:candidate_mobile/features/workplace_simulation/presentation/inspection_zone_handoff_screen.dart';
+import 'package:candidate_mobile/features/workplace_simulation/presentation/inspection_zone_screen.dart';
 import 'package:candidate_mobile/features/workplace_simulation/presentation/workplace_overview_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -65,7 +65,7 @@ void main() {
           container: container,
           child: MaterialApp(
             theme: buildAppTheme(),
-            home: InspectionZoneHandoffScreen(
+            home: InspectionZoneScreen(
               missionId: WorkplaceSimulationController.missionId,
               onBack: () {},
             ),

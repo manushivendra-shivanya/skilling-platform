@@ -314,3 +314,130 @@ enum SubmitReceivingCountResult {
   invalidAttemptState,
   persistenceFailure,
 }
+
+class RecordCartonInspectionCommand {
+  const RecordCartonInspectionCommand({
+    required this.cartonId,
+    required this.finding,
+    this.learnerNotes = '',
+  });
+
+  final String cartonId;
+  final CartonFinding finding;
+  final String learnerNotes;
+}
+
+class UpdateCartonInspectionCommand {
+  const UpdateCartonInspectionCommand({
+    required this.entryId,
+    required this.finding,
+    this.learnerNotes = '',
+  });
+
+  final String entryId;
+  final CartonFinding finding;
+  final String learnerNotes;
+}
+
+class RemoveCartonInspectionCommand {
+  const RemoveCartonInspectionCommand(this.entryId);
+
+  final String entryId;
+}
+
+class RecordBarcodeScanCommand {
+  const RecordBarcodeScanCommand({
+    required this.cartonId,
+    required this.status,
+  });
+
+  final String cartonId;
+  final BarcodeStatus status;
+}
+
+class UpdateBarcodeScanCommand {
+  const UpdateBarcodeScanCommand({required this.entryId, required this.status});
+
+  final String entryId;
+  final BarcodeStatus status;
+}
+
+class RemoveBarcodeScanCommand {
+  const RemoveBarcodeScanCommand(this.entryId);
+
+  final String entryId;
+}
+
+class SaveInspectionDraftCommand {
+  const SaveInspectionDraftCommand();
+}
+
+class SubmitInspectionCommand {
+  const SubmitInspectionCommand();
+}
+
+enum RecordCartonInspectionResult {
+  success,
+  cartonNotFound,
+  duplicateEntry,
+  alreadySubmitted,
+  invalidAttemptState,
+  persistenceFailure,
+}
+
+enum UpdateCartonInspectionResult {
+  success,
+  entryNotFound,
+  alreadySubmitted,
+  invalidAttemptState,
+  persistenceFailure,
+}
+
+enum RemoveCartonInspectionResult {
+  success,
+  entryNotFound,
+  alreadySubmitted,
+  invalidAttemptState,
+  persistenceFailure,
+}
+
+enum RecordBarcodeScanResult {
+  success,
+  cartonNotFound,
+  duplicateEntry,
+  alreadySubmitted,
+  invalidAttemptState,
+  persistenceFailure,
+}
+
+enum UpdateBarcodeScanResult {
+  success,
+  entryNotFound,
+  alreadySubmitted,
+  invalidAttemptState,
+  persistenceFailure,
+}
+
+enum RemoveBarcodeScanResult {
+  success,
+  entryNotFound,
+  alreadySubmitted,
+  invalidAttemptState,
+  persistenceFailure,
+}
+
+enum SaveInspectionDraftResult {
+  success,
+  alreadySubmitted,
+  invalidAttemptState,
+  persistenceFailure,
+}
+
+enum SubmitInspectionResult {
+  success,
+  incompleteInspection,
+  incompleteScans,
+  alreadySubmitted,
+  invalidAttemptState,
+  persistenceFailure,
+}

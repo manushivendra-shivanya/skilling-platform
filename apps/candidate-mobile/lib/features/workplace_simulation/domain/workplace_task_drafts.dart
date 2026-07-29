@@ -264,5 +264,190 @@ class ReceivingCountDraft {
   );
 }
 
+enum CartonFinding {
+  compliant('compliant'),
+  packagingDamage('packaging_damage'),
+  nearExpiry('near_expiry'),
+  incorrectSku('incorrect_sku'),
+  quantityShortage('quantity_shortage'),
+  unreadableBarcode('unreadable_barcode');
+
+  const CartonFinding(this.wireName);
+  final String wireName;
+
+  static CartonFinding fromWireName(String value) =>
+      values.firstWhere((item) => item.wireName == value);
+}
+
+class CartonInspectionEntry {
+  const CartonInspectionEntry({
+    required this.id,
+    required this.cartonId,
+    required this.finding,
+    required this.learnerNotes,
+    required this.createdAt,
+    required this.updatedAt,
+    required this.revisionNumber,
+  });
+
+  final String id;
+  final String cartonId;
+  final CartonFinding finding;
+  final String learnerNotes;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final int revisionNumber;
+
+  CartonInspectionEntry copyWith({
+    CartonFinding? finding,
+    String? learnerNotes,
+    DateTime? updatedAt,
+    int? revisionNumber,
+  }) => CartonInspectionEntry(
+    id: id,
+    cartonId: cartonId,
+    finding: finding ?? this.finding,
+    learnerNotes: learnerNotes ?? this.learnerNotes,
+    createdAt: createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    revisionNumber: revisionNumber ?? this.revisionNumber,
+  );
+
+  JsonMap toJson() => {
+    'id': id,
+    'cartonId': cartonId,
+    'finding': finding.wireName,
+    'learnerNotes': learnerNotes,
+    'createdAt': createdAt.toUtc().toIso8601String(),
+    'updatedAt': updatedAt.toUtc().toIso8601String(),
+    'revisionNumber': revisionNumber,
+  };
+
+  factory CartonInspectionEntry.fromJson(JsonMap json) => CartonInspectionEntry(
+    id: json.string('id'),
+    cartonId: json.string('cartonId'),
+    finding: CartonFinding.fromWireName(json.string('finding')),
+    learnerNotes: json.optionalString('learnerNotes') ?? '',
+    createdAt: DateTime.parse(json.string('createdAt')),
+    updatedAt: DateTime.parse(json.string('updatedAt')),
+    revisionNumber: json.integer('revisionNumber'),
+  );
+}
+
+enum BarcodeStatus { readable, unreadable }
+
+class BarcodeScanEntry {
+  const BarcodeScanEntry({
+    required this.id,
+    required this.cartonId,
+    required this.status,
+    required this.createdAt,
+    required this.updatedAt,
+    required this.revisionNumber,
+  });
+
+  final String id;
+  final String cartonId;
+  final BarcodeStatus status;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final int revisionNumber;
+
+  BarcodeScanEntry copyWith({
+    BarcodeStatus? status,
+    DateTime? updatedAt,
+    int? revisionNumber,
+  }) => BarcodeScanEntry(
+    id: id,
+    cartonId: cartonId,
+    status: status ?? this.status,
+    createdAt: createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    revisionNumber: revisionNumber ?? this.revisionNumber,
+  );
+
+  JsonMap toJson() => {
+    'id': id,
+    'cartonId': cartonId,
+    'status': status.name,
+    'createdAt': createdAt.toUtc().toIso8601String(),
+    'updatedAt': updatedAt.toUtc().toIso8601String(),
+    'revisionNumber': revisionNumber,
+  };
+
+  factory BarcodeScanEntry.fromJson(JsonMap json) => BarcodeScanEntry(
+    id: json.string('id'),
+    cartonId: json.string('cartonId'),
+    status: BarcodeStatus.values.byName(json.string('status')),
+    createdAt: DateTime.parse(json.string('createdAt')),
+    updatedAt: DateTime.parse(json.string('updatedAt')),
+    revisionNumber: json.integer('revisionNumber'),
+  );
+}
+
+class InspectionDraft {
+  const InspectionDraft({
+    required this.attemptId,
+    required this.cartonInspections,
+    required this.barcodeScans,
+    required this.status,
+    required this.createdAt,
+    required this.updatedAt,
+    this.submittedAt,
+  });
+
+  final String attemptId;
+  final List<CartonInspectionEntry> cartonInspections;
+  final List<BarcodeScanEntry> barcodeScans;
+  final OperationalDraftStatus status;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final DateTime? submittedAt;
+
+  InspectionDraft copyWith({
+    List<CartonInspectionEntry>? cartonInspections,
+    List<BarcodeScanEntry>? barcodeScans,
+    OperationalDraftStatus? status,
+    DateTime? updatedAt,
+    DateTime? submittedAt,
+  }) => InspectionDraft(
+    attemptId: attemptId,
+    cartonInspections: cartonInspections ?? this.cartonInspections,
+    barcodeScans: barcodeScans ?? this.barcodeScans,
+    status: status ?? this.status,
+    createdAt: createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    submittedAt: submittedAt ?? this.submittedAt,
+  );
+
+  JsonMap toJson() => {
+    'attemptId': attemptId,
+    'cartonInspections': cartonInspections
+        .map((item) => item.toJson())
+        .toList(),
+    'barcodeScans': barcodeScans.map((item) => item.toJson()).toList(),
+    'status': status.name,
+    'createdAt': createdAt.toUtc().toIso8601String(),
+    'updatedAt': updatedAt.toUtc().toIso8601String(),
+    'submittedAt': submittedAt?.toUtc().toIso8601String(),
+  };
+
+  factory InspectionDraft.fromJson(JsonMap json) => InspectionDraft(
+    attemptId: json.string('attemptId'),
+    cartonInspections: json
+        .mapList('cartonInspections')
+        .map(CartonInspectionEntry.fromJson)
+        .toList(growable: false),
+    barcodeScans: json
+        .mapList('barcodeScans')
+        .map(BarcodeScanEntry.fromJson)
+        .toList(growable: false),
+    status: OperationalDraftStatus.values.byName(json.string('status')),
+    createdAt: DateTime.parse(json.string('createdAt')),
+    updatedAt: DateTime.parse(json.string('updatedAt')),
+    submittedAt: _optionalDate(json.optionalString('submittedAt')),
+  );
+}
+
 DateTime? _optionalDate(String? value) =>
     value == null ? null : DateTime.parse(value);

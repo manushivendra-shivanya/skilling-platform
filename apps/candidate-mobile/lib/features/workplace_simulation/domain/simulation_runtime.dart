@@ -68,6 +68,7 @@ class SimulationAttempt {
     required this.auditEvents,
     this.documentReviewDraft,
     this.receivingCountDraft,
+    this.inspectionDraft,
     this.submittedAt,
     this.completedAt,
   });
@@ -94,6 +95,7 @@ class SimulationAttempt {
   final List<AttemptAuditEvent> auditEvents;
   final DocumentReviewDraft? documentReviewDraft;
   final ReceivingCountDraft? receivingCountDraft;
+  final InspectionDraft? inspectionDraft;
 
   @Deprecated('Use createdAt')
   DateTime get startedAt => createdAt;
@@ -138,6 +140,7 @@ class SimulationAttempt {
     List<AttemptAuditEvent>? auditEvents,
     DocumentReviewDraft? documentReviewDraft,
     ReceivingCountDraft? receivingCountDraft,
+    InspectionDraft? inspectionDraft,
   }) => SimulationAttempt(
     id: id,
     candidateId: candidateId,
@@ -170,6 +173,7 @@ class SimulationAttempt {
     auditEvents: auditEvents ?? this.auditEvents,
     documentReviewDraft: documentReviewDraft ?? this.documentReviewDraft,
     receivingCountDraft: receivingCountDraft ?? this.receivingCountDraft,
+    inspectionDraft: inspectionDraft ?? this.inspectionDraft,
   );
 
   JsonMap toJson() => {
@@ -195,6 +199,7 @@ class SimulationAttempt {
     'auditEvents': auditEvents.map((item) => item.toJson()).toList(),
     'documentReviewDraft': documentReviewDraft?.toJson(),
     'receivingCountDraft': receivingCountDraft?.toJson(),
+    'inspectionDraft': inspectionDraft?.toJson(),
   };
 
   factory SimulationAttempt.fromJson(JsonMap json) => SimulationAttempt(
@@ -239,6 +244,9 @@ class SimulationAttempt {
         : null,
     receivingCountDraft: json['receivingCountDraft'] is JsonMap
         ? ReceivingCountDraft.fromJson(json.object('receivingCountDraft'))
+        : null,
+    inspectionDraft: json['inspectionDraft'] is JsonMap
+        ? InspectionDraft.fromJson(json.object('inspectionDraft'))
         : null,
   );
 }
