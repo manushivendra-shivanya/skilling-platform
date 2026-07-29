@@ -267,6 +267,7 @@ class MissionDefinition {
     required this.tasks,
     required this.resources,
     required this.scenario,
+    this.scenarios = const [],
     required this.scoringRule,
     required this.criticalErrorRules,
   });
@@ -290,12 +291,33 @@ class MissionDefinition {
   final List<SimulationTask> tasks;
   final List<SimulationResource> resources;
   final ScenarioDefinition scenario;
+
+  /// Named alternative variation-rule sets a candidate can be started against
+  /// via `startMission(scenarioId: ...)`, on top of the always-available
+  /// default seeded against [scenario]. Empty for missions that don't author
+  /// a catalog -- existing content is unaffected.
+  final List<NamedScenario> scenarios;
   final ScoringRule scoringRule;
   final List<CriticalErrorRule> criticalErrorRules;
 
   String get versionedId => '$id@$version';
 
   SimulationTask task(String id) => tasks.firstWhere((item) => item.id == id);
+
+  /// The variation-rule set to generate a scenario from: the named catalog
+  /// entry if [scenarioId] is given and known, otherwise the mission's
+  /// always-available default.
+  ScenarioDefinition scenarioFor(String? scenarioId) {
+    if (scenarioId == null) return scenario;
+    final named = scenarios.firstWhere(
+      (item) => item.id == scenarioId,
+      orElse: () => throw FormatException('Unknown scenario id $scenarioId'),
+    );
+    return ScenarioDefinition(
+      defaultSeed: scenario.defaultSeed,
+      variationRules: named.variationRules,
+    );
+  }
 
   factory MissionDefinition.fromJson(JsonMap json) {
     final mission = MissionDefinition(
@@ -327,6 +349,12 @@ class MissionDefinition {
           .map(SimulationResource.fromJson)
           .toList(growable: false),
       scenario: ScenarioDefinition.fromJson(json.object('scenario')),
+      scenarios: json['scenarios'] is List<Object?>
+          ? json
+                .mapList('scenarios')
+                .map(NamedScenario.fromJson)
+                .toList(growable: false)
+          : const [],
       scoringRule: ScoringRule.fromJson(json.object('scoringRule')),
       criticalErrorRules: json
           .mapList('criticalErrorRules')
@@ -361,6 +389,19 @@ class MissionDefinition {
     );
     if ((weight - 1).abs() > 0.0001) {
       throw const FormatException('Score category weights must total 1');
+    }
+    final scenarioIds = <String>{};
+    for (final named in scenarios) {
+      if (!scenarioIds.add(named.id)) {
+        throw FormatException('Duplicate scenario id ${named.id}');
+      }
+      for (final rule in named.variationRules) {
+        if (!definedResourceIds.containsAll(rule.eligibleTargets)) {
+          throw FormatException(
+            'Scenario ${named.id} references an undefined resource',
+          );
+        }
+      }
     }
   }
 }
@@ -675,6 +716,33 @@ class ScenarioVariationRule {
     severity: IssueSeverity.values.byName(json.string('severity')),
     eligibleTargets: json.stringList('eligibleTargets'),
     count: json.integer('count'),
+  );
+}
+
+/// One entry in a mission's scenario catalog -- a named, independently
+/// selectable alternative to the mission's default [ScenarioDefinition].
+/// See docs/24-receiving-department-content-specification.md section 3.3.
+class NamedScenario {
+  const NamedScenario({
+    required this.id,
+    required this.name,
+    required this.variationRules,
+    this.pedagogicalIntent,
+  });
+
+  final String id;
+  final String name;
+  final List<ScenarioVariationRule> variationRules;
+  final String? pedagogicalIntent;
+
+  factory NamedScenario.fromJson(JsonMap json) => NamedScenario(
+    id: json.string('id'),
+    name: json.string('name'),
+    variationRules: json
+        .mapList('variationRules')
+        .map(ScenarioVariationRule.fromJson)
+        .toList(growable: false),
+    pedagogicalIntent: json.optionalString('pedagogicalIntent'),
   );
 }
 

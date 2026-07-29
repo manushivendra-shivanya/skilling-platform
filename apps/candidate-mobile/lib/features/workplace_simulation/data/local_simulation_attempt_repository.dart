@@ -19,6 +19,7 @@ class LocalSimulationAttemptRepository implements SimulationAttemptRepository {
     required String missionId,
     required String missionVersion,
     required int scenarioSeed,
+    String? scenarioId,
   }) async {
     final counterKey = _counterKey(candidateId, missionId);
     final attemptNumber =
@@ -32,6 +33,7 @@ class LocalSimulationAttemptRepository implements SimulationAttemptRepository {
       missionVersion: missionVersion,
       attemptNumber: nextNumber,
       scenarioSeed: scenarioSeed,
+      scenarioId: scenarioId,
       state: MissionState.notStarted,
       createdAt: now,
       shiftStartedAt: null,
@@ -287,11 +289,13 @@ class InMemorySimulationAttemptRepository
     required String missionId,
     required String missionVersion,
     required int scenarioSeed,
+    String? scenarioId,
   }) => _delegate.createAttempt(
     candidateId: candidateId,
     missionId: missionId,
     missionVersion: missionVersion,
     scenarioSeed: scenarioSeed,
+    scenarioId: scenarioId,
   );
 
   @override

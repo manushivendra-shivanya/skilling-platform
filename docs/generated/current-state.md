@@ -1061,24 +1061,81 @@ and is unaffected by this change. GitHub Actions' **Build Candidate Mobile
 APK** workflow remains the authoritative validator and has not yet run
 against this change.
 
+### Content deepening — NPC dialogue and a scenario catalog
+Closed the runtime-capability gap `docs/24-receiving-department-content-
+specification.md` section 4.1 flagged: `ResourceType` had no `person`
+variant and `ActionType` had no `speak`, so none of the pre-authored NPC
+dialogue in that doc could be loaded as content at all. Both are additive
+enum values — zero risk to existing content, since `SimulationResource`
+already carries arbitrary `content` for any resource type.
+
+Added the **Receiving Supervisor** as a real `person` resource on
+`receive_shipment_mission.json` (mission-start greeting, near-expiry
+guidance, an anti-shortcut line if the learner tries to skip inspection, a
+shift-report acknowledgement — all guidance-only, matching the doc's own
+constraint that NPCs never reveal findings or the correct disposition).
+Screen-level UI to actually surface this dialogue (a chat bubble, an NPC
+tap target) is explicitly not part of this pass — the ask was the runtime
+capability plus real content ready to slot in, not the presentation layer;
+proven by a schema-level test rather than a widget test.
+
+Also added a real **scenario catalog** — section 3.3's proposal, which
+needs `MissionDefinition` to support multiple named, independently
+selectable `variationRules` sets rather than one fixed set per mission.
+`MissionDefinition.scenarios` (optional, defaults to empty so no existing
+content is affected), `ScenarioGenerator.generate(..., scenarioId: ...)`,
+`SimulationAttempt.scenarioId`, and `startMission(scenarioId: ...)` are all
+additive and back-compatible; `attempt.scenarioId` persists so a resumed
+attempt regenerates the same scenario it started with, not the default —
+proven directly by a test that simulates a reload through the same
+persisted-attempt path a real app restart goes through, not just checked at
+creation time. Authored one real catalog entry, `perfect-delivery`: empty
+variation rules, so every carton is physically clean, testing whether the
+learner still runs full inspection discipline once nothing looks visibly
+wrong. Its `pedagogicalIntent` is explicit that this does *not* produce a
+fully clean shipment end-to-end — the PO/DN paperwork mismatch (SKU-1002
+short by 2, unauthorised SKU-1094) is fixed mission content, not
+scenario-varied, so document verification is still exercised regardless of
+which scenario is selected.
+
+**Deliberately not attempted this pass**: the doc's other three proposed
+scenarios. `multi-exception-shipment` needs `ScenarioGenerator` to allow
+more than one issue per resource — it currently enforces at most one
+(`assignedTargets` excludes a resource from every subsequent rule once any
+rule has claimed it), a real generator change, not a content-only addition.
+`wrong-supplier-delivery` needs a new issue type with its own task/
+evaluation-rule authoring. `clerical-only-discrepancy` needs new resource
+content. All three are catalog-ready once someone writes that follow-up
+work; the mechanism to select and score against them already exists now.
+
+### Content deepening — local validation
+- `dart format .` — passed
+- `flutter analyze --no-pub` — passed (same 4 pre-existing info-level hints
+  in `api_jobs_repository.dart`, unrelated to this change)
+- Focused WMS suite — 36/36 passed, including new tests: the supervisor
+  resource loads as `ResourceType.person` with guidance-only dialogue; a
+  named scenario generates independently of the mission default; an unknown
+  scenario id fails clearly; and the controller-level reload-persistence
+  test described above
+- Full suite — 93 of 96 passed; the three failures are the same
+  pre-existing baseline flakes as every prior milestone, confirmed
+  unrelated
+- `flutter build apk --debug --no-pub --target-platform android-arm64` —
+  succeeded locally
+
 ### Next implementation
-Decide how the Flutter Jobs feature gets a real job catalogue — either wire
-`loadJobs()` to `GET /v1/jobs` too, or seed/align mock ids with real ones —
-so the now-wired Apply action has real jobs to apply to end to end; today it
-still only works against mock ids that don't exist in the real database.
-Separately, this remote session's `Supabase` MCP connector should still be
-fixed to actually reach `qoairksjpwkhwqxeollj` (not another authentication
-attempt from inside the session — the connector's project allow-list needs
-changing wherever it was originally configured) so future work here doesn't
-depend on a parallel local session with its own differently-scoped
-connection. Also still open: deepen Receiving's
-content per the backlog in
-`docs/24-receiving-department-content-specification.md`; apply the same
-reusable-architecture pass to Receiving's ~15 bespoke draft/submit
-controller methods now that both Put Away and the BFF slice prove the
-simpler generic pattern; and the doc 23 bounded-context merge remains
-explicitly deferred pending its own 5 approval gates, separate from BFF/Jobs
-work.
+Receiving's controller refactor toward removing duplicated boilerplate
+across its ~15 bespoke draft/submit methods is still open — scoped
+separately from this pass since it touches live, shipped, already-tested
+code rather than adding new capability, and deserves its own careful,
+independently-validated change. Also still open: authoring the three
+deferred scenario-catalog entries (needs a real `ScenarioGenerator` change
+for multi-exception, new task content for the other two); screen-level UI
+for the supervisor dialogue just added; fixing this remote session's
+`Supabase` MCP connector to actually reach `qoairksjpwkhwqxeollj`; deciding
+how the Flutter Jobs feature gets a real job catalogue so the already-wired
+Apply action has real jobs to apply to; and the doc 23 bounded-context
+merge, still explicitly deferred pending its own 5 approval gates.
 
 ## Target product architecture proposal
 

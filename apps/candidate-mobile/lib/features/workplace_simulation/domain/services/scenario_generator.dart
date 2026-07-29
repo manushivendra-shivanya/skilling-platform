@@ -4,7 +4,15 @@ import '../simulation_runtime.dart';
 class ScenarioGenerator {
   const ScenarioGenerator();
 
-  GeneratedScenario generate(MissionDefinition mission, int seed) {
+  /// Generates a scenario for [mission] against the given [seed]. Uses the
+  /// mission's default variation-rule set unless [scenarioId] names an entry
+  /// in the mission's scenario catalog (see [MissionDefinition.scenarioFor]).
+  GeneratedScenario generate(
+    MissionDefinition mission,
+    int seed, {
+    String? scenarioId,
+  }) {
+    final scenario = mission.scenarioFor(scenarioId);
     final random = _StableRandom(seed ^ _stableHash(mission.versionedId));
     final resources = [
       for (final resource in mission.resources)
@@ -12,7 +20,7 @@ class ScenarioGenerator {
     ];
     final assignedTargets = <String>{};
 
-    for (final rule in mission.scenario.variationRules) {
+    for (final rule in scenario.variationRules) {
       if (rule.type != 'assign_issue') {
         throw FormatException('Unsupported variation rule: ${rule.type}');
       }

@@ -204,7 +204,8 @@ enum ResourceType {
   message('message'),
   workOrder('work_order'),
   customerRecord('customer_record'),
-  transaction('transaction');
+  transaction('transaction'),
+  person('person');
 
   const ResourceType(this.wireName);
   final String wireName;
@@ -248,6 +249,7 @@ enum ActionType {
   completeForm('complete_form'),
   makeDecision('make_decision'),
   confirmAction('confirm_action'),
+  speak('speak'),
   technicalFailure('technical_failure');
 
   const ActionType(this.wireName);

@@ -526,6 +526,40 @@
           "Required inspections cannot be skipped, even for a visually intact carton."
         ]
       }
+    },
+    {
+      "id": "receiving-supervisor",
+      "missionId": "receive-incoming-shipment-01",
+      "resourceType": "person",
+      "title": "Receiving Supervisor",
+      "content": {
+        "role": "supervisor",
+        "guidanceOnly": true,
+        "dialogue": [
+          {
+            "id": "greeting",
+            "trigger": "mission_start",
+            "lines": ["Good morning. Apex Consumer Products is on PO-2026-001. Inspect it carefully — I want every discrepancy recorded, not guessed at."]
+          },
+          {
+            "id": "near_expiry_question",
+            "trigger": "learner_asks",
+            "topic": "near_expiry_policy",
+            "lines": ["If it's near expiry, don't decide that yourself — flag it to me and I'll apply the shelf-life policy."]
+          },
+          {
+            "id": "skip_inspection_attempt",
+            "trigger": "learner_asks",
+            "topic": "skip_inspection",
+            "lines": ["Every carton gets inspected, even the ones that look fine. 'Looks fine' isn't a finding."]
+          },
+          {
+            "id": "shift_report_acknowledged",
+            "trigger": "supervisor_notified",
+            "lines": ["Good — I've got the audit trail. I'll follow up on the held stock myself."]
+          }
+        ]
+      }
     }
   ],
   "scenario": {
@@ -538,6 +572,14 @@
       {"type": "assign_issue", "issue": "near_expiry", "severity": "major", "eligibleTargets": ["carton-001", "carton-002", "carton-003", "carton-004", "carton-005", "carton-006"], "count": 1}
     ]
   },
+  "scenarios": [
+    {
+      "id": "perfect-delivery",
+      "name": "Perfect delivery",
+      "variationRules": [],
+      "pedagogicalIntent": "No carton has a physical defect assigned — every carton scans, inspects and counts clean. The standing PO/DN paperwork mismatch (SKU-1002 short by 2, unauthorised SKU-1094) is fixed mission content, not scenario-varied, so document verification is still exercised. Tests whether the learner still performs full physical inspection discipline when nothing is visibly wrong with the cartons themselves — the most common real failure mode is skipping inspection steps once the paperwork already flagged something."
+    }
+  ],
   "scoringRule": {
     "minimumScore": 70,
     "allMandatoryTasksRequired": true,

@@ -85,7 +85,11 @@ class WorkplaceSimulationController
         .getActiveAttempt(session.candidateId, mission.id);
     final scenario = attempt == null
         ? null
-        : _scenarioGenerator.generate(mission, attempt.scenarioSeed);
+        : _scenarioGenerator.generate(
+            mission,
+            attempt.scenarioSeed,
+            scenarioId: attempt.scenarioId,
+          );
     final outcomes = attempt == null || scenario == null
         ? const <ActionOutcome>[]
         : _evaluateActions(mission, scenario, attempt.actions);
@@ -109,7 +113,7 @@ class WorkplaceSimulationController
     );
   }
 
-  Future<AppFailure?> startMission({int? scenarioSeed}) {
+  Future<AppFailure?> startMission({int? scenarioSeed, String? scenarioId}) {
     return _guard(() async {
       final current = _requireState();
       final candidateId = _requireCandidate();
@@ -118,6 +122,11 @@ class WorkplaceSimulationController
           existing.state != MissionState.completed &&
           existing.state != MissionState.failed) {
         return;
+      }
+      if (scenarioId != null) {
+        // Validates the id and throws early with a clear error rather than
+        // creating an attempt against an unknown scenario.
+        current.mission.scenarioFor(scenarioId);
       }
       final attempt = await ref
           .read(simulationAttemptRepositoryProvider)
@@ -128,6 +137,7 @@ class WorkplaceSimulationController
             scenarioSeed:
                 scenarioSeed ??
                 DateTime.now().microsecondsSinceEpoch.remainder(0x7fffffff),
+            scenarioId: scenarioId,
           );
       var briefing = _stateService.transition(attempt, MissionState.briefing);
       await ref.read(simulationAttemptRepositoryProvider).saveAttempt(briefing);
@@ -156,6 +166,7 @@ class WorkplaceSimulationController
           scenario: _scenarioGenerator.generate(
             current.mission,
             briefing.scenarioSeed,
+            scenarioId: briefing.scenarioId,
           ),
           outcomes: const [],
           clearResult: true,

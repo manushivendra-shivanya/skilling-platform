@@ -87,6 +87,57 @@ void main() {
     },
   );
 
+  test('the receiving supervisor is addressable as a person resource with '
+      'guidance-only dialogue', () async {
+    final mission = await repository.getMission('receive-incoming-shipment-01');
+
+    final supervisor = mission.resources.firstWhere(
+      (item) => item.id == 'receiving-supervisor',
+    );
+
+    expect(supervisor.resourceType, ResourceType.person);
+    expect(supervisor.content['guidanceOnly'], isTrue);
+    final dialogue = (supervisor.content['dialogue'] as List)
+        .cast<Map<String, Object?>>();
+    expect(dialogue, isNotEmpty);
+    expect(
+      dialogue.every((line) => line['lines'] is List),
+      isTrue,
+      reason: 'every dialogue entry must have readable lines',
+    );
+    expect(
+      dialogue.any((line) => line['trigger'] == 'mission_start'),
+      isTrue,
+      reason: 'a mission-start greeting line must exist',
+    );
+  });
+
+  test('a named scenario in the catalog seeds a scenario against its own '
+      'variation rules, independent of the mission default', () async {
+    final mission = await repository.getMission('receive-incoming-shipment-01');
+    const generator = ScenarioGenerator();
+
+    final perfect = generator.generate(
+      mission,
+      48127,
+      scenarioId: 'perfect-delivery',
+    );
+    final regular = generator.generate(mission, 48127);
+
+    expect(
+      perfect.resources.expand((item) => item.issues),
+      isEmpty,
+      reason: 'perfect-delivery has no variation rules to assign an issue',
+    );
+    expect(regular.resources.expand((item) => item.issues), isNotEmpty);
+  });
+
+  test('selecting an unknown scenario id fails clearly', () async {
+    final mission = await repository.getMission('receive-incoming-shipment-01');
+
+    expect(() => mission.scenarioFor('does-not-exist'), throwsFormatException);
+  });
+
   test('mission state service accepts only declared transitions', () {
     const service = MissionStateService();
     final initial = _attempt(MissionState.notStarted);
