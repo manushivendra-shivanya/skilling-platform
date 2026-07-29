@@ -23,8 +23,10 @@ flowchart TD
     WMSBRIEF --> WMSOVERVIEW[Workplace Overview]
     WMSOVERVIEW --> WMSDOC[Document Desk]
     WMSDOC --> WMSDOCK[Receiving Dock]
-    WMSDOCK --> WMSINSPECT[Screen 06 Inspection Zone]
-    WMSINSPECT --> WMSQUARANTINE[Quarantine Zone - not yet built]
+    WMSDOCK --> WMSINSPECT[Inspection Zone]
+    WMSINSPECT --> WMSQUARANTINE[Quarantine Zone]
+    WMSQUARANTINE --> WMSOFFICE[Receiving Office]
+    WMSOFFICE --> WMSFEEDBACK[Performance Feedback]
 
     ENTRY --> AUTHCTRL[Authentication Controller]
     AUTHCTRL --> LOCALOTP[Development OTP Adapter]
@@ -94,6 +96,9 @@ flowchart TD
     WMSDOC --> WMSCTRL
     WMSDOCK --> WMSCTRL
     WMSINSPECT --> WMSCTRL
+    WMSQUARANTINE --> WMSCTRL
+    WMSOFFICE --> WMSCTRL
+    WMSCTRL --> WMSFEEDBACK
 
     GH[GitHub Repository] --> ACTIONS[GitHub Actions APK Build]
     ACTIONS --> APK[Signed Android Debug APK]

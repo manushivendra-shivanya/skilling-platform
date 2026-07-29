@@ -5,6 +5,9 @@ import 'package:candidate_mobile/features/workplace_simulation/application/workp
 import 'package:candidate_mobile/features/workplace_simulation/data/asset_simulation_content_repository.dart';
 import 'package:candidate_mobile/features/workplace_simulation/data/local_simulation_attempt_repository.dart';
 import 'package:candidate_mobile/features/workplace_simulation/presentation/inspection_zone_screen.dart';
+import 'package:candidate_mobile/features/workplace_simulation/presentation/performance_feedback_screen.dart';
+import 'package:candidate_mobile/features/workplace_simulation/presentation/quarantine_zone_screen.dart';
+import 'package:candidate_mobile/features/workplace_simulation/presentation/receiving_office_screen.dart';
 import 'package:candidate_mobile/features/workplace_simulation/presentation/workplace_overview_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -36,6 +39,8 @@ void main() {
               onOpenDocumentDesk: () {},
               onOpenReceivingDock: () => receivingOpened = true,
               onOpenInspectionZone: () {},
+              onOpenQuarantineZone: () {},
+              onOpenReceivingOffice: () {},
               onReturnToPractice: () {},
             ),
           ),
@@ -68,6 +73,7 @@ void main() {
             home: InspectionZoneScreen(
               missionId: WorkplaceSimulationController.missionId,
               onBack: () {},
+              onOpenQuarantineZone: () {},
             ),
           ),
         ),
@@ -75,6 +81,54 @@ void main() {
       await tester.pump(const Duration(milliseconds: 300));
       expect(find.text('Inspection Zone is locked'), findsOneWidget);
       expect(find.text('Inspection workflow coming next.'), findsNothing);
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(
+            theme: buildAppTheme(),
+            home: QuarantineZoneScreen(
+              missionId: WorkplaceSimulationController.missionId,
+              onBack: () {},
+              onOpenReceivingOffice: () {},
+            ),
+          ),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(find.text('Quarantine Zone is locked'), findsOneWidget);
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(
+            theme: buildAppTheme(),
+            home: ReceivingOfficeScreen(
+              missionId: WorkplaceSimulationController.missionId,
+              onBack: () {},
+              onMissionComplete: () {},
+            ),
+          ),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(find.text('Receiving Office is locked'), findsOneWidget);
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(
+            theme: buildAppTheme(),
+            home: PerformanceFeedbackScreen(
+              missionId: WorkplaceSimulationController.missionId,
+              onReturnToPractice: () {},
+            ),
+          ),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(find.text('No results yet'), findsOneWidget);
+
       await tester.pumpWidget(const SizedBox());
       await tester.pump();
     },

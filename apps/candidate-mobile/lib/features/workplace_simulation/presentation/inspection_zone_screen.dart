@@ -16,11 +16,13 @@ class InspectionZoneScreen extends ConsumerStatefulWidget {
   const InspectionZoneScreen({
     required this.missionId,
     required this.onBack,
+    required this.onOpenQuarantineZone,
     super.key,
   });
 
   final String missionId;
   final VoidCallback onBack;
+  final VoidCallback onOpenQuarantineZone;
 
   @override
   ConsumerState<InspectionZoneScreen> createState() =>
@@ -505,8 +507,8 @@ class _InspectionZoneScreenState extends ConsumerState<InspectionZoneScreen> {
     setState(() => _saving = false);
     switch (result) {
       case SubmitInspectionResult.success:
-        _showMessage('Inspection submitted.');
-        widget.onBack();
+        _showMessage('Inspection submitted. Quarantine Zone unlocked.');
+        widget.onOpenQuarantineZone();
       case SubmitInspectionResult.incompleteInspection:
         _showMessage('Inspect every carton before submitting.');
       case SubmitInspectionResult.incompleteScans:

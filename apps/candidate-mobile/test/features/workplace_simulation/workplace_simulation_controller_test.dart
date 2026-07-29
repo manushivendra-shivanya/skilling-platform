@@ -468,6 +468,103 @@ void main() {
         SubmitInspectionResult.alreadySubmitted,
       );
 
+      // Seed 48127's deterministic issue assignment (verified by replaying
+      // the scenario generator): carton-001 unreadable_barcode,
+      // carton-002 quantity_shortage, carton-003 incorrect_sku,
+      // carton-004 compliant, carton-005 near_expiry,
+      // carton-006 packaging_damage.
+      const correctDispositions = {
+        'carton-001': DispositionType.holdForVerification,
+        'carton-002': DispositionType.holdForVerification,
+        'carton-003': DispositionType.rejectReturn,
+        'carton-004': DispositionType.accept,
+        'carton-005': DispositionType.escalate,
+        'carton-006': DispositionType.quarantine,
+      };
+      for (final entry in correctDispositions.entries) {
+        expect(
+          await controller.recordDisposition(
+            RecordDispositionCommand(
+              cartonId: entry.key,
+              disposition: entry.value,
+              reason: entry.value == DispositionType.accept
+                  ? ''
+                  : 'Matches inspection finding',
+            ),
+          ),
+          RecordDispositionResult.success,
+        );
+      }
+      expect(
+        await controller.submitDispositions(const SubmitDispositionsCommand()),
+        SubmitDispositionsResult.success,
+      );
+      expect(
+        await controller.confirmQuarantine(const ConfirmQuarantineCommand()),
+        ConfirmQuarantineResult.success,
+      );
+      expect(
+        controller.workstationStatus('quarantine-zone'),
+        WorkstationStatus.completed,
+      );
+      expect(
+        controller.workstationStatus('receiving-office'),
+        WorkstationStatus.available,
+      );
+
+      expect(
+        await controller.setDiscrepancyReportFlags(
+          const SetDiscrepancyReportFlagsCommand(
+            shortageRecorded: true,
+            unauthorizedSkuRecorded: true,
+            damageRecorded: true,
+            barcodeIssueRecorded: true,
+            nearExpiryRecorded: true,
+          ),
+        ),
+        SetDiscrepancyReportFlagsResult.success,
+      );
+      expect(
+        await controller.submitDiscrepancyReport(
+          const SubmitDiscrepancyReportCommand(),
+        ),
+        SubmitDiscrepancyReportResult.success,
+      );
+      expect(
+        await controller.selectReceivingDecision(
+          const SelectReceivingDecisionCommand(
+            ReceivingDecisionOutcome.partiallyAccept,
+          ),
+        ),
+        SelectReceivingDecisionResult.success,
+      );
+      expect(
+        controller.selectedReceivingDecision,
+        ReceivingDecisionOutcome.partiallyAccept,
+      );
+      expect(
+        await controller.notifySupervisor(const NotifySupervisorCommand()),
+        NotifySupervisorResult.success,
+      );
+      expect(controller.supervisorNotified, isTrue);
+
+      expect(await controller.completeMission(), CompleteMissionResult.success);
+      final result = container
+          .read(workplaceSimulationControllerProvider)
+          .requireValue
+          .result;
+      expect(result, isNotNull);
+      // This test deliberately records an incorrect optional document
+      // finding earlier (see the addDocumentFinding call above) to verify
+      // typed commands work "independent of correctness" -- so it does not
+      // assert a passing overall score here. All mandatory tasks across
+      // every stage were completed (the receiving/quarantine/decision
+      // portion added in this change was answered correctly throughout),
+      // and no critical error was triggered.
+      expect(result!.mandatoryTasksCompleted, isTrue);
+      expect(result.criticalErrors, isEmpty);
+      expect(result.status, isNot(MissionStatus.criticalFailure));
+
       final completedAttempt = container
           .read(workplaceSimulationControllerProvider)
           .requireValue
@@ -490,6 +587,124 @@ void main() {
           ),
         ),
       );
+    },
+  );
+
+  test(
+    'a wrong receiving decision still lets the learner finish the shift',
+    () async {
+      final container = ProviderContainer(
+        overrides: [
+          candidateSessionRepositoryProvider.overrideWithValue(
+            InMemoryCandidateSessionRepository(
+              session: const CandidateSession(
+                candidateId: 'wrong-decision-candidate',
+                isAuthenticated: true,
+              ),
+            ),
+          ),
+          simulationContentRepositoryProvider.overrideWithValue(
+            AssetSimulationContentRepository(),
+          ),
+          simulationAttemptRepositoryProvider.overrideWithValue(
+            InMemorySimulationAttemptRepository(),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+      await container.read(workplaceSimulationControllerProvider.future);
+      final controller = container.read(
+        workplaceSimulationControllerProvider.notifier,
+      );
+      expect(await controller.startMission(scenarioSeed: 48127), isNull);
+      expect(await controller.setBriefingAcknowledged(true), isNull);
+      expect(
+        await controller.beginShift(at: DateTime.utc(2026, 7, 29)),
+        BeginShiftResult.success,
+      );
+
+      // Selecting the wrong decision leaves make-receiving-decision out of
+      // completedTaskIds (non-repeatable, single evaluationRule for
+      // partially_accept only) -- the learner must still be able to notify
+      // the supervisor and see results, not get stuck with no way forward.
+      expect(
+        await controller.selectReceivingDecision(
+          const SelectReceivingDecisionCommand(ReceivingDecisionOutcome.accept),
+        ),
+        SelectReceivingDecisionResult.discrepancyReportNotSubmitted,
+      );
+
+      final state = container
+          .read(workplaceSimulationControllerProvider)
+          .requireValue;
+      for (final cartonId
+          in state.mission.task('assign-dispositions').targetResourceIds) {
+        expect(
+          await controller.recordDisposition(
+            RecordDispositionCommand(
+              cartonId: cartonId,
+              disposition: DispositionType.accept,
+            ),
+          ),
+          RecordDispositionResult.success,
+        );
+      }
+      expect(
+        await controller.submitDispositions(const SubmitDispositionsCommand()),
+        SubmitDispositionsResult.success,
+      );
+      expect(
+        await controller.confirmQuarantine(const ConfirmQuarantineCommand()),
+        ConfirmQuarantineResult.success,
+      );
+      expect(
+        await controller.setDiscrepancyReportFlags(
+          const SetDiscrepancyReportFlagsCommand(
+            shortageRecorded: false,
+            unauthorizedSkuRecorded: false,
+            damageRecorded: false,
+            barcodeIssueRecorded: false,
+            nearExpiryRecorded: false,
+          ),
+        ),
+        SetDiscrepancyReportFlagsResult.success,
+      );
+      expect(
+        await controller.submitDiscrepancyReport(
+          const SubmitDiscrepancyReportCommand(),
+        ),
+        SubmitDiscrepancyReportResult.success,
+      );
+
+      expect(
+        await controller.selectReceivingDecision(
+          const SelectReceivingDecisionCommand(ReceivingDecisionOutcome.accept),
+        ),
+        SelectReceivingDecisionResult.success,
+      );
+      expect(
+        container
+            .read(workplaceSimulationControllerProvider)
+            .requireValue
+            .attempt!
+            .completedTaskIds,
+        isNot(contains('make-receiving-decision')),
+      );
+
+      // The critical assertion: notify-supervisor and completion must still
+      // succeed even though the decision scored incorrect.
+      expect(
+        await controller.notifySupervisor(const NotifySupervisorCommand()),
+        NotifySupervisorResult.success,
+      );
+      expect(await controller.completeMission(), CompleteMissionResult.success);
+      final result = container
+          .read(workplaceSimulationControllerProvider)
+          .requireValue
+          .result;
+      expect(result, isNotNull);
+      expect(result!.mandatoryTasksCompleted, isFalse);
+      expect(result.status, isNot(MissionStatus.passed));
     },
   );
 }

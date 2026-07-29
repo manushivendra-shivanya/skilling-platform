@@ -69,6 +69,8 @@ class SimulationAttempt {
     this.documentReviewDraft,
     this.receivingCountDraft,
     this.inspectionDraft,
+    this.dispositionDraft,
+    this.discrepancyReportDraft,
     this.submittedAt,
     this.completedAt,
   });
@@ -96,6 +98,8 @@ class SimulationAttempt {
   final DocumentReviewDraft? documentReviewDraft;
   final ReceivingCountDraft? receivingCountDraft;
   final InspectionDraft? inspectionDraft;
+  final DispositionDraft? dispositionDraft;
+  final DiscrepancyReportDraft? discrepancyReportDraft;
 
   @Deprecated('Use createdAt')
   DateTime get startedAt => createdAt;
@@ -141,6 +145,8 @@ class SimulationAttempt {
     DocumentReviewDraft? documentReviewDraft,
     ReceivingCountDraft? receivingCountDraft,
     InspectionDraft? inspectionDraft,
+    DispositionDraft? dispositionDraft,
+    DiscrepancyReportDraft? discrepancyReportDraft,
   }) => SimulationAttempt(
     id: id,
     candidateId: candidateId,
@@ -174,6 +180,9 @@ class SimulationAttempt {
     documentReviewDraft: documentReviewDraft ?? this.documentReviewDraft,
     receivingCountDraft: receivingCountDraft ?? this.receivingCountDraft,
     inspectionDraft: inspectionDraft ?? this.inspectionDraft,
+    dispositionDraft: dispositionDraft ?? this.dispositionDraft,
+    discrepancyReportDraft:
+        discrepancyReportDraft ?? this.discrepancyReportDraft,
   );
 
   JsonMap toJson() => {
@@ -200,6 +209,8 @@ class SimulationAttempt {
     'documentReviewDraft': documentReviewDraft?.toJson(),
     'receivingCountDraft': receivingCountDraft?.toJson(),
     'inspectionDraft': inspectionDraft?.toJson(),
+    'dispositionDraft': dispositionDraft?.toJson(),
+    'discrepancyReportDraft': discrepancyReportDraft?.toJson(),
   };
 
   factory SimulationAttempt.fromJson(JsonMap json) => SimulationAttempt(
@@ -247,6 +258,12 @@ class SimulationAttempt {
         : null,
     inspectionDraft: json['inspectionDraft'] is JsonMap
         ? InspectionDraft.fromJson(json.object('inspectionDraft'))
+        : null,
+    dispositionDraft: json['dispositionDraft'] is JsonMap
+        ? DispositionDraft.fromJson(json.object('dispositionDraft'))
+        : null,
+    discrepancyReportDraft: json['discrepancyReportDraft'] is JsonMap
+        ? DiscrepancyReportDraft.fromJson(json.object('discrepancyReportDraft'))
         : null,
   );
 }
