@@ -4,10 +4,10 @@ import 'package:candidate_mobile/core/repositories/candidate_session_repository.
 import 'package:candidate_mobile/features/workplace_simulation/application/workplace_simulation_controller.dart';
 import 'package:candidate_mobile/features/workplace_simulation/data/asset_simulation_content_repository.dart';
 import 'package:candidate_mobile/features/workplace_simulation/data/local_simulation_attempt_repository.dart';
-import 'package:candidate_mobile/features/workplace_simulation/presentation/inspection_zone_screen.dart';
-import 'package:candidate_mobile/features/workplace_simulation/presentation/performance_feedback_screen.dart';
-import 'package:candidate_mobile/features/workplace_simulation/presentation/quarantine_zone_screen.dart';
-import 'package:candidate_mobile/features/workplace_simulation/presentation/receiving_office_screen.dart';
+import 'package:candidate_mobile/features/workplace_simulation/presentation/location_planning_screen.dart';
+import 'package:candidate_mobile/features/workplace_simulation/presentation/putaway_office_screen.dart';
+import 'package:candidate_mobile/features/workplace_simulation/presentation/staging_area_screen.dart';
+import 'package:candidate_mobile/features/workplace_simulation/presentation/transport_placement_screen.dart';
 import 'package:candidate_mobile/features/workplace_simulation/presentation/workplace_overview_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -17,17 +17,17 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   testWidgets(
-    'Screen 03 renders controller-derived station states at large text',
+    'Put Away workstation screens render, lock correctly and open the '
+    'putaway list',
     (tester) async {
       tester.view.physicalSize = const Size(430, 1200);
       tester.view.devicePixelRatio = 1;
-      tester.platformDispatcher.textScaleFactorTestValue = 2;
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
-      addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
-      final container = await _activeContainer();
+      final missionId = WorkplaceSimulationController.putAwayMissionId;
+      final container = await _activePutAwayContainer(missionId);
       addTearDown(container.dispose);
-      String? openedWorkstationId;
+      var opened = false;
 
       await tester.pumpWidget(
         UncontrolledProviderScope(
@@ -35,9 +35,8 @@ void main() {
           child: MaterialApp(
             theme: buildAppTheme(),
             home: WorkplaceOverviewScreen(
-              missionId: WorkplaceSimulationController.missionId,
-              onOpenWorkstation: (workstationId) =>
-                  openedWorkstationId = workstationId,
+              missionId: missionId,
+              onOpenWorkstation: (_) => opened = true,
               onReturnToPractice: () {},
             ),
           ),
@@ -47,61 +46,57 @@ void main() {
       await tester.pump(const Duration(milliseconds: 300));
 
       for (final station in const [
-        'Document Desk',
-        'Receiving Dock',
-        'Inspection Zone',
-        'Barcode Station',
-        'Quarantine Zone',
-        'Receiving Office',
+        'Staging Area',
+        'Location Planning',
+        'Transport and Placement',
+        'Putaway Office',
       ]) {
         expect(find.text(station), findsOneWidget);
       }
-      expect(find.textContaining('Recommended'), findsOneWidget);
 
-      await tester.tap(find.text('Receiving Dock'));
+      await tester.tap(find.text('Staging Area'));
       await tester.pump(const Duration(milliseconds: 300));
-      expect(openedWorkstationId, isNull);
-      expect(find.textContaining('Complete'), findsWidgets);
+      expect(opened, isTrue);
+
       await tester.pumpWidget(
         UncontrolledProviderScope(
           container: container,
           child: MaterialApp(
             theme: buildAppTheme(),
-            home: InspectionZoneScreen(
-              missionId: WorkplaceSimulationController.missionId,
+            home: LocationPlanningScreen(
+              missionId: missionId,
               onBack: () {},
-              onOpenQuarantineZone: () {},
+              onOpenTransportPlacement: () {},
             ),
           ),
         ),
       );
       await tester.pump(const Duration(milliseconds: 300));
-      expect(find.text('Inspection Zone is locked'), findsOneWidget);
-      expect(find.text('Inspection workflow coming next.'), findsNothing);
+      expect(find.text('Location Planning is locked'), findsOneWidget);
 
       await tester.pumpWidget(
         UncontrolledProviderScope(
           container: container,
           child: MaterialApp(
             theme: buildAppTheme(),
-            home: QuarantineZoneScreen(
-              missionId: WorkplaceSimulationController.missionId,
+            home: TransportPlacementScreen(
+              missionId: missionId,
               onBack: () {},
-              onOpenReceivingOffice: () {},
+              onOpenPutawayOffice: () {},
             ),
           ),
         ),
       );
       await tester.pump(const Duration(milliseconds: 300));
-      expect(find.text('Quarantine Zone is locked'), findsOneWidget);
+      expect(find.text('Transport and Placement is locked'), findsOneWidget);
 
       await tester.pumpWidget(
         UncontrolledProviderScope(
           container: container,
           child: MaterialApp(
             theme: buildAppTheme(),
-            home: ReceivingOfficeScreen(
-              missionId: WorkplaceSimulationController.missionId,
+            home: PutawayOfficeScreen(
+              missionId: missionId,
               onBack: () {},
               onMissionComplete: () {},
             ),
@@ -109,22 +104,34 @@ void main() {
         ),
       );
       await tester.pump(const Duration(milliseconds: 300));
-      expect(find.text('Receiving Office is locked'), findsOneWidget);
+      expect(find.text('Putaway Office is locked'), findsOneWidget);
 
       await tester.pumpWidget(
         UncontrolledProviderScope(
           container: container,
           child: MaterialApp(
             theme: buildAppTheme(),
-            home: PerformanceFeedbackScreen(
-              missionId: WorkplaceSimulationController.missionId,
-              onReturnToPractice: () {},
+            home: StagingAreaScreen(
+              missionId: missionId,
+              onBack: () {},
+              onOpenLocationPlanning: () {},
             ),
           ),
         ),
       );
       await tester.pump(const Duration(milliseconds: 300));
-      expect(find.text('No results yet'), findsOneWidget);
+      expect(find.text('Putaway Task List PUTAWAY-2026-004'), findsOneWidget);
+      expect(find.text('Mark reviewed'), findsOneWidget);
+
+      await tester.tap(find.text('Mark reviewed'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      final attempt = container
+          .read(workplaceSimulationControllerProvider(missionId))
+          .requireValue
+          .attempt!;
+      expect(attempt.completedTaskIds, contains('open-putaway-list'));
 
       await tester.pumpWidget(const SizedBox());
       await tester.pump();
@@ -132,13 +139,13 @@ void main() {
   );
 }
 
-Future<ProviderContainer> _activeContainer() async {
+Future<ProviderContainer> _activePutAwayContainer(String missionId) async {
   final container = ProviderContainer(
     overrides: [
       candidateSessionRepositoryProvider.overrideWithValue(
         InMemoryCandidateSessionRepository(
           session: const CandidateSession(
-            candidateId: 'screen-operations-candidate',
+            candidateId: 'put-away-screen-candidate',
             isAuthenticated: true,
           ),
         ),
@@ -151,22 +158,16 @@ Future<ProviderContainer> _activeContainer() async {
       ),
     ],
   );
-  await container.read(
-    workplaceSimulationControllerProvider(
-      WorkplaceSimulationController.missionId,
-    ).future,
-  );
+  await container.read(workplaceSimulationControllerProvider(missionId).future);
   final controller = container.read(
-    workplaceSimulationControllerProvider(
-      WorkplaceSimulationController.missionId,
-    ).notifier,
+    workplaceSimulationControllerProvider(missionId).notifier,
   );
-  await controller.startMission(scenarioSeed: 48127);
+  await controller.startMission(scenarioSeed: 71204);
   await controller.setBriefingAcknowledged(true);
   final result = await controller.beginShift();
   if (result != BeginShiftResult.success) {
     container.dispose();
-    throw StateError('Could not prepare active WMS test attempt: $result');
+    throw StateError('Could not prepare active Put Away test attempt: $result');
   }
   return container;
 }

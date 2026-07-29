@@ -849,9 +849,6 @@ class WorkplaceSimulationController
         await _commit(current, attempt);
         return OpenWorkstationResult.workstationLocked;
       }
-      if (_workstationRoute(current.mission.id, station.id) == null) {
-        return OpenWorkstationResult.routeUnavailable;
-      }
       attempt = _withAudit(
         attempt,
         AttemptAuditEventType.workstationOpened,
@@ -2545,7 +2542,9 @@ class WorkplaceSimulationController
     }
   }
 
-  Future<CompleteMissionResult> completeMission() async {
+  Future<CompleteMissionResult> completeMission({
+    String screenId = 'receiving-office',
+  }) async {
     final current = state.valueOrNull;
     final attempt = current?.attempt;
     if (current == null ||
@@ -2557,7 +2556,7 @@ class WorkplaceSimulationController
     if (failure != null) return CompleteMissionResult.persistenceFailure;
     await _recordWorkplaceEvent(
       AttemptAuditEventType.missionSubmitted,
-      screenId: 'receiving-office',
+      screenId: screenId,
     );
     return CompleteMissionResult.success;
   }
@@ -3032,7 +3031,6 @@ class WorkplaceSimulationController
       name: station.name,
       description: station.description,
       iconKey: station.icon,
-      route: _workstationRoute(current.mission.id, station.id),
       status: status,
       isRecommended: recommended,
       progressLabel: label,
@@ -3041,17 +3039,6 @@ class WorkplaceSimulationController
           : station.description,
     );
   }
-
-  String? _workstationRoute(String missionId, String workstationId) =>
-      switch (workstationId) {
-        'document-desk' =>
-          '/practise/workplace-simulation/$missionId/document-desk',
-        'receiving-dock' =>
-          '/practise/workplace-simulation/$missionId/receiving-dock',
-        'inspection-zone' =>
-          '/practise/workplace-simulation/$missionId/inspection-zone',
-        _ => null,
-      };
 
   List<ActionOutcome> _evaluateActions(
     MissionDefinition mission,

@@ -36,6 +36,10 @@ import '../../features/workplace_simulation/presentation/performance_feedback_sc
 import '../../features/workplace_simulation/presentation/quarantine_zone_screen.dart';
 import '../../features/workplace_simulation/presentation/receiving_dock_screen.dart';
 import '../../features/workplace_simulation/presentation/receiving_office_screen.dart';
+import '../../features/workplace_simulation/presentation/staging_area_screen.dart';
+import '../../features/workplace_simulation/presentation/location_planning_screen.dart';
+import '../../features/workplace_simulation/presentation/transport_placement_screen.dart';
+import '../../features/workplace_simulation/presentation/putaway_office_screen.dart';
 import '../../features/workplace_simulation/presentation/workplace_overview_screen.dart';
 import '../dependencies.dart';
 
@@ -122,6 +126,20 @@ const workplacePerformanceFeedbackRouteName =
     'workplace-simulation-performance-feedback';
 const workplacePerformanceFeedbackRoutePattern =
     '/practise/workplace-simulation/:missionId/performance-feedback';
+const workplaceStagingAreaRouteName = 'workplace-simulation-staging-area';
+const workplaceStagingAreaRoutePattern =
+    '/practise/workplace-simulation/:missionId/staging-area';
+const workplaceLocationPlanningRouteName =
+    'workplace-simulation-location-planning';
+const workplaceLocationPlanningRoutePattern =
+    '/practise/workplace-simulation/:missionId/location-planning';
+const workplaceTransportPlacementRouteName =
+    'workplace-simulation-transport-placement';
+const workplaceTransportPlacementRoutePattern =
+    '/practise/workplace-simulation/:missionId/transport-placement';
+const workplacePutawayOfficeRouteName = 'workplace-simulation-putaway-office';
+const workplacePutawayOfficeRoutePattern =
+    '/practise/workplace-simulation/:missionId/putaway-office';
 const designSystemGalleryRoutePath = '/dev/design-system';
 const designSystemGalleryRouteName = 'design-system-gallery';
 
@@ -143,6 +161,31 @@ String workplaceReceivingOfficePath(String missionId) =>
     '${workplaceSimulationPath(missionId)}/receiving-office';
 String workplacePerformanceFeedbackPath(String missionId) =>
     '${workplaceSimulationPath(missionId)}/performance-feedback';
+String workplaceStagingAreaPath(String missionId) =>
+    '${workplaceSimulationPath(missionId)}/staging-area';
+String workplaceLocationPlanningPath(String missionId) =>
+    '${workplaceSimulationPath(missionId)}/location-planning';
+String workplaceTransportPlacementPath(String missionId) =>
+    '${workplaceSimulationPath(missionId)}/transport-placement';
+String workplacePutawayOfficePath(String missionId) =>
+    '${workplaceSimulationPath(missionId)}/putaway-office';
+
+/// Maps a workstation id from mission content to its screen route. New
+/// workstations only need an entry here plus a GoRoute below — the overview
+/// screen itself has no per-department knowledge of where things live.
+String workstationPath(String workstationId, String missionId) =>
+    switch (workstationId) {
+      'document-desk' => workplaceDocumentDeskPath(missionId),
+      'receiving-dock' => workplaceReceivingDockPath(missionId),
+      'inspection-zone' => workplaceInspectionZonePath(missionId),
+      'quarantine-zone' => workplaceQuarantineZonePath(missionId),
+      'receiving-office' => workplaceReceivingOfficePath(missionId),
+      'staging-area' => workplaceStagingAreaPath(missionId),
+      'location-planning' => workplaceLocationPlanningPath(missionId),
+      'transport-placement' => workplaceTransportPlacementPath(missionId),
+      'putaway-office' => workplacePutawayOfficePath(missionId),
+      _ => workplaceOverviewPath(missionId),
+    };
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   final router = createAppRouter(
@@ -376,16 +419,8 @@ GoRouter createAppRouter({
           final missionId = state.pathParameters['missionId']!;
           return WorkplaceOverviewScreen(
             missionId: missionId,
-            onOpenDocumentDesk: () =>
-                context.go(workplaceDocumentDeskPath(missionId)),
-            onOpenReceivingDock: () =>
-                context.go(workplaceReceivingDockPath(missionId)),
-            onOpenInspectionZone: () =>
-                context.go(workplaceInspectionZonePath(missionId)),
-            onOpenQuarantineZone: () =>
-                context.go(workplaceQuarantineZonePath(missionId)),
-            onOpenReceivingOffice: () =>
-                context.go(workplaceReceivingOfficePath(missionId)),
+            onOpenWorkstation: (workstationId) =>
+                context.go(workstationPath(workstationId, missionId)),
             onReturnToPractice: () => context.go(practiseRoutePath),
           );
         },
@@ -467,6 +502,62 @@ GoRouter createAppRouter({
           return PerformanceFeedbackScreen(
             missionId: missionId,
             onReturnToPractice: () => context.go(practiseRoutePath),
+          );
+        },
+      ),
+      GoRoute(
+        parentNavigatorKey: rootNavigatorKey,
+        path: workplaceStagingAreaRoutePattern,
+        name: workplaceStagingAreaRouteName,
+        builder: (context, state) {
+          final missionId = state.pathParameters['missionId']!;
+          return StagingAreaScreen(
+            missionId: missionId,
+            onBack: () => context.go(workplaceOverviewPath(missionId)),
+            onOpenLocationPlanning: () =>
+                context.go(workplaceLocationPlanningPath(missionId)),
+          );
+        },
+      ),
+      GoRoute(
+        parentNavigatorKey: rootNavigatorKey,
+        path: workplaceLocationPlanningRoutePattern,
+        name: workplaceLocationPlanningRouteName,
+        builder: (context, state) {
+          final missionId = state.pathParameters['missionId']!;
+          return LocationPlanningScreen(
+            missionId: missionId,
+            onBack: () => context.go(workplaceOverviewPath(missionId)),
+            onOpenTransportPlacement: () =>
+                context.go(workplaceTransportPlacementPath(missionId)),
+          );
+        },
+      ),
+      GoRoute(
+        parentNavigatorKey: rootNavigatorKey,
+        path: workplaceTransportPlacementRoutePattern,
+        name: workplaceTransportPlacementRouteName,
+        builder: (context, state) {
+          final missionId = state.pathParameters['missionId']!;
+          return TransportPlacementScreen(
+            missionId: missionId,
+            onBack: () => context.go(workplaceOverviewPath(missionId)),
+            onOpenPutawayOffice: () =>
+                context.go(workplacePutawayOfficePath(missionId)),
+          );
+        },
+      ),
+      GoRoute(
+        parentNavigatorKey: rootNavigatorKey,
+        path: workplacePutawayOfficeRoutePattern,
+        name: workplacePutawayOfficeRouteName,
+        builder: (context, state) {
+          final missionId = state.pathParameters['missionId']!;
+          return PutawayOfficeScreen(
+            missionId: missionId,
+            onBack: () => context.go(workplaceOverviewPath(missionId)),
+            onMissionComplete: () =>
+                context.go(workplacePerformanceFeedbackPath(missionId)),
           );
         },
       ),
