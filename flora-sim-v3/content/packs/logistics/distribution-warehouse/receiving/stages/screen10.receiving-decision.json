@@ -1,0 +1,110 @@
+{
+  "meta": {
+    "pack": "Logistics",
+    "domain": "Distribution Warehouse",
+    "department": "Receiving",
+    "stage": "receiving.receiving-decision",
+    "screen": "10",
+    "title": "Receiving Decision",
+    "type": "stage",
+    "version": "0.1.0",
+    "rendererAgnostic": true,
+    "flowPosition": "after 09 Discrepancy Resolution & Quarantine, before 11 Goods Receipt & Documentation",
+    "departmentFlowStep": "decide",
+    "note": "Convergence stage. Backend-authoritative. Everything from Screens 06-09 lands here as one shipment-level decision with a required rationale. Output is an immutable Receiving Decision consumed by Screen 11.",
+    "assessmentModel": "append-only LearnerAction"
+  },
+
+  "purpose": "The learner reviews the consolidated evidence from dock verification, goods inspection, barcode verification, and discrepancy resolution, then submits the shipment-level receiving decision together with a rationale that must cite the evidence that actually drove it.",
+
+  "learningObjectives": [
+    "Synthesise evidence across four prior stages into one decision",
+    "Apply the receiving decision rubric (accept / partial accept / reject) correctly",
+    "Write a rationale that cites the specific evidence behind the decision, not a generic statement",
+    "Recognise when residual issues (quarantine, reject items) require partial or full rejection"
+  ],
+
+  "input": {
+    "source": ["screen06.receiving-dock", "screen07.goods-inspection", "screen08.barcode-verification", "screen09.discrepancy-resolution"],
+    "note": "The runtime consolidates a summary from all four prior stages; the learner does not re-derive it, only reviews and decides.",
+    "expected": {
+      "dockDecision": "approve_unloading | escalate_issue | reject_shipment",
+      "inspectionSummary": "{ findingsCount, palletsInspected }",
+      "verificationSummary": "{ mismatchesCount, itemsScanned }",
+      "finalQuarantineList": "[itemId]",
+      "finalRejectList": "[itemId]",
+      "escalations": "[issueId]"
+    }
+  },
+
+  "environment": {
+    "area": "receiving_office",
+    "objects": ["computer", "tablet"],
+    "nearby": ["quarantine", "damaged_goods", "barcode_station"]
+  },
+
+  "workflow": ["review_inspection_report", "review_verification_result", "review_resolution_set", "apply_decision_rubric", "select_decision", "cite_supporting_evidence", "submit_decision_with_rationale", "proceed_to_goods_receipt"],
+
+  "decisionOptions": ["accept_shipment", "partial_acceptance", "reject_shipment"],
+
+  "decisionRubric": {
+    "accept_shipment":    { "when": "finalRejectList is empty AND finalQuarantineList is empty AND no unresolved escalations" },
+    "partial_acceptance": { "when": "finalRejectList is empty AND (finalQuarantineList is non-empty OR escalations were resolved without a reject-level outcome)" },
+    "reject_shipment":    { "when": "finalRejectList is non-empty, OR dockDecision was reject_shipment" }
+  },
+
+  "npcs": {
+    "supervisor": { "role": "Supervisor", "guidanceOnly": true, "example": "Your rationale should point at what actually happened on this shipment, not restate the checklist." }
+  },
+
+  "objects": ["computer", "tablet"],
+
+  "learnerActionsCatalog": [
+    { "action": "reviewed_inspection_report",      "verb": "read",           "competencies": ["documentation"] },
+    { "action": "reviewed_verification_result",    "verb": "read",           "competencies": ["documentation"] },
+    { "action": "reviewed_resolution_set",         "verb": "read",           "competencies": ["documentation"] },
+    { "action": "selected_decision",                "verb": "submitDecision","competencies": ["decision_making", "receiving_operations"] },
+    { "action": "cited_supporting_evidence",        "verb": "operate",       "competencies": ["documentation", "decision_making"] },
+    { "action": "submitted_decision_with_rationale","verb": "submitDecision","competencies": ["decision_making", "receiving_operations", "documentation"] }
+  ],
+
+  "competencies": ["decision_making", "receiving_operations", "documentation", "attention_to_detail"],
+
+  "scenarios": [
+    { "id": "A", "name": "Clean shipment",                "config": { "finalQuarantineList": [], "finalRejectList": [], "escalations": [], "dockDecision": "approve_unloading" },                          "expectedDecision": "accept_shipment" },
+    { "id": "B", "name": "Quarantined items only",        "config": { "finalQuarantineList": ["P2-C01"], "finalRejectList": [], "escalations": [], "dockDecision": "approve_unloading" },                    "expectedDecision": "partial_acceptance" },
+    { "id": "C", "name": "Rejected items present",         "config": { "finalQuarantineList": [], "finalRejectList": ["L1-04"], "escalations": [], "dockDecision": "approve_unloading" },                     "expectedDecision": "reject_shipment" },
+    { "id": "D", "name": "Resolved escalation, no reject", "config": { "finalQuarantineList": [], "finalRejectList": [], "escalations": ["P3-C02"], "dockDecision": "approve_unloading" },                    "expectedDecision": "partial_acceptance" },
+    { "id": "E", "name": "Dock-level rejection carries through", "config": { "finalQuarantineList": [], "finalRejectList": [], "escalations": [], "dockDecision": "reject_shipment" },                          "expectedDecision": "reject_shipment" }
+  ],
+
+  "correctnessModel": {
+    "authority": "Flora Backend (reference logic mirrors the decisionRubric above)",
+    "outcomeMatch": "chosen decision == scenario.expectedDecision",
+    "rationaleQuality": "did the cited evidence reference the actual driving items/issues from finalQuarantineList / finalRejectList / escalations, not generic text",
+    "penalties": [
+      "decision matches but rationale cites no real evidence → process gap (low rationale quality even though outcome is correct)",
+      "decision does not match the rubric outcome → major error"
+    ],
+    "evidence": "append-only LearnerAction stream (seq, ts, action, target, competencies, result, meta)"
+  },
+
+  "completion": {
+    "criteria": ["reviewed_all_three_upstream_summaries", "selected_a_decision", "cited_at_least_one_evidence_item_per_flagged_issue", "submitted_decision_with_rationale"],
+    "rule": "Stage completes when a decision is selected, rationale is submitted citing evidence, and the record is handed to Screen 11.",
+    "note": "Completion is reaching a submitted decision. Correctness (rubric match) and rationale quality are assessed separately."
+  },
+
+  "output": {
+    "target": "screen11.goods-receipt-documentation",
+    "immutable": true,
+    "note": "The Receiving Decision becomes an immutable part of the simulation attempt. Screen 11 consumes it to determine net accepted quantities and generate the GRN.",
+    "shape": {
+      "decisionId": "string",
+      "decision": "accept_shipment | partial_acceptance | reject_shipment",
+      "rationale": "string",
+      "citedEvidence": "[{ evidenceRef, note }]",
+      "evidenceRef": "LearnerAction seq range for this stage"
+    }
+  }
+}

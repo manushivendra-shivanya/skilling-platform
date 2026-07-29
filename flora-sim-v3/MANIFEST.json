@@ -1,6 +1,6 @@
 {
   "package": "flora-sim",
-  "version": "3.0.0",
+  "version": "3.3.0",
   "module": "logistics-supply-chain",
   "firstDepartment": "receiving",
   "date": "2026-07-28",
@@ -14,16 +14,23 @@
     "architecture": [
       { "path": "docs/ADR-001-rendering-technology.md", "type": "decision", "status": "accepted+revised" },
       { "path": "docs/ADR-002-simulation-content-model.md", "type": "decision", "status": "accepted" },
-      { "path": "docs/ADR-003-client-server-interaction-boundary.md", "type": "decision", "status": "accepted" }
+      { "path": "docs/ADR-003-client-server-interaction-boundary.md", "type": "decision", "status": "accepted" },
+      { "path": "docs/FLORA-3D-CONTEXT.md", "type": "context-brief", "status": "reference" }
     ],
     "content": [
       { "path": "content/simulation.schema.json", "type": "schema", "version": "0.1" },
       { "path": "content/packs/logistics/distribution-warehouse/receiving/receiving.department.json", "type": "department-data", "version": "0.1.0" },
       { "path": "content/packs/logistics/distribution-warehouse/receiving/stages/screen06.receiving-dock.json", "type": "stage-contract", "version": "0.1.0" },
-      { "path": "content/packs/logistics/distribution-warehouse/receiving/stages/screen07.goods-inspection.json", "type": "stage-contract", "version": "0.1.0" }
+      { "path": "content/packs/logistics/distribution-warehouse/receiving/stages/screen07.goods-inspection.json", "type": "stage-contract", "version": "0.1.0" },
+      { "path": "content/packs/logistics/distribution-warehouse/receiving/stages/screen08.barcode-verification.json", "type": "stage-contract", "version": "0.1.0" },
+      { "path": "content/packs/logistics/distribution-warehouse/receiving/stages/screen09.discrepancy-resolution.json", "type": "stage-contract", "version": "0.1.0" },
+      { "path": "content/packs/logistics/distribution-warehouse/receiving/stages/screen10.receiving-decision.json", "type": "stage-contract", "version": "0.1.0" },
+      { "path": "content/packs/logistics/distribution-warehouse/receiving/stages/screen11.goods-receipt-documentation.json", "type": "stage-contract", "version": "0.1.0" },
+      { "path": "content/packs/logistics/distribution-warehouse/receiving/stages/screen12.shift-report-reflection.json", "type": "stage-contract", "version": "0.1.0" },
+      { "path": "content/packs/logistics/distribution-warehouse/receiving/stages/screen13.performance-feedback.json", "type": "stage-contract", "version": "0.1.0" }
     ],
     "tools": [
-      { "path": "tools/stage_runner.mjs", "type": "reference-runner", "run": "node tools/stage_runner.mjs", "note": "headless executor: computes completion vs correctness + evidence from a stage contract" }
+      { "path": "tools/stage_runner.mjs", "type": "reference-runner", "run": "node tools/stage_runner.mjs", "note": "headless executor: computes completion vs correctness + evidence for screens 06-10 (11-13 have contracts but no runner yet)" }
     ],
     "prototypes": [
       { "path": "prototypes/picking/warehouse_picking_v3_tuning.html", "type": "prototype", "engine": "three.js r128", "note": "picking + tuning panel" },
