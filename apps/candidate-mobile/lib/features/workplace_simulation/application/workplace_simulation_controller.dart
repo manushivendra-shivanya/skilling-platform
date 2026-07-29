@@ -20,9 +20,10 @@ import 'workplace_simulation_state.dart';
 import 'workplace_interaction_contracts.dart';
 
 final workplaceSimulationControllerProvider =
-    AsyncNotifierProvider<
+    AsyncNotifierProvider.family<
       WorkplaceSimulationController,
-      WorkplaceSimulationState
+      WorkplaceSimulationState,
+      String
     >(WorkplaceSimulationController.new);
 
 enum BeginShiftResult {
@@ -37,10 +38,11 @@ enum BeginShiftResult {
 }
 
 class WorkplaceSimulationController
-    extends AsyncNotifier<WorkplaceSimulationState> {
+    extends FamilyAsyncNotifier<WorkplaceSimulationState, String> {
   static const packId = 'logistics-foundation';
   static const workplaceId = 'central-distribution-centre';
   static const missionId = 'receive-incoming-shipment-01';
+  static const putAwayMissionId = 'put-away-incoming-stock-01';
 
   final _stateService = const MissionStateService();
   final _scenarioGenerator = const ScenarioGenerator();
@@ -56,7 +58,7 @@ class WorkplaceSimulationController
   bool _isStartingShift = false;
 
   @override
-  Future<WorkplaceSimulationState> build() async {
+  Future<WorkplaceSimulationState> build(String missionId) async {
     final sessionResult = await ref
         .read(candidateSessionRepositoryProvider)
         .readSession();
@@ -740,7 +742,9 @@ class WorkplaceSimulationController
       missionId: current.mission.id,
       missionTitle: current.mission.title,
       workplaceName: current.workplace.name,
-      departmentName: current.workplace.departments.first.name,
+      departmentName: current.workplace.departments
+          .firstWhere((item) => item.id == current.mission.departmentId)
+          .name,
       elapsedSimulationDuration: Duration(
         seconds: currentElapsedSimulationSeconds(attempt),
       ),
@@ -751,12 +755,13 @@ class WorkplaceSimulationController
       recommendedWorkstationId: recommended?.id,
       workstations: [
         for (final station in current.workplace.workstations)
-          _workstationViewModel(
-            current,
-            attempt,
-            station.id,
-            station.id == recommended?.id,
-          ),
+          if (station.departmentId == current.mission.departmentId)
+            _workstationViewModel(
+              current,
+              attempt,
+              station.id,
+              station.id == recommended?.id,
+            ),
       ],
       canPause:
           attempt.state == MissionState.inProgress &&

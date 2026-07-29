@@ -16,11 +16,13 @@ import 'widgets/simulation_section_card.dart';
 
 class SupervisorBriefingScreen extends ConsumerStatefulWidget {
   const SupervisorBriefingScreen({
+    required this.missionId,
     required this.onBackToEntry,
     required this.onOpenWorkplace,
     super.key,
   });
 
+  final String missionId;
   final VoidCallback onBackToEntry;
   final VoidCallback onOpenWorkplace;
 
@@ -36,7 +38,9 @@ class _SupervisorBriefingScreenState
 
   @override
   Widget build(BuildContext context) {
-    final simulation = ref.watch(workplaceSimulationControllerProvider);
+    final simulation = ref.watch(
+      workplaceSimulationControllerProvider(widget.missionId),
+    );
     return PopScope(
       canPop: !_starting,
       onPopInvokedWithResult: (didPop, result) {
@@ -55,8 +59,9 @@ class _SupervisorBriefingScreenState
           child: simulation.when(
             loading: _BriefingLoading.new,
             error: (error, stackTrace) => _BriefingRuntimeError(
-              onRetry: () =>
-                  ref.invalidate(workplaceSimulationControllerProvider),
+              onRetry: () => ref.invalidate(
+                workplaceSimulationControllerProvider(widget.missionId),
+              ),
               onReturn: widget.onBackToEntry,
             ),
             data: (value) => _buildReady(value),
@@ -79,7 +84,9 @@ class _SupervisorBriefingScreenState
     }
     if (value.scenario == null) {
       return _BriefingRuntimeError(
-        onRetry: () => ref.invalidate(workplaceSimulationControllerProvider),
+        onRetry: () => ref.invalidate(
+          workplaceSimulationControllerProvider(widget.missionId),
+        ),
         onReturn: widget.onBackToEntry,
       );
     }
@@ -93,7 +100,9 @@ class _SupervisorBriefingScreenState
       _openedTracked = true;
       unawaited(
         ref
-            .read(workplaceSimulationControllerProvider.notifier)
+            .read(
+              workplaceSimulationControllerProvider(widget.missionId).notifier,
+            )
             .recordBriefingOpened(),
       );
     }
@@ -110,7 +119,7 @@ class _SupervisorBriefingScreenState
   Future<void> _setAcknowledgement(bool value) async {
     if (_starting) return;
     final failure = await ref
-        .read(workplaceSimulationControllerProvider.notifier)
+        .read(workplaceSimulationControllerProvider(widget.missionId).notifier)
         .setBriefingAcknowledged(value);
     if (!mounted || failure == null) return;
     showAppSnackBar(
@@ -124,7 +133,7 @@ class _SupervisorBriefingScreenState
     if (_starting) return;
     setState(() => _starting = true);
     final result = await ref
-        .read(workplaceSimulationControllerProvider.notifier)
+        .read(workplaceSimulationControllerProvider(widget.missionId).notifier)
         .beginShift();
     if (!mounted) return;
     if (result != BeginShiftResult.success) {
@@ -141,7 +150,7 @@ class _SupervisorBriefingScreenState
 
   Future<void> _showMissionDetails(WorkplaceSimulationState value) async {
     await ref
-        .read(workplaceSimulationControllerProvider.notifier)
+        .read(workplaceSimulationControllerProvider(widget.missionId).notifier)
         .recordMissionDetailsOpened(screenId: 'supervisor-briefing');
     if (!mounted) return;
     await showAppBottomSheet<void>(

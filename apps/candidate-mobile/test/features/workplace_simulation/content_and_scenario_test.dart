@@ -24,7 +24,10 @@ void main() {
     final remediation = await repository.getRemediation();
 
     expect(pack.version, '1.0.0');
-    expect(workplace.workstations, hasLength(6));
+    expect(
+      workplace.workstations.where((item) => item.departmentId == 'receiving'),
+      hasLength(6),
+    );
     expect(mission.versionedId, 'receive-incoming-shipment-01@1.0.0');
     expect(mission.stages, hasLength(7));
     expect(mission.tasks, hasLength(13));
@@ -33,7 +36,10 @@ void main() {
     expect(mission.briefing.responsibilities, hasLength(6));
     expect(mission.briefing.workplaceRules, hasLength(5));
     expect(competencies, hasLength(5));
-    expect(remediation.single.id, 'micro-lesson-expiry-policy');
+    expect(
+      remediation.map((item) => item.id),
+      contains('micro-lesson-expiry-policy'),
+    );
   });
 
   test('same mission version and seed generate identical scenarios', () async {

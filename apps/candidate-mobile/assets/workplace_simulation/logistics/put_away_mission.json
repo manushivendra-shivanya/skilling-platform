@@ -1,0 +1,375 @@
+{
+  "id": "put-away-incoming-stock-01",
+  "version": "1.0.0",
+  "packId": "logistics-foundation",
+  "workplaceId": "central-distribution-centre",
+  "departmentId": "put-away",
+  "processId": "putaway-storage-allocation",
+  "role": {
+    "id": "warehouse-associate-trainee",
+    "industry": "logistics_supply_chain",
+    "title": "Warehouse Associate",
+    "level": "trainee",
+    "departmentIds": ["receiving", "put-away"],
+    "requiredCompetencies": [
+      "storage-location-accuracy",
+      "safe-material-handling",
+      "inventory-accuracy",
+      "putaway-decisions"
+    ],
+    "promotionTargetRoleId": "warehouse-associate-junior"
+  },
+  "title": "Put Away Incoming Stock",
+  "difficulty": "beginner",
+  "estimatedDurationMinutes": 18,
+  "missionType": "guided_shift",
+  "briefing": {
+    "supervisorTitle": "Warehouse Supervisor",
+    "message": "Six items cleared Receiving this morning and need to go into storage before the next wave of picking starts. Assign every item to the right zone, move it safely, and confirm the system location matches the physical one.",
+    "shiftName": "Morning Shift",
+    "supplier": "Internal Handoff — Receiving Department",
+    "purchaseOrderNumber": "PO-2026-004",
+    "deliveryReference": "PUTAWAY-2026-004",
+    "deliveryType": "Internal putaway handoff",
+    "responsibilities": [
+      "Review the putaway task list",
+      "Assign each item to the correct storage zone",
+      "Move and place items safely",
+      "Scan to confirm system and physical locations match",
+      "Report any location exceptions",
+      "Complete the putaway report and notify the supervisor"
+    ],
+    "workplaceRules": [
+      "Hazardous items must never be stored outside the hazmat locker.",
+      "Cold-chain items must never be stored outside the cold-storage unit.",
+      "A zone at capacity must be escalated, never worked around silently.",
+      "Placed quantities must be recorded accurately, never adjusted to match a target.",
+      "Every item requires a confirmed scan match before the task is complete."
+    ],
+    "rulesVersion": "1.0.0"
+  },
+  "objectives": [
+    "Review the putaway task list",
+    "Assign each item to its correct storage zone",
+    "Move and place items safely",
+    "Confirm placement by scanning item and bin",
+    "Record any location exceptions",
+    "Complete the putaway report and decision"
+  ],
+  "startingWorkstationId": "staging-area",
+  "stages": [
+    "review-putaway-list",
+    "plan-locations",
+    "transport-and-place",
+    "putaway-decision"
+  ],
+  "stageDefinitions": [
+    {
+      "id": "review-putaway-list",
+      "missionId": "put-away-incoming-stock-01",
+      "sequence": 1,
+      "title": "Review Putaway List",
+      "workstationId": "staging-area",
+      "instructions": "Open the putaway task list handed off from Receiving.",
+      "taskIds": ["open-putaway-list"],
+      "completionMode": "all_mandatory_tasks"
+    },
+    {
+      "id": "plan-locations",
+      "missionId": "put-away-incoming-stock-01",
+      "sequence": 2,
+      "title": "Assign Storage Zones",
+      "workstationId": "location-planning",
+      "instructions": "Assign every item to its correct storage zone. Report any zone-capacity exception you notice.",
+      "taskIds": ["assign-storage-zone", "record-location-exception"],
+      "completionMode": "all_mandatory_tasks"
+    },
+    {
+      "id": "transport-and-place",
+      "missionId": "put-away-incoming-stock-01",
+      "sequence": 3,
+      "title": "Transport and Place",
+      "workstationId": "transport-placement",
+      "instructions": "Move every item to its assigned zone, then scan and confirm the quantity placed.",
+      "taskIds": [
+        "transport-and-place-items",
+        "scan-items-to-bins",
+        "confirm-quantities-placed"
+      ],
+      "completionMode": "all_mandatory_tasks"
+    },
+    {
+      "id": "putaway-decision",
+      "missionId": "put-away-incoming-stock-01",
+      "sequence": 4,
+      "title": "Complete Putaway",
+      "workstationId": "putaway-office",
+      "instructions": "Complete the putaway report, confirm the outcome, and notify the supervisor.",
+      "taskIds": [
+        "complete-putaway-report",
+        "make-putaway-decision",
+        "notify-supervisor"
+      ],
+      "completionMode": "correct_decision"
+    }
+  ],
+  "taskDefinitions": [
+    {
+      "id": "open-putaway-list",
+      "stageId": "review-putaway-list",
+      "taskType": "read_document",
+      "title": "Open Putaway Task List",
+      "instructions": "Read the handoff list from Receiving.",
+      "mandatory": true,
+      "repeatable": false,
+      "availableActions": ["open_resource"],
+      "targetResourceIds": ["putaway-task-list"],
+      "competencyMappings": [{"competencyId": "storage-location-accuracy", "weight": 1.0}],
+      "maximumPoints": 5,
+      "scoreCategoryId": "process-accuracy",
+      "evaluationRules": [{
+        "actionType": "open_resource",
+        "targetId": "putaway-task-list",
+        "outcomeType": "correct",
+        "pointsAwarded": 5,
+        "feedbackCode": "putaway_list_reviewed",
+        "correctActionLabel": "Reviewed the putaway task list"
+      }]
+    },
+    {
+      "id": "assign-storage-zone",
+      "stageId": "plan-locations",
+      "taskType": "classify_issue",
+      "title": "Assign Every Item a Storage Zone",
+      "instructions": "Classify each item into the correct storage zone based on its handling requirements.",
+      "mandatory": true,
+      "repeatable": true,
+      "availableActions": ["classify_issue"],
+      "targetResourceIds": ["put-item-001", "put-item-002", "put-item-003", "put-item-004", "put-item-005", "put-item-006"],
+      "competencyMappings": [{"competencyId": "storage-location-accuracy", "weight": 1.0}],
+      "maximumPoints": 24,
+      "scoreCategoryId": "location-accuracy",
+      "evaluationRules": [
+        {"actionType": "classify_issue", "requiredPayload": {"selectedZone": "hazmat-locker"}, "targetHasIssue": "hazmat_item", "outcomeType": "correct", "pointsAwarded": 4, "feedbackCode": "hazmat_zone_correct", "correctActionLabel": "Assigned hazardous item to the hazmat locker", "missedIssueCode": "hazmat_item"},
+        {"actionType": "classify_issue", "requiredPayload": {"selectedZone": "cold-storage-unit"}, "targetHasIssue": "cold_chain_item", "outcomeType": "correct", "pointsAwarded": 4, "feedbackCode": "cold_chain_zone_correct", "correctActionLabel": "Assigned cold-chain item to cold storage", "missedIssueCode": "cold_chain_item"},
+        {"actionType": "classify_issue", "requiredPayload": {"selectedZone": "secure-cage"}, "targetHasIssue": "high_value_item", "outcomeType": "correct", "pointsAwarded": 4, "feedbackCode": "high_value_zone_correct", "correctActionLabel": "Assigned high-value item to the secure cage", "missedIssueCode": "high_value_item"},
+        {"actionType": "classify_issue", "requiredPayload": {"selectedZone": "overflow-storage"}, "targetHasIssue": "zone_at_capacity", "outcomeType": "correct", "pointsAwarded": 4, "feedbackCode": "overflow_zone_correct", "correctActionLabel": "Routed the item to overflow storage instead of its blocked primary zone", "missedIssueCode": "zone_at_capacity"},
+        {"actionType": "classify_issue", "requiredPayload": {"selectedZone": "standard-shelving"}, "targetMustBeCompliant": true, "outcomeType": "correct", "pointsAwarded": 4, "feedbackCode": "standard_zone_correct", "correctActionLabel": "Assigned standard item to standard shelving"}
+      ]
+    },
+    {
+      "id": "record-location-exception",
+      "stageId": "plan-locations",
+      "taskType": "classify_issue",
+      "title": "Record Location Exceptions",
+      "instructions": "Report any zone-capacity exception you notice without revealing the answer.",
+      "mandatory": false,
+      "repeatable": true,
+      "availableActions": ["classify_issue"],
+      "targetResourceIds": ["put-item-001", "put-item-002", "put-item-003", "put-item-004", "put-item-005", "put-item-006"],
+      "competencyMappings": [
+        {"competencyId": "storage-location-accuracy", "weight": 0.6},
+        {"competencyId": "putaway-decisions", "weight": 0.4}
+      ],
+      "maximumPoints": 10,
+      "scoreCategoryId": "location-accuracy",
+      "evaluationRules": [{
+        "actionType": "classify_issue",
+        "requiredPayload": {"exceptionType": "zone_at_capacity"},
+        "targetHasIssue": "zone_at_capacity",
+        "outcomeType": "correct",
+        "pointsAwarded": 10,
+        "feedbackCode": "capacity_exception_recorded",
+        "correctActionLabel": "Recorded the zone-capacity exception",
+        "missedIssueCode": "zone_at_capacity"
+      }]
+    },
+    {
+      "id": "transport-and-place-items",
+      "stageId": "transport-and-place",
+      "taskType": "move_item",
+      "title": "Move and Place Every Item",
+      "instructions": "Transport each item to its assigned zone using safe handling.",
+      "mandatory": true,
+      "repeatable": true,
+      "availableActions": ["move_item"],
+      "targetResourceIds": ["put-item-001", "put-item-002", "put-item-003", "put-item-004", "put-item-005", "put-item-006"],
+      "competencyMappings": [{"competencyId": "safe-material-handling", "weight": 1.0}],
+      "maximumPoints": 18,
+      "scoreCategoryId": "safe-handling",
+      "evaluationRules": [{
+        "actionType": "move_item",
+        "requiredPayload": {"placed": true, "safeHandlingConfirmed": true},
+        "outcomeType": "correct",
+        "pointsAwarded": 3,
+        "feedbackCode": "item_placed_safely",
+        "correctActionLabel": "Moved and placed the item using safe handling"
+      }]
+    },
+    {
+      "id": "scan-items-to-bins",
+      "stageId": "transport-and-place",
+      "taskType": "scan_barcode",
+      "title": "Scan Every Item to Its Bin",
+      "instructions": "Scan the item and the bin to confirm the system location matches the physical one.",
+      "mandatory": true,
+      "repeatable": true,
+      "availableActions": ["scan_barcode"],
+      "targetResourceIds": ["put-item-001", "put-item-002", "put-item-003", "put-item-004", "put-item-005", "put-item-006"],
+      "competencyMappings": [{"competencyId": "storage-location-accuracy", "weight": 1.0}],
+      "maximumPoints": 12,
+      "scoreCategoryId": "location-accuracy",
+      "evaluationRules": [{
+        "actionType": "scan_barcode",
+        "requiredPayload": {"scanStatus": "matched"},
+        "outcomeType": "correct",
+        "pointsAwarded": 2,
+        "feedbackCode": "scan_confirmed",
+        "correctActionLabel": "Confirmed the scan match for the item and bin"
+      }]
+    },
+    {
+      "id": "confirm-quantities-placed",
+      "stageId": "transport-and-place",
+      "taskType": "count_quantity",
+      "title": "Confirm Quantities Placed",
+      "instructions": "Record the quantity placed in each zone accurately.",
+      "mandatory": true,
+      "repeatable": true,
+      "availableActions": ["count_quantity"],
+      "targetResourceIds": ["put-item-001", "put-item-002", "put-item-003", "put-item-004", "put-item-005", "put-item-006"],
+      "competencyMappings": [{"competencyId": "inventory-accuracy", "weight": 1.0}],
+      "maximumPoints": 12,
+      "scoreCategoryId": "inventory-accuracy",
+      "evaluationRules": [{
+        "actionType": "count_quantity",
+        "payloadMatchesTargetContent": {"placedQuantity": "quantity"},
+        "outcomeType": "correct",
+        "pointsAwarded": 2,
+        "feedbackCode": "placed_quantity_confirmed",
+        "correctActionLabel": "Confirmed the placed quantity"
+      }]
+    },
+    {
+      "id": "complete-putaway-report",
+      "stageId": "putaway-decision",
+      "taskType": "complete_form",
+      "title": "Complete the Putaway Report",
+      "instructions": "Record that every item was placed and every exception was reported.",
+      "mandatory": true,
+      "repeatable": false,
+      "availableActions": ["complete_form"],
+      "targetResourceIds": ["putaway-report"],
+      "competencyMappings": [{"competencyId": "putaway-decisions", "weight": 1.0}],
+      "maximumPoints": 15,
+      "scoreCategoryId": "process-accuracy",
+      "evaluationRules": [{
+        "actionType": "complete_form",
+        "requiredPayload": {"allItemsPlaced": true, "exceptionsRecorded": true},
+        "outcomeType": "correct",
+        "pointsAwarded": 15,
+        "feedbackCode": "putaway_report_completed",
+        "correctActionLabel": "Completed the putaway report",
+        "missedIssueCode": "putaway_report"
+      }]
+    },
+    {
+      "id": "make-putaway-decision",
+      "stageId": "putaway-decision",
+      "taskType": "make_decision",
+      "title": "Confirm Putaway Outcome",
+      "instructions": "Select the outcome that matches the completed placement and any exceptions.",
+      "mandatory": true,
+      "repeatable": false,
+      "availableActions": ["make_decision"],
+      "targetResourceIds": ["putaway-report"],
+      "competencyMappings": [{"competencyId": "putaway-decisions", "weight": 1.0}],
+      "maximumPoints": 15,
+      "scoreCategoryId": "decision-quality",
+      "evaluationRules": [{
+        "actionType": "make_decision",
+        "requiredPayload": {"decision": "putaway_complete"},
+        "outcomeType": "correct",
+        "pointsAwarded": 15,
+        "feedbackCode": "putaway_complete_selected",
+        "correctActionLabel": "Confirmed putaway complete"
+      }]
+    },
+    {
+      "id": "notify-supervisor",
+      "stageId": "putaway-decision",
+      "taskType": "confirm_action",
+      "title": "Notify Warehouse Supervisor",
+      "instructions": "Share facts, exceptions and outstanding risks with the supervisor.",
+      "mandatory": true,
+      "repeatable": false,
+      "availableActions": ["confirm_action"],
+      "targetResourceIds": ["supervisor-notification"],
+      "competencyMappings": [{"competencyId": "putaway-decisions", "weight": 1.0}],
+      "maximumPoints": 10,
+      "scoreCategoryId": "process-accuracy",
+      "evaluationRules": [{
+        "actionType": "confirm_action",
+        "requiredPayload": {"supervisorNotified": true, "exceptionsIncluded": true},
+        "outcomeType": "correct",
+        "pointsAwarded": 10,
+        "feedbackCode": "supervisor_notified",
+        "correctActionLabel": "Notified the supervisor with exceptions included"
+      }]
+    }
+  ],
+  "resources": [
+    {
+      "id": "putaway-task-list",
+      "missionId": "put-away-incoming-stock-01",
+      "resourceType": "document",
+      "title": "Putaway Task List PUTAWAY-2026-004",
+      "content": {
+        "reference": "PUTAWAY-2026-004",
+        "sourceProcess": "incoming-shipment-receipt",
+        "items": [
+          {"sku": "SKU-2001", "name": "Steel Storage Shelf Bracket", "quantity": 25},
+          {"sku": "SKU-2002", "name": "Frozen Snack Trays", "quantity": 40},
+          {"sku": "SKU-2003", "name": "Lithium Battery Pack", "quantity": 15},
+          {"sku": "SKU-2004", "name": "Wireless Earbuds Premium", "quantity": 12},
+          {"sku": "SKU-2005", "name": "Plastic Storage Bins", "quantity": 30},
+          {"sku": "SKU-2006", "name": "Insulin Cooler Packs", "quantity": 20}
+        ]
+      }
+    },
+    {"id": "put-item-001", "missionId": "put-away-incoming-stock-01", "resourceType": "carton", "title": "Steel Storage Shelf Bracket", "content": {"sku": "SKU-2001", "quantity": 25, "handlingNotes": "Standard shelving item"}},
+    {"id": "put-item-002", "missionId": "put-away-incoming-stock-01", "resourceType": "carton", "title": "Frozen Snack Trays", "content": {"sku": "SKU-2002", "quantity": 40, "handlingNotes": "Requires cold-chain storage"}},
+    {"id": "put-item-003", "missionId": "put-away-incoming-stock-01", "resourceType": "carton", "title": "Lithium Battery Pack", "content": {"sku": "SKU-2003", "quantity": 15, "handlingNotes": "Classified as hazardous material"}},
+    {"id": "put-item-004", "missionId": "put-away-incoming-stock-01", "resourceType": "carton", "title": "Wireless Earbuds Premium", "content": {"sku": "SKU-2004", "quantity": 12, "handlingNotes": "High-value, theft-sensitive item"}},
+    {"id": "put-item-005", "missionId": "put-away-incoming-stock-01", "resourceType": "carton", "title": "Plastic Storage Bins", "content": {"sku": "SKU-2005", "quantity": 30, "handlingNotes": "Standard shelving item"}},
+    {"id": "put-item-006", "missionId": "put-away-incoming-stock-01", "resourceType": "carton", "title": "Insulin Cooler Packs", "content": {"sku": "SKU-2006", "quantity": 20, "handlingNotes": "Requires cold-chain storage"}},
+    {"id": "putaway-report", "missionId": "put-away-incoming-stock-01", "resourceType": "form", "title": "Putaway Completion Report", "content": {"reference": "PUTAWAY-2026-004"}},
+    {"id": "supervisor-notification", "missionId": "put-away-incoming-stock-01", "resourceType": "message", "title": "Warehouse Supervisor Notification", "content": {"requiresExceptionSummary": true}}
+  ],
+  "scenario": {
+    "defaultSeed": 71204,
+    "variationRules": [
+      {"type": "assign_issue", "issue": "hazmat_item", "severity": "critical", "eligibleTargets": ["put-item-001", "put-item-002", "put-item-003", "put-item-004", "put-item-005", "put-item-006"], "count": 1},
+      {"type": "assign_issue", "issue": "cold_chain_item", "severity": "major", "eligibleTargets": ["put-item-001", "put-item-002", "put-item-003", "put-item-004", "put-item-005", "put-item-006"], "count": 1},
+      {"type": "assign_issue", "issue": "high_value_item", "severity": "major", "eligibleTargets": ["put-item-001", "put-item-002", "put-item-003", "put-item-004", "put-item-005", "put-item-006"], "count": 1},
+      {"type": "assign_issue", "issue": "zone_at_capacity", "severity": "minor", "eligibleTargets": ["put-item-001", "put-item-002", "put-item-003", "put-item-004", "put-item-005", "put-item-006"], "count": 1}
+    ]
+  },
+  "scoringRule": {
+    "minimumScore": 70,
+    "allMandatoryTasksRequired": true,
+    "criticalErrorsAllowed": 0,
+    "scoreCategories": [
+      {"id": "location-accuracy", "weight": 0.30},
+      {"id": "safe-handling", "weight": 0.20},
+      {"id": "inventory-accuracy", "weight": 0.20},
+      {"id": "process-accuracy", "weight": 0.15},
+      {"id": "decision-quality", "weight": 0.15}
+    ]
+  },
+  "criticalErrorRules": [
+    {"id": "hazmat-in-standard-zone", "title": "Hazardous Item Misplaced", "description": "A hazardous item was stored outside the hazmat locker.", "severity": "critical", "trigger": {"actionType": "classify_issue", "requiredPayload": {"selectedZone": "standard-shelving"}, "targetHasIssue": "hazmat_item"}, "scorePenalty": 25, "preventsPassing": true, "feedback": "Hazardous items must always be stored in the hazmat locker."},
+    {"id": "cold-chain-in-standard-zone", "title": "Cold-Chain Item Misplaced", "description": "A cold-chain item was stored outside cold storage, risking spoilage.", "severity": "critical", "trigger": {"actionType": "classify_issue", "requiredPayload": {"selectedZone": "standard-shelving"}, "targetHasIssue": "cold_chain_item"}, "scorePenalty": 25, "preventsPassing": true, "feedback": "Cold-chain items must always be stored in the cold-storage unit."},
+    {"id": "false-quantity-placed", "title": "Recorded Incorrect Placed Quantity", "description": "The placed quantity was knowingly falsified.", "severity": "critical", "trigger": {"actionType": "count_quantity", "requiredPayload": {"knowinglyIncorrect": true}}, "scorePenalty": 20, "preventsPassing": true, "feedback": "Placed quantities must be recorded accurately."}
+  ]
+}

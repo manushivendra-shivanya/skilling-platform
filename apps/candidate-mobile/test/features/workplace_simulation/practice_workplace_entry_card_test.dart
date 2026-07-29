@@ -3,6 +3,7 @@ import 'package:candidate_mobile/app/theme/app_theme.dart';
 import 'package:candidate_mobile/core/repositories/candidate_session_repository.dart';
 import 'package:candidate_mobile/features/intelligence/data/secure_candidate_intelligence_repository.dart';
 import 'package:candidate_mobile/features/practice/presentation/practice_screen.dart';
+import 'package:candidate_mobile/features/workplace_simulation/application/workplace_simulation_controller.dart';
 import 'package:candidate_mobile/features/workplace_simulation/data/asset_simulation_content_repository.dart';
 import 'package:candidate_mobile/features/workplace_simulation/data/local_simulation_attempt_repository.dart';
 import 'package:flutter/material.dart';
@@ -15,7 +16,11 @@ void main() {
   testWidgets('Practice resolves and opens the Workplace Simulation card', (
     tester,
   ) async {
-    var opened = false;
+    tester.view.physicalSize = const Size(800, 1400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    String? openedMissionId;
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
@@ -39,17 +44,21 @@ void main() {
         ],
         child: MaterialApp(
           theme: buildAppTheme(),
-          home: PracticeScreen(onOpenWorkplaceSimulation: () => opened = true),
+          home: PracticeScreen(
+            onOpenWorkplaceSimulation: (missionId) =>
+                openedMissionId = missionId,
+          ),
         ),
       ),
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Workplace Simulation'), findsOneWidget);
+    expect(find.text('Workplace Simulation'), findsNWidgets(2));
     expect(find.textContaining('Receive an Incoming Shipment'), findsOneWidget);
-    await tester.ensureVisible(find.text('Start Simulation'));
+    expect(find.textContaining('Put Away Incoming Stock'), findsOneWidget);
+    await tester.ensureVisible(find.text('Start Simulation').first);
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Start Simulation'));
-    expect(opened, isTrue);
+    await tester.tap(find.text('Start Simulation').first);
+    expect(openedMissionId, WorkplaceSimulationController.missionId);
   });
 }

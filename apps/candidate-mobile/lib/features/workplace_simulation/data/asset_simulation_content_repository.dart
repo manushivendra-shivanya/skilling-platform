@@ -13,12 +13,17 @@ class AssetSimulationContentRepository implements SimulationContentRepository {
 
   static const supportedEngineVersion = '1.0.0';
 
+  static const _missionFiles = {
+    'receive-incoming-shipment-01': 'receive_shipment_mission.json',
+    'put-away-incoming-stock-01': 'put_away_mission.json',
+  };
+
   final AssetBundle _bundle;
   final String basePath;
 
   SimulationPack? _pack;
   Workplace? _workplace;
-  MissionDefinition? _mission;
+  final Map<String, MissionDefinition> _missions = {};
   List<CompetencyDefinition>? _competencies;
   List<RemediationRecommendation>? _remediation;
 
@@ -54,12 +59,17 @@ class AssetSimulationContentRepository implements SimulationContentRepository {
 
   @override
   Future<MissionDefinition> getMission(String missionId) async {
-    final mission = _mission ??= MissionDefinition.fromJson(
-      await _loadObject('receive_shipment_mission.json'),
-    );
+    final cached = _missions[missionId];
+    if (cached != null) return cached;
+    final fileName = _missionFiles[missionId];
+    if (fileName == null) {
+      throw StateError('Mission "$missionId" is unavailable');
+    }
+    final mission = MissionDefinition.fromJson(await _loadObject(fileName));
     if (mission.id != missionId) {
       throw StateError('Mission "$missionId" is unavailable');
     }
+    _missions[missionId] = mission;
     final workplace = await getWorkplace(mission.workplaceId);
     if (mission.packId != workplace.packId ||
         workplace.departmentIds.contains(mission.departmentId) == false ||

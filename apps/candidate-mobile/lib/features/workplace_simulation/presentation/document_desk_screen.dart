@@ -32,7 +32,9 @@ class _DocumentDeskScreenState extends ConsumerState<DocumentDeskScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final simulation = ref.watch(workplaceSimulationControllerProvider);
+    final simulation = ref.watch(
+      workplaceSimulationControllerProvider(widget.missionId),
+    );
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
@@ -49,12 +51,13 @@ class _DocumentDeskScreenState extends ConsumerState<DocumentDeskScreen> {
             title: 'Documents unavailable',
             message: 'Your saved draft is safe. Retry loading the documents.',
             actionLabel: 'Retry',
-            onAction: () =>
-                ref.invalidate(workplaceSimulationControllerProvider),
+            onAction: () => ref.invalidate(
+              workplaceSimulationControllerProvider(widget.missionId),
+            ),
           ),
           data: (value) {
             final controller = ref.read(
-              workplaceSimulationControllerProvider.notifier,
+              workplaceSimulationControllerProvider(widget.missionId).notifier,
             );
             final station = controller.workplaceOverview.workstations
                 .firstWhere((item) => item.workstationId == 'document-desk');
@@ -71,7 +74,11 @@ class _DocumentDeskScreenState extends ConsumerState<DocumentDeskScreen> {
               _tracked = true;
               unawaited(
                 ref
-                    .read(workplaceSimulationControllerProvider.notifier)
+                    .read(
+                      workplaceSimulationControllerProvider(
+                        widget.missionId,
+                      ).notifier,
+                    )
                     .recordWorkplaceEvent(
                       AttemptAuditEventType.documentDeskOpened,
                       screenId: 'document-desk',
@@ -248,7 +255,7 @@ class _DocumentDeskScreenState extends ConsumerState<DocumentDeskScreen> {
     final input = await _showFindingEditor(itemReference: sku);
     if (input == null) return;
     final result = await ref
-        .read(workplaceSimulationControllerProvider.notifier)
+        .read(workplaceSimulationControllerProvider(widget.missionId).notifier)
         .addDocumentFinding(input);
     if (!mounted) return;
     if (result != AddDocumentFindingResult.success) {
@@ -267,7 +274,7 @@ class _DocumentDeskScreenState extends ConsumerState<DocumentDeskScreen> {
     );
     if (input == null) return;
     final result = await ref
-        .read(workplaceSimulationControllerProvider.notifier)
+        .read(workplaceSimulationControllerProvider(widget.missionId).notifier)
         .updateDocumentFinding(
           UpdateDocumentFindingCommand(
             findingId: finding.id,
@@ -284,7 +291,7 @@ class _DocumentDeskScreenState extends ConsumerState<DocumentDeskScreen> {
 
   Future<void> _removeFinding(DocumentFinding finding) async {
     final result = await ref
-        .read(workplaceSimulationControllerProvider.notifier)
+        .read(workplaceSimulationControllerProvider(widget.missionId).notifier)
         .removeDocumentFinding(RemoveDocumentFindingCommand(finding.id));
     if (mounted && result != RemoveDocumentFindingResult.success) {
       _showMessage('The finding could not be removed.');
@@ -384,7 +391,7 @@ class _DocumentDeskScreenState extends ConsumerState<DocumentDeskScreen> {
   Future<void> _saveDraft() async {
     setState(() => _saving = true);
     final result = await ref
-        .read(workplaceSimulationControllerProvider.notifier)
+        .read(workplaceSimulationControllerProvider(widget.missionId).notifier)
         .saveDocumentReviewDraft(const SaveDocumentReviewDraftCommand());
     if (!mounted) return;
     setState(() => _saving = false);
@@ -398,7 +405,7 @@ class _DocumentDeskScreenState extends ConsumerState<DocumentDeskScreen> {
   Future<void> _submit() async {
     setState(() => _saving = true);
     final result = await ref
-        .read(workplaceSimulationControllerProvider.notifier)
+        .read(workplaceSimulationControllerProvider(widget.missionId).notifier)
         .submitDocumentReview(const SubmitDocumentReviewCommand());
     if (!mounted) return;
     setState(() => _saving = false);
@@ -416,7 +423,7 @@ class _DocumentDeskScreenState extends ConsumerState<DocumentDeskScreen> {
 
   Future<void> _exit() async {
     await ref
-        .read(workplaceSimulationControllerProvider.notifier)
+        .read(workplaceSimulationControllerProvider(widget.missionId).notifier)
         .recordWorkplaceEvent(
           AttemptAuditEventType.documentDeskExited,
           screenId: 'document-desk',

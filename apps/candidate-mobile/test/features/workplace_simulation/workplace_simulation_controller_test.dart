@@ -39,16 +39,24 @@ void main() {
       addTearDown(container.dispose);
 
       final initial = await container.read(
-        workplaceSimulationControllerProvider.future,
+        workplaceSimulationControllerProvider(
+          WorkplaceSimulationController.missionId,
+        ).future,
       );
       expect(initial.attempt, isNull);
 
       final controller = container.read(
-        workplaceSimulationControllerProvider.notifier,
+        workplaceSimulationControllerProvider(
+          WorkplaceSimulationController.missionId,
+        ).notifier,
       );
       expect(await controller.startMission(scenarioSeed: 48127), isNull);
       var state = container
-          .read(workplaceSimulationControllerProvider)
+          .read(
+            workplaceSimulationControllerProvider(
+              WorkplaceSimulationController.missionId,
+            ),
+          )
           .requireValue;
       expect(state.attempt!.state, MissionState.briefing);
       expect(state.attempt!.timerStatus, SimulationTimerStatus.notStarted);
@@ -57,7 +65,11 @@ void main() {
 
       expect(await controller.setBriefingAcknowledged(true), isNull);
       state = container
-          .read(workplaceSimulationControllerProvider)
+          .read(
+            workplaceSimulationControllerProvider(
+              WorkplaceSimulationController.missionId,
+            ),
+          )
           .requireValue;
       expect(state.attempt!.briefingAcknowledgedAt, isNotNull);
       expect(state.attempt!.shiftStartedAt, isNull);
@@ -67,7 +79,11 @@ void main() {
         BeginShiftResult.success,
       );
       state = container
-          .read(workplaceSimulationControllerProvider)
+          .read(
+            workplaceSimulationControllerProvider(
+              WorkplaceSimulationController.missionId,
+            ),
+          )
           .requireValue;
       expect(state.attempt!.shiftStartedAt, isNotNull);
       expect(state.attempt!.timerStatus, SimulationTimerStatus.running);
@@ -90,7 +106,11 @@ void main() {
       );
       expect(
         container
-            .read(workplaceSimulationControllerProvider)
+            .read(
+              workplaceSimulationControllerProvider(
+                WorkplaceSimulationController.missionId,
+              ),
+            )
             .requireValue
             .attempt!
             .auditEvents
@@ -101,7 +121,11 @@ void main() {
       );
       expect(
         container
-            .read(workplaceSimulationControllerProvider)
+            .read(
+              workplaceSimulationControllerProvider(
+                WorkplaceSimulationController.missionId,
+              ),
+            )
             .requireValue
             .attempt!
             .shiftStartedAt,
@@ -115,14 +139,22 @@ void main() {
       );
       expect(
         container
-            .read(workplaceSimulationControllerProvider)
+            .read(
+              workplaceSimulationControllerProvider(
+                WorkplaceSimulationController.missionId,
+              ),
+            )
             .requireValue
             .attempt!
             .state,
         MissionState.paused,
       );
       state = container
-          .read(workplaceSimulationControllerProvider)
+          .read(
+            workplaceSimulationControllerProvider(
+              WorkplaceSimulationController.missionId,
+            ),
+          )
           .requireValue;
       expect(state.attempt!.elapsedSimulationSeconds, 10);
       expect(state.attempt!.timerStatus, SimulationTimerStatus.paused);
@@ -134,7 +166,11 @@ void main() {
       );
       expect(
         container
-            .read(workplaceSimulationControllerProvider)
+            .read(
+              workplaceSimulationControllerProvider(
+                WorkplaceSimulationController.missionId,
+              ),
+            )
             .requireValue
             .attempt!
             .state,
@@ -147,7 +183,11 @@ void main() {
         isNull,
       );
       state = container
-          .read(workplaceSimulationControllerProvider)
+          .read(
+            workplaceSimulationControllerProvider(
+              WorkplaceSimulationController.missionId,
+            ),
+          )
           .requireValue;
       expect(state.attempt!.elapsedSimulationSeconds, 20);
       expect(state.attempt!.timerStatus, SimulationTimerStatus.paused);
@@ -160,7 +200,11 @@ void main() {
 
       expect(await controller.submit(), isNull);
       state = container
-          .read(workplaceSimulationControllerProvider)
+          .read(
+            workplaceSimulationControllerProvider(
+              WorkplaceSimulationController.missionId,
+            ),
+          )
           .requireValue;
       expect(state.result!.status, MissionStatus.incomplete);
       expect(state.attempt!.state, MissionState.failed);
@@ -168,7 +212,11 @@ void main() {
 
       expect(await controller.retry(scenarioSeed: 90210), isNull);
       state = container
-          .read(workplaceSimulationControllerProvider)
+          .read(
+            workplaceSimulationControllerProvider(
+              WorkplaceSimulationController.missionId,
+            ),
+          )
           .requireValue;
       expect(state.attempt!.id, isNot(firstAttemptId));
       expect(state.attempt!.attemptNumber, 2);
@@ -200,9 +248,15 @@ void main() {
         ],
       );
       addTearDown(container.dispose);
-      await container.read(workplaceSimulationControllerProvider.future);
+      await container.read(
+        workplaceSimulationControllerProvider(
+          WorkplaceSimulationController.missionId,
+        ).future,
+      );
       final controller = container.read(
-        workplaceSimulationControllerProvider.notifier,
+        workplaceSimulationControllerProvider(
+          WorkplaceSimulationController.missionId,
+        ).notifier,
       );
       await controller.startMission();
 
@@ -215,7 +269,11 @@ void main() {
 
       expect(failure, isNotNull);
       final state = container
-          .read(workplaceSimulationControllerProvider)
+          .read(
+            workplaceSimulationControllerProvider(
+              WorkplaceSimulationController.missionId,
+            ),
+          )
           .requireValue;
       expect(state.attempt!.actions, isEmpty);
       expect(state.attempt!.state, MissionState.briefing);
@@ -244,9 +302,15 @@ void main() {
         ],
       );
       addTearDown(container.dispose);
-      await container.read(workplaceSimulationControllerProvider.future);
+      await container.read(
+        workplaceSimulationControllerProvider(
+          WorkplaceSimulationController.missionId,
+        ).future,
+      );
       final controller = container.read(
-        workplaceSimulationControllerProvider.notifier,
+        workplaceSimulationControllerProvider(
+          WorkplaceSimulationController.missionId,
+        ).notifier,
       );
       await controller.startMission(scenarioSeed: 48127);
 
@@ -255,7 +319,11 @@ void main() {
         BeginShiftResult.acknowledgementRequired,
       );
       final attempt = container
-          .read(workplaceSimulationControllerProvider)
+          .read(
+            workplaceSimulationControllerProvider(
+              WorkplaceSimulationController.missionId,
+            ),
+          )
           .requireValue
           .attempt!;
       expect(attempt.state, MissionState.briefing);
@@ -290,9 +358,15 @@ void main() {
         ],
       );
       addTearDown(container.dispose);
-      await container.read(workplaceSimulationControllerProvider.future);
+      await container.read(
+        workplaceSimulationControllerProvider(
+          WorkplaceSimulationController.missionId,
+        ).future,
+      );
       final controller = container.read(
-        workplaceSimulationControllerProvider.notifier,
+        workplaceSimulationControllerProvider(
+          WorkplaceSimulationController.missionId,
+        ).notifier,
       );
       await controller.startMission(scenarioSeed: 48127);
       await controller.setBriefingAcknowledged(true);
@@ -364,7 +438,11 @@ void main() {
         ConfirmShipmentIdentityResult.success,
       );
       final state = container
-          .read(workplaceSimulationControllerProvider)
+          .read(
+            workplaceSimulationControllerProvider(
+              WorkplaceSimulationController.missionId,
+            ),
+          )
           .requireValue;
       for (final cartonId
           in state.mission.task('confirm-received-counts').targetResourceIds) {
@@ -550,7 +628,11 @@ void main() {
 
       expect(await controller.completeMission(), CompleteMissionResult.success);
       final result = container
-          .read(workplaceSimulationControllerProvider)
+          .read(
+            workplaceSimulationControllerProvider(
+              WorkplaceSimulationController.missionId,
+            ),
+          )
           .requireValue
           .result;
       expect(result, isNotNull);
@@ -566,7 +648,11 @@ void main() {
       expect(result.status, isNot(MissionStatus.criticalFailure));
 
       final completedAttempt = container
-          .read(workplaceSimulationControllerProvider)
+          .read(
+            workplaceSimulationControllerProvider(
+              WorkplaceSimulationController.missionId,
+            ),
+          )
           .requireValue
           .attempt!;
       expect(
@@ -612,9 +698,15 @@ void main() {
         ],
       );
       addTearDown(container.dispose);
-      await container.read(workplaceSimulationControllerProvider.future);
+      await container.read(
+        workplaceSimulationControllerProvider(
+          WorkplaceSimulationController.missionId,
+        ).future,
+      );
       final controller = container.read(
-        workplaceSimulationControllerProvider.notifier,
+        workplaceSimulationControllerProvider(
+          WorkplaceSimulationController.missionId,
+        ).notifier,
       );
       expect(await controller.startMission(scenarioSeed: 48127), isNull);
       expect(await controller.setBriefingAcknowledged(true), isNull);
@@ -635,7 +727,11 @@ void main() {
       );
 
       final state = container
-          .read(workplaceSimulationControllerProvider)
+          .read(
+            workplaceSimulationControllerProvider(
+              WorkplaceSimulationController.missionId,
+            ),
+          )
           .requireValue;
       for (final cartonId
           in state.mission.task('assign-dispositions').targetResourceIds) {
@@ -684,7 +780,11 @@ void main() {
       );
       expect(
         container
-            .read(workplaceSimulationControllerProvider)
+            .read(
+              workplaceSimulationControllerProvider(
+                WorkplaceSimulationController.missionId,
+              ),
+            )
             .requireValue
             .attempt!
             .completedTaskIds,
@@ -699,7 +799,11 @@ void main() {
       );
       expect(await controller.completeMission(), CompleteMissionResult.success);
       final result = container
-          .read(workplaceSimulationControllerProvider)
+          .read(
+            workplaceSimulationControllerProvider(
+              WorkplaceSimulationController.missionId,
+            ),
+          )
           .requireValue
           .result;
       expect(result, isNotNull);

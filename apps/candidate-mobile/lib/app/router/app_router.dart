@@ -281,8 +281,8 @@ GoRouter createAppRouter({
                 path: practiseRoutePath,
                 name: practiseRouteName,
                 builder: (context, state) => PracticeScreen(
-                  onOpenWorkplaceSimulation: () =>
-                      context.pushNamed(workplaceSimulationHubRouteName),
+                  onOpenWorkplaceSimulation: (missionId) =>
+                      context.push(workplaceSimulationPath(missionId)),
                 ),
               ),
             ],
@@ -346,6 +346,7 @@ GoRouter createAppRouter({
         builder: (context, state) {
           final missionId = state.pathParameters['missionId']!;
           return SimulationEntryScreen(
+            missionId: missionId,
             onOpenBriefing: () =>
                 context.push(workplaceBriefingPath(missionId)),
             onContinueWorkplace: () =>
@@ -361,6 +362,7 @@ GoRouter createAppRouter({
         builder: (context, state) {
           final missionId = state.pathParameters['missionId']!;
           return SupervisorBriefingScreen(
+            missionId: missionId,
             onBackToEntry: () => context.go(workplaceSimulationPath(missionId)),
             onOpenWorkplace: () => context.go(workplaceOverviewPath(missionId)),
           );
