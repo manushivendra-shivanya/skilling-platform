@@ -1,0 +1,114 @@
+[
+  {
+    "id": "document-verification",
+    "name": "Document Verification",
+    "description": "Compares supplier and internal records to identify discrepancies.",
+    "category": "operational",
+    "observableBehaviours": ["Checks the PO number", "Matches SKUs", "Compares quantities", "Records discrepancies"],
+    "proficiencyLevels": [
+      {"level": 1, "name": "Aware", "minimumScore": 0},
+      {"level": 2, "name": "Developing", "minimumScore": 50},
+      {"level": 3, "name": "Competent", "minimumScore": 70},
+      {"level": 4, "name": "Proficient", "minimumScore": 85},
+      {"level": 5, "name": "Advanced", "minimumScore": 95}
+    ]
+  },
+  {
+    "id": "inventory-accuracy",
+    "name": "Inventory Accuracy",
+    "description": "Records the quantity and identity of received goods accurately.",
+    "category": "operational",
+    "observableBehaviours": ["Counts received goods", "Records shortages", "Preserves source records"],
+    "proficiencyLevels": [
+      {"level": 1, "name": "Aware", "minimumScore": 0},
+      {"level": 2, "name": "Developing", "minimumScore": 50},
+      {"level": 3, "name": "Competent", "minimumScore": 70},
+      {"level": 4, "name": "Proficient", "minimumScore": 85},
+      {"level": 5, "name": "Advanced", "minimumScore": 95}
+    ]
+  },
+  {
+    "id": "goods-inspection",
+    "name": "Goods Inspection",
+    "description": "Inspects packaging, labels, batch, barcode and shelf life.",
+    "category": "operational",
+    "observableBehaviours": ["Finds damage", "Checks barcode", "Checks expiry"],
+    "proficiencyLevels": [
+      {"level": 1, "name": "Aware", "minimumScore": 0},
+      {"level": 2, "name": "Developing", "minimumScore": 50},
+      {"level": 3, "name": "Competent", "minimumScore": 70},
+      {"level": 4, "name": "Proficient", "minimumScore": 85},
+      {"level": 5, "name": "Advanced", "minimumScore": 95}
+    ]
+  },
+  {
+    "id": "warehouse-compliance",
+    "name": "Warehouse Compliance",
+    "description": "Keeps damaged, unauthorised and unverified goods out of available inventory.",
+    "category": "safety",
+    "observableBehaviours": ["Uses quarantine", "Uses verification hold", "Escalates exceptions"],
+    "proficiencyLevels": [
+      {"level": 1, "name": "Aware", "minimumScore": 0},
+      {"level": 2, "name": "Developing", "minimumScore": 50},
+      {"level": 3, "name": "Competent", "minimumScore": 70},
+      {"level": 4, "name": "Proficient", "minimumScore": 85},
+      {"level": 5, "name": "Advanced", "minimumScore": 95}
+    ]
+  },
+  {
+    "id": "receiving-decisions",
+    "name": "Receiving Decisions",
+    "description": "Selects a safe, documented receiving decision and communicates it.",
+    "category": "judgement",
+    "observableBehaviours": ["Partially accepts compliant stock", "Completes report", "Notifies supervisor"],
+    "proficiencyLevels": [
+      {"level": 1, "name": "Aware", "minimumScore": 0},
+      {"level": 2, "name": "Developing", "minimumScore": 50},
+      {"level": 3, "name": "Competent", "minimumScore": 70},
+      {"level": 4, "name": "Proficient", "minimumScore": 85},
+      {"level": 5, "name": "Advanced", "minimumScore": 95}
+    ]
+  },
+  {
+    "id": "storage-location-accuracy",
+    "name": "Storage Location Accuracy",
+    "description": "Assigns and confirms the correct storage zone for every item based on its handling requirements.",
+    "category": "operational",
+    "observableBehaviours": ["Assigns hazmat items to the hazmat locker", "Assigns cold-chain items to cold storage", "Confirms scans match assigned zones", "Reports capacity exceptions"],
+    "proficiencyLevels": [
+      {"level": 1, "name": "Aware", "minimumScore": 0},
+      {"level": 2, "name": "Developing", "minimumScore": 50},
+      {"level": 3, "name": "Competent", "minimumScore": 70},
+      {"level": 4, "name": "Proficient", "minimumScore": 85},
+      {"level": 5, "name": "Advanced", "minimumScore": 95}
+    ]
+  },
+  {
+    "id": "safe-material-handling",
+    "name": "Safe Material Handling",
+    "description": "Moves and places goods using safe handling practices.",
+    "category": "safety",
+    "observableBehaviours": ["Confirms safe handling before placement", "Uses correct equipment for the load"],
+    "proficiencyLevels": [
+      {"level": 1, "name": "Aware", "minimumScore": 0},
+      {"level": 2, "name": "Developing", "minimumScore": 50},
+      {"level": 3, "name": "Competent", "minimumScore": 70},
+      {"level": 4, "name": "Proficient", "minimumScore": 85},
+      {"level": 5, "name": "Advanced", "minimumScore": 95}
+    ]
+  },
+  {
+    "id": "putaway-decisions",
+    "name": "Putaway Decisions",
+    "description": "Completes the putaway report accurately and communicates the outcome.",
+    "category": "judgement",
+    "observableBehaviours": ["Completes the putaway report", "Confirms putaway outcome", "Notifies supervisor with exceptions included"],
+    "proficiencyLevels": [
+      {"level": 1, "name": "Aware", "minimumScore": 0},
+      {"level": 2, "name": "Developing", "minimumScore": 50},
+      {"level": 3, "name": "Competent", "minimumScore": 70},
+      {"level": 4, "name": "Proficient", "minimumScore": 85},
+      {"level": 5, "name": "Advanced", "minimumScore": 95}
+    ]
+  }
+]

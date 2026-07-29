@@ -1,5 +1,30 @@
 # Codex Phase Execution Plan
 
+## Strategic evolution gate — AI Employability Infrastructure
+
+The target product architecture is defined in
+`docs/23-ai-employability-infrastructure-platform.md`.
+
+This is currently an architecture proposal, not implementation authority.
+Workplace Management Simulation remains the active implementation stream and
+becomes the Simulation bounded context within the wider platform.
+
+Before adding Career, Competency Passport, Employer, Placement Partner or
+Government platform code:
+
+1. Approve the bounded-context map and authority boundaries.
+2. Approve canonical Role, Competency, Evidence and Readiness semantics.
+3. Record ADRs for sharing consent, employer decision boundaries and external
+   source-of-truth rules.
+4. Correct legacy architecture references that conflict with the approved
+   Flutter mobile pipeline.
+5. Select one coherent lifecycle vertical slice using the decision gates in
+   document 23.
+
+Do not couple current WMS domain/application code to future portals or external
+government systems. WMS should expose a stable evidence-generation boundary
+after the current approved screen milestone.
+
 ## Execution rules
 
 Codex must:
@@ -328,12 +353,153 @@ Acceptance:
 - Resume parsing adapter
 - Analytics events
 
+## Phase 2.1 — Environment, authentication and candidate records
+
+Build:
+- Environment-gated Supabase bootstrap
+- Provider-neutral production phone authentication adapter
+- Candidate profile persistence
+- Versioned consent persistence
+- Secure local fallback for development and offline use
+
+## Phase 2.2 — Taxonomy and diagnostic
+
+Build:
+- Versioned role and competency taxonomy
+- Versioned logistics diagnostic definition
+- Deterministic diagnostic runtime
+- Explainable competency-gap results
+- Recommended role and pathway
+
+## Phase 2.3 — Learning pathway and offline progress
+
+Build:
+- Versioned learning pathway and content model
+- Lesson detail and checkpoint experience
+- Download and completion state
+- Candidate-owned progress persistence
+- Local-first pending-sync behaviour
+
+## Phase 2.4 — Simulation runtime and event batching
+
+Build:
+- Versioned inventory-discrepancy simulation
+- Ordered candidate and technical events
+- Idempotent event persistence
+- Offline attempt preservation and later synchronization
+- Explicit separation of technical failures from candidate actions
+
+## Phase 2.5 — Scoring, evidence and integration boundaries
+
+Build:
+- Deterministic, explainable scoring
+- Candidate competency evidence generation
+- Evidence history in the candidate profile
+- Resume parsing repository contract without provider credentials
+- Non-PII analytics for diagnostic, learning and simulation events
+
+## Phase 2.6 — Security and release hardening
+
+Validate:
+- Row-level security and least-privilege grants
+- Candidate ownership and immutable published reference data
+- Database security and performance advisors
+- Loading, empty, offline, pending-sync and error states
+- Unit, repository, widget and end-to-end feature tests
+- Android build, signed ARM64 QC APK, installation and launch
+
 ## Exit criteria
 Candidate can authenticate, create a persistent profile, complete a logistics diagnostic, receive an explainable pathway, complete learning content and perform at least one scored simulation.
 
 ---
 
+# Inter-phase milestone — Workplace Management Simulation v0.2 backbone
+
+Build:
+- Industry-neutral workplace-simulation domain and content contracts
+- Versioned local logistics content pack and first receiving mission
+- Deterministic scenario generation and explicit mission state machine
+- Action validation, evaluation, scoring and critical-error services
+- Competency evidence and remediation generation
+- Candidate-isolated local attempt persistence
+- UI-neutral application controller
+
+Constraints:
+- Preserve the existing Phase 2 Practice simulation
+- Add no production route or screen until the approved screen-by-screen
+  interaction specification is available
+- Add no Supabase, BFF, Redis, AI or voice dependency for this milestone
+
+Acceptance:
+- Same mission version and seed reproduce the same scenario
+- Audit actions are append-only, candidate-owned and continuously sequenced
+- Technical events never reduce candidate scores
+- Critical errors, incomplete attempts, retry outcomes and remediation are
+  deterministic and tested
+- Content references and scoring weights are validated
+- Existing Android and GitHub Actions pipelines remain unchanged
+
+---
+
+# Inter-phase milestone — WMS approved entry and briefing
+
+Build:
+- Screen 01 Simulation Entry from approved specification 1.0
+- Screen 02 Supervisor Briefing from approved specification 1.0
+- Practice entry and protected GoRouter routes under `/practise`
+- Separate attempt-creation and shift-timer timestamps
+- Append-only unscored audit events
+- Mandatory briefing acknowledgement and duplicate-start protection
+- Explicit Screen 03 handoff without operational UI assumptions
+
+Acceptance:
+- A new or retry attempt receives a fresh deterministic scenario seed
+- The timer does not start on entry or while reading the briefing
+- Begin Shift requires acknowledgement and application-layer validation
+- Successful start atomically persists `inProgress`, the
+  document-verification stage, timer start and exactly one `shiftStarted` event
+- Loading, empty, error, offline and accessible 200% text states are represented
+- Existing Phase 2 Practice functionality remains available
+
+---
+
 # Phase 3 — Voice, Jobs and Employer Operations
+
+## Phase 3.1 — Recorded-turn voice foundation
+
+Build:
+- Purpose-separated recording, transcription, evaluation and sharing consent
+- Microphone permission education and readiness test
+- Turn-based recording with interruption recovery and local deletion
+- Resumable upload repository contract and visible pending-upload state
+- Candidate-reviewed transcript flow
+- Versioned prompt and rubric registry
+- Structured, transcript-only development evaluation
+- Candidate feedback and human-review request
+- Private media, evaluation, appeal and audit schema with least-privilege RLS
+
+Acceptance:
+- Technical failures never reduce candidate feedback
+- Accent, emotion, personality and protected traits are excluded
+- Every transcript is candidate-reviewed before evaluation
+- Development evaluation cannot reject or shortlist
+- AI-provider, raw-media and reviewer operations remain behind the planned BFF
+
+## Phase 3.2 — Job application operations
+
+Build:
+- Authoritative job matching inputs and explanations
+- Consent-gated job application APIs
+- Application tracking and withdrawal
+- Idempotent consequential mutations through the NestJS BFF
+
+## Phase 3.3 — Employer and administrator operations
+
+Build:
+- Tenant-isolated employer portal v1
+- Evidence review and human shortlist workflow
+- Administrator prompt, rubric, appeal and review controls
+- Audit and operational dashboards
 
 ## Scope
 - Audio permissions

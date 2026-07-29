@@ -1,0 +1,814 @@
+import 'package:candidate_mobile/app/dependencies.dart';
+import 'package:candidate_mobile/core/repositories/candidate_session_repository.dart';
+import 'package:candidate_mobile/features/workplace_simulation/application/workplace_interaction_contracts.dart';
+import 'package:candidate_mobile/features/workplace_simulation/application/workplace_simulation_controller.dart';
+import 'package:candidate_mobile/features/workplace_simulation/data/asset_simulation_content_repository.dart';
+import 'package:candidate_mobile/features/workplace_simulation/data/local_simulation_attempt_repository.dart';
+import 'package:candidate_mobile/features/workplace_simulation/domain/simulation_enums.dart';
+import 'package:candidate_mobile/features/workplace_simulation/domain/workplace_task_drafts.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+
+void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
+  test(
+    'controller starts, pauses, resumes and retries a fresh attempt',
+    () async {
+      var tick = 0;
+      final attempts = InMemorySimulationAttemptRepository(
+        clock: () =>
+            DateTime.utc(2026, 7, 28).add(Duration(microseconds: tick++)),
+      );
+      final container = ProviderContainer(
+        overrides: [
+          candidateSessionRepositoryProvider.overrideWithValue(
+            InMemoryCandidateSessionRepository(
+              session: const CandidateSession(
+                candidateId: 'controller-candidate',
+                isAuthenticated: true,
+              ),
+            ),
+          ),
+          simulationContentRepositoryProvider.overrideWithValue(
+            AssetSimulationContentRepository(),
+          ),
+          simulationAttemptRepositoryProvider.overrideWithValue(attempts),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      final initial = await container.read(
+        workplaceSimulationControllerProvider(
+          WorkplaceSimulationController.missionId,
+        ).future,
+      );
+      expect(initial.attempt, isNull);
+
+      final controller = container.read(
+        workplaceSimulationControllerProvider(
+          WorkplaceSimulationController.missionId,
+        ).notifier,
+      );
+      expect(await controller.startMission(scenarioSeed: 48127), isNull);
+      var state = container
+          .read(
+            workplaceSimulationControllerProvider(
+              WorkplaceSimulationController.missionId,
+            ),
+          )
+          .requireValue;
+      expect(state.attempt!.state, MissionState.briefing);
+      expect(state.attempt!.timerStatus, SimulationTimerStatus.notStarted);
+      expect(state.attempt!.shiftStartedAt, isNull);
+      final firstAttemptId = state.attempt!.id;
+
+      expect(await controller.setBriefingAcknowledged(true), isNull);
+      state = container
+          .read(
+            workplaceSimulationControllerProvider(
+              WorkplaceSimulationController.missionId,
+            ),
+          )
+          .requireValue;
+      expect(state.attempt!.briefingAcknowledgedAt, isNotNull);
+      expect(state.attempt!.shiftStartedAt, isNull);
+      final shiftStart = DateTime.utc(2026, 7, 28, 10);
+      expect(
+        await controller.beginShift(at: shiftStart),
+        BeginShiftResult.success,
+      );
+      state = container
+          .read(
+            workplaceSimulationControllerProvider(
+              WorkplaceSimulationController.missionId,
+            ),
+          )
+          .requireValue;
+      expect(state.attempt!.shiftStartedAt, isNotNull);
+      expect(state.attempt!.timerStatus, SimulationTimerStatus.running);
+      expect(state.attempt!.currentStageId, 'document-verification');
+      expect(
+        state.attempt!.auditEvents.map((event) => event.type),
+        containsAllInOrder([
+          'attemptCreated',
+          'briefingAcknowledged',
+          'shiftStartRequested',
+          'shiftStarted',
+        ]),
+      );
+      final originalShiftStart = state.attempt!.shiftStartedAt;
+      expect(
+        await controller.beginShift(
+          at: shiftStart.add(const Duration(days: 1)),
+        ),
+        BeginShiftResult.alreadyStarted,
+      );
+      expect(
+        container
+            .read(
+              workplaceSimulationControllerProvider(
+                WorkplaceSimulationController.missionId,
+              ),
+            )
+            .requireValue
+            .attempt!
+            .auditEvents
+            .where(
+              (event) => event.eventType == AttemptAuditEventType.shiftStarted,
+            ),
+        hasLength(1),
+      );
+      expect(
+        container
+            .read(
+              workplaceSimulationControllerProvider(
+                WorkplaceSimulationController.missionId,
+              ),
+            )
+            .requireValue
+            .attempt!
+            .shiftStartedAt,
+        originalShiftStart,
+      );
+      expect(
+        await controller.pauseAttempt(
+          at: shiftStart.add(const Duration(seconds: 10)),
+        ),
+        isNull,
+      );
+      expect(
+        container
+            .read(
+              workplaceSimulationControllerProvider(
+                WorkplaceSimulationController.missionId,
+              ),
+            )
+            .requireValue
+            .attempt!
+            .state,
+        MissionState.paused,
+      );
+      state = container
+          .read(
+            workplaceSimulationControllerProvider(
+              WorkplaceSimulationController.missionId,
+            ),
+          )
+          .requireValue;
+      expect(state.attempt!.elapsedSimulationSeconds, 10);
+      expect(state.attempt!.timerStatus, SimulationTimerStatus.paused);
+      expect(
+        await controller.resumeAttempt(
+          at: shiftStart.add(const Duration(seconds: 40)),
+        ),
+        isNull,
+      );
+      expect(
+        container
+            .read(
+              workplaceSimulationControllerProvider(
+                WorkplaceSimulationController.missionId,
+              ),
+            )
+            .requireValue
+            .attempt!
+            .state,
+        MissionState.inProgress,
+      );
+      expect(
+        await controller.pauseAttempt(
+          at: shiftStart.add(const Duration(seconds: 50)),
+        ),
+        isNull,
+      );
+      state = container
+          .read(
+            workplaceSimulationControllerProvider(
+              WorkplaceSimulationController.missionId,
+            ),
+          )
+          .requireValue;
+      expect(state.attempt!.elapsedSimulationSeconds, 20);
+      expect(state.attempt!.timerStatus, SimulationTimerStatus.paused);
+      expect(
+        await controller.resumeAttempt(
+          at: shiftStart.add(const Duration(seconds: 60)),
+        ),
+        isNull,
+      );
+
+      expect(await controller.submit(), isNull);
+      state = container
+          .read(
+            workplaceSimulationControllerProvider(
+              WorkplaceSimulationController.missionId,
+            ),
+          )
+          .requireValue;
+      expect(state.result!.status, MissionStatus.incomplete);
+      expect(state.attempt!.state, MissionState.failed);
+      expect(state.attempt!.timerStatus, SimulationTimerStatus.stopped);
+
+      expect(await controller.retry(scenarioSeed: 90210), isNull);
+      state = container
+          .read(
+            workplaceSimulationControllerProvider(
+              WorkplaceSimulationController.missionId,
+            ),
+          )
+          .requireValue;
+      expect(state.attempt!.id, isNot(firstAttemptId));
+      expect(state.attempt!.attemptNumber, 2);
+      expect(state.attempt!.scenarioSeed, 90210);
+      expect(state.attempt!.state, MissionState.briefing);
+      expect(state.result, isNull);
+    },
+  );
+
+  test(
+    'controller rejects actions before shift begins without corrupting state',
+    () async {
+      final container = ProviderContainer(
+        overrides: [
+          candidateSessionRepositoryProvider.overrideWithValue(
+            InMemoryCandidateSessionRepository(
+              session: const CandidateSession(
+                candidateId: 'controller-candidate',
+                isAuthenticated: true,
+              ),
+            ),
+          ),
+          simulationContentRepositoryProvider.overrideWithValue(
+            AssetSimulationContentRepository(),
+          ),
+          simulationAttemptRepositoryProvider.overrideWithValue(
+            InMemorySimulationAttemptRepository(),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+      await container.read(
+        workplaceSimulationControllerProvider(
+          WorkplaceSimulationController.missionId,
+        ).future,
+      );
+      final controller = container.read(
+        workplaceSimulationControllerProvider(
+          WorkplaceSimulationController.missionId,
+        ).notifier,
+      );
+      await controller.startMission();
+
+      final failure = await controller.recordAction(
+        stageId: 'document-verification',
+        taskId: 'open-purchase-order',
+        actionType: ActionType.openResource,
+        targetId: 'purchase-order-po-2026-001',
+      );
+
+      expect(failure, isNotNull);
+      final state = container
+          .read(
+            workplaceSimulationControllerProvider(
+              WorkplaceSimulationController.missionId,
+            ),
+          )
+          .requireValue;
+      expect(state.attempt!.actions, isEmpty);
+      expect(state.attempt!.state, MissionState.briefing);
+    },
+  );
+
+  test(
+    'begin shift returns a typed acknowledgement result without starting time',
+    () async {
+      final container = ProviderContainer(
+        overrides: [
+          candidateSessionRepositoryProvider.overrideWithValue(
+            InMemoryCandidateSessionRepository(
+              session: const CandidateSession(
+                candidateId: 'unacknowledged-candidate',
+                isAuthenticated: true,
+              ),
+            ),
+          ),
+          simulationContentRepositoryProvider.overrideWithValue(
+            AssetSimulationContentRepository(),
+          ),
+          simulationAttemptRepositoryProvider.overrideWithValue(
+            InMemorySimulationAttemptRepository(),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+      await container.read(
+        workplaceSimulationControllerProvider(
+          WorkplaceSimulationController.missionId,
+        ).future,
+      );
+      final controller = container.read(
+        workplaceSimulationControllerProvider(
+          WorkplaceSimulationController.missionId,
+        ).notifier,
+      );
+      await controller.startMission(scenarioSeed: 48127);
+
+      expect(
+        await controller.beginShift(),
+        BeginShiftResult.acknowledgementRequired,
+      );
+      final attempt = container
+          .read(
+            workplaceSimulationControllerProvider(
+              WorkplaceSimulationController.missionId,
+            ),
+          )
+          .requireValue
+          .attempt!;
+      expect(attempt.state, MissionState.briefing);
+      expect(attempt.timerStatus, SimulationTimerStatus.notStarted);
+      expect(attempt.shiftStartedAt, isNull);
+      expect(
+        attempt.auditEvents.last.eventType,
+        AttemptAuditEventType.shiftStartRejected,
+      );
+      expect(attempt.actions, isEmpty);
+    },
+  );
+
+  test(
+    'typed operational commands unlock stations independent of correctness',
+    () async {
+      final attempts = InMemorySimulationAttemptRepository();
+      final container = ProviderContainer(
+        overrides: [
+          candidateSessionRepositoryProvider.overrideWithValue(
+            InMemoryCandidateSessionRepository(
+              session: const CandidateSession(
+                candidateId: 'operations-candidate',
+                isAuthenticated: true,
+              ),
+            ),
+          ),
+          simulationContentRepositoryProvider.overrideWithValue(
+            AssetSimulationContentRepository(),
+          ),
+          simulationAttemptRepositoryProvider.overrideWithValue(attempts),
+        ],
+      );
+      addTearDown(container.dispose);
+      await container.read(
+        workplaceSimulationControllerProvider(
+          WorkplaceSimulationController.missionId,
+        ).future,
+      );
+      final controller = container.read(
+        workplaceSimulationControllerProvider(
+          WorkplaceSimulationController.missionId,
+        ).notifier,
+      );
+      await controller.startMission(scenarioSeed: 48127);
+      await controller.setBriefingAcknowledged(true);
+      expect(await controller.beginShift(), BeginShiftResult.success);
+
+      expect(
+        controller.workstationStatus('document-desk'),
+        WorkstationStatus.available,
+      );
+      expect(
+        controller.workstationStatus('receiving-dock'),
+        WorkstationStatus.locked,
+      );
+      expect(controller.recommendedWorkstationId, 'document-desk');
+      expect(
+        await controller.openWorkstation('receiving-dock'),
+        OpenWorkstationResult.workstationLocked,
+      );
+
+      expect(
+        await controller.addDocumentFinding(
+          const AddDocumentFindingCommand(
+            sourceDocument: DocumentSource.both,
+            itemReference: 'SKU-1001',
+            findingType: DocumentFindingType.other,
+          ),
+        ),
+        AddDocumentFindingResult.success,
+      );
+      final finding = controller.documentReviewDraft!.findings.single;
+      expect(
+        await controller.updateDocumentFinding(
+          UpdateDocumentFindingCommand(
+            findingId: finding.id,
+            sourceDocument: DocumentSource.both,
+            itemReference: finding.itemReference,
+            findingType: DocumentFindingType.documentMismatch,
+          ),
+        ),
+        UpdateDocumentFindingResult.success,
+      );
+      expect(controller.documentReviewDraft!.findings.single.revisionNumber, 2);
+      expect(
+        await controller.submitDocumentReview(
+          const SubmitDocumentReviewCommand(),
+        ),
+        SubmitDocumentReviewResult.success,
+      );
+      expect(
+        controller.workstationStatus('document-desk'),
+        WorkstationStatus.completed,
+      );
+      expect(
+        controller.workstationStatus('receiving-dock'),
+        WorkstationStatus.available,
+      );
+      expect(controller.recommendedWorkstationId, 'receiving-dock');
+      expect(
+        await controller.submitDocumentReview(
+          const SubmitDocumentReviewCommand(),
+        ),
+        SubmitDocumentReviewResult.alreadySubmitted,
+      );
+
+      expect(
+        await controller.confirmShipmentIdentity(
+          const ConfirmShipmentIdentityCommand(confirmed: true),
+        ),
+        ConfirmShipmentIdentityResult.success,
+      );
+      final state = container
+          .read(
+            workplaceSimulationControllerProvider(
+              WorkplaceSimulationController.missionId,
+            ),
+          )
+          .requireValue;
+      for (final cartonId
+          in state.mission.task('confirm-received-counts').targetResourceIds) {
+        expect(
+          await controller.recordCartonCount(
+            RecordCartonCountCommand(
+              cartonId: cartonId,
+              enteredQuantity: 0,
+              countMethod: CountMethod.individual,
+            ),
+          ),
+          RecordCartonCountResult.success,
+        );
+      }
+      final firstCount = controller.receivingCountDraft!.countEntries.first;
+      expect(
+        await controller.updateCartonCount(
+          UpdateCartonCountCommand(
+            entryId: firstCount.id,
+            enteredQuantity: 1,
+            countMethod: CountMethod.individual,
+          ),
+        ),
+        UpdateCartonCountResult.success,
+      );
+      expect(
+        controller.receivingCountDraft!.countEntries.first.revisionNumber,
+        2,
+      );
+      expect(
+        await controller.submitReceivingCount(
+          const SubmitReceivingCountCommand(),
+        ),
+        SubmitReceivingCountResult.success,
+      );
+      expect(
+        controller.workstationStatus('receiving-dock'),
+        WorkstationStatus.completed,
+      );
+      expect(
+        controller.workstationStatus('inspection-zone'),
+        WorkstationStatus.available,
+      );
+      expect(controller.recommendedWorkstationId, 'inspection-zone');
+
+      for (final cartonId
+          in state.mission.task('inspect-cartons').targetResourceIds) {
+        expect(
+          await controller.recordCartonInspection(
+            RecordCartonInspectionCommand(
+              cartonId: cartonId,
+              finding: CartonFinding.compliant,
+            ),
+          ),
+          RecordCartonInspectionResult.success,
+        );
+      }
+      final firstInspection =
+          controller.inspectionDraft!.cartonInspections.first;
+      expect(
+        await controller.updateCartonInspection(
+          UpdateCartonInspectionCommand(
+            entryId: firstInspection.id,
+            finding: CartonFinding.packagingDamage,
+          ),
+        ),
+        UpdateCartonInspectionResult.success,
+      );
+      expect(
+        controller.inspectionDraft!.cartonInspections.first.revisionNumber,
+        2,
+      );
+      for (final cartonId
+          in state.mission.task('scan-barcodes').targetResourceIds) {
+        expect(
+          await controller.recordBarcodeScan(
+            RecordBarcodeScanCommand(
+              cartonId: cartonId,
+              status: BarcodeStatus.readable,
+            ),
+          ),
+          RecordBarcodeScanResult.success,
+        );
+      }
+      expect(
+        await controller.saveInspectionDraft(
+          const SaveInspectionDraftCommand(),
+        ),
+        SaveInspectionDraftResult.success,
+      );
+      expect(
+        await controller.submitInspection(const SubmitInspectionCommand()),
+        SubmitInspectionResult.success,
+      );
+      expect(
+        controller.workstationStatus('inspection-zone'),
+        WorkstationStatus.completed,
+      );
+      expect(
+        await controller.submitInspection(const SubmitInspectionCommand()),
+        SubmitInspectionResult.alreadySubmitted,
+      );
+
+      // Seed 48127's deterministic issue assignment (verified by replaying
+      // the scenario generator): carton-001 unreadable_barcode,
+      // carton-002 quantity_shortage, carton-003 incorrect_sku,
+      // carton-004 compliant, carton-005 near_expiry,
+      // carton-006 packaging_damage.
+      const correctDispositions = {
+        'carton-001': DispositionType.holdForVerification,
+        'carton-002': DispositionType.holdForVerification,
+        'carton-003': DispositionType.rejectReturn,
+        'carton-004': DispositionType.accept,
+        'carton-005': DispositionType.escalate,
+        'carton-006': DispositionType.quarantine,
+      };
+      for (final entry in correctDispositions.entries) {
+        expect(
+          await controller.recordDisposition(
+            RecordDispositionCommand(
+              cartonId: entry.key,
+              disposition: entry.value,
+              reason: entry.value == DispositionType.accept
+                  ? ''
+                  : 'Matches inspection finding',
+            ),
+          ),
+          RecordDispositionResult.success,
+        );
+      }
+      expect(
+        await controller.submitDispositions(const SubmitDispositionsCommand()),
+        SubmitDispositionsResult.success,
+      );
+      expect(
+        await controller.confirmQuarantine(const ConfirmQuarantineCommand()),
+        ConfirmQuarantineResult.success,
+      );
+      expect(
+        controller.workstationStatus('quarantine-zone'),
+        WorkstationStatus.completed,
+      );
+      expect(
+        controller.workstationStatus('receiving-office'),
+        WorkstationStatus.available,
+      );
+
+      expect(
+        await controller.setDiscrepancyReportFlags(
+          const SetDiscrepancyReportFlagsCommand(
+            shortageRecorded: true,
+            unauthorizedSkuRecorded: true,
+            damageRecorded: true,
+            barcodeIssueRecorded: true,
+            nearExpiryRecorded: true,
+          ),
+        ),
+        SetDiscrepancyReportFlagsResult.success,
+      );
+      expect(
+        await controller.submitDiscrepancyReport(
+          const SubmitDiscrepancyReportCommand(),
+        ),
+        SubmitDiscrepancyReportResult.success,
+      );
+      expect(
+        await controller.selectReceivingDecision(
+          const SelectReceivingDecisionCommand(
+            ReceivingDecisionOutcome.partiallyAccept,
+          ),
+        ),
+        SelectReceivingDecisionResult.success,
+      );
+      expect(
+        controller.selectedReceivingDecision,
+        ReceivingDecisionOutcome.partiallyAccept,
+      );
+      expect(
+        await controller.notifySupervisor(const NotifySupervisorCommand()),
+        NotifySupervisorResult.success,
+      );
+      expect(controller.supervisorNotified, isTrue);
+
+      expect(await controller.completeMission(), CompleteMissionResult.success);
+      final result = container
+          .read(
+            workplaceSimulationControllerProvider(
+              WorkplaceSimulationController.missionId,
+            ),
+          )
+          .requireValue
+          .result;
+      expect(result, isNotNull);
+      // This test deliberately records an incorrect optional document
+      // finding earlier (see the addDocumentFinding call above) to verify
+      // typed commands work "independent of correctness" -- so it does not
+      // assert a passing overall score here. All mandatory tasks across
+      // every stage were completed (the receiving/quarantine/decision
+      // portion added in this change was answered correctly throughout),
+      // and no critical error was triggered.
+      expect(result!.mandatoryTasksCompleted, isTrue);
+      expect(result.criticalErrors, isEmpty);
+      expect(result.status, isNot(MissionStatus.criticalFailure));
+
+      final completedAttempt = container
+          .read(
+            workplaceSimulationControllerProvider(
+              WorkplaceSimulationController.missionId,
+            ),
+          )
+          .requireValue
+          .attempt!;
+      expect(
+        completedAttempt.actions.map((action) => action.sequenceNumber),
+        orderedEquals(
+          List<int>.generate(
+            completedAttempt.actions.length,
+            (index) => index + 1,
+          ),
+        ),
+      );
+      expect(
+        completedAttempt.auditEvents.map((event) => event.sequenceNumber),
+        orderedEquals(
+          List<int>.generate(
+            completedAttempt.auditEvents.length,
+            (index) => index + 1,
+          ),
+        ),
+      );
+    },
+  );
+
+  test(
+    'a wrong receiving decision still lets the learner finish the shift',
+    () async {
+      final container = ProviderContainer(
+        overrides: [
+          candidateSessionRepositoryProvider.overrideWithValue(
+            InMemoryCandidateSessionRepository(
+              session: const CandidateSession(
+                candidateId: 'wrong-decision-candidate',
+                isAuthenticated: true,
+              ),
+            ),
+          ),
+          simulationContentRepositoryProvider.overrideWithValue(
+            AssetSimulationContentRepository(),
+          ),
+          simulationAttemptRepositoryProvider.overrideWithValue(
+            InMemorySimulationAttemptRepository(),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+      await container.read(
+        workplaceSimulationControllerProvider(
+          WorkplaceSimulationController.missionId,
+        ).future,
+      );
+      final controller = container.read(
+        workplaceSimulationControllerProvider(
+          WorkplaceSimulationController.missionId,
+        ).notifier,
+      );
+      expect(await controller.startMission(scenarioSeed: 48127), isNull);
+      expect(await controller.setBriefingAcknowledged(true), isNull);
+      expect(
+        await controller.beginShift(at: DateTime.utc(2026, 7, 29)),
+        BeginShiftResult.success,
+      );
+
+      // Selecting the wrong decision leaves make-receiving-decision out of
+      // completedTaskIds (non-repeatable, single evaluationRule for
+      // partially_accept only) -- the learner must still be able to notify
+      // the supervisor and see results, not get stuck with no way forward.
+      expect(
+        await controller.selectReceivingDecision(
+          const SelectReceivingDecisionCommand(ReceivingDecisionOutcome.accept),
+        ),
+        SelectReceivingDecisionResult.discrepancyReportNotSubmitted,
+      );
+
+      final state = container
+          .read(
+            workplaceSimulationControllerProvider(
+              WorkplaceSimulationController.missionId,
+            ),
+          )
+          .requireValue;
+      for (final cartonId
+          in state.mission.task('assign-dispositions').targetResourceIds) {
+        expect(
+          await controller.recordDisposition(
+            RecordDispositionCommand(
+              cartonId: cartonId,
+              disposition: DispositionType.accept,
+            ),
+          ),
+          RecordDispositionResult.success,
+        );
+      }
+      expect(
+        await controller.submitDispositions(const SubmitDispositionsCommand()),
+        SubmitDispositionsResult.success,
+      );
+      expect(
+        await controller.confirmQuarantine(const ConfirmQuarantineCommand()),
+        ConfirmQuarantineResult.success,
+      );
+      expect(
+        await controller.setDiscrepancyReportFlags(
+          const SetDiscrepancyReportFlagsCommand(
+            shortageRecorded: false,
+            unauthorizedSkuRecorded: false,
+            damageRecorded: false,
+            barcodeIssueRecorded: false,
+            nearExpiryRecorded: false,
+          ),
+        ),
+        SetDiscrepancyReportFlagsResult.success,
+      );
+      expect(
+        await controller.submitDiscrepancyReport(
+          const SubmitDiscrepancyReportCommand(),
+        ),
+        SubmitDiscrepancyReportResult.success,
+      );
+
+      expect(
+        await controller.selectReceivingDecision(
+          const SelectReceivingDecisionCommand(ReceivingDecisionOutcome.accept),
+        ),
+        SelectReceivingDecisionResult.success,
+      );
+      expect(
+        container
+            .read(
+              workplaceSimulationControllerProvider(
+                WorkplaceSimulationController.missionId,
+              ),
+            )
+            .requireValue
+            .attempt!
+            .completedTaskIds,
+        isNot(contains('make-receiving-decision')),
+      );
+
+      // The critical assertion: notify-supervisor and completion must still
+      // succeed even though the decision scored incorrect.
+      expect(
+        await controller.notifySupervisor(const NotifySupervisorCommand()),
+        NotifySupervisorResult.success,
+      );
+      expect(await controller.completeMission(), CompleteMissionResult.success);
+      final result = container
+          .read(
+            workplaceSimulationControllerProvider(
+              WorkplaceSimulationController.missionId,
+            ),
+          )
+          .requireValue
+          .result;
+      expect(result, isNotNull);
+      expect(result!.mandatoryTasksCompleted, isFalse);
+      expect(result.status, isNot(MissionStatus.passed));
+    },
+  );
+}

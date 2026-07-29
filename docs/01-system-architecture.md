@@ -37,7 +37,7 @@ Analytics Warehouse / BI
 
 ## Recommended Initial Stack
 - Web: Next.js App Router, TypeScript
-- Candidate: React Native with Expo and TypeScript
+- Candidate: Flutter with Dart, Riverpod, GoRouter and Material 3
 - API: TypeScript service using a structured framework or Next.js route handlers initially
 - Database: PostgreSQL
 - ORM/query layer: Drizzle or Prisma, selected by ADR

@@ -3,6 +3,22 @@
 ## Objective
 Create reusable, versioned, auditable workplace simulations that capture process, judgement, timing, accuracy, and escalation—not only final answers.
 
+## Current Implementations
+- The Phase 2 inventory-discrepancy flow remains the production Practice
+  experience and is not replaced.
+- The additive Workplace Management Simulation v0.2 backbone lives under
+  `features/workplace_simulation`. It is content-driven and industry-neutral
+  at the engine boundary.
+- The first local content pack models a logistics receiving mission so the
+  generic runtime can be validated before the final interaction contract is
+  applied.
+- Approved Simulation Entry and Supervisor Briefing screens now expose the
+  backbone from Practice. Screen 03 remains an explicit handoff and has not
+  been invented.
+- See `docs/21-workplace-management-simulation.md`,
+  `docs/21-layered-simulation-strategy.md`,
+  `docs/22-simulation-content-schema.md` and ADR-0015.
+
 ## Authoring Model
 A simulation version contains:
 - metadata and target role,
@@ -17,6 +33,10 @@ A simulation version contains:
 - completion conditions,
 - scoring rubric,
 - accessibility and language content.
+
+The runtime must not infer presentation from this content. Screens translate
+the approved interaction contract into domain commands; domain services remain
+independent of Flutter widgets and navigation.
 
 ## Runtime State Machine
 ```text

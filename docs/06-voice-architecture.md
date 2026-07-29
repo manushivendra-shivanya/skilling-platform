@@ -11,6 +11,10 @@
 2. Turn-based recorded answer with upload and delayed feedback.
 3. Offline capture with resumeable background upload.
 
+Phase 3.1 implements mode 2 with local queueing toward mode 3. Real-time mode,
+production transcription, and signed media credentials remain behind the
+planned NestJS BFF.
+
 ## Pipeline
 ```text
 Mic → device audio processing → encrypted stream/upload
@@ -55,6 +59,16 @@ Audio retention is shorter than derived evidence by default. Candidates can requ
 - Preserve session state on app termination.
 - Never fabricate a transcript when speech is unintelligible.
 - Mark incomplete sessions without penalising reliability when failure is technical.
+
+## Phase 3.1 Safety Boundary
+- Microphone access follows explicit permission education and consent.
+- The candidate reviews or corrects every transcript before evaluation.
+- Development evaluation uses transcript content only.
+- Accent, vocal emotion, personality and protected traits are not inferred.
+- Technical failures are excluded from feedback and evidence.
+- Every evaluation requires human review and cannot reject or shortlist.
+- Audio uses a private bucket; short-lived upload/download credentials are
+  authorised by the BFF.
 
 ## Voice Session Types
 - Baseline introduction

@@ -59,10 +59,22 @@ Example event batch:
 ## Voice APIs
 - `POST /voice/sessions`
 - `POST /voice/sessions/{id}/media-credentials`
+- `POST /voice/sessions/{id}/turns`
+- `POST /voice/sessions/{id}/turns/{turn_id}/upload-complete`
+- `PATCH /voice/sessions/{id}/turns/{turn_id}/transcript`
 - `POST /voice/sessions/{id}/complete`
 - `GET /voice/sessions/{id}`
 - `GET /voice/sessions/{id}/feedback`
+- `POST /voice/sessions/{id}/human-review`
 - `POST /voice/sessions/{id}/appeals`
+- `DELETE /voice/sessions/{id}/media`
+
+Voice media credentials are short-lived and candidate-authorised by the BFF.
+They support resumable uploads to the private `voice-media` bucket. AI-provider
+credentials and the Supabase service role are never returned to clients.
+Transcripts must be candidate-reviewed before evaluation. Evaluation responses
+include prompt version, rubric version, dimension evidence, confidence and
+human-review status; they cannot perform autonomous rejection or shortlisting.
 
 ## Job APIs
 - `GET /jobs`

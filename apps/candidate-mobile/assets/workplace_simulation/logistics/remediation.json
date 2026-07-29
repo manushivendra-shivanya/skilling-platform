@@ -1,0 +1,54 @@
+[
+  {
+    "id": "micro-lesson-expiry-policy",
+    "title": "Handling Near-Expiry Inventory",
+    "contentType": "micro_lesson",
+    "estimatedDurationMinutes": 4,
+    "competencyId": "goods-inspection",
+    "triggerConditions": [{"type": "missed_issue", "issueType": "near_expiry"}],
+    "learningObjectives": [
+      "Recognise near-expiry stock",
+      "Apply shelf-life policy",
+      "Choose the correct disposition"
+    ]
+  },
+  {
+    "id": "micro-lesson-hazmat-storage",
+    "title": "Hazardous Material Storage Rules",
+    "contentType": "micro_lesson",
+    "estimatedDurationMinutes": 5,
+    "competencyId": "storage-location-accuracy",
+    "triggerConditions": [{"type": "missed_issue", "issueType": "hazmat_item"}],
+    "learningObjectives": [
+      "Identify hazardous material classifications",
+      "Recognise the hazmat locker requirement",
+      "Apply safe segregation rules for hazardous stock"
+    ]
+  },
+  {
+    "id": "micro-lesson-cold-chain-storage",
+    "title": "Cold-Chain Storage Requirements",
+    "contentType": "micro_lesson",
+    "estimatedDurationMinutes": 4,
+    "competencyId": "storage-location-accuracy",
+    "triggerConditions": [{"type": "missed_issue", "issueType": "cold_chain_item"}],
+    "learningObjectives": [
+      "Recognise cold-chain product indicators",
+      "Apply cold-storage placement rules",
+      "Understand spoilage risk from misplacement"
+    ]
+  },
+  {
+    "id": "micro-lesson-capacity-exceptions",
+    "title": "Handling Zone-Capacity Exceptions",
+    "contentType": "micro_lesson",
+    "estimatedDurationMinutes": 3,
+    "competencyId": "putaway-decisions",
+    "triggerConditions": [{"type": "missed_issue", "issueType": "zone_at_capacity"}],
+    "learningObjectives": [
+      "Recognise a zone-at-capacity exception",
+      "Route items to overflow storage correctly",
+      "Report capacity exceptions rather than working around them"
+    ]
+  }
+]

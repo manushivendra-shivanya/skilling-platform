@@ -8,6 +8,8 @@
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
 	<string>Candidate Mobile</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Saksham uses the microphone only when you choose to record a practice interview answer.</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>

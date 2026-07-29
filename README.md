@@ -75,7 +75,7 @@ skilling-platform/
 │   ├── marketing-web/       # Next.js
 │   ├── employer-web/        # Next.js
 │   ├── admin-web/           # Next.js
-│   ├── candidate-mobile/    # React Native / Expo
+│   ├── candidate-mobile/    # Flutter / Dart
 │   └── api/                 # API/BFF
 ├── packages/
 │   ├── design-tokens/
