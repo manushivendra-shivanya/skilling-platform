@@ -3,7 +3,7 @@ create table public.jobs (
   employer_name text not null,
   title text not null,
   location text not null,
-  role_profile_code text references public.role_profiles(code),
+  role_profile_id uuid references public.role_profiles(id),
   description text not null,
   status text not null check (status in ('draft', 'published', 'closed')) default 'draft',
   published_at timestamptz,
@@ -47,8 +47,17 @@ create policy "candidate reads own applications"
 grant select on public.jobs to authenticated;
 grant select on public.job_applications to authenticated;
 
+-- `role_profiles` is versioned (unique on code + version), so jobs bind to the
+-- surrogate id of the published profile for each code.
 insert into public.jobs
-  (employer_name, title, location, role_profile_code, description, status, published_at) values
-  ('Apex Consumer Products', 'Warehouse Operations Associate', 'Bhiwandi, Maharashtra', 'warehouse_associate', 'Receiving and put-away for a regional distribution centre. Entry-level, on-the-job training provided.', 'published', now()),
-  ('Meridian Logistics', 'Inventory Executive', 'Gurugram, Haryana', 'inventory_executive', 'Cycle counts, discrepancy resolution and stock accuracy reporting across three warehouse zones.', 'published', now()),
-  ('Northstar Freight', 'Dispatch Executive', 'Pune, Maharashtra', 'dispatch_executive', 'Prioritise outbound dispatch against SLA commitments and coordinate with the driver pool.', 'published', now());
+  (employer_name, title, location, role_profile_id, description, status, published_at)
+select
+  seed.employer_name, seed.title, seed.location, role.id, seed.description, 'published', now()
+from (values
+  ('Apex Consumer Products', 'Warehouse Operations Associate', 'Bhiwandi, Maharashtra', 'warehouse_associate', 'Receiving and put-away for a regional distribution centre. Entry-level, on-the-job training provided.'),
+  ('Meridian Logistics', 'Inventory Executive', 'Gurugram, Haryana', 'inventory_executive', 'Cycle counts, discrepancy resolution and stock accuracy reporting across three warehouse zones.'),
+  ('Northstar Freight', 'Dispatch Executive', 'Pune, Maharashtra', 'dispatch_executive', 'Prioritise outbound dispatch against SLA commitments and coordinate with the driver pool.')
+) as seed (employer_name, title, location, role_profile_code, description)
+join public.role_profiles role
+  on role.code = seed.role_profile_code
+ and role.status = 'published';

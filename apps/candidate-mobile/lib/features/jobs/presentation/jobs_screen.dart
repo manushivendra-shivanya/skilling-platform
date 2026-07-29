@@ -173,9 +173,7 @@ class _JobDetailsState extends State<_JobDetails> {
               ? null
               : (value) => setState(() => _sharingConfirmed = value ?? false),
           title: const Text('Share this demo profile for this application'),
-          subtitle: const Text(
-            'Required before saving. No data leaves this device.',
-          ),
+          subtitle: const Text('Required before applying.'),
         ),
         if (_error != null)
           Text(_error!, style: const TextStyle(color: AppColors.error)),
@@ -204,7 +202,7 @@ class _JobDetailsState extends State<_JobDetails> {
     if (failure == null) {
       showAppSnackBar(
         context: context,
-        message: 'Demo application saved securely on this device.',
+        message: 'Your application was saved.',
         tone: AppMessageTone.success,
       );
       Navigator.of(context).pop();
