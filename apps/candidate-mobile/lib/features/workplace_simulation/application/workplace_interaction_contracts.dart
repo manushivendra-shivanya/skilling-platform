@@ -441,3 +441,157 @@ enum SubmitInspectionResult {
   invalidAttemptState,
   persistenceFailure,
 }
+
+class RecordDispositionCommand {
+  const RecordDispositionCommand({
+    required this.cartonId,
+    required this.disposition,
+    this.reason = '',
+  });
+
+  final String cartonId;
+  final DispositionType disposition;
+  final String reason;
+}
+
+class UpdateDispositionCommand {
+  const UpdateDispositionCommand({
+    required this.entryId,
+    required this.disposition,
+    this.reason = '',
+  });
+
+  final String entryId;
+  final DispositionType disposition;
+  final String reason;
+}
+
+class RemoveDispositionCommand {
+  const RemoveDispositionCommand(this.entryId);
+
+  final String entryId;
+}
+
+class SaveDispositionDraftCommand {
+  const SaveDispositionDraftCommand();
+}
+
+class SubmitDispositionsCommand {
+  const SubmitDispositionsCommand();
+}
+
+class ConfirmQuarantineCommand {
+  const ConfirmQuarantineCommand();
+}
+
+class SetDiscrepancyReportFlagsCommand {
+  const SetDiscrepancyReportFlagsCommand({
+    required this.shortageRecorded,
+    required this.unauthorizedSkuRecorded,
+    required this.damageRecorded,
+    required this.barcodeIssueRecorded,
+    required this.nearExpiryRecorded,
+  });
+
+  final bool shortageRecorded;
+  final bool unauthorizedSkuRecorded;
+  final bool damageRecorded;
+  final bool barcodeIssueRecorded;
+  final bool nearExpiryRecorded;
+}
+
+class SubmitDiscrepancyReportCommand {
+  const SubmitDiscrepancyReportCommand();
+}
+
+class SelectReceivingDecisionCommand {
+  const SelectReceivingDecisionCommand(this.decision);
+
+  final ReceivingDecisionOutcome decision;
+}
+
+class NotifySupervisorCommand {
+  const NotifySupervisorCommand();
+}
+
+enum RecordDispositionResult {
+  success,
+  reasonRequired,
+  cartonNotFound,
+  duplicateEntry,
+  alreadySubmitted,
+  invalidAttemptState,
+  persistenceFailure,
+}
+
+enum UpdateDispositionResult {
+  success,
+  reasonRequired,
+  entryNotFound,
+  alreadySubmitted,
+  invalidAttemptState,
+  persistenceFailure,
+}
+
+enum RemoveDispositionResult {
+  success,
+  entryNotFound,
+  alreadySubmitted,
+  invalidAttemptState,
+  persistenceFailure,
+}
+
+enum SaveDispositionDraftResult {
+  success,
+  alreadySubmitted,
+  invalidAttemptState,
+  persistenceFailure,
+}
+
+enum SubmitDispositionsResult {
+  success,
+  incompleteDispositions,
+  alreadySubmitted,
+  invalidAttemptState,
+  persistenceFailure,
+}
+
+enum ConfirmQuarantineResult {
+  success,
+  dispositionsNotSubmitted,
+  alreadyConfirmed,
+  invalidAttemptState,
+  persistenceFailure,
+}
+
+enum SetDiscrepancyReportFlagsResult {
+  success,
+  alreadySubmitted,
+  invalidAttemptState,
+  persistenceFailure,
+}
+
+enum SubmitDiscrepancyReportResult {
+  success,
+  alreadySubmitted,
+  invalidAttemptState,
+  persistenceFailure,
+}
+
+enum SelectReceivingDecisionResult {
+  success,
+  discrepancyReportNotSubmitted,
+  alreadyDecided,
+  invalidAttemptState,
+  persistenceFailure,
+}
+
+enum NotifySupervisorResult {
+  success,
+  decisionNotMade,
+  alreadyNotified,
+  invalidAttemptState,
+  persistenceFailure,
+}
+
+enum CompleteMissionResult { success, invalidAttemptState, persistenceFailure }

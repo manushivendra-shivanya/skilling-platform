@@ -89,6 +89,30 @@ enum AttemptAuditEventType {
   inspectionSaveFailed,
   inspectionDraftSaved,
   inspectionZoneExited,
+  quarantineZoneOpened,
+  quarantineZoneExited,
+  dispositionEditorOpened,
+  dispositionEdited,
+  dispositionsSubmissionRequested,
+  dispositionsSaved,
+  dispositionsSaveFailed,
+  dispositionsDraftSaved,
+  quarantineConfirmed,
+  quarantineConfirmationFailed,
+  receivingOfficeOpened,
+  receivingOfficeExited,
+  discrepancyReportFlagsSaved,
+  discrepancyReportSubmissionRequested,
+  discrepancyReportSaved,
+  discrepancyReportSaveFailed,
+  receivingDecisionSelected,
+  receivingDecisionFailed,
+  supervisorNotificationRequested,
+  supervisorNotified,
+  supervisorNotificationFailed,
+  missionSubmitted,
+  missionSubmissionFailed,
+  performanceFeedbackOpened,
   screenLoadFailed,
   attemptExited;
 
@@ -214,8 +238,10 @@ enum ActionType {
   barcodeScanRecorded('barcode_scan_recorded'),
   barcodeScanUpdated('barcode_scan_updated'),
   barcodeScanRemoved('barcode_scan_removed'),
-  inspectionSubmitted('inspection_submitted'),
   selectDisposition('select_disposition'),
+  dispositionRecorded('disposition_recorded'),
+  dispositionUpdated('disposition_updated'),
+  dispositionRemoved('disposition_removed'),
   moveItem('move_item'),
   completeForm('complete_form'),
   makeDecision('make_decision'),
@@ -246,6 +272,18 @@ enum OutcomeType {
 }
 
 enum IssueSeverity { minor, major, critical }
+
+enum ReceivingDecisionOutcome {
+  accept('accept'),
+  partiallyAccept('partially_accept'),
+  reject('reject');
+
+  const ReceivingDecisionOutcome(this.wireName);
+  final String wireName;
+
+  static ReceivingDecisionOutcome fromWireName(String value) =>
+      values.firstWhere((item) => item.wireName == value);
+}
 
 enum DispositionType {
   accept('accept'),

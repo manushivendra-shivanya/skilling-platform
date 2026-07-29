@@ -62,6 +62,8 @@ void main() {
                                 onOpenDocumentDesk: () {},
                                 onOpenReceivingDock: () {},
                                 onOpenInspectionZone: () {},
+                                onOpenQuarantineZone: () {},
+                                onOpenReceivingOffice: () {},
                                 onReturnToPractice: () {},
                               ),
                             ),

@@ -16,6 +16,8 @@ class WorkplaceOverviewScreen extends ConsumerStatefulWidget {
     required this.onOpenDocumentDesk,
     required this.onOpenReceivingDock,
     required this.onOpenInspectionZone,
+    required this.onOpenQuarantineZone,
+    required this.onOpenReceivingOffice,
     required this.onReturnToPractice,
     super.key,
   });
@@ -24,6 +26,8 @@ class WorkplaceOverviewScreen extends ConsumerStatefulWidget {
   final VoidCallback onOpenDocumentDesk;
   final VoidCallback onOpenReceivingDock;
   final VoidCallback onOpenInspectionZone;
+  final VoidCallback onOpenQuarantineZone;
+  final VoidCallback onOpenReceivingOffice;
   final VoidCallback onReturnToPractice;
 
   @override
@@ -196,6 +200,10 @@ class _WorkplaceOverviewScreenState
         widget.onOpenReceivingDock();
       case 'inspection-zone':
         widget.onOpenInspectionZone();
+      case 'quarantine-zone':
+        widget.onOpenQuarantineZone();
+      case 'receiving-office':
+        widget.onOpenReceivingOffice();
       default:
         _showMessage('This workstation is coming next.');
     }

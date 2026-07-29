@@ -704,11 +704,70 @@ boundary without implementing inspection behaviour.
   milestone where the documented Gradle 9.1 host failure did not reproduce.
   GitHub Actions remains the authoritative Android build validator for CI.
 
+### WMS Receiving mission completion (Quarantine Zone, Receiving Office, Performance Feedback)
+- Replaced the remaining not-yet-built portion of the Receiving mission with
+  real screens, completing the mission end to end from Screen 01 through
+  results: **Quarantine Zone** (`assign-dispositions` — per-carton
+  disposition with a reason required for anything except Accept, matching
+  `task_validation_service`'s reason requirement; `confirm-quarantine`),
+  **Receiving Office** (`complete-discrepancy-report` — five-flag recall
+  form; `make-receiving-decision` — accept/partially-accept/reject;
+  `notify-supervisor`), and **Performance Feedback** (renders the real
+  `SimulationResult` from the existing scoring engine — status, overall
+  score, category scores, competency evidence, critical errors, missed
+  issues, correct actions, recommended remediation — no fabricated content)
+- Added `DispositionDraft`/`DispositionEntry` and `DiscrepancyReportDraft`
+  domain models, typed commands/controller methods, and a `completeMission()`
+  wrapper around the existing `submit()` scoring call
+- Inspection Zone and Quarantine Zone now navigate forward to the next
+  unlocked screen on successful submission (previously Inspection Zone
+  returned to the overview, since Quarantine Zone did not exist yet)
+- **Correctness fix found and fixed during implementation:** `make-receiving-
+  decision` is a non-repeatable task with only one scored-correct payload
+  (`partially_accept`); an incorrect decision (accept/reject) leaves it out
+  of `completedTaskIds` with no way to retry (engine-level, one shot per
+  non-repeatable task). The `notifySupervisor` gate originally required that
+  task's *completion*, which would have permanently stranded a learner who
+  picked wrong with no way to finish the shift or see results. Changed the
+  gate to require only that the task was *attempted*— the learner can always
+  finish the shift; the scoring engine already correctly reflects a wrong
+  decision via `mandatoryTasksCompleted`/`status` without any screen-level
+  dead end. Covered by a dedicated test
+  (`a wrong receiving decision still lets the learner finish the shift`)
+- **Second correctness fix:** initially recorded discrepancy-report checkbox
+  edits as a draft `LearnerAction` against the same non-repeatable
+  `complete-discrepancy-report` task id used by the real scored submission —
+  `task_validation_service` forbids a second action on a non-repeatable task
+  regardless of whether the first was a draft edit, so the real submission
+  always failed. Fixed by recording draft edits as an audit event instead of
+  a `LearnerAction` (mirrors how `confirm-quarantine`/`notify-supervisor`,
+  which are also non-repeatable single-shot tasks, were built with no
+  intermediate draft action at all)
+- Removed three `ActionType` values added but never actually constructed
+  (`inspectionSubmitted`, `dispositionsSubmitted`,
+  `discrepancyReportFlagsUpdated`) rather than leave dead enum entries
+
+### WMS Receiving mission completion — local validation
+- `dart format .` — passed
+- `flutter analyze --no-pub` — passed with no issues
+- Focused WMS suite — 25/25 passed, including a full mission run from
+  Document Desk through `completeMission()` with `mandatoryTasksCompleted:
+  true` and zero critical errors, plus the wrong-decision stuck-state
+  regression test
+- Full Flutter suite — 83 of 85 tests passed; the two failures are the
+  unchanged pre-existing `Today's mission` Home-navigation baseline failures
+  and do not import or exercise WMS
+- `flutter build apk --debug --no-pub --target-platform android-arm64` —
+  succeeded locally, producing a 110,134,994-byte `app-debug.apk`. GitHub
+  Actions remains the authoritative Android build validator for CI.
+
 ### Next implementation
-Author the Quarantine Zone / Exception Handling screen (`assign-dispositions`,
-`confirm-quarantine` tasks, already stubbed in `receive_shipment_mission.json`)
-as the next coherent WMS milestone. Do not infer Receiving Office, final
-decision, report or results behaviour.
+Author Put Away as the second department (content already scoped in
+`docs/24-receiving-department-content-specification.md`'s backlog), which
+validates the architecture generalises with zero engine changes — or, if
+prioritised instead, build the WebGL/3D viewer per ADR-001, which every
+architecture document to date has sequenced as deferred until the content
+layer is stable.
 
 ## Target product architecture proposal
 

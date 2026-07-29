@@ -71,7 +71,9 @@ class ActionEvaluationService {
     ActionType.barcodeScanRecorded,
     ActionType.barcodeScanUpdated,
     ActionType.barcodeScanRemoved,
-    ActionType.inspectionSubmitted,
+    ActionType.dispositionRecorded,
+    ActionType.dispositionUpdated,
+    ActionType.dispositionRemoved,
   }.contains(type);
 
   bool _matches(

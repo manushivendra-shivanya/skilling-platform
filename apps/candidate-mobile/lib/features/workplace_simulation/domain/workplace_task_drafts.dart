@@ -1,4 +1,5 @@
 import 'simulation_content.dart';
+import 'simulation_enums.dart' show DispositionType;
 
 enum OperationalDraftStatus { draft, submitted }
 
@@ -447,6 +448,190 @@ class InspectionDraft {
     updatedAt: DateTime.parse(json.string('updatedAt')),
     submittedAt: _optionalDate(json.optionalString('submittedAt')),
   );
+}
+
+class DispositionEntry {
+  const DispositionEntry({
+    required this.id,
+    required this.cartonId,
+    required this.disposition,
+    required this.reason,
+    required this.createdAt,
+    required this.updatedAt,
+    required this.revisionNumber,
+  });
+
+  final String id;
+  final String cartonId;
+  final DispositionType disposition;
+  final String reason;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final int revisionNumber;
+
+  DispositionEntry copyWith({
+    DispositionType? disposition,
+    String? reason,
+    DateTime? updatedAt,
+    int? revisionNumber,
+  }) => DispositionEntry(
+    id: id,
+    cartonId: cartonId,
+    disposition: disposition ?? this.disposition,
+    reason: reason ?? this.reason,
+    createdAt: createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    revisionNumber: revisionNumber ?? this.revisionNumber,
+  );
+
+  JsonMap toJson() => {
+    'id': id,
+    'cartonId': cartonId,
+    'disposition': disposition.wireName,
+    'reason': reason,
+    'createdAt': createdAt.toUtc().toIso8601String(),
+    'updatedAt': updatedAt.toUtc().toIso8601String(),
+    'revisionNumber': revisionNumber,
+  };
+
+  factory DispositionEntry.fromJson(JsonMap json) => DispositionEntry(
+    id: json.string('id'),
+    cartonId: json.string('cartonId'),
+    disposition: DispositionType.fromWireName(json.string('disposition')),
+    reason: json.optionalString('reason') ?? '',
+    createdAt: DateTime.parse(json.string('createdAt')),
+    updatedAt: DateTime.parse(json.string('updatedAt')),
+    revisionNumber: json.integer('revisionNumber'),
+  );
+}
+
+class DispositionDraft {
+  const DispositionDraft({
+    required this.attemptId,
+    required this.entries,
+    required this.status,
+    required this.createdAt,
+    required this.updatedAt,
+    this.submittedAt,
+  });
+
+  final String attemptId;
+  final List<DispositionEntry> entries;
+  final OperationalDraftStatus status;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final DateTime? submittedAt;
+
+  DispositionDraft copyWith({
+    List<DispositionEntry>? entries,
+    OperationalDraftStatus? status,
+    DateTime? updatedAt,
+    DateTime? submittedAt,
+  }) => DispositionDraft(
+    attemptId: attemptId,
+    entries: entries ?? this.entries,
+    status: status ?? this.status,
+    createdAt: createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    submittedAt: submittedAt ?? this.submittedAt,
+  );
+
+  JsonMap toJson() => {
+    'attemptId': attemptId,
+    'entries': entries.map((item) => item.toJson()).toList(),
+    'status': status.name,
+    'createdAt': createdAt.toUtc().toIso8601String(),
+    'updatedAt': updatedAt.toUtc().toIso8601String(),
+    'submittedAt': submittedAt?.toUtc().toIso8601String(),
+  };
+
+  factory DispositionDraft.fromJson(JsonMap json) => DispositionDraft(
+    attemptId: json.string('attemptId'),
+    entries: json
+        .mapList('entries')
+        .map(DispositionEntry.fromJson)
+        .toList(growable: false),
+    status: OperationalDraftStatus.values.byName(json.string('status')),
+    createdAt: DateTime.parse(json.string('createdAt')),
+    updatedAt: DateTime.parse(json.string('updatedAt')),
+    submittedAt: _optionalDate(json.optionalString('submittedAt')),
+  );
+}
+
+class DiscrepancyReportDraft {
+  const DiscrepancyReportDraft({
+    required this.attemptId,
+    this.shortageRecorded = false,
+    this.unauthorizedSkuRecorded = false,
+    this.damageRecorded = false,
+    this.barcodeIssueRecorded = false,
+    this.nearExpiryRecorded = false,
+    required this.status,
+    required this.createdAt,
+    required this.updatedAt,
+    this.submittedAt,
+  });
+
+  final String attemptId;
+  final bool shortageRecorded;
+  final bool unauthorizedSkuRecorded;
+  final bool damageRecorded;
+  final bool barcodeIssueRecorded;
+  final bool nearExpiryRecorded;
+  final OperationalDraftStatus status;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final DateTime? submittedAt;
+
+  DiscrepancyReportDraft copyWith({
+    bool? shortageRecorded,
+    bool? unauthorizedSkuRecorded,
+    bool? damageRecorded,
+    bool? barcodeIssueRecorded,
+    bool? nearExpiryRecorded,
+    OperationalDraftStatus? status,
+    DateTime? updatedAt,
+    DateTime? submittedAt,
+  }) => DiscrepancyReportDraft(
+    attemptId: attemptId,
+    shortageRecorded: shortageRecorded ?? this.shortageRecorded,
+    unauthorizedSkuRecorded:
+        unauthorizedSkuRecorded ?? this.unauthorizedSkuRecorded,
+    damageRecorded: damageRecorded ?? this.damageRecorded,
+    barcodeIssueRecorded: barcodeIssueRecorded ?? this.barcodeIssueRecorded,
+    nearExpiryRecorded: nearExpiryRecorded ?? this.nearExpiryRecorded,
+    status: status ?? this.status,
+    createdAt: createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    submittedAt: submittedAt ?? this.submittedAt,
+  );
+
+  JsonMap toJson() => {
+    'attemptId': attemptId,
+    'shortageRecorded': shortageRecorded,
+    'unauthorizedSkuRecorded': unauthorizedSkuRecorded,
+    'damageRecorded': damageRecorded,
+    'barcodeIssueRecorded': barcodeIssueRecorded,
+    'nearExpiryRecorded': nearExpiryRecorded,
+    'status': status.name,
+    'createdAt': createdAt.toUtc().toIso8601String(),
+    'updatedAt': updatedAt.toUtc().toIso8601String(),
+    'submittedAt': submittedAt?.toUtc().toIso8601String(),
+  };
+
+  factory DiscrepancyReportDraft.fromJson(JsonMap json) =>
+      DiscrepancyReportDraft(
+        attemptId: json.string('attemptId'),
+        shortageRecorded: json.boolean('shortageRecorded'),
+        unauthorizedSkuRecorded: json.boolean('unauthorizedSkuRecorded'),
+        damageRecorded: json.boolean('damageRecorded'),
+        barcodeIssueRecorded: json.boolean('barcodeIssueRecorded'),
+        nearExpiryRecorded: json.boolean('nearExpiryRecorded'),
+        status: OperationalDraftStatus.values.byName(json.string('status')),
+        createdAt: DateTime.parse(json.string('createdAt')),
+        updatedAt: DateTime.parse(json.string('updatedAt')),
+        submittedAt: _optionalDate(json.optionalString('submittedAt')),
+      );
 }
 
 DateTime? _optionalDate(String? value) =>

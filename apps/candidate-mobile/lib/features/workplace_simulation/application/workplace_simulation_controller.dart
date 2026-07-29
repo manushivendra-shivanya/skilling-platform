@@ -779,6 +779,35 @@ class WorkplaceSimulationController
   drafts.InspectionDraft? get inspectionDraft =>
       state.valueOrNull?.attempt?.inspectionDraft;
 
+  drafts.DispositionDraft? get dispositionDraft =>
+      state.valueOrNull?.attempt?.dispositionDraft;
+
+  drafts.DiscrepancyReportDraft? get discrepancyReportDraft =>
+      state.valueOrNull?.attempt?.discrepancyReportDraft;
+
+  LearnerAction? _lastAction(String taskId) {
+    final attempt = state.valueOrNull?.attempt;
+    if (attempt == null) return null;
+    for (final action in attempt.actions.reversed) {
+      if (action.taskId == taskId) return action;
+    }
+    return null;
+  }
+
+  ReceivingDecisionOutcome? get selectedReceivingDecision {
+    final action = _lastAction('make-receiving-decision');
+    final decision = action?.payload['decision'];
+    return decision is String
+        ? ReceivingDecisionOutcome.fromWireName(decision)
+        : null;
+  }
+
+  bool get supervisorNotified =>
+      state.valueOrNull?.attempt?.completedTaskIds.contains(
+        'notify-supervisor',
+      ) ??
+      false;
+
   Future<OpenWorkstationResult> openWorkstation(String workstationId) async {
     try {
       final current = _requireState();
@@ -1959,6 +1988,575 @@ class WorkplaceSimulationController
     }
   }
 
+  Future<RecordDispositionResult> recordDisposition(
+    RecordDispositionCommand command,
+  ) async {
+    final current = state.valueOrNull;
+    final attempt = current?.attempt;
+    if (current == null ||
+        attempt == null ||
+        attempt.state != MissionState.inProgress) {
+      return RecordDispositionResult.invalidAttemptState;
+    }
+    final task = current.mission.task('assign-dispositions');
+    if (!task.targetResourceIds.contains(command.cartonId)) {
+      return RecordDispositionResult.cartonNotFound;
+    }
+    if (command.disposition != DispositionType.accept &&
+        command.reason.trim().isEmpty) {
+      return RecordDispositionResult.reasonRequired;
+    }
+    final draft = attempt.dispositionDraft ?? _newDispositionDraft(attempt);
+    if (draft.status == drafts.OperationalDraftStatus.submitted) {
+      return RecordDispositionResult.alreadySubmitted;
+    }
+    if (draft.entries.any((item) => item.cartonId == command.cartonId)) {
+      return RecordDispositionResult.duplicateEntry;
+    }
+    try {
+      final now = DateTime.now();
+      final entry = drafts.DispositionEntry(
+        id: '${attempt.id}-disposition-${draft.entries.length + 1}',
+        cartonId: command.cartonId,
+        disposition: command.disposition,
+        reason: command.reason.trim(),
+        createdAt: now,
+        updatedAt: now,
+        revisionNumber: 1,
+      );
+      var updated = attempt.copyWith(
+        dispositionDraft: draft.copyWith(
+          entries: [...draft.entries, entry],
+          updatedAt: now,
+        ),
+      );
+      updated = _appendDraftAction(
+        updated,
+        stageId: 'exception-handling',
+        taskId: 'assign-dispositions',
+        actionType: ActionType.dispositionRecorded,
+        targetId: entry.cartonId,
+        payload: _dispositionPayload(entry),
+      );
+      await _commit(current, updated);
+      return RecordDispositionResult.success;
+    } catch (_) {
+      return RecordDispositionResult.persistenceFailure;
+    }
+  }
+
+  Future<UpdateDispositionResult> updateDisposition(
+    UpdateDispositionCommand command,
+  ) async {
+    final current = state.valueOrNull;
+    final attempt = current?.attempt;
+    if (current == null ||
+        attempt == null ||
+        attempt.state != MissionState.inProgress) {
+      return UpdateDispositionResult.invalidAttemptState;
+    }
+    if (command.disposition != DispositionType.accept &&
+        command.reason.trim().isEmpty) {
+      return UpdateDispositionResult.reasonRequired;
+    }
+    final draft = attempt.dispositionDraft;
+    if (draft == null) return UpdateDispositionResult.entryNotFound;
+    if (draft.status == drafts.OperationalDraftStatus.submitted) {
+      return UpdateDispositionResult.alreadySubmitted;
+    }
+    final index = draft.entries.indexWhere(
+      (item) => item.id == command.entryId,
+    );
+    if (index < 0) return UpdateDispositionResult.entryNotFound;
+    try {
+      final now = DateTime.now();
+      final previous = draft.entries[index];
+      final entry = previous.copyWith(
+        disposition: command.disposition,
+        reason: command.reason.trim(),
+        updatedAt: now,
+        revisionNumber: previous.revisionNumber + 1,
+      );
+      final entries = [...draft.entries]..[index] = entry;
+      var updated = attempt.copyWith(
+        dispositionDraft: draft.copyWith(entries: entries, updatedAt: now),
+      );
+      updated = _appendDraftAction(
+        updated,
+        stageId: 'exception-handling',
+        taskId: 'assign-dispositions',
+        actionType: ActionType.dispositionUpdated,
+        targetId: entry.cartonId,
+        payload: _dispositionPayload(entry),
+      );
+      await _commit(current, updated);
+      return UpdateDispositionResult.success;
+    } catch (_) {
+      return UpdateDispositionResult.persistenceFailure;
+    }
+  }
+
+  Future<RemoveDispositionResult> removeDisposition(
+    RemoveDispositionCommand command,
+  ) async {
+    final current = state.valueOrNull;
+    final attempt = current?.attempt;
+    if (current == null ||
+        attempt == null ||
+        attempt.state != MissionState.inProgress) {
+      return RemoveDispositionResult.invalidAttemptState;
+    }
+    final draft = attempt.dispositionDraft;
+    if (draft == null) return RemoveDispositionResult.entryNotFound;
+    if (draft.status == drafts.OperationalDraftStatus.submitted) {
+      return RemoveDispositionResult.alreadySubmitted;
+    }
+    drafts.DispositionEntry? entry;
+    for (final item in draft.entries) {
+      if (item.id == command.entryId) entry = item;
+    }
+    if (entry == null) return RemoveDispositionResult.entryNotFound;
+    try {
+      final now = DateTime.now();
+      var updated = attempt.copyWith(
+        dispositionDraft: draft.copyWith(
+          entries: draft.entries
+              .where((item) => item.id != command.entryId)
+              .toList(growable: false),
+          updatedAt: now,
+        ),
+      );
+      updated = _appendDraftAction(
+        updated,
+        stageId: 'exception-handling',
+        taskId: 'assign-dispositions',
+        actionType: ActionType.dispositionRemoved,
+        targetId: entry.cartonId,
+        payload: {
+          'entryId': entry.id,
+          'revisionNumber': entry.revisionNumber + 1,
+        },
+      );
+      await _commit(current, updated);
+      return RemoveDispositionResult.success;
+    } catch (_) {
+      return RemoveDispositionResult.persistenceFailure;
+    }
+  }
+
+  Future<SaveDispositionDraftResult> saveDispositionDraft(
+    SaveDispositionDraftCommand command,
+  ) async {
+    final current = state.valueOrNull;
+    final attempt = current?.attempt;
+    if (current == null ||
+        attempt == null ||
+        attempt.state != MissionState.inProgress) {
+      return SaveDispositionDraftResult.invalidAttemptState;
+    }
+    final draft = attempt.dispositionDraft ?? _newDispositionDraft(attempt);
+    if (draft.status == drafts.OperationalDraftStatus.submitted) {
+      return SaveDispositionDraftResult.alreadySubmitted;
+    }
+    try {
+      final updated = _withAudit(
+        attempt.copyWith(dispositionDraft: draft),
+        AttemptAuditEventType.dispositionsDraftSaved,
+        screenId: 'quarantine-zone',
+        payload: {'entryCount': draft.entries.length},
+      );
+      await _commit(current, updated);
+      return SaveDispositionDraftResult.success;
+    } catch (_) {
+      return SaveDispositionDraftResult.persistenceFailure;
+    }
+  }
+
+  Future<SubmitDispositionsResult> submitDispositions(
+    SubmitDispositionsCommand command,
+  ) async {
+    final current = state.valueOrNull;
+    var attempt = current?.attempt;
+    final scenario = current?.scenario;
+    if (current == null ||
+        attempt == null ||
+        scenario == null ||
+        attempt.state != MissionState.inProgress) {
+      return SubmitDispositionsResult.invalidAttemptState;
+    }
+    var working = attempt;
+    final draft = working.dispositionDraft;
+    if (draft == null) return SubmitDispositionsResult.incompleteDispositions;
+    if (draft.status == drafts.OperationalDraftStatus.submitted) {
+      return SubmitDispositionsResult.alreadySubmitted;
+    }
+    final targets = current.mission
+        .task('assign-dispositions')
+        .targetResourceIds;
+    if (draft.entries.length != targets.length ||
+        !targets.every(
+          (id) => draft.entries.any((entry) => entry.cartonId == id),
+        )) {
+      return SubmitDispositionsResult.incompleteDispositions;
+    }
+    try {
+      working = _withAudit(
+        working,
+        AttemptAuditEventType.dispositionsSubmissionRequested,
+        screenId: 'quarantine-zone',
+        payload: {'entryCount': draft.entries.length},
+      );
+      var outcomes = [...current.outcomes];
+      for (final entry in draft.entries) {
+        (working, outcomes) = _applyAction(
+          current,
+          working,
+          outcomes,
+          _newAction(
+            working,
+            stageId: 'exception-handling',
+            taskId: 'assign-dispositions',
+            actionType: ActionType.selectDisposition,
+            targetId: entry.cartonId,
+            payload: {
+              'disposition': entry.disposition.wireName,
+              'reason': entry.reason,
+            },
+          ),
+          scenario,
+        );
+      }
+      final now = DateTime.now();
+      working = working.copyWith(
+        dispositionDraft: draft.copyWith(
+          status: drafts.OperationalDraftStatus.submitted,
+          updatedAt: now,
+          submittedAt: now,
+        ),
+      );
+      working = _withAudit(
+        working,
+        AttemptAuditEventType.dispositionsSaved,
+        screenId: 'quarantine-zone',
+        payload: {'entryCount': draft.entries.length},
+      );
+      await _commit(current, working, outcomes: outcomes);
+      return SubmitDispositionsResult.success;
+    } catch (_) {
+      await _recordWorkplaceEvent(
+        AttemptAuditEventType.dispositionsSaveFailed,
+        screenId: 'quarantine-zone',
+      );
+      return SubmitDispositionsResult.persistenceFailure;
+    }
+  }
+
+  Future<ConfirmQuarantineResult> confirmQuarantine(
+    ConfirmQuarantineCommand command,
+  ) async {
+    final current = state.valueOrNull;
+    var attempt = current?.attempt;
+    final scenario = current?.scenario;
+    if (current == null ||
+        attempt == null ||
+        scenario == null ||
+        attempt.state != MissionState.inProgress) {
+      return ConfirmQuarantineResult.invalidAttemptState;
+    }
+    if (attempt.dispositionDraft?.status !=
+        drafts.OperationalDraftStatus.submitted) {
+      return ConfirmQuarantineResult.dispositionsNotSubmitted;
+    }
+    if (attempt.completedTaskIds.contains('confirm-quarantine')) {
+      return ConfirmQuarantineResult.alreadyConfirmed;
+    }
+    try {
+      var working = attempt;
+      var outcomes = [...current.outcomes];
+      (working, outcomes) = _applyAction(
+        current,
+        working,
+        outcomes,
+        _newAction(
+          working,
+          stageId: 'exception-handling',
+          taskId: 'confirm-quarantine',
+          actionType: ActionType.confirmAction,
+          targetId: 'quarantine-record',
+          payload: {'allExceptionsSeparated': true},
+        ),
+        scenario,
+      );
+      working = _withAudit(
+        working,
+        AttemptAuditEventType.quarantineConfirmed,
+        screenId: 'quarantine-zone',
+      );
+      await _commit(current, working, outcomes: outcomes);
+      return ConfirmQuarantineResult.success;
+    } catch (_) {
+      await _recordWorkplaceEvent(
+        AttemptAuditEventType.quarantineConfirmationFailed,
+        screenId: 'quarantine-zone',
+      );
+      return ConfirmQuarantineResult.persistenceFailure;
+    }
+  }
+
+  Future<SetDiscrepancyReportFlagsResult> setDiscrepancyReportFlags(
+    SetDiscrepancyReportFlagsCommand command,
+  ) async {
+    final current = state.valueOrNull;
+    final attempt = current?.attempt;
+    if (current == null ||
+        attempt == null ||
+        attempt.state != MissionState.inProgress) {
+      return SetDiscrepancyReportFlagsResult.invalidAttemptState;
+    }
+    final draft =
+        attempt.discrepancyReportDraft ?? _newDiscrepancyReportDraft(attempt);
+    if (draft.status == drafts.OperationalDraftStatus.submitted) {
+      return SetDiscrepancyReportFlagsResult.alreadySubmitted;
+    }
+    try {
+      final now = DateTime.now();
+      final updatedDraft = draft.copyWith(
+        shortageRecorded: command.shortageRecorded,
+        unauthorizedSkuRecorded: command.unauthorizedSkuRecorded,
+        damageRecorded: command.damageRecorded,
+        barcodeIssueRecorded: command.barcodeIssueRecorded,
+        nearExpiryRecorded: command.nearExpiryRecorded,
+        updatedAt: now,
+      );
+      // complete-discrepancy-report is non-repeatable: unlike the
+      // repeatable per-carton drafts (inspection, dispositions), draft
+      // edits here must NOT append a LearnerAction against this taskId --
+      // task_validation_service forbids a second action on a non-repeatable
+      // task regardless of whether the first was a draft edit, which would
+      // permanently block the real complete_form submission below. An
+      // audit event (not a LearnerAction) is sufficient for a save-draft
+      // trail here.
+      final updated = _withAudit(
+        attempt.copyWith(discrepancyReportDraft: updatedDraft),
+        AttemptAuditEventType.discrepancyReportFlagsSaved,
+        screenId: 'receiving-office',
+        payload: {
+          'shortageRecorded': updatedDraft.shortageRecorded,
+          'unauthorizedSkuRecorded': updatedDraft.unauthorizedSkuRecorded,
+          'damageRecorded': updatedDraft.damageRecorded,
+          'barcodeIssueRecorded': updatedDraft.barcodeIssueRecorded,
+          'nearExpiryRecorded': updatedDraft.nearExpiryRecorded,
+        },
+      );
+      await _commit(current, updated);
+      return SetDiscrepancyReportFlagsResult.success;
+    } catch (_) {
+      return SetDiscrepancyReportFlagsResult.persistenceFailure;
+    }
+  }
+
+  Future<SubmitDiscrepancyReportResult> submitDiscrepancyReport(
+    SubmitDiscrepancyReportCommand command,
+  ) async {
+    final current = state.valueOrNull;
+    var attempt = current?.attempt;
+    final scenario = current?.scenario;
+    if (current == null ||
+        attempt == null ||
+        scenario == null ||
+        attempt.state != MissionState.inProgress) {
+      return SubmitDiscrepancyReportResult.invalidAttemptState;
+    }
+    var working = attempt;
+    final draft =
+        working.discrepancyReportDraft ?? _newDiscrepancyReportDraft(working);
+    if (draft.status == drafts.OperationalDraftStatus.submitted) {
+      return SubmitDiscrepancyReportResult.alreadySubmitted;
+    }
+    try {
+      working = _withAudit(
+        working,
+        AttemptAuditEventType.discrepancyReportSubmissionRequested,
+        screenId: 'receiving-office',
+      );
+      var outcomes = [...current.outcomes];
+      (working, outcomes) = _applyAction(
+        current,
+        working,
+        outcomes,
+        _newAction(
+          working,
+          stageId: 'receiving-decision',
+          taskId: 'complete-discrepancy-report',
+          actionType: ActionType.completeForm,
+          targetId: 'receiving-discrepancy-report',
+          payload: {
+            'poNumber': current.mission.briefing.purchaseOrderNumber,
+            'shortageRecorded': draft.shortageRecorded,
+            'unauthorizedSkuRecorded': draft.unauthorizedSkuRecorded,
+            'damageRecorded': draft.damageRecorded,
+            'barcodeIssueRecorded': draft.barcodeIssueRecorded,
+            'nearExpiryRecorded': draft.nearExpiryRecorded,
+          },
+        ),
+        scenario,
+      );
+      final now = DateTime.now();
+      working = working.copyWith(
+        discrepancyReportDraft: draft.copyWith(
+          status: drafts.OperationalDraftStatus.submitted,
+          updatedAt: now,
+          submittedAt: now,
+        ),
+      );
+      working = _withAudit(
+        working,
+        AttemptAuditEventType.discrepancyReportSaved,
+        screenId: 'receiving-office',
+      );
+      await _commit(current, working, outcomes: outcomes);
+      return SubmitDiscrepancyReportResult.success;
+    } catch (_) {
+      await _recordWorkplaceEvent(
+        AttemptAuditEventType.discrepancyReportSaveFailed,
+        screenId: 'receiving-office',
+      );
+      return SubmitDiscrepancyReportResult.persistenceFailure;
+    }
+  }
+
+  Future<SelectReceivingDecisionResult> selectReceivingDecision(
+    SelectReceivingDecisionCommand command,
+  ) async {
+    final current = state.valueOrNull;
+    var attempt = current?.attempt;
+    final scenario = current?.scenario;
+    if (current == null ||
+        attempt == null ||
+        scenario == null ||
+        attempt.state != MissionState.inProgress) {
+      return SelectReceivingDecisionResult.invalidAttemptState;
+    }
+    if (attempt.discrepancyReportDraft?.status !=
+        drafts.OperationalDraftStatus.submitted) {
+      return SelectReceivingDecisionResult.discrepancyReportNotSubmitted;
+    }
+    if (attempt.completedTaskIds.contains('make-receiving-decision')) {
+      return SelectReceivingDecisionResult.alreadyDecided;
+    }
+    try {
+      var working = attempt;
+      var outcomes = [...current.outcomes];
+      (working, outcomes) = _applyAction(
+        current,
+        working,
+        outcomes,
+        _newAction(
+          working,
+          stageId: 'receiving-decision',
+          taskId: 'make-receiving-decision',
+          actionType: ActionType.makeDecision,
+          targetId: 'receiving-discrepancy-report',
+          payload: {'decision': command.decision.wireName},
+        ),
+        scenario,
+      );
+      working = _withAudit(
+        working,
+        AttemptAuditEventType.receivingDecisionSelected,
+        screenId: 'receiving-office',
+        payload: {'decision': command.decision.wireName},
+      );
+      await _commit(current, working, outcomes: outcomes);
+      return SelectReceivingDecisionResult.success;
+    } catch (_) {
+      await _recordWorkplaceEvent(
+        AttemptAuditEventType.receivingDecisionFailed,
+        screenId: 'receiving-office',
+      );
+      return SelectReceivingDecisionResult.persistenceFailure;
+    }
+  }
+
+  Future<NotifySupervisorResult> notifySupervisor(
+    NotifySupervisorCommand command,
+  ) async {
+    final current = state.valueOrNull;
+    var attempt = current?.attempt;
+    final scenario = current?.scenario;
+    if (current == null ||
+        attempt == null ||
+        scenario == null ||
+        attempt.state != MissionState.inProgress) {
+      return NotifySupervisorResult.invalidAttemptState;
+    }
+    if (!attempt.actions.any(
+      (action) => action.taskId == 'make-receiving-decision',
+    )) {
+      // A decision must have been attempted, but need not have scored
+      // correct: the learner must always be able to finish the shift and
+      // see feedback, even after a wrong call. Scoring reflects the
+      // incorrect decision separately via mandatoryTasksCompleted/status.
+      return NotifySupervisorResult.decisionNotMade;
+    }
+    if (attempt.completedTaskIds.contains('notify-supervisor')) {
+      return NotifySupervisorResult.alreadyNotified;
+    }
+    try {
+      var working = attempt;
+      var outcomes = [...current.outcomes];
+      working = _withAudit(
+        working,
+        AttemptAuditEventType.supervisorNotificationRequested,
+        screenId: 'receiving-office',
+      );
+      (working, outcomes) = _applyAction(
+        current,
+        working,
+        outcomes,
+        _newAction(
+          working,
+          stageId: 'shift-report',
+          taskId: 'notify-supervisor',
+          actionType: ActionType.confirmAction,
+          targetId: 'supervisor-notification',
+          payload: {'supervisorNotified': true, 'auditTrailIncluded': true},
+        ),
+        scenario,
+      );
+      working = _withAudit(
+        working,
+        AttemptAuditEventType.supervisorNotified,
+        screenId: 'receiving-office',
+      );
+      await _commit(current, working, outcomes: outcomes);
+      return NotifySupervisorResult.success;
+    } catch (_) {
+      await _recordWorkplaceEvent(
+        AttemptAuditEventType.supervisorNotificationFailed,
+        screenId: 'receiving-office',
+      );
+      return NotifySupervisorResult.persistenceFailure;
+    }
+  }
+
+  Future<CompleteMissionResult> completeMission() async {
+    final current = state.valueOrNull;
+    final attempt = current?.attempt;
+    if (current == null ||
+        attempt == null ||
+        attempt.state != MissionState.inProgress) {
+      return CompleteMissionResult.invalidAttemptState;
+    }
+    final failure = await submit();
+    if (failure != null) return CompleteMissionResult.persistenceFailure;
+    await _recordWorkplaceEvent(
+      AttemptAuditEventType.missionSubmitted,
+      screenId: 'receiving-office',
+    );
+    return CompleteMissionResult.success;
+  }
+
   Future<AppFailure?> submit() {
     return _guard(() async {
       final current = _requireState();
@@ -2328,6 +2926,36 @@ class WorkplaceSimulationController
       updatedAt: now,
     );
   }
+
+  drafts.DispositionDraft _newDispositionDraft(SimulationAttempt attempt) {
+    final now = DateTime.now();
+    return drafts.DispositionDraft(
+      attemptId: attempt.id,
+      entries: const [],
+      status: drafts.OperationalDraftStatus.draft,
+      createdAt: now,
+      updatedAt: now,
+    );
+  }
+
+  drafts.DiscrepancyReportDraft _newDiscrepancyReportDraft(
+    SimulationAttempt attempt,
+  ) {
+    final now = DateTime.now();
+    return drafts.DiscrepancyReportDraft(
+      attemptId: attempt.id,
+      status: drafts.OperationalDraftStatus.draft,
+      createdAt: now,
+      updatedAt: now,
+    );
+  }
+
+  JsonMap _dispositionPayload(drafts.DispositionEntry entry) => {
+    'entryId': entry.id,
+    'disposition': entry.disposition.wireName,
+    'reason': entry.reason,
+    'revisionNumber': entry.revisionNumber,
+  };
 
   SimulationAttempt _appendDraftAction(
     SimulationAttempt attempt, {
