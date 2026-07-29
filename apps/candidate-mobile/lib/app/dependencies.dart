@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -16,6 +17,7 @@ import '../features/home/domain/home_dashboard_repository.dart';
 import '../features/intelligence/data/offline_first_candidate_intelligence_repository.dart';
 import '../features/intelligence/data/secure_candidate_intelligence_repository.dart';
 import '../features/intelligence/domain/candidate_intelligence_repository.dart';
+import '../features/jobs/data/api_jobs_repository.dart';
 import '../features/jobs/data/local_mock_jobs_repository.dart';
 import '../features/jobs/domain/jobs_repository.dart';
 import '../features/learning/data/mock_learning_repository.dart';
@@ -102,9 +104,19 @@ final learningRepositoryProvider = Provider<LearningRepository>(
   (ref) => MockLearningRepository(),
 );
 
-final jobsRepositoryProvider = Provider<JobsRepository>(
-  (ref) => LocalMockJobsRepository(ref.watch(secureKeyValueStoreProvider)),
-);
+final jobsRepositoryProvider = Provider<JobsRepository>((ref) {
+  final local = LocalMockJobsRepository(ref.watch(secureKeyValueStoreProvider));
+  final config = ref.watch(appConfigProvider);
+  if (config.hasSupabaseConfiguration && config.hasApiConfiguration) {
+    return ApiJobsRepository(
+      local: local,
+      dio: Dio(),
+      supabaseClient: Supabase.instance.client,
+      apiBaseUrl: config.apiBaseUrl,
+    );
+  }
+  return local;
+});
 
 final candidateIntelligenceRepositoryProvider =
     Provider<CandidateIntelligenceRepository>((ref) {

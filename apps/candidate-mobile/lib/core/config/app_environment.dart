@@ -6,13 +6,15 @@ class AppConfig {
     required this.enableLogging,
     this.supabaseUrl = '',
     this.supabasePublishableKey = '',
+    this.apiBaseUrl = '',
   });
 
   const AppConfig.development()
     : environment = AppEnvironment.development,
       enableLogging = true,
       supabaseUrl = '',
-      supabasePublishableKey = '';
+      supabasePublishableKey = '',
+      apiBaseUrl = '';
 
   factory AppConfig.fromDartDefines() {
     const configuredEnvironment = String.fromEnvironment(
@@ -36,6 +38,7 @@ class AppConfig {
       supabasePublishableKey: const String.fromEnvironment(
         'SUPABASE_PUBLISHABLE_KEY',
       ),
+      apiBaseUrl: const String.fromEnvironment('API_BASE_URL'),
     );
   }
 
@@ -43,10 +46,13 @@ class AppConfig {
   final bool enableLogging;
   final String supabaseUrl;
   final String supabasePublishableKey;
+  final String apiBaseUrl;
 
   bool get isProduction => environment == AppEnvironment.production;
 
   bool get hasSupabaseConfiguration =>
       Uri.tryParse(supabaseUrl)?.hasScheme == true &&
       supabasePublishableKey.startsWith('sb_publishable_');
+
+  bool get hasApiConfiguration => Uri.tryParse(apiBaseUrl)?.hasScheme == true;
 }

@@ -959,18 +959,91 @@ locally but not pushed with this milestone -- the push token in use lacks
 the `workflow` scope GitHub requires to add or modify Actions files. It
 needs adding through the GitHub UI or a token with that scope.
 
+### Jobs — Apply wired to the real BFF endpoint; job-applications migration still not applied
+Attempted to apply `20260729180000_phase_three_job_applications.sql` to the
+real project (`qoairksjpwkhwqxeollj`) as the prior milestone's "next
+implementation" called for. It is still not applied: the connected Supabase
+MCP server (`Supabase`) reached the account fine — `list_projects` succeeded
+— but both `get_project` and `list_tables` for `qoairksjpwkhwqxeollj`
+returned "You do not have permission to perform this action", and
+`list_projects` lists only the unrelated `nutridiet` project
+(`rspyrkcdzariizvqookp`), exactly as the prior milestone documented. A
+second, separate `supabase` (lowercase) MCP server is also present but
+requires an interactive OAuth authorization this non-interactive session
+cannot perform. No migration was applied and no live-database verification
+(tables, RLS, seeded jobs) was possible this milestone.
+
+That blocker does not gate the client side, so this milestone wired
+apps/candidate-mobile's Jobs "Apply" action to the real
+`POST /v1/jobs/:id/applications` endpoint, intentionally leaving job listing
+on mock data:
+- Added `ApiJobsRepository`, composing over the untouched
+  `LocalMockJobsRepository` for `loadJobs()` and `readAppliedJobIds()`, and
+  overriding only `saveApplication()` to `POST` to the BFF with
+  `Authorization: Bearer <Supabase access token>` and a deterministic
+  per-(candidate, job) `Idempotency-Key` header, then persisting the same
+  local applied-id record on success so the existing "already applied" chip
+  and button state keep working unchanged.
+- Added `API_BASE_URL` as a new dart-define-gated `AppConfig` field (mirrors
+  the existing `SUPABASE_URL`/`SUPABASE_PUBLISHABLE_KEY` gating) and a
+  `hasApiConfiguration` getter; `jobsRepositoryProvider` only swaps in
+  `ApiJobsRepository` when both Supabase and API configuration are present,
+  otherwise it stays on the plain `LocalMockJobsRepository` default exactly
+  as before.
+- Mapped 401→`AuthenticationFailure`, 403→`PermissionFailure`,
+  400/404→`ValidationFailure`, and connection/timeout errors→
+  `NetworkFailure`, surfacing the server's `error.message` where available —
+  consistent with the app's existing `AppFailure` taxonomy, no new failure
+  type introduced.
+- Corrected two Jobs-screen strings that were only true while
+  `saveApplication` was 100% local ("No data leaves this device.",
+  "Demo application saved securely on this device."); nothing else about the
+  screen's mock-data framing changed.
+- **Known limitation by design of this milestone's scope:** the mock job ids
+  (e.g. `warehouse-lucknow`) do not match the real seeded UUIDs in the target
+  database, so an Apply tap against a real, fully configured backend is
+  expected to fail today (not a valid UUID, so a Postgres error is more
+  likely than a clean 404) until job listing itself is wired to real data.
+  This milestone proves the request/auth/idempotency/error-mapping wiring,
+  the same "prove the mechanism before the data" split already used for the
+  BFF endpoint itself in the prior milestone — it does not claim a working
+  end-to-end apply flow.
+
+**Local validation:** this remote session's container has no Flutter/Dart
+SDK installed at all (`flutter`/`dart` are not on `PATH`, and no install was
+found anywhere on disk) — unlike prior milestones, where `dart format`,
+`flutter analyze`, and `flutter test` all ran locally and only the Android
+Gradle build itself failed on-host. No local Dart command could be run this
+session; every edit was instead reviewed by hand against existing repository
+conventions (line width, the existing `AppFailure`/`Result` patterns, and
+Dio 5.x's public API, which was already a declared but previously-unused
+dependency). Followed the existing precedent of not writing a dedicated unit
+test for Supabase-touching repositories — `SupabasePhoneAuthRepository`,
+`SupabaseCandidateOnboardingRepository`, and
+`OfflineFirstCandidateIntelligenceRepository` have none either, since
+constructing a real `SupabaseClient` in a unit test isn't set up in this
+codebase. The existing widget test that exercises the Jobs Apply flow
+overrides `jobsRepositoryProvider` with an explicit `LocalMockJobsRepository`
+and is unaffected by this change. GitHub Actions' **Build Candidate Mobile
+APK** workflow remains the authoritative validator and has not yet run
+against this change.
+
 ### Next implementation
-Apply the job-applications migration to the real project once its Supabase
-MCP connection is authenticated, then wire the Flutter Jobs feature's
-"Apply" action to this endpoint in place of `LocalMockJobsRepository`
-(currently untouched — this milestone proved the BFF endpoint itself, not
-the client integration). Separately, still open: deepen Receiving's content
-per the backlog in `docs/24-receiving-department-content-specification.md`;
-apply the same reusable-architecture pass to Receiving's ~15 bespoke
-draft/submit controller methods now that both Put Away and this BFF slice
-prove the simpler generic pattern; and the doc 23 bounded-context merge
-remains explicitly deferred pending its own 5 approval gates, separate from
-today's BFF work.
+Get the Supabase MCP connection actually project-scoped to
+`qoairksjpwkhwqxeollj` (an admin action outside this repository/session, not
+another authentication attempt from here), apply the job-applications
+migration, and verify `jobs`/`job_applications` exist with RLS enabled and
+the three seeded jobs present. Then decide how the Flutter Jobs feature gets
+a real job catalogue — either wire `loadJobs()` to `GET /v1/jobs` too, or
+seed/align mock ids with real ones — so the now-wired Apply action has real
+jobs to apply to end to end. Separately, still open: deepen Receiving's
+content per the backlog in
+`docs/24-receiving-department-content-specification.md`; apply the same
+reusable-architecture pass to Receiving's ~15 bespoke draft/submit
+controller methods now that both Put Away and the BFF slice prove the
+simpler generic pattern; and the doc 23 bounded-context merge remains
+explicitly deferred pending its own 5 approval gates, separate from BFF/Jobs
+work.
 
 ## Target product architecture proposal
 
