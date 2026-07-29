@@ -499,7 +499,34 @@
     {"id": "carton-006", "missionId": "receive-incoming-shipment-01", "resourceType": "carton", "title": "Carton 006", "content": {"sku": "SKU-1003", "productName": "AA Battery Pack", "quantity": 10, "batchNumber": "BAT-260406", "barcode": "890100300006", "barcodeStatus": "readable", "packagingStatus": "intact", "expiryDate": "2028-04-02"}},
     {"id": "quarantine-record", "missionId": "receive-incoming-shipment-01", "resourceType": "form", "title": "Quarantine Movement Record", "content": {"requiresReason": true}},
     {"id": "receiving-discrepancy-report", "missionId": "receive-incoming-shipment-01", "resourceType": "form", "title": "Receiving Discrepancy Report", "content": {"poNumber": "PO-2026-001", "supplier": "Apex Consumer Products"}},
-    {"id": "supervisor-notification", "missionId": "receive-incoming-shipment-01", "resourceType": "message", "title": "Receiving Supervisor Notification", "content": {"requiresAuditTrail": true}}
+    {"id": "supervisor-notification", "missionId": "receive-incoming-shipment-01", "resourceType": "message", "title": "Receiving Supervisor Notification", "content": {"requiresAuditTrail": true}},
+    {
+      "id": "sop-rcv-001",
+      "missionId": "receive-incoming-shipment-01",
+      "resourceType": "policy",
+      "title": "SOP-RCV-001 — Incoming Shipment Receiving Procedure",
+      "content": {
+        "sopId": "SOP-RCV-001",
+        "purpose": "Ensure every incoming shipment is verified against its paperwork, physically inspected, and that no damaged, unauthorised or unverified stock enters available inventory before a documented receiving decision is made.",
+        "steps": [
+          "Compare the Purchase Order against the Delivery Note before the dock door opens. Record every SKU, quantity or supplier mismatch.",
+          "Confirm the physical delivery matches the expected supplier and references, then count every carton individually where feasible.",
+          "Inspect every carton for packaging damage, expiry/near-expiry, SKU correctness and quantity. A carton with no finding is an explicit compliant confirmation, not a skipped step.",
+          "Scan every carton's barcode. An unreadable barcode is itself a finding requiring hold or escalation, never recorded as readable to move the process along.",
+          "Assign a disposition to every carton with a finding: packaging damage -> quarantine, unreadable barcode -> hold for verification, incorrect SKU -> reject/return, near-expiry -> escalate, quantity shortage -> hold for reconciliation, no finding -> accept.",
+          "Complete the discrepancy report with every issue identified, then make the receiving decision consistent with the dispositions already assigned.",
+          "Notify the Receiving Supervisor with the facts, actions taken and outstanding risk, including the audit trail."
+        ],
+        "nonNegotiableRules": [
+          "All incoming shipments require document verification before physical receiving begins.",
+          "Damaged goods cannot enter available inventory under any circumstance.",
+          "Items not listed on the purchase order must not be accepted.",
+          "Unreadable barcodes require hold or escalation, never silent acceptance.",
+          "Quantity discrepancies must be recorded, never adjusted to match the count.",
+          "Required inspections cannot be skipped, even for a visually intact carton."
+        ]
+      }
+    }
   ],
   "scenario": {
     "defaultSeed": 48127,
