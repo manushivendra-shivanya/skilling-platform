@@ -824,18 +824,98 @@ boundary without implementing inspection behaviour.
   succeeded locally, producing a 110,140,295-byte `app-debug.apk`. GitHub
   Actions remains the authoritative Android build validator for CI.
 
+### Merge to main
+PRs #5 (Screen 06 Inspection Zone), #6 (Receiving content specification), #7
+(Quarantine Zone/Receiving Office/Performance Feedback) and #9 (Put Away
+runtime wiring) were merged in sequence into `feature/flutter-foundation`
+(one real merge conflict on `workplace.json` between #6's and #9's additions
+to the `receiving`/`put-away` department entries, resolved by keeping both).
+`feature/flutter-foundation` was then merged into `main` via PR #2 after its
+CI build passed — the first time this Flutter app foundation has been live
+on `main`. PR #8 (Put Away content-only) was closed as superseded, since #9
+was cut before #8 merged and carries the same content forward alongside the
+runtime wiring.
+
+### Put Away mission — the four workstation screens
+Built **Staging Area** (`open-putaway-list` — read-only task list review),
+**Location Planning** (`assign-storage-zone` — per-item zone assignment
+across 6 items with plain-language handling notes instead of exposed issue
+flags, mirroring how Inspection Zone withholds findings; `record-location-
+exception` — optional capacity-exception flag), **Transport and Placement**
+(`transport-and-place-items` move → `scan-items-to-bins` scan → `confirm-
+quantities-placed` count, sequenced per item), and **Putaway Office**
+(`complete-putaway-report` form → `make-putaway-decision` → `notify-
+supervisor`, with the same "gate on attempted, not completed" pattern used
+for Receiving's decision task so a wrong putaway decision still lets the
+learner finish the shift). A learner can now complete an entire Put Away
+shift from Practice through Performance Feedback with real competency
+evidence, not just navigate to Workplace Overview.
+
+**Architecture fix applied while building these, per the flagged reusable-
+architecture gap:** none of the four screens have their own bespoke
+controller methods. Every task submission calls the existing generic
+`recordAction()` directly with the task's real `ActionType` and payload —
+the same validate/evaluate/score/persist path Receiving uses — instead of
+adding ~15 more one-task-one-method wrappers like Receiving's `record
+CartonCount`/`updateCartonCount`/`removeCartonCount` triplet pattern.
+Progress ("3 of 6 items zoned") is read directly off `attempt.actions` and
+`attempt.completedTaskIds` rather than a new per-screen draft model.
+
+**Real bug found and fixed, not just Put Away's:** `WorkplaceOverviewScreen`
+routed workstation taps through five `VoidCallback onOpen*` constructor
+parameters, hardcoded to Receiving's five screens — replaced with a single
+`void Function(String workstationId) onOpenWorkstation`, resolved
+content-generically in `app_router.dart` via a `workstationId -> path`
+lookup (`workstationPath()`) that already extends to Put Away and any future
+department by adding one map entry, not new screen wiring. Separately —
+and more seriously — `WorkplaceSimulationController.openWorkstation()` had
+its *own*, different hardcoded route-existence check
+(`_workstationRoute()`), listing only `document-desk`, `receiving-dock` and
+`inspection-zone`. This silently returned `routeUnavailable` for **Quarantine
+Zone and Receiving Office too** whenever a candidate returned to Workplace
+Overview and tapped an already-unlocked station directly instead of using a
+prior screen's forward-navigation callback — a latent bug in the already-
+shipped Receiving mission, not something introduced by Put Away. The backing
+`WorkstationViewModel.route` field the check fed was dead — never read by
+any screen. Removed the check and the field entirely; `openWorkstation()`
+now gates purely on `unlockRequirements`-derived lock status, which was
+already the correct source of truth. Caught by a Put Away widget test that
+tapped a station card from Overview rather than only testing forward-chained
+navigation.
+
+**Correction to a citation carried across the last two milestones' "Next
+implementation" notes:** the WebGL/3D viewer deferral was attributed to
+"ADR-001." No such file exists in `docs/adr/` (only ADR-0013 through
+ADR-0017, none about a 3D viewer). This citation should not be repeated
+until the real source is found or the reference is dropped.
+
+### Put Away mission — the four workstation screens — local validation
+- `dart format .` — passed
+- `flutter analyze --no-pub` — passed with no issues
+- Focused WMS suite — 31/31 passed, including a full Put Away playthrough
+  through the real family-provider controller (`recordAction()`/
+  `completeMission()`, the same calls the screens make) asserting workstation
+  unlock order and a final `SimulationResult` with `status: passed`,
+  `mandatoryTasksCompleted: true`, zero critical errors — plus a widget test
+  covering all four screens' locked-state rendering and the Staging Area
+  interaction end to end
+- Full Flutter suite — 88 of 91 tests passed; the three failures are the
+  same pre-existing baseline flakes as prior milestones, unrelated to WMS
+- `flutter build apk --debug --no-pub --target-platform android-arm64` —
+  succeeded locally. GitHub Actions remains the authoritative Android build
+  validator for CI.
+
 ### Next implementation
-Build the four Put Away workstation screens (Staging Area, Location
-Planning, Transport & Placement, Putaway Office) and generalize
-`WorkplaceOverviewScreen`'s workstation routing so it is no longer
-hardcoded to the five Receiving-only screens — this is what makes Put Away
-genuinely completable end-to-end rather than just navigable up to Workplace
-Overview. Alongside that, continue deepening Receiving's content per the
-backlog in `docs/24-receiving-department-content-specification.md` (the
-`person` resource type + `speak` action type needed for NPC dialogue, and a
-true multi-scenario catalog). If prioritised instead, build the WebGL/3D
-viewer per ADR-001, which every architecture document to date has sequenced
-as deferred until the content layer is stable.
+Deepen Receiving's content per the backlog in `docs/24-receiving-department-
+content-specification.md` (the `person` resource type + `speak` action type
+needed for NPC dialogue, and a true multi-scenario catalog). Separately, the
+same reusable-architecture pass applied to Put Away's new screens could be
+applied retroactively to Receiving's ~15 bespoke draft/submit controller
+methods, collapsing them toward the same generic `recordAction()` path now
+that two departments prove the pattern. If prioritised instead: the deferred
+avatar/spatial interaction layer discussed with the user as a premium visual
+skin over this same engine — a rendering-surface change, not a new
+assessment pipeline — once its own scope is confirmed.
 
 ## Target product architecture proposal
 
@@ -888,6 +968,11 @@ as deferred until the content layer is stable.
   Phase 2 records and narrowly scoped Phase 3 practice metadata; media
   authorisation, AI, employer, administrator and job-application operations
   remain behind the planned NestJS BFF
-- WMS Screens 01–06 are production-visible. Quarantine Zone, Receiving
-  Office, final decision, shift report and results are intentionally
-  unavailable pending approved contracts.
+- The Receiving mission is complete end to end (Document Desk through
+  Performance Feedback) and the Put Away mission is complete end to end
+  (Staging Area through Performance Feedback), both merged to `main`. No WMS
+  screen is withheld pending approval; the WebGL/3D spatial interaction
+  layer remains the only deliberately deferred WMS scope, per direct
+  discussion with the product owner rather than a specific ADR (see the Put
+  Away workstation screens entry above for the correction to a stale
+  "ADR-001" citation).

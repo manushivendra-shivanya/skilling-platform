@@ -114,7 +114,9 @@ enum AttemptAuditEventType {
   missionSubmissionFailed,
   performanceFeedbackOpened,
   screenLoadFailed,
-  attemptExited;
+  attemptExited,
+  workstationScreenOpened,
+  workstationScreenExited;
 
   static AttemptAuditEventType fromWireName(String value) {
     final normalized = value.replaceAllMapped(

@@ -13,21 +13,13 @@ import '../domain/simulation_enums.dart';
 class WorkplaceOverviewScreen extends ConsumerStatefulWidget {
   const WorkplaceOverviewScreen({
     required this.missionId,
-    required this.onOpenDocumentDesk,
-    required this.onOpenReceivingDock,
-    required this.onOpenInspectionZone,
-    required this.onOpenQuarantineZone,
-    required this.onOpenReceivingOffice,
+    required this.onOpenWorkstation,
     required this.onReturnToPractice,
     super.key,
   });
 
   final String missionId;
-  final VoidCallback onOpenDocumentDesk;
-  final VoidCallback onOpenReceivingDock;
-  final VoidCallback onOpenInspectionZone;
-  final VoidCallback onOpenQuarantineZone;
-  final VoidCallback onOpenReceivingOffice;
+  final void Function(String workstationId) onOpenWorkstation;
   final VoidCallback onReturnToPractice;
 
   @override
@@ -204,20 +196,7 @@ class _WorkplaceOverviewScreenState
       _showMessage('This workstation cannot be opened.');
       return;
     }
-    switch (station.workstationId) {
-      case 'document-desk':
-        widget.onOpenDocumentDesk();
-      case 'receiving-dock':
-        widget.onOpenReceivingDock();
-      case 'inspection-zone':
-        widget.onOpenInspectionZone();
-      case 'quarantine-zone':
-        widget.onOpenQuarantineZone();
-      case 'receiving-office':
-        widget.onOpenReceivingOffice();
-      default:
-        _showMessage('This workstation is coming next.');
-    }
+    widget.onOpenWorkstation(station.workstationId);
   }
 
   Future<void> _pause() async {

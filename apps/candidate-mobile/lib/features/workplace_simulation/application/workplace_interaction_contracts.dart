@@ -66,7 +66,6 @@ class WorkstationViewModel {
     required this.name,
     required this.description,
     required this.iconKey,
-    required this.route,
     required this.status,
     required this.isRecommended,
     required this.progressLabel,
@@ -77,7 +76,6 @@ class WorkstationViewModel {
   final String name;
   final String description;
   final String iconKey;
-  final String? route;
   final WorkstationStatus status;
   final bool isRecommended;
   final String progressLabel;

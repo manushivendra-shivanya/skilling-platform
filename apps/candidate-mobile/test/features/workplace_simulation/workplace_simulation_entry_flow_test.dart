@@ -61,11 +61,7 @@ void main() {
                               builder: (_) => WorkplaceOverviewScreen(
                                 missionId:
                                     WorkplaceSimulationController.missionId,
-                                onOpenDocumentDesk: () {},
-                                onOpenReceivingDock: () {},
-                                onOpenInspectionZone: () {},
-                                onOpenQuarantineZone: () {},
-                                onOpenReceivingOffice: () {},
+                                onOpenWorkstation: (_) {},
                                 onReturnToPractice: () {},
                               ),
                             ),
