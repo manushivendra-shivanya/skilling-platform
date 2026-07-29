@@ -21,6 +21,7 @@ abstract interface class SimulationAttemptRepository {
     required String missionId,
     required String missionVersion,
     required int scenarioSeed,
+    String? scenarioId,
   });
 
   Future<SimulationAttempt?> getActiveAttempt(

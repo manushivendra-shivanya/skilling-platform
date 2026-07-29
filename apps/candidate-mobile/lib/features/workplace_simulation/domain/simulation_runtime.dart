@@ -54,6 +54,7 @@ class SimulationAttempt {
     required this.missionVersion,
     required this.attemptNumber,
     required this.scenarioSeed,
+    this.scenarioId,
     required this.state,
     required this.createdAt,
     required this.shiftStartedAt,
@@ -81,6 +82,10 @@ class SimulationAttempt {
   final String missionVersion;
   final int attemptNumber;
   final int scenarioSeed;
+
+  /// Which entry of the mission's scenario catalog this attempt was seeded
+  /// against, if any. Null means the mission's always-available default.
+  final String? scenarioId;
   final MissionState state;
   final DateTime createdAt;
   final DateTime? briefingAcknowledgedAt;
@@ -154,6 +159,7 @@ class SimulationAttempt {
     missionVersion: missionVersion,
     attemptNumber: attemptNumber,
     scenarioSeed: scenarioSeed,
+    scenarioId: scenarioId,
     state: state ?? this.state,
     createdAt: createdAt,
     shiftStartedAt: clearShiftStartedAt
@@ -192,6 +198,7 @@ class SimulationAttempt {
     'missionVersion': missionVersion,
     'attemptNumber': attemptNumber,
     'scenarioSeed': scenarioSeed,
+    'scenarioId': scenarioId,
     'state': state.wireName,
     'createdAt': createdAt.toUtc().toIso8601String(),
     'shiftStartedAt': shiftStartedAt?.toUtc().toIso8601String(),
@@ -220,6 +227,7 @@ class SimulationAttempt {
     missionVersion: json.string('missionVersion'),
     attemptNumber: json.integer('attemptNumber'),
     scenarioSeed: json.integer('scenarioSeed'),
+    scenarioId: json.optionalString('scenarioId'),
     state: MissionState.fromWireName(json.string('state')),
     createdAt: DateTime.parse(
       json.optionalString('createdAt') ?? json.string('startedAt'),
