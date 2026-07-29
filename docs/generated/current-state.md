@@ -905,17 +905,72 @@ until the real source is found or the reference is dropped.
   succeeded locally. GitHub Actions remains the authoritative Android build
   validator for CI.
 
+### API (BFF) — Phase 3.2 first slice
+Per `docs/20-codex-phase-execution.md`, Phase 3.2 (job application
+operations) does not require the doc 23 bounded-context approval gates —
+those gate only Career/Competency Passport/Employer/Placement
+Partner/Government platform code. Phase 3.2 is already-scoped work waiting
+on the BFF existing, so it proceeded independently of that larger,
+still-unresolved architecture question.
+
+Added `apps/api`, a NestJS service at the path the README's proposed
+monorepo layout already specifies — the first backend service in the repo
+(previously only `apps/candidate-mobile` existed). Implements the one real vertical
+slice `docs/03-api-specifications.md` specifies:
+`POST /v1/jobs/{id}/applications` — consent-gated (checks an active
+`employer_sharing` `consent_grants` row, reusing the same purpose string the
+voice interview feature already uses for the same real-world concept, rather
+than inventing a second consent mechanism), idempotent (an `Idempotency-Key`
+header is required; a repeat call for the same candidate and job returns the
+existing application rather than erroring or duplicating — enforced by a
+`unique (job_id, candidate_id)` database constraint, not just an
+application-level check, so concurrent requests are actually safe), and
+authenticated by verifying the bearer token against Supabase Auth directly
+(`auth.getUser()`) rather than decoding the JWT locally, so a revoked
+session is correctly rejected. `GET /v1/jobs` (published jobs only) exists
+as the minimal supporting read needed to make the write endpoint
+exercisable, not as the "authoritative job matching" scope doc 20
+describes — that remains unbuilt.
+
+Added `supabase/migrations/20260729180000_phase_three_job_applications.sql`
+(`jobs`, `job_applications`, RLS, three seeded published jobs) — not yet
+applied to any live project. The repository's Supabase MCP connection was
+found to be scoped only to an unrelated project (`nutridiet`); the real
+project (`qoairksjpwkhwqxeollj`) needs its own project-scoped MCP connection
+added and authenticated from a terminal before this can be applied directly
+in a session.
+
+Errors follow `docs/03-api-specifications.md`'s envelope exactly —
+`{"error": {"code", "message", "details", "request_id"}}` — verified by
+booting the service against a syntactically-valid but unreachable Supabase
+URL and confirming both the 401 status and the exact JSON shape over a real
+HTTP request, not just unit-tested.
+
+**Local validation:** `npx tsc --noEmit` — passed. `npx eslint` — passed, no
+issues. `npx jest` — 7/7 passed (consent gating, idempotent create, 404 on
+unpublished jobs, revoked-consent rejection — all against a hand-built fake
+Supabase client, no live database needed). `npx nest build` then
+`node dist/main.js` — boots, maps both routes, fails loudly and exits (does
+not hang) when Supabase env vars are missing; with placeholder env vars
+boots clean and returns the correct error envelope over real HTTP for both
+an invalid and a missing bearer token. A `.github/workflows/build-api.yml`
+(install, build, test on push to `main` under `apps/api/**`) was written
+locally but not pushed with this milestone -- the push token in use lacks
+the `workflow` scope GitHub requires to add or modify Actions files. It
+needs adding through the GitHub UI or a token with that scope.
+
 ### Next implementation
-Deepen Receiving's content per the backlog in `docs/24-receiving-department-
-content-specification.md` (the `person` resource type + `speak` action type
-needed for NPC dialogue, and a true multi-scenario catalog). Separately, the
-same reusable-architecture pass applied to Put Away's new screens could be
-applied retroactively to Receiving's ~15 bespoke draft/submit controller
-methods, collapsing them toward the same generic `recordAction()` path now
-that two departments prove the pattern. If prioritised instead: the deferred
-avatar/spatial interaction layer discussed with the user as a premium visual
-skin over this same engine — a rendering-surface change, not a new
-assessment pipeline — once its own scope is confirmed.
+Apply the job-applications migration to the real project once its Supabase
+MCP connection is authenticated, then wire the Flutter Jobs feature's
+"Apply" action to this endpoint in place of `LocalMockJobsRepository`
+(currently untouched — this milestone proved the BFF endpoint itself, not
+the client integration). Separately, still open: deepen Receiving's content
+per the backlog in `docs/24-receiving-department-content-specification.md`;
+apply the same reusable-architecture pass to Receiving's ~15 bespoke
+draft/submit controller methods now that both Put Away and this BFF slice
+prove the simpler generic pattern; and the doc 23 bounded-context merge
+remains explicitly deferred pending its own 5 approval gates, separate from
+today's BFF work.
 
 ## Target product architecture proposal
 
@@ -966,8 +1021,11 @@ assessment pipeline — once its own scope is confirmed.
   remote upload, push token, or notification service is connected
 - The direct Supabase adapter is intentionally limited to candidate-owned
   Phase 2 records and narrowly scoped Phase 3 practice metadata; media
-  authorisation, AI, employer, administrator and job-application operations
-  remain behind the planned NestJS BFF
+  authorisation, AI, employer and administrator operations remain behind the
+  BFF, which now exists (`apps/api`) but implements only one endpoint
+  (`POST /v1/jobs/{id}/applications`) — not yet applied to a live database,
+  and the Flutter Jobs feature still calls `LocalMockJobsRepository`, not
+  this endpoint
 - The Receiving mission is complete end to end (Document Desk through
   Performance Feedback) and the Put Away mission is complete end to end
   (Staging Area through Performance Feedback), both merged to `main`. No WMS
