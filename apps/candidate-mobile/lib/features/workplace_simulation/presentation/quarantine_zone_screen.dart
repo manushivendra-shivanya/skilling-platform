@@ -35,7 +35,9 @@ class _QuarantineZoneScreenState extends ConsumerState<QuarantineZoneScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final simulation = ref.watch(workplaceSimulationControllerProvider);
+    final simulation = ref.watch(
+      workplaceSimulationControllerProvider(widget.missionId),
+    );
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
@@ -52,12 +54,13 @@ class _QuarantineZoneScreenState extends ConsumerState<QuarantineZoneScreen> {
             title: 'Quarantine Zone unavailable',
             message: 'Your saved draft is safe. Retry loading the cartons.',
             actionLabel: 'Retry',
-            onAction: () =>
-                ref.invalidate(workplaceSimulationControllerProvider),
+            onAction: () => ref.invalidate(
+              workplaceSimulationControllerProvider(widget.missionId),
+            ),
           ),
           data: (value) {
             final controller = ref.read(
-              workplaceSimulationControllerProvider.notifier,
+              workplaceSimulationControllerProvider(widget.missionId).notifier,
             );
             final station = controller.workplaceOverview.workstations
                 .firstWhere((item) => item.workstationId == 'quarantine-zone');
@@ -83,7 +86,11 @@ class _QuarantineZoneScreenState extends ConsumerState<QuarantineZoneScreen> {
               _tracked = true;
               unawaited(
                 ref
-                    .read(workplaceSimulationControllerProvider.notifier)
+                    .read(
+                      workplaceSimulationControllerProvider(
+                        widget.missionId,
+                      ).notifier,
+                    )
                     .recordWorkplaceEvent(
                       AttemptAuditEventType.quarantineZoneOpened,
                       screenId: 'quarantine-zone',
@@ -268,7 +275,9 @@ class _QuarantineZoneScreenState extends ConsumerState<QuarantineZoneScreen> {
     if (input == null) return;
     if (entry == null) {
       final result = await ref
-          .read(workplaceSimulationControllerProvider.notifier)
+          .read(
+            workplaceSimulationControllerProvider(widget.missionId).notifier,
+          )
           .recordDisposition(
             RecordDispositionCommand(
               cartonId: cartonId,
@@ -285,7 +294,9 @@ class _QuarantineZoneScreenState extends ConsumerState<QuarantineZoneScreen> {
       }
     } else {
       final result = await ref
-          .read(workplaceSimulationControllerProvider.notifier)
+          .read(
+            workplaceSimulationControllerProvider(widget.missionId).notifier,
+          )
           .updateDisposition(
             UpdateDispositionCommand(
               entryId: entry.id,
@@ -383,7 +394,7 @@ class _QuarantineZoneScreenState extends ConsumerState<QuarantineZoneScreen> {
 
   Future<void> _removeDisposition(DispositionEntry entry) async {
     final result = await ref
-        .read(workplaceSimulationControllerProvider.notifier)
+        .read(workplaceSimulationControllerProvider(widget.missionId).notifier)
         .removeDisposition(RemoveDispositionCommand(entry.id));
     if (mounted && result != RemoveDispositionResult.success) {
       _showMessage('The disposition could not be removed.');
@@ -393,7 +404,7 @@ class _QuarantineZoneScreenState extends ConsumerState<QuarantineZoneScreen> {
   Future<void> _saveDraft() async {
     setState(() => _saving = true);
     final result = await ref
-        .read(workplaceSimulationControllerProvider.notifier)
+        .read(workplaceSimulationControllerProvider(widget.missionId).notifier)
         .saveDispositionDraft(const SaveDispositionDraftCommand());
     if (!mounted) return;
     setState(() => _saving = false);
@@ -407,7 +418,7 @@ class _QuarantineZoneScreenState extends ConsumerState<QuarantineZoneScreen> {
   Future<void> _submitDispositions() async {
     setState(() => _saving = true);
     final result = await ref
-        .read(workplaceSimulationControllerProvider.notifier)
+        .read(workplaceSimulationControllerProvider(widget.missionId).notifier)
         .submitDispositions(const SubmitDispositionsCommand());
     if (!mounted) return;
     setState(() => _saving = false);
@@ -424,7 +435,7 @@ class _QuarantineZoneScreenState extends ConsumerState<QuarantineZoneScreen> {
   Future<void> _confirmQuarantine() async {
     setState(() => _saving = true);
     final result = await ref
-        .read(workplaceSimulationControllerProvider.notifier)
+        .read(workplaceSimulationControllerProvider(widget.missionId).notifier)
         .confirmQuarantine(const ConfirmQuarantineCommand());
     if (!mounted) return;
     setState(() => _saving = false);
@@ -441,7 +452,7 @@ class _QuarantineZoneScreenState extends ConsumerState<QuarantineZoneScreen> {
 
   Future<void> _exit() async {
     await ref
-        .read(workplaceSimulationControllerProvider.notifier)
+        .read(workplaceSimulationControllerProvider(widget.missionId).notifier)
         .recordWorkplaceEvent(
           AttemptAuditEventType.quarantineZoneExited,
           screenId: 'quarantine-zone',

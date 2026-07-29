@@ -41,7 +41,9 @@ class _ReceivingOfficeScreenState extends ConsumerState<ReceivingOfficeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final simulation = ref.watch(workplaceSimulationControllerProvider);
+    final simulation = ref.watch(
+      workplaceSimulationControllerProvider(widget.missionId),
+    );
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
@@ -58,12 +60,13 @@ class _ReceivingOfficeScreenState extends ConsumerState<ReceivingOfficeScreen> {
             title: 'Receiving Office unavailable',
             message: 'Your saved draft is safe. Retry loading the shift.',
             actionLabel: 'Retry',
-            onAction: () =>
-                ref.invalidate(workplaceSimulationControllerProvider),
+            onAction: () => ref.invalidate(
+              workplaceSimulationControllerProvider(widget.missionId),
+            ),
           ),
           data: (value) {
             final controller = ref.read(
-              workplaceSimulationControllerProvider.notifier,
+              workplaceSimulationControllerProvider(widget.missionId).notifier,
             );
             final station = controller.workplaceOverview.workstations
                 .firstWhere((item) => item.workstationId == 'receiving-office');
@@ -80,7 +83,11 @@ class _ReceivingOfficeScreenState extends ConsumerState<ReceivingOfficeScreen> {
               _tracked = true;
               unawaited(
                 ref
-                    .read(workplaceSimulationControllerProvider.notifier)
+                    .read(
+                      workplaceSimulationControllerProvider(
+                        widget.missionId,
+                      ).notifier,
+                    )
                     .recordWorkplaceEvent(
                       AttemptAuditEventType.receivingOfficeOpened,
                       screenId: 'receiving-office',
@@ -270,7 +277,7 @@ class _ReceivingOfficeScreenState extends ConsumerState<ReceivingOfficeScreen> {
   Future<void> _saveFlags() async {
     setState(() => _saving = true);
     final result = await ref
-        .read(workplaceSimulationControllerProvider.notifier)
+        .read(workplaceSimulationControllerProvider(widget.missionId).notifier)
         .setDiscrepancyReportFlags(
           SetDiscrepancyReportFlagsCommand(
             shortageRecorded: _shortage,
@@ -291,7 +298,9 @@ class _ReceivingOfficeScreenState extends ConsumerState<ReceivingOfficeScreen> {
 
   Future<void> _submitReport() async {
     setState(() => _saving = true);
-    final controller = ref.read(workplaceSimulationControllerProvider.notifier);
+    final controller = ref.read(
+      workplaceSimulationControllerProvider(widget.missionId).notifier,
+    );
     final flagsResult = await controller.setDiscrepancyReportFlags(
       SetDiscrepancyReportFlagsCommand(
         shortageRecorded: _shortage,
@@ -323,7 +332,7 @@ class _ReceivingOfficeScreenState extends ConsumerState<ReceivingOfficeScreen> {
   Future<void> _selectDecision(ReceivingDecisionOutcome decision) async {
     setState(() => _saving = true);
     final result = await ref
-        .read(workplaceSimulationControllerProvider.notifier)
+        .read(workplaceSimulationControllerProvider(widget.missionId).notifier)
         .selectReceivingDecision(SelectReceivingDecisionCommand(decision));
     if (!mounted) return;
     setState(() => _saving = false);
@@ -335,7 +344,7 @@ class _ReceivingOfficeScreenState extends ConsumerState<ReceivingOfficeScreen> {
   Future<void> _notifySupervisor() async {
     setState(() => _saving = true);
     final result = await ref
-        .read(workplaceSimulationControllerProvider.notifier)
+        .read(workplaceSimulationControllerProvider(widget.missionId).notifier)
         .notifySupervisor(const NotifySupervisorCommand());
     if (!mounted) return;
     setState(() => _saving = false);
@@ -347,7 +356,7 @@ class _ReceivingOfficeScreenState extends ConsumerState<ReceivingOfficeScreen> {
   Future<void> _completeMission() async {
     setState(() => _saving = true);
     final result = await ref
-        .read(workplaceSimulationControllerProvider.notifier)
+        .read(workplaceSimulationControllerProvider(widget.missionId).notifier)
         .completeMission();
     if (!mounted) return;
     setState(() => _saving = false);
@@ -360,7 +369,7 @@ class _ReceivingOfficeScreenState extends ConsumerState<ReceivingOfficeScreen> {
 
   Future<void> _exit() async {
     await ref
-        .read(workplaceSimulationControllerProvider.notifier)
+        .read(workplaceSimulationControllerProvider(widget.missionId).notifier)
         .recordWorkplaceEvent(
           AttemptAuditEventType.receivingOfficeExited,
           screenId: 'receiving-office',

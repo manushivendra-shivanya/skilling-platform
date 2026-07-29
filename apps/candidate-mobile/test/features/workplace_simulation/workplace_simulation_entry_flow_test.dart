@@ -49,9 +49,11 @@ void main() {
             theme: buildAppTheme(),
             home: Builder(
               builder: (entryContext) => SimulationEntryScreen(
+                missionId: WorkplaceSimulationController.missionId,
                 onOpenBriefing: () => Navigator.of(entryContext).push(
                   MaterialPageRoute<void>(
                     builder: (briefingContext) => SupervisorBriefingScreen(
+                      missionId: WorkplaceSimulationController.missionId,
                       onBackToEntry: () => Navigator.of(briefingContext).pop(),
                       onOpenWorkplace: () =>
                           Navigator.of(briefingContext).pushReplacement(

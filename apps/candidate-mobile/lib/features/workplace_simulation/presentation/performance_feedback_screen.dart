@@ -32,7 +32,9 @@ class _PerformanceFeedbackScreenState
 
   @override
   Widget build(BuildContext context) {
-    final simulation = ref.watch(workplaceSimulationControllerProvider);
+    final simulation = ref.watch(
+      workplaceSimulationControllerProvider(widget.missionId),
+    );
     return Scaffold(
       appBar: AppBar(title: const Text('Performance Feedback')),
       body: SafeArea(
@@ -58,7 +60,11 @@ class _PerformanceFeedbackScreenState
               _tracked = true;
               unawaited(
                 ref
-                    .read(workplaceSimulationControllerProvider.notifier)
+                    .read(
+                      workplaceSimulationControllerProvider(
+                        widget.missionId,
+                      ).notifier,
+                    )
                     .recordWorkplaceEvent(
                       AttemptAuditEventType.performanceFeedbackOpened,
                       screenId: 'performance-feedback',

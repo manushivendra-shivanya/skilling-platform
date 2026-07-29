@@ -36,7 +36,9 @@ class _ReceivingDockScreenState extends ConsumerState<ReceivingDockScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final simulation = ref.watch(workplaceSimulationControllerProvider);
+    final simulation = ref.watch(
+      workplaceSimulationControllerProvider(widget.missionId),
+    );
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
@@ -53,12 +55,13 @@ class _ReceivingDockScreenState extends ConsumerState<ReceivingDockScreen> {
             title: 'Receiving Dock unavailable',
             message: 'Your saved draft is safe. Retry loading the cartons.',
             actionLabel: 'Retry',
-            onAction: () =>
-                ref.invalidate(workplaceSimulationControllerProvider),
+            onAction: () => ref.invalidate(
+              workplaceSimulationControllerProvider(widget.missionId),
+            ),
           ),
           data: (value) {
             final controller = ref.read(
-              workplaceSimulationControllerProvider.notifier,
+              workplaceSimulationControllerProvider(widget.missionId).notifier,
             );
             final station = controller.workplaceOverview.workstations
                 .firstWhere((item) => item.workstationId == 'receiving-dock');
@@ -84,7 +87,11 @@ class _ReceivingDockScreenState extends ConsumerState<ReceivingDockScreen> {
               _tracked = true;
               unawaited(
                 ref
-                    .read(workplaceSimulationControllerProvider.notifier)
+                    .read(
+                      workplaceSimulationControllerProvider(
+                        widget.missionId,
+                      ).notifier,
+                    )
                     .recordWorkplaceEvent(
                       AttemptAuditEventType.receivingDockOpened,
                       screenId: 'receiving-dock',
@@ -247,7 +254,7 @@ class _ReceivingDockScreenState extends ConsumerState<ReceivingDockScreen> {
 
   Future<void> _confirmIdentity(bool confirmed) async {
     final result = await ref
-        .read(workplaceSimulationControllerProvider.notifier)
+        .read(workplaceSimulationControllerProvider(widget.missionId).notifier)
         .confirmShipmentIdentity(
           ConfirmShipmentIdentityCommand(confirmed: confirmed),
         );
@@ -261,7 +268,9 @@ class _ReceivingDockScreenState extends ConsumerState<ReceivingDockScreen> {
     if (input == null) return;
     if (entry == null) {
       final result = await ref
-          .read(workplaceSimulationControllerProvider.notifier)
+          .read(
+            workplaceSimulationControllerProvider(widget.missionId).notifier,
+          )
           .recordCartonCount(
             RecordCartonCountCommand(
               cartonId: cartonId,
@@ -275,7 +284,9 @@ class _ReceivingDockScreenState extends ConsumerState<ReceivingDockScreen> {
       }
     } else {
       final result = await ref
-          .read(workplaceSimulationControllerProvider.notifier)
+          .read(
+            workplaceSimulationControllerProvider(widget.missionId).notifier,
+          )
           .updateCartonCount(
             UpdateCartonCountCommand(
               entryId: entry.id,
@@ -381,7 +392,7 @@ class _ReceivingDockScreenState extends ConsumerState<ReceivingDockScreen> {
 
   Future<void> _removeEntry(ReceivingCountEntry entry) async {
     final result = await ref
-        .read(workplaceSimulationControllerProvider.notifier)
+        .read(workplaceSimulationControllerProvider(widget.missionId).notifier)
         .removeCartonCount(RemoveCartonCountCommand(entry.id));
     if (mounted && result != RemoveCartonCountResult.success) {
       _showMessage('The carton count could not be removed.');
@@ -391,7 +402,7 @@ class _ReceivingDockScreenState extends ConsumerState<ReceivingDockScreen> {
   Future<void> _saveDraft() async {
     setState(() => _saving = true);
     final result = await ref
-        .read(workplaceSimulationControllerProvider.notifier)
+        .read(workplaceSimulationControllerProvider(widget.missionId).notifier)
         .saveReceivingCountDraft(const SaveReceivingCountDraftCommand());
     if (!mounted) return;
     setState(() => _saving = false);
@@ -405,7 +416,7 @@ class _ReceivingDockScreenState extends ConsumerState<ReceivingDockScreen> {
   Future<void> _submit() async {
     setState(() => _saving = true);
     final result = await ref
-        .read(workplaceSimulationControllerProvider.notifier)
+        .read(workplaceSimulationControllerProvider(widget.missionId).notifier)
         .submitReceivingCount(const SubmitReceivingCountCommand());
     if (!mounted) return;
     setState(() => _saving = false);
@@ -424,7 +435,7 @@ class _ReceivingDockScreenState extends ConsumerState<ReceivingDockScreen> {
 
   Future<void> _exit() async {
     await ref
-        .read(workplaceSimulationControllerProvider.notifier)
+        .read(workplaceSimulationControllerProvider(widget.missionId).notifier)
         .recordWorkplaceEvent(
           AttemptAuditEventType.receivingDockExited,
           screenId: 'receiving-dock',

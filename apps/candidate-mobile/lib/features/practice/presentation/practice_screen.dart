@@ -18,7 +18,7 @@ import '../../workplace_simulation/domain/simulation_enums.dart';
 class PracticeScreen extends ConsumerStatefulWidget {
   const PracticeScreen({required this.onOpenWorkplaceSimulation, super.key});
 
-  final VoidCallback onOpenWorkplaceSimulation;
+  final void Function(String missionId) onOpenWorkplaceSimulation;
 
   @override
   ConsumerState<PracticeScreen> createState() => _PracticeScreenState();
@@ -89,12 +89,24 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
         ),
         const SizedBox(height: AppSpacing.md),
         ref
-            .watch(workplaceSimulationControllerProvider)
+            .watch(
+              workplaceSimulationControllerProvider(
+                WorkplaceSimulationController.missionId,
+              ),
+            )
             .when(
               loading: () => const _WorkplaceSimulationCard(
+                title: 'Workplace Simulation',
+                missionSummary:
+                    'Receive an Incoming Shipment\n'
+                    'Logistics • Warehouse Associate • Beginner • Approximately 20 minutes',
                 actionLabel: 'Loading simulation',
               ),
               error: (error, stackTrace) => const _WorkplaceSimulationCard(
+                title: 'Workplace Simulation',
+                missionSummary:
+                    'Receive an Incoming Shipment\n'
+                    'Logistics • Warehouse Associate • Beginner • Approximately 20 minutes',
                 actionLabel: 'Simulation unavailable',
                 unavailable: true,
               ),
@@ -107,8 +119,57 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
                     ? 'Retry Simulation'
                     : 'Continue Simulation';
                 return _WorkplaceSimulationCard(
+                  title: 'Workplace Simulation',
+                  missionSummary:
+                      'Receive an Incoming Shipment\n'
+                      'Logistics • Warehouse Associate • Beginner • Approximately 20 minutes',
                   actionLabel: actionLabel,
-                  onPressed: widget.onOpenWorkplaceSimulation,
+                  onPressed: () => widget.onOpenWorkplaceSimulation(
+                    WorkplaceSimulationController.missionId,
+                  ),
+                );
+              },
+            ),
+        const SizedBox(height: AppSpacing.md),
+        ref
+            .watch(
+              workplaceSimulationControllerProvider(
+                WorkplaceSimulationController.putAwayMissionId,
+              ),
+            )
+            .when(
+              loading: () => const _WorkplaceSimulationCard(
+                title: 'Workplace Simulation',
+                missionSummary:
+                    'Put Away Incoming Stock\n'
+                    'Logistics • Warehouse Associate • Beginner • Approximately 20 minutes',
+                actionLabel: 'Loading simulation',
+              ),
+              error: (error, stackTrace) => const _WorkplaceSimulationCard(
+                title: 'Workplace Simulation',
+                missionSummary:
+                    'Put Away Incoming Stock\n'
+                    'Logistics • Warehouse Associate • Beginner • Approximately 20 minutes',
+                actionLabel: 'Simulation unavailable',
+                unavailable: true,
+              ),
+              data: (state) {
+                final attempt = state.attempt;
+                final actionLabel = attempt == null
+                    ? 'Start Simulation'
+                    : attempt.state == MissionState.completed ||
+                          attempt.state == MissionState.failed
+                    ? 'Retry Simulation'
+                    : 'Continue Simulation';
+                return _WorkplaceSimulationCard(
+                  title: 'Workplace Simulation',
+                  missionSummary:
+                      'Put Away Incoming Stock\n'
+                      'Logistics • Warehouse Associate • Beginner • Approximately 20 minutes',
+                  actionLabel: actionLabel,
+                  onPressed: () => widget.onOpenWorkplaceSimulation(
+                    WorkplaceSimulationController.putAwayMissionId,
+                  ),
                 );
               },
             ),
@@ -212,11 +273,15 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
 
 class _WorkplaceSimulationCard extends StatelessWidget {
   const _WorkplaceSimulationCard({
+    required this.title,
+    required this.missionSummary,
     required this.actionLabel,
     this.onPressed,
     this.unavailable = false,
   });
 
+  final String title;
+  final String missionSummary;
   final String actionLabel;
   final VoidCallback? onPressed;
   final bool unavailable;
@@ -228,19 +293,13 @@ class _WorkplaceSimulationCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            'Workplace Simulation',
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
+          Text(title, style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: AppSpacing.xs),
           const Text(
             'Complete realistic workplace missions and build verified competency evidence.',
           ),
           const SizedBox(height: AppSpacing.sm),
-          const Text(
-            'Receive an Incoming Shipment\n'
-            'Logistics • Warehouse Associate • Beginner • Approximately 20 minutes',
-          ),
+          Text(missionSummary),
           if (unavailable) ...[
             const SizedBox(height: AppSpacing.sm),
             const Text('Workplace simulation content is unavailable.'),
@@ -248,7 +307,7 @@ class _WorkplaceSimulationCard extends StatelessWidget {
           const SizedBox(height: AppSpacing.md),
           AppButton(
             label: actionLabel,
-            semanticLabel: '$actionLabel button for Workplace Simulation.',
+            semanticLabel: '$actionLabel button for $title.',
             leadingIcon: Icons.factory_outlined,
             onPressed: onPressed,
           ),

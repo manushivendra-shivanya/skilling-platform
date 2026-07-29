@@ -4,7 +4,7 @@
   "name": "Central Distribution Centre",
   "workplaceType": "warehouse",
   "description": "A regional warehouse receiving, storing and dispatching consumer products.",
-  "departments": ["receiving"],
+  "departments": ["receiving", "put-away"],
   "operationalRules": [
     "All incoming shipments require document verification.",
     "Damaged goods cannot enter available inventory.",
@@ -33,6 +33,19 @@
         "Discrepancy detection rate (documented discrepancies / actual discrepancies present)",
         "Non-compliant stock leakage (compliant-marked items later found damaged or wrong-SKU in inventory)"
       ]
+    },
+    {
+      "id": "put-away",
+      "workplaceId": "central-distribution-centre",
+      "name": "Put Away Department",
+      "description": "Moves accepted stock from Receiving into the correct storage zones.",
+      "workstations": [
+        "staging-area",
+        "location-planning",
+        "transport-placement",
+        "putaway-office"
+      ],
+      "processes": ["putaway-storage-allocation"]
     }
   ],
   "workstationDefinitions": [
@@ -104,6 +117,53 @@
       "position": {"x": 0.84, "y": 0.74},
       "capabilities": ["complete_form", "make_decision", "confirm_action"],
       "unlockRequirements": [{"type": "task_completed", "referenceId": "assign-dispositions"}]
+    },
+    {
+      "id": "staging-area",
+      "departmentId": "put-away",
+      "name": "Staging Area",
+      "workstationType": "staging",
+      "description": "Accepted stock from Receiving waits here for a storage assignment.",
+      "icon": "staging",
+      "position": {"x": 0.15, "y": 0.5},
+      "capabilities": ["read_document"],
+      "unlockRequirements": []
+    },
+    {
+      "id": "location-planning",
+      "departmentId": "put-away",
+      "name": "Location Planning",
+      "workstationType": "planning",
+      "description": "Assign every item to its correct storage zone.",
+      "icon": "planning",
+      "position": {"x": 0.4, "y": 0.5},
+      "capabilities": ["classify_issue"],
+      "unlockRequirements": [{"type": "task_completed", "referenceId": "open-putaway-list"}]
+    },
+    {
+      "id": "transport-placement",
+      "departmentId": "put-away",
+      "name": "Transport and Placement",
+      "workstationType": "transport",
+      "description": "Move and place every item, then scan to confirm.",
+      "icon": "transport",
+      "position": {"x": 0.65, "y": 0.5},
+      "capabilities": ["move_item", "scan_barcode", "count_quantity"],
+      "unlockRequirements": [{"type": "task_completed", "referenceId": "assign-storage-zone"}]
+    },
+    {
+      "id": "putaway-office",
+      "departmentId": "put-away",
+      "name": "Putaway Office",
+      "workstationType": "office",
+      "description": "Complete the putaway report and notify the supervisor.",
+      "icon": "office",
+      "position": {"x": 0.9, "y": 0.5},
+      "capabilities": ["complete_form", "make_decision", "confirm_action"],
+      "unlockRequirements": [
+        {"type": "task_completed", "referenceId": "scan-items-to-bins"},
+        {"type": "task_completed", "referenceId": "confirm-quantities-placed"}
+      ]
     }
   ]
 }

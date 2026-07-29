@@ -56,7 +56,9 @@ class _WorkplaceOverviewScreenState
 
   @override
   Widget build(BuildContext context) {
-    final state = ref.watch(workplaceSimulationControllerProvider);
+    final state = ref.watch(
+      workplaceSimulationControllerProvider(widget.missionId),
+    );
     return Scaffold(
       appBar: AppBar(
         title: const Text('Workplace Overview'),
@@ -80,8 +82,9 @@ class _WorkplaceOverviewScreenState
             title: 'Workplace unavailable',
             message: 'Your saved attempt is safe. Retry loading the workplace.',
             actionLabel: 'Retry',
-            onAction: () =>
-                ref.invalidate(workplaceSimulationControllerProvider),
+            onAction: () => ref.invalidate(
+              workplaceSimulationControllerProvider(widget.missionId),
+            ),
           ),
           data: (value) {
             if (value.attempt == null ||
@@ -98,14 +101,22 @@ class _WorkplaceOverviewScreenState
               _tracked = true;
               unawaited(
                 ref
-                    .read(workplaceSimulationControllerProvider.notifier)
+                    .read(
+                      workplaceSimulationControllerProvider(
+                        widget.missionId,
+                      ).notifier,
+                    )
                     .recordWorkplaceEvent(
                       AttemptAuditEventType.workplaceOverviewOpened,
                     ),
               );
             }
             final overview = ref
-                .read(workplaceSimulationControllerProvider.notifier)
+                .read(
+                  workplaceSimulationControllerProvider(
+                    widget.missionId,
+                  ).notifier,
+                )
                 .workplaceOverview;
             return LayoutBuilder(
               builder: (context, constraints) {
@@ -182,7 +193,7 @@ class _WorkplaceOverviewScreenState
 
   Future<void> _openStation(WorkstationViewModel station) async {
     final result = await ref
-        .read(workplaceSimulationControllerProvider.notifier)
+        .read(workplaceSimulationControllerProvider(widget.missionId).notifier)
         .openWorkstation(station.workstationId);
     if (!mounted) return;
     if (result == OpenWorkstationResult.workstationLocked) {
@@ -210,7 +221,9 @@ class _WorkplaceOverviewScreenState
   }
 
   Future<void> _pause() async {
-    final controller = ref.read(workplaceSimulationControllerProvider.notifier);
+    final controller = ref.read(
+      workplaceSimulationControllerProvider(widget.missionId).notifier,
+    );
     final overview = controller.workplaceOverview;
     if (overview.canResume) {
       await controller.resumeAttempt();
@@ -261,7 +274,7 @@ class _WorkplaceOverviewScreenState
 
   Future<void> _saveAndExit() async {
     final result = await ref
-        .read(workplaceSimulationControllerProvider.notifier)
+        .read(workplaceSimulationControllerProvider(widget.missionId).notifier)
         .saveAndExit();
     if (!mounted) return;
     if (result == SaveAndExitResult.success) {

@@ -154,9 +154,15 @@ Future<ProviderContainer> _activeContainer() async {
       ),
     ],
   );
-  await container.read(workplaceSimulationControllerProvider.future);
+  await container.read(
+    workplaceSimulationControllerProvider(
+      WorkplaceSimulationController.missionId,
+    ).future,
+  );
   final controller = container.read(
-    workplaceSimulationControllerProvider.notifier,
+    workplaceSimulationControllerProvider(
+      WorkplaceSimulationController.missionId,
+    ).notifier,
   );
   await controller.startMission(scenarioSeed: 48127);
   await controller.setBriefingAcknowledged(true);

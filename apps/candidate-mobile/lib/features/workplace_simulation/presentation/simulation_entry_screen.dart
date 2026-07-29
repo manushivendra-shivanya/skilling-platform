@@ -19,12 +19,14 @@ import 'widgets/simulation_section_card.dart';
 
 class SimulationEntryScreen extends ConsumerStatefulWidget {
   const SimulationEntryScreen({
+    required this.missionId,
     required this.onOpenBriefing,
     required this.onContinueWorkplace,
     required this.onExit,
     super.key,
   });
 
+  final String missionId;
   final VoidCallback onOpenBriefing;
   final VoidCallback onContinueWorkplace;
   final VoidCallback onExit;
@@ -40,7 +42,9 @@ class _SimulationEntryScreenState extends ConsumerState<SimulationEntryScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final simulation = ref.watch(workplaceSimulationControllerProvider);
+    final simulation = ref.watch(
+      workplaceSimulationControllerProvider(widget.missionId),
+    );
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, result) {
@@ -52,8 +56,9 @@ class _SimulationEntryScreenState extends ConsumerState<SimulationEntryScreen> {
           child: simulation.when(
             loading: _EntryLoading.new,
             error: (error, stackTrace) => _EntryError(
-              onRetry: () =>
-                  ref.invalidate(workplaceSimulationControllerProvider),
+              onRetry: () => ref.invalidate(
+                workplaceSimulationControllerProvider(widget.missionId),
+              ),
               onBack: widget.onExit,
             ),
             data: (value) {
@@ -61,7 +66,11 @@ class _SimulationEntryScreenState extends ConsumerState<SimulationEntryScreen> {
                 _entryTracked = true;
                 unawaited(
                   ref
-                      .read(workplaceSimulationControllerProvider.notifier)
+                      .read(
+                        workplaceSimulationControllerProvider(
+                          widget.missionId,
+                        ).notifier,
+                      )
                       .recordSimulationEntryOpened(),
                 );
               }
@@ -76,7 +85,11 @@ class _SimulationEntryScreenState extends ConsumerState<SimulationEntryScreen> {
               return _EntryContent(
                 value: value,
                 progress: ref
-                    .read(workplaceSimulationControllerProvider.notifier)
+                    .read(
+                      workplaceSimulationControllerProvider(
+                        widget.missionId,
+                      ).notifier,
+                    )
                     .progress,
                 isStarting: _isStarting,
                 onPrimaryAction: () => _handlePrimaryAction(value),
@@ -93,7 +106,9 @@ class _SimulationEntryScreenState extends ConsumerState<SimulationEntryScreen> {
   Future<void> _handlePrimaryAction(WorkplaceSimulationState value) async {
     if (_isStarting) return;
     setState(() => _isStarting = true);
-    final controller = ref.read(workplaceSimulationControllerProvider.notifier);
+    final controller = ref.read(
+      workplaceSimulationControllerProvider(widget.missionId).notifier,
+    );
     final attempt = value.attempt;
     final AppFailure? failure;
     if (attempt == null) {
@@ -115,7 +130,7 @@ class _SimulationEntryScreenState extends ConsumerState<SimulationEntryScreen> {
       return;
     }
     final updated = ref
-        .read(workplaceSimulationControllerProvider)
+        .read(workplaceSimulationControllerProvider(widget.missionId))
         .requireValue;
     final state = updated.attempt?.state;
     if (state == MissionState.briefing) {
@@ -129,7 +144,9 @@ class _SimulationEntryScreenState extends ConsumerState<SimulationEntryScreen> {
     final attempt = value.attempt;
     if (attempt != null) {
       await ref
-          .read(workplaceSimulationControllerProvider.notifier)
+          .read(
+            workplaceSimulationControllerProvider(widget.missionId).notifier,
+          )
           .recordMissionDetailsOpened(screenId: 'simulation-entry');
     }
     if (!mounted) return;
@@ -142,7 +159,7 @@ class _SimulationEntryScreenState extends ConsumerState<SimulationEntryScreen> {
 
   Future<void> _confirmExit() async {
     final attempt = ref
-        .read(workplaceSimulationControllerProvider)
+        .read(workplaceSimulationControllerProvider(widget.missionId))
         .valueOrNull
         ?.attempt;
     final confirmed = await showAppConfirmationDialog(

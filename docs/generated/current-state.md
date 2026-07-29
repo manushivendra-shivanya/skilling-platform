@@ -761,13 +761,81 @@ boundary without implementing inspection behaviour.
   succeeded locally, producing a 110,134,994-byte `app-debug.apk`. GitHub
   Actions remains the authoritative Android build validator for CI.
 
+### Put Away mission — runtime wiring
+- Put Away's content (`put_away_mission.json`, workstations, competencies,
+  remediation) previously proved "zero engine changes" only via a headless
+  test that bypassed the app's repository/controller and loaded mission JSON
+  directly. This milestone wires it into the real app so it is reachable and
+  playable through actual navigation, not just proven by a bypass test.
+- `AssetSimulationContentRepository.getMission()` was hardcoded to always
+  load `receive_shipment_mission.json` regardless of the requested
+  `missionId` (the id was only used for a post-load equality check). Replaced
+  with a `missionId -> file name` map and a per-mission cache so any mission
+  id with a registered content file resolves correctly.
+- `workplaceSimulationControllerProvider` converted from a plain
+  `AsyncNotifierProvider` (one mission, globally) to
+  `AsyncNotifierProvider.family<..., String>`, keyed by `missionId`. Screens
+  and tests now read `workplaceSimulationControllerProvider(missionId)`
+  instead of a single shared instance.
+- **Correctness gap found and fixed:** `SimulationEntryScreen` and
+  `SupervisorBriefingScreen` never accepted a `missionId` constructor
+  parameter at all, even though the router already extracted
+  `state.pathParameters['missionId']` for their routes — latent because only
+  one mission ever existed. Added the parameter to both and threaded it from
+  `app_router.dart`.
+- **Correctness fix (department-scoping leak):** `workplaceOverview` built
+  its workstation list from every workstation across every department in
+  `workplace.json` rather than filtering by the current mission's
+  department. Harmless with one department; once Put Away's four
+  workstations were added to the shared `workplace.json`, they leaked into
+  the Receiving mission's own Workplace Overview screen. Fixed by filtering
+  on `station.departmentId == current.mission.departmentId`, and fixed an
+  adjacent `departments.first.name` lookup (only correct by ordering luck)
+  to look up the department by id.
+- `PracticeScreen.onOpenWorkplaceSimulation` changed from `VoidCallback` to
+  `void Function(String missionId)`; the Practice tab now renders two
+  Workplace Simulation cards — Receive an Incoming Shipment and Put Away
+  Incoming Stock — each independently watching its own family-provider
+  instance and opening its own mission by id.
+- **What is and is not playable yet:** a candidate can now open either
+  mission from Practice, go through Simulation Entry, acknowledge the
+  Supervisor Briefing, start the shift, and reach Workplace Overview showing
+  Put Away's real four workstations (Staging Area, Location Planning,
+  Transport & Placement, Putaway Office) with correct locked/available
+  state. `WorkplaceOverviewScreen` still routes taps to five hardcoded
+  Receiving-only screen callbacks, so tapping a Put Away workstation has
+  nowhere to go yet — the four Put Away workstation screens (mirroring the
+  Receiving Document Desk / Receiving Dock / Inspection Zone pattern, built
+  on the existing generic `recordAction()` controller method rather than
+  bespoke per-task wrapper methods) are the next stacked increment needed
+  for genuine end-to-end completion of the Put Away mission.
+
+### Put Away mission — runtime wiring — local validation
+- `dart format .` — passed
+- `flutter analyze --no-pub` — passed with no issues
+- Focused WMS suite — 29/29 passed
+- Full Flutter suite — 86 of 89 tests passed; the three failures are the
+  same pre-existing baseline flakes as prior milestones (`Today's mission`
+  Home-navigation ordering flakiness across `main_navigation_test.dart`,
+  `phase_one_shells_test.dart`, `candidate_onboarding_flow_test.dart`),
+  confirmed unrelated by reproducing them on the unmodified base branch
+  before this change; none import or exercise WMS
+- `flutter build apk --debug --no-pub --target-platform android-arm64` —
+  succeeded locally, producing a 110,140,295-byte `app-debug.apk`. GitHub
+  Actions remains the authoritative Android build validator for CI.
+
 ### Next implementation
-Author Put Away as the second department (content already scoped in
-`docs/24-receiving-department-content-specification.md`'s backlog), which
-validates the architecture generalises with zero engine changes — or, if
-prioritised instead, build the WebGL/3D viewer per ADR-001, which every
-architecture document to date has sequenced as deferred until the content
-layer is stable.
+Build the four Put Away workstation screens (Staging Area, Location
+Planning, Transport & Placement, Putaway Office) and generalize
+`WorkplaceOverviewScreen`'s workstation routing so it is no longer
+hardcoded to the five Receiving-only screens — this is what makes Put Away
+genuinely completable end-to-end rather than just navigable up to Workplace
+Overview. Alongside that, continue deepening Receiving's content per the
+backlog in `docs/24-receiving-department-content-specification.md` (the
+`person` resource type + `speak` action type needed for NPC dialogue, and a
+true multi-scenario catalog). If prioritised instead, build the WebGL/3D
+viewer per ADR-001, which every architecture document to date has sequenced
+as deferred until the content layer is stable.
 
 ## Target product architecture proposal
 

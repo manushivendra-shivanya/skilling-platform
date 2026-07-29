@@ -35,7 +35,9 @@ class _InspectionZoneScreenState extends ConsumerState<InspectionZoneScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final simulation = ref.watch(workplaceSimulationControllerProvider);
+    final simulation = ref.watch(
+      workplaceSimulationControllerProvider(widget.missionId),
+    );
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
@@ -52,12 +54,13 @@ class _InspectionZoneScreenState extends ConsumerState<InspectionZoneScreen> {
             title: 'Inspection Zone unavailable',
             message: 'Your saved draft is safe. Retry loading the cartons.',
             actionLabel: 'Retry',
-            onAction: () =>
-                ref.invalidate(workplaceSimulationControllerProvider),
+            onAction: () => ref.invalidate(
+              workplaceSimulationControllerProvider(widget.missionId),
+            ),
           ),
           data: (value) {
             final controller = ref.read(
-              workplaceSimulationControllerProvider.notifier,
+              workplaceSimulationControllerProvider(widget.missionId).notifier,
             );
             final station = controller.workplaceOverview.workstations
                 .firstWhere((item) => item.workstationId == 'inspection-zone');
@@ -83,7 +86,11 @@ class _InspectionZoneScreenState extends ConsumerState<InspectionZoneScreen> {
               _tracked = true;
               unawaited(
                 ref
-                    .read(workplaceSimulationControllerProvider.notifier)
+                    .read(
+                      workplaceSimulationControllerProvider(
+                        widget.missionId,
+                      ).notifier,
+                    )
                     .recordWorkplaceEvent(
                       AttemptAuditEventType.inspectionZoneOpened,
                       screenId: 'inspection-zone',
@@ -316,7 +323,9 @@ class _InspectionZoneScreenState extends ConsumerState<InspectionZoneScreen> {
     if (input == null) return;
     if (entry == null) {
       final result = await ref
-          .read(workplaceSimulationControllerProvider.notifier)
+          .read(
+            workplaceSimulationControllerProvider(widget.missionId).notifier,
+          )
           .recordCartonInspection(
             RecordCartonInspectionCommand(
               cartonId: cartonId,
@@ -329,7 +338,9 @@ class _InspectionZoneScreenState extends ConsumerState<InspectionZoneScreen> {
       }
     } else {
       final result = await ref
-          .read(workplaceSimulationControllerProvider.notifier)
+          .read(
+            workplaceSimulationControllerProvider(widget.missionId).notifier,
+          )
           .updateCartonInspection(
             UpdateCartonInspectionCommand(
               entryId: entry.id,
@@ -405,7 +416,7 @@ class _InspectionZoneScreenState extends ConsumerState<InspectionZoneScreen> {
 
   Future<void> _removeInspection(CartonInspectionEntry entry) async {
     final result = await ref
-        .read(workplaceSimulationControllerProvider.notifier)
+        .read(workplaceSimulationControllerProvider(widget.missionId).notifier)
         .removeCartonInspection(RemoveCartonInspectionCommand(entry.id));
     if (mounted && result != RemoveCartonInspectionResult.success) {
       _showMessage('The inspection could not be removed.');
@@ -417,7 +428,9 @@ class _InspectionZoneScreenState extends ConsumerState<InspectionZoneScreen> {
     if (input == null) return;
     if (entry == null) {
       final result = await ref
-          .read(workplaceSimulationControllerProvider.notifier)
+          .read(
+            workplaceSimulationControllerProvider(widget.missionId).notifier,
+          )
           .recordBarcodeScan(
             RecordBarcodeScanCommand(cartonId: cartonId, status: input),
           );
@@ -426,7 +439,9 @@ class _InspectionZoneScreenState extends ConsumerState<InspectionZoneScreen> {
       }
     } else {
       final result = await ref
-          .read(workplaceSimulationControllerProvider.notifier)
+          .read(
+            workplaceSimulationControllerProvider(widget.missionId).notifier,
+          )
           .updateBarcodeScan(
             UpdateBarcodeScanCommand(entryId: entry.id, status: input),
           );
@@ -477,7 +492,7 @@ class _InspectionZoneScreenState extends ConsumerState<InspectionZoneScreen> {
 
   Future<void> _removeScan(BarcodeScanEntry entry) async {
     final result = await ref
-        .read(workplaceSimulationControllerProvider.notifier)
+        .read(workplaceSimulationControllerProvider(widget.missionId).notifier)
         .removeBarcodeScan(RemoveBarcodeScanCommand(entry.id));
     if (mounted && result != RemoveBarcodeScanResult.success) {
       _showMessage('The scan could not be removed.');
@@ -487,7 +502,7 @@ class _InspectionZoneScreenState extends ConsumerState<InspectionZoneScreen> {
   Future<void> _saveDraft() async {
     setState(() => _saving = true);
     final result = await ref
-        .read(workplaceSimulationControllerProvider.notifier)
+        .read(workplaceSimulationControllerProvider(widget.missionId).notifier)
         .saveInspectionDraft(const SaveInspectionDraftCommand());
     if (!mounted) return;
     setState(() => _saving = false);
@@ -501,7 +516,7 @@ class _InspectionZoneScreenState extends ConsumerState<InspectionZoneScreen> {
   Future<void> _submit() async {
     setState(() => _saving = true);
     final result = await ref
-        .read(workplaceSimulationControllerProvider.notifier)
+        .read(workplaceSimulationControllerProvider(widget.missionId).notifier)
         .submitInspection(const SubmitInspectionCommand());
     if (!mounted) return;
     setState(() => _saving = false);
@@ -520,7 +535,7 @@ class _InspectionZoneScreenState extends ConsumerState<InspectionZoneScreen> {
 
   Future<void> _exit() async {
     await ref
-        .read(workplaceSimulationControllerProvider.notifier)
+        .read(workplaceSimulationControllerProvider(widget.missionId).notifier)
         .recordWorkplaceEvent(
           AttemptAuditEventType.inspectionZoneExited,
           screenId: 'inspection-zone',
