@@ -932,7 +932,7 @@ as the minimal supporting read needed to make the write endpoint
 exercisable, not as the "authoritative job matching" scope doc 20
 describes — that remains unbuilt.
 
-Added `supabase/migrations/20260729180000_phase_three_job_applications.sql`
+Added `supabase/migrations/20260729182817_phase_three_job_applications.sql`
 (`jobs`, `job_applications`, RLS, three seeded published jobs) — not yet
 applied to any live project. The repository's Supabase MCP connection was
 found to be scoped only to an unrelated project (`nutridiet`); the real

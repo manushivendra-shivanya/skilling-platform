@@ -33,7 +33,7 @@ cp .env.example .env   # fill in SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY
 The service-role key is server-side only and bypasses row-level security —
 never send it to a client, never commit `.env`.
 
-Apply `supabase/migrations/20260729180000_phase_three_job_applications.sql`
+Apply `supabase/migrations/20260729182817_phase_three_job_applications.sql`
 to the target project before starting the service (via the Supabase CLI, the
 SQL editor, or the Supabase MCP integration's `apply_migration`).
 
