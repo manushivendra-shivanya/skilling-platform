@@ -1,0 +1,13 @@
+# Node / TypeScript services (apps/api and future packages/services)
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+npm-debug.log*
+
+# Local environment secrets -- never commit real credentials
+.env
+.env.local
+.env.*.local
+
+.DS_Store
