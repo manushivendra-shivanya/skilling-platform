@@ -668,6 +668,82 @@ Implement the approved Screen 06 Inspection Zone interaction contract as the
 next coherent WMS milestone. Do not infer Barcode Station, Quarantine Zone,
 Receiving Office, final decision, report or results behaviour.
 
+*(Note: this branch predates the Screen 06, Quarantine/Office/Feedback, and
+Receiving-content-specification work, each developed on separate branches per
+the stacked-PR strategy. This section documents the Put Away milestone
+specifically; the above "Next implementation" pointer and the WMS status
+above it reflect this branch's base commit, not the latest state across all
+open branches — reconciliation happens when the branches are merged.)*
+
+### Put Away — second department content
+- Authored **Put Away** as the second department, testing the explicit claim
+  in every architecture document to date: "author a second department as
+  data, with zero engine changes, as the real proof the architecture holds."
+- New `put_away_mission.json`: 4 stages, 4 workstations, 9 tasks, 6 items to
+  store, reusing the exact same task types, action types and resource types
+  already defined for Receiving (`read_document`, `classify_issue`,
+  `move_item`, `scan_barcode`, `count_quantity`, `complete_form`,
+  `make_decision`, `confirm_action`) — no new engine enums were needed for
+  this to work.
+- Additive entries in `workplace.json` (put-away department + 4
+  workstations), `competencies.json` (3 new competencies:
+  storage-location-accuracy, safe-material-handling, putaway-decisions —
+  reusing the existing `inventory-accuracy` competency for the
+  quantity-confirmation task), and `remediation.json` (3 new remediation
+  entries).
+- **Real gap found and scoped, not silently worked around:**
+  `AssetSimulationContentRepository.getMission()` hardcodes
+  `'receive_shipment_mission.json'` — it does not discover missions by id.
+  The `WorkplaceSimulationController` also hardcodes a single `missionId`.
+  Actually *playing* Put Away through the app therefore needs controller/UI
+  work beyond content (a mission catalog, multi-mission repository loading) —
+  this is runtime/UI scope, not content, and is left for whoever picks this
+  up next. What this milestone proves instead: the **content schema and
+  every domain/scoring service already generalise with zero changes**, which
+  is the actual claim the architecture docs care about — proven by loading
+  the mission directly (bypassing the hardcoded repository method) and
+  running it through the real `TaskValidationService`,
+  `ActionEvaluationService`, `MissionProgressService`, `MissionScoringService`
+  and `CriticalErrorService`, unmodified.
+- **Real bug found and fixed while wiring this in**: `workplaceOverview`
+  built its workstation list from the *entire* workplace, not the current
+  mission's department — harmless with one department, but with two it
+  would have shown Put Away's workstations (all reporting `available`, since
+  nothing in the Receiving mission's stages references them) inside the
+  Receiving mission's own overview screen. Fixed by filtering to
+  `station.departmentId == mission.departmentId`. Also fixed an adjacent
+  `departments.first.name` lookup that was only correct by ordering luck.
+  Existing WMS/content tests updated where they encoded a stale fixed count
+  (`workstations, hasLength(6)` → department-scoped;
+  `remediation.single` → `contains(...)`) now that the shared content
+  legitimately holds more than one department's worth of data.
+
+### Put Away — local validation
+- `dart format .` — passed
+- `flutter analyze --no-pub` — clean, no issues
+- New `put_away_content_test.dart` — 4/4 passed: schema validation, a fully
+  correct run scoring `MissionStatus.passed` with `overallScore: 100`, a
+  hazmat-misplacement critical error correctly triggering
+  `MissionStatus.criticalFailure`, and confirmation that `competencies.json`
+  correctly serves both departments' competency ids through the same load
+  path
+- Full WMS suite — 28/28 passed after updating the two assertions above
+- Full Flutter suite — 86 of 88 tests passed; the 2 failures are the
+  documented pre-existing `Today's mission` baseline, unrelated to WMS
+- `flutter build apk --debug --target-platform android-arm64` — succeeded
+  locally, producing an 87,272,066-byte `app-debug.apk`. GitHub Actions
+  remains the authoritative Android build validator for CI.
+
+### Next implementation (Put Away follow-up)
+Wire Put Away into the actual runtime: make
+`AssetSimulationContentRepository` discover missions by id (small,
+mechanical change — a filename map or a `{missionId}.json` convention), then
+decide how the controller/UI expose mission selection (a workplace hub with
+more than one mission is new UI surface, not just a controller
+generalisation). Until then, Put Away's content is real and tested but not
+reachable from the app. Author Put Away's screens once that lands, mirroring
+the Receiving screen pattern exactly.
+
 ## Target product architecture proposal
 
 - Added the proposed Flora AI Employability Infrastructure architecture in

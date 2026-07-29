@@ -740,7 +740,9 @@ class WorkplaceSimulationController
       missionId: current.mission.id,
       missionTitle: current.mission.title,
       workplaceName: current.workplace.name,
-      departmentName: current.workplace.departments.first.name,
+      departmentName: current.workplace.departments
+          .firstWhere((item) => item.id == current.mission.departmentId)
+          .name,
       elapsedSimulationDuration: Duration(
         seconds: currentElapsedSimulationSeconds(attempt),
       ),
@@ -751,12 +753,13 @@ class WorkplaceSimulationController
       recommendedWorkstationId: recommended?.id,
       workstations: [
         for (final station in current.workplace.workstations)
-          _workstationViewModel(
-            current,
-            attempt,
-            station.id,
-            station.id == recommended?.id,
-          ),
+          if (station.departmentId == current.mission.departmentId)
+            _workstationViewModel(
+              current,
+              attempt,
+              station.id,
+              station.id == recommended?.id,
+            ),
       ],
       canPause:
           attempt.state == MissionState.inProgress &&

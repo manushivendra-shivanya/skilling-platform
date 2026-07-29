@@ -25,6 +25,8 @@ flowchart TD
     WMSDOC --> WMSDOCK[Receiving Dock]
     WMSDOCK --> WMSINSPECT[Screen 06 Inspection Zone Placeholder]
 
+    WMSCONTENT --> PUTAWAYCONTENT[Put Away mission content - authored, not yet wired to a screen]
+
     ENTRY --> AUTHCTRL[Authentication Controller]
     AUTHCTRL --> LOCALOTP[Development OTP Adapter]
     AUTHCTRL --> SUPAAUTH[Supabase Phone Auth Adapter]
