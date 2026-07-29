@@ -60,9 +60,10 @@ Last updated: 2026-07-28
 - A UI-neutral Workplace Management Simulation v0.2 backbone provides
   versioned local content, deterministic scenarios, mission state, action
   validation, scoring, critical errors, remediation and evidence
-- Approved WMS Screens 01–05 are available from Practice, with controller-owned
-  progression through entry, briefing, overview, document review and receiving
-  count; Screen 06 is an intentional Inspection Zone handoff placeholder
+- Approved WMS Screens 01–06 are available from Practice, with controller-owned
+  progression through entry, briefing, overview, document review, receiving
+  count and physical inspection (carton inspection + barcode scanning against
+  the already-authored `physical-inspection` stage content)
 
 ### Android configuration
 - compileSdk 36
@@ -663,10 +664,51 @@ boundary without implementing inspection behaviour.
   `SM-S928B` in 5.8 seconds, launched it and confirmed process `26108` remained
   active; visual workflow QC remains with the tester
 
+### WMS Screen 06 Inspection Zone implementation
+- Replaced the Screen 06 handoff placeholder with a real Inspection Zone
+  screen implementing the already-authored `physical-inspection` stage from
+  `receive_shipment_mission.json`: `inspect-cartons` (record a finding —
+  compliant, packaging damage, near expiry, incorrect SKU, quantity shortage,
+  or unreadable barcode — per carton) and `scan-barcodes` (record
+  readable/unreadable per carton), both against the same six cartons
+- Added a persisted `InspectionDraft` (per-carton inspection and scan entries,
+  each independently editable/removable pre-submission with revision
+  numbers), mirroring the existing Document Review and Receiving Count draft
+  pattern
+- Added typed record/update/remove/save-draft/submit commands and controller
+  methods for both tasks; individual edits emit unscored draft audit actions,
+  final submission applies the real scored `inspect_item`/`record_issue`/
+  `scan_barcode` actions per carton against the mission's existing evaluation
+  rules — no new scoring logic was invented
+- Submission requires every one of the six cartons to have both an inspection
+  finding and a barcode scan recorded before it validates; unlocks Quarantine
+  Zone (not yet built — tapping it shows the existing "coming next" message,
+  unchanged from how every other not-yet-built workstation already behaves)
+- Fixed a pre-existing bug discovered while cross-checking the separately
+  delivered `flora-sim-v3` content package: that package's screen numbering is
+  a different, independently authored breakdown of the same Receiving
+  workflow and does not correspond 1:1 to this app's actual
+  `receive_shipment_mission.json` stages; this implementation follows the
+  mission JSON actually wired into the app, not that package
+
+### WMS Screen 06 local validation
+- `dart format .` — passed; 4 files reformatted (own new/changed files)
+- `flutter analyze --no-pub` — passed with no issues
+- `flutter test --no-pub --reporter expanded` — 82 of 84 tests passed; the
+  two failures are the unchanged pre-existing `Today's mission`
+  Home-navigation baseline failures (documented since the WMS Screens 03–06
+  milestone) and do not import or exercise WMS
+- `flutter build apk --debug --no-pub --target-platform android-arm64` —
+  succeeded locally (Android SDK Platform 34 auto-installed during the run),
+  producing an 87,271,939-byte `app-debug.apk`; this is the first WMS
+  milestone where the documented Gradle 9.1 host failure did not reproduce.
+  GitHub Actions remains the authoritative Android build validator for CI.
+
 ### Next implementation
-Implement the approved Screen 06 Inspection Zone interaction contract as the
-next coherent WMS milestone. Do not infer Barcode Station, Quarantine Zone,
-Receiving Office, final decision, report or results behaviour.
+Author the Quarantine Zone / Exception Handling screen (`assign-dispositions`,
+`confirm-quarantine` tasks, already stubbed in `receive_shipment_mission.json`)
+as the next coherent WMS milestone. Do not infer Receiving Office, final
+decision, report or results behaviour.
 
 ## Target product architecture proposal
 
@@ -719,6 +761,6 @@ Receiving Office, final decision, report or results behaviour.
   Phase 2 records and narrowly scoped Phase 3 practice metadata; media
   authorisation, AI, employer, administrator and job-application operations
   remain behind the planned NestJS BFF
-- WMS Screens 01–05 are production-visible. Screen 06 remains a placeholder;
-  Barcode Station, Quarantine Zone, Receiving Office, final decision, shift
-  report and results are intentionally unavailable pending approved contracts.
+- WMS Screens 01–06 are production-visible. Quarantine Zone, Receiving
+  Office, final decision, shift report and results are intentionally
+  unavailable pending approved contracts.

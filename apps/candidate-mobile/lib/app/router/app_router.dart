@@ -31,7 +31,7 @@ import '../../features/voice/presentation/voice_interview_screen.dart';
 import '../../features/workplace_simulation/presentation/simulation_entry_screen.dart';
 import '../../features/workplace_simulation/presentation/supervisor_briefing_screen.dart';
 import '../../features/workplace_simulation/presentation/document_desk_screen.dart';
-import '../../features/workplace_simulation/presentation/inspection_zone_handoff_screen.dart';
+import '../../features/workplace_simulation/presentation/inspection_zone_screen.dart';
 import '../../features/workplace_simulation/presentation/receiving_dock_screen.dart';
 import '../../features/workplace_simulation/presentation/workplace_overview_screen.dart';
 import '../dependencies.dart';
@@ -320,9 +320,8 @@ GoRouter createAppRouter({
         builder: (context, state) {
           final missionId = state.pathParameters['missionId']!;
           return SimulationEntryScreen(
-            onOpenBriefing: () => context.push(
-              workplaceBriefingPath(missionId),
-            ),
+            onOpenBriefing: () =>
+                context.push(workplaceBriefingPath(missionId)),
             onContinueWorkplace: () =>
                 context.go(workplaceOverviewPath(missionId)),
             onExit: () => context.go(practiseRoutePath),
@@ -337,8 +336,7 @@ GoRouter createAppRouter({
           final missionId = state.pathParameters['missionId']!;
           return SupervisorBriefingScreen(
             onBackToEntry: () => context.go(workplaceSimulationPath(missionId)),
-            onOpenWorkplace: () =>
-                context.go(workplaceOverviewPath(missionId)),
+            onOpenWorkplace: () => context.go(workplaceOverviewPath(missionId)),
           );
         },
       ),
@@ -392,7 +390,7 @@ GoRouter createAppRouter({
         name: workplaceInspectionZoneRouteName,
         builder: (context, state) {
           final missionId = state.pathParameters['missionId']!;
-          return InspectionZoneHandoffScreen(
+          return InspectionZoneScreen(
             missionId: missionId,
             onBack: () => context.go(workplaceOverviewPath(missionId)),
           );

@@ -776,6 +776,9 @@ class WorkplaceSimulationController
   drafts.ReceivingCountDraft? get receivingCountDraft =>
       state.valueOrNull?.attempt?.receivingCountDraft;
 
+  drafts.InspectionDraft? get inspectionDraft =>
+      state.valueOrNull?.attempt?.inspectionDraft;
+
   Future<OpenWorkstationResult> openWorkstation(String workstationId) async {
     try {
       final current = _requireState();
@@ -1516,6 +1519,446 @@ class WorkplaceSimulationController
     }
   }
 
+  Future<RecordCartonInspectionResult> recordCartonInspection(
+    RecordCartonInspectionCommand command,
+  ) async {
+    final current = state.valueOrNull;
+    final attempt = current?.attempt;
+    if (current == null ||
+        attempt == null ||
+        attempt.state != MissionState.inProgress) {
+      return RecordCartonInspectionResult.invalidAttemptState;
+    }
+    final task = current.mission.task('inspect-cartons');
+    if (!task.targetResourceIds.contains(command.cartonId)) {
+      return RecordCartonInspectionResult.cartonNotFound;
+    }
+    final draft = attempt.inspectionDraft ?? _newInspectionDraft(attempt);
+    if (draft.status == drafts.OperationalDraftStatus.submitted) {
+      return RecordCartonInspectionResult.alreadySubmitted;
+    }
+    if (draft.cartonInspections.any(
+      (item) => item.cartonId == command.cartonId,
+    )) {
+      return RecordCartonInspectionResult.duplicateEntry;
+    }
+    try {
+      final now = DateTime.now();
+      final entry = drafts.CartonInspectionEntry(
+        id: '${attempt.id}-inspect-${draft.cartonInspections.length + 1}',
+        cartonId: command.cartonId,
+        finding: command.finding,
+        learnerNotes: command.learnerNotes.trim(),
+        createdAt: now,
+        updatedAt: now,
+        revisionNumber: 1,
+      );
+      var updated = attempt.copyWith(
+        inspectionDraft: draft.copyWith(
+          cartonInspections: [...draft.cartonInspections, entry],
+          updatedAt: now,
+        ),
+      );
+      updated = _appendDraftAction(
+        updated,
+        stageId: 'physical-inspection',
+        taskId: 'inspect-cartons',
+        actionType: ActionType.cartonInspectionRecorded,
+        targetId: entry.cartonId,
+        payload: _inspectionPayload(entry),
+      );
+      await _commit(current, updated);
+      return RecordCartonInspectionResult.success;
+    } catch (_) {
+      return RecordCartonInspectionResult.persistenceFailure;
+    }
+  }
+
+  Future<UpdateCartonInspectionResult> updateCartonInspection(
+    UpdateCartonInspectionCommand command,
+  ) async {
+    final current = state.valueOrNull;
+    final attempt = current?.attempt;
+    if (current == null ||
+        attempt == null ||
+        attempt.state != MissionState.inProgress) {
+      return UpdateCartonInspectionResult.invalidAttemptState;
+    }
+    final draft = attempt.inspectionDraft;
+    if (draft == null) return UpdateCartonInspectionResult.entryNotFound;
+    if (draft.status == drafts.OperationalDraftStatus.submitted) {
+      return UpdateCartonInspectionResult.alreadySubmitted;
+    }
+    final index = draft.cartonInspections.indexWhere(
+      (item) => item.id == command.entryId,
+    );
+    if (index < 0) return UpdateCartonInspectionResult.entryNotFound;
+    try {
+      final now = DateTime.now();
+      final previous = draft.cartonInspections[index];
+      final entry = previous.copyWith(
+        finding: command.finding,
+        learnerNotes: command.learnerNotes.trim(),
+        updatedAt: now,
+        revisionNumber: previous.revisionNumber + 1,
+      );
+      final entries = [...draft.cartonInspections]..[index] = entry;
+      var updated = attempt.copyWith(
+        inspectionDraft: draft.copyWith(
+          cartonInspections: entries,
+          updatedAt: now,
+        ),
+      );
+      updated = _appendDraftAction(
+        updated,
+        stageId: 'physical-inspection',
+        taskId: 'inspect-cartons',
+        actionType: ActionType.cartonInspectionUpdated,
+        targetId: entry.cartonId,
+        payload: _inspectionPayload(entry),
+      );
+      await _commit(current, updated);
+      return UpdateCartonInspectionResult.success;
+    } catch (_) {
+      return UpdateCartonInspectionResult.persistenceFailure;
+    }
+  }
+
+  Future<RemoveCartonInspectionResult> removeCartonInspection(
+    RemoveCartonInspectionCommand command,
+  ) async {
+    final current = state.valueOrNull;
+    final attempt = current?.attempt;
+    if (current == null ||
+        attempt == null ||
+        attempt.state != MissionState.inProgress) {
+      return RemoveCartonInspectionResult.invalidAttemptState;
+    }
+    final draft = attempt.inspectionDraft;
+    if (draft == null) return RemoveCartonInspectionResult.entryNotFound;
+    if (draft.status == drafts.OperationalDraftStatus.submitted) {
+      return RemoveCartonInspectionResult.alreadySubmitted;
+    }
+    drafts.CartonInspectionEntry? entry;
+    for (final item in draft.cartonInspections) {
+      if (item.id == command.entryId) entry = item;
+    }
+    if (entry == null) return RemoveCartonInspectionResult.entryNotFound;
+    try {
+      final now = DateTime.now();
+      var updated = attempt.copyWith(
+        inspectionDraft: draft.copyWith(
+          cartonInspections: draft.cartonInspections
+              .where((item) => item.id != command.entryId)
+              .toList(growable: false),
+          updatedAt: now,
+        ),
+      );
+      updated = _appendDraftAction(
+        updated,
+        stageId: 'physical-inspection',
+        taskId: 'inspect-cartons',
+        actionType: ActionType.cartonInspectionRemoved,
+        targetId: entry.cartonId,
+        payload: {
+          'entryId': entry.id,
+          'revisionNumber': entry.revisionNumber + 1,
+        },
+      );
+      await _commit(current, updated);
+      return RemoveCartonInspectionResult.success;
+    } catch (_) {
+      return RemoveCartonInspectionResult.persistenceFailure;
+    }
+  }
+
+  Future<RecordBarcodeScanResult> recordBarcodeScan(
+    RecordBarcodeScanCommand command,
+  ) async {
+    final current = state.valueOrNull;
+    final attempt = current?.attempt;
+    if (current == null ||
+        attempt == null ||
+        attempt.state != MissionState.inProgress) {
+      return RecordBarcodeScanResult.invalidAttemptState;
+    }
+    final task = current.mission.task('scan-barcodes');
+    if (!task.targetResourceIds.contains(command.cartonId)) {
+      return RecordBarcodeScanResult.cartonNotFound;
+    }
+    final draft = attempt.inspectionDraft ?? _newInspectionDraft(attempt);
+    if (draft.status == drafts.OperationalDraftStatus.submitted) {
+      return RecordBarcodeScanResult.alreadySubmitted;
+    }
+    if (draft.barcodeScans.any((item) => item.cartonId == command.cartonId)) {
+      return RecordBarcodeScanResult.duplicateEntry;
+    }
+    try {
+      final now = DateTime.now();
+      final entry = drafts.BarcodeScanEntry(
+        id: '${attempt.id}-scan-${draft.barcodeScans.length + 1}',
+        cartonId: command.cartonId,
+        status: command.status,
+        createdAt: now,
+        updatedAt: now,
+        revisionNumber: 1,
+      );
+      var updated = attempt.copyWith(
+        inspectionDraft: draft.copyWith(
+          barcodeScans: [...draft.barcodeScans, entry],
+          updatedAt: now,
+        ),
+      );
+      updated = _appendDraftAction(
+        updated,
+        stageId: 'physical-inspection',
+        taskId: 'scan-barcodes',
+        actionType: ActionType.barcodeScanRecorded,
+        targetId: entry.cartonId,
+        payload: _scanPayload(entry),
+      );
+      await _commit(current, updated);
+      return RecordBarcodeScanResult.success;
+    } catch (_) {
+      return RecordBarcodeScanResult.persistenceFailure;
+    }
+  }
+
+  Future<UpdateBarcodeScanResult> updateBarcodeScan(
+    UpdateBarcodeScanCommand command,
+  ) async {
+    final current = state.valueOrNull;
+    final attempt = current?.attempt;
+    if (current == null ||
+        attempt == null ||
+        attempt.state != MissionState.inProgress) {
+      return UpdateBarcodeScanResult.invalidAttemptState;
+    }
+    final draft = attempt.inspectionDraft;
+    if (draft == null) return UpdateBarcodeScanResult.entryNotFound;
+    if (draft.status == drafts.OperationalDraftStatus.submitted) {
+      return UpdateBarcodeScanResult.alreadySubmitted;
+    }
+    final index = draft.barcodeScans.indexWhere(
+      (item) => item.id == command.entryId,
+    );
+    if (index < 0) return UpdateBarcodeScanResult.entryNotFound;
+    try {
+      final now = DateTime.now();
+      final previous = draft.barcodeScans[index];
+      final entry = previous.copyWith(
+        status: command.status,
+        updatedAt: now,
+        revisionNumber: previous.revisionNumber + 1,
+      );
+      final entries = [...draft.barcodeScans]..[index] = entry;
+      var updated = attempt.copyWith(
+        inspectionDraft: draft.copyWith(barcodeScans: entries, updatedAt: now),
+      );
+      updated = _appendDraftAction(
+        updated,
+        stageId: 'physical-inspection',
+        taskId: 'scan-barcodes',
+        actionType: ActionType.barcodeScanUpdated,
+        targetId: entry.cartonId,
+        payload: _scanPayload(entry),
+      );
+      await _commit(current, updated);
+      return UpdateBarcodeScanResult.success;
+    } catch (_) {
+      return UpdateBarcodeScanResult.persistenceFailure;
+    }
+  }
+
+  Future<RemoveBarcodeScanResult> removeBarcodeScan(
+    RemoveBarcodeScanCommand command,
+  ) async {
+    final current = state.valueOrNull;
+    final attempt = current?.attempt;
+    if (current == null ||
+        attempt == null ||
+        attempt.state != MissionState.inProgress) {
+      return RemoveBarcodeScanResult.invalidAttemptState;
+    }
+    final draft = attempt.inspectionDraft;
+    if (draft == null) return RemoveBarcodeScanResult.entryNotFound;
+    if (draft.status == drafts.OperationalDraftStatus.submitted) {
+      return RemoveBarcodeScanResult.alreadySubmitted;
+    }
+    drafts.BarcodeScanEntry? entry;
+    for (final item in draft.barcodeScans) {
+      if (item.id == command.entryId) entry = item;
+    }
+    if (entry == null) return RemoveBarcodeScanResult.entryNotFound;
+    try {
+      final now = DateTime.now();
+      var updated = attempt.copyWith(
+        inspectionDraft: draft.copyWith(
+          barcodeScans: draft.barcodeScans
+              .where((item) => item.id != command.entryId)
+              .toList(growable: false),
+          updatedAt: now,
+        ),
+      );
+      updated = _appendDraftAction(
+        updated,
+        stageId: 'physical-inspection',
+        taskId: 'scan-barcodes',
+        actionType: ActionType.barcodeScanRemoved,
+        targetId: entry.cartonId,
+        payload: {
+          'entryId': entry.id,
+          'revisionNumber': entry.revisionNumber + 1,
+        },
+      );
+      await _commit(current, updated);
+      return RemoveBarcodeScanResult.success;
+    } catch (_) {
+      return RemoveBarcodeScanResult.persistenceFailure;
+    }
+  }
+
+  Future<SaveInspectionDraftResult> saveInspectionDraft(
+    SaveInspectionDraftCommand command,
+  ) async {
+    final current = state.valueOrNull;
+    final attempt = current?.attempt;
+    if (current == null ||
+        attempt == null ||
+        attempt.state != MissionState.inProgress) {
+      return SaveInspectionDraftResult.invalidAttemptState;
+    }
+    final draft = attempt.inspectionDraft ?? _newInspectionDraft(attempt);
+    if (draft.status == drafts.OperationalDraftStatus.submitted) {
+      return SaveInspectionDraftResult.alreadySubmitted;
+    }
+    try {
+      final updated = _withAudit(
+        attempt.copyWith(inspectionDraft: draft),
+        AttemptAuditEventType.inspectionDraftSaved,
+        screenId: 'inspection-zone',
+        payload: {
+          'inspectionCount': draft.cartonInspections.length,
+          'scanCount': draft.barcodeScans.length,
+        },
+      );
+      await _commit(current, updated);
+      return SaveInspectionDraftResult.success;
+    } catch (_) {
+      return SaveInspectionDraftResult.persistenceFailure;
+    }
+  }
+
+  Future<SubmitInspectionResult> submitInspection(
+    SubmitInspectionCommand command,
+  ) async {
+    final current = state.valueOrNull;
+    var attempt = current?.attempt;
+    final scenario = current?.scenario;
+    if (current == null ||
+        attempt == null ||
+        scenario == null ||
+        attempt.state != MissionState.inProgress) {
+      return SubmitInspectionResult.invalidAttemptState;
+    }
+    var working = attempt;
+    final draft = working.inspectionDraft;
+    if (draft == null) return SubmitInspectionResult.incompleteInspection;
+    if (draft.status == drafts.OperationalDraftStatus.submitted) {
+      return SubmitInspectionResult.alreadySubmitted;
+    }
+    final inspectionTargets = current.mission
+        .task('inspect-cartons')
+        .targetResourceIds;
+    if (draft.cartonInspections.length != inspectionTargets.length ||
+        !inspectionTargets.every(
+          (id) => draft.cartonInspections.any((entry) => entry.cartonId == id),
+        )) {
+      return SubmitInspectionResult.incompleteInspection;
+    }
+    final scanTargets = current.mission.task('scan-barcodes').targetResourceIds;
+    if (draft.barcodeScans.length != scanTargets.length ||
+        !scanTargets.every(
+          (id) => draft.barcodeScans.any((entry) => entry.cartonId == id),
+        )) {
+      return SubmitInspectionResult.incompleteScans;
+    }
+    try {
+      working = _withAudit(
+        working,
+        AttemptAuditEventType.inspectionSubmissionRequested,
+        screenId: 'inspection-zone',
+        payload: {
+          'inspectionCount': draft.cartonInspections.length,
+          'scanCount': draft.barcodeScans.length,
+        },
+      );
+      var outcomes = [...current.outcomes];
+      for (final entry in draft.cartonInspections) {
+        final compliant = entry.finding == drafts.CartonFinding.compliant;
+        (working, outcomes) = _applyAction(
+          current,
+          working,
+          outcomes,
+          _newAction(
+            working,
+            stageId: 'physical-inspection',
+            taskId: 'inspect-cartons',
+            actionType: compliant
+                ? ActionType.inspectItem
+                : ActionType.recordIssue,
+            targetId: entry.cartonId,
+            payload: compliant
+                ? const {'finding': 'compliant'}
+                : {'issueType': entry.finding.wireName},
+          ),
+          scenario,
+        );
+      }
+      for (final entry in draft.barcodeScans) {
+        (working, outcomes) = _applyAction(
+          current,
+          working,
+          outcomes,
+          _newAction(
+            working,
+            stageId: 'physical-inspection',
+            taskId: 'scan-barcodes',
+            actionType: ActionType.scanBarcode,
+            targetId: entry.cartonId,
+            payload: {'barcodeStatus': entry.status.name},
+          ),
+          scenario,
+        );
+      }
+      final now = DateTime.now();
+      working = working.copyWith(
+        inspectionDraft: draft.copyWith(
+          status: drafts.OperationalDraftStatus.submitted,
+          updatedAt: now,
+          submittedAt: now,
+        ),
+      );
+      working = _withAudit(
+        working,
+        AttemptAuditEventType.inspectionSaved,
+        screenId: 'inspection-zone',
+        payload: {
+          'inspectionCount': draft.cartonInspections.length,
+          'scanCount': draft.barcodeScans.length,
+        },
+      );
+      await _commit(current, working, outcomes: outcomes);
+      return SubmitInspectionResult.success;
+    } catch (_) {
+      await _recordWorkplaceEvent(
+        AttemptAuditEventType.inspectionSaveFailed,
+        screenId: 'inspection-zone',
+      );
+      return SubmitInspectionResult.persistenceFailure;
+    }
+  }
+
   Future<AppFailure?> submit() {
     return _guard(() async {
       final current = _requireState();
@@ -1874,6 +2317,18 @@ class WorkplaceSimulationController
     );
   }
 
+  drafts.InspectionDraft _newInspectionDraft(SimulationAttempt attempt) {
+    final now = DateTime.now();
+    return drafts.InspectionDraft(
+      attemptId: attempt.id,
+      cartonInspections: const [],
+      barcodeScans: const [],
+      status: drafts.OperationalDraftStatus.draft,
+      createdAt: now,
+      updatedAt: now,
+    );
+  }
+
   SimulationAttempt _appendDraftAction(
     SimulationAttempt attempt, {
     required String stageId,
@@ -1902,6 +2357,19 @@ class WorkplaceSimulationController
     'enteredQuantity': entry.enteredQuantity,
     'countMethod': entry.countMethod.name,
     'learnerNotes': entry.learnerNotes,
+    'revisionNumber': entry.revisionNumber,
+  };
+
+  JsonMap _inspectionPayload(drafts.CartonInspectionEntry entry) => {
+    'entryId': entry.id,
+    'finding': entry.finding.wireName,
+    'learnerNotes': entry.learnerNotes,
+    'revisionNumber': entry.revisionNumber,
+  };
+
+  JsonMap _scanPayload(drafts.BarcodeScanEntry entry) => {
+    'entryId': entry.id,
+    'status': entry.status.name,
     'revisionNumber': entry.revisionNumber,
   };
 

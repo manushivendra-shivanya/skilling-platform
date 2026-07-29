@@ -65,6 +65,13 @@ class ActionEvaluationService {
     ActionType.cartonCountRemoved,
     ActionType.countMethodSelected,
     ActionType.receivingCountSubmitted,
+    ActionType.cartonInspectionRecorded,
+    ActionType.cartonInspectionUpdated,
+    ActionType.cartonInspectionRemoved,
+    ActionType.barcodeScanRecorded,
+    ActionType.barcodeScanUpdated,
+    ActionType.barcodeScanRemoved,
+    ActionType.inspectionSubmitted,
   }.contains(type);
 
   bool _matches(
