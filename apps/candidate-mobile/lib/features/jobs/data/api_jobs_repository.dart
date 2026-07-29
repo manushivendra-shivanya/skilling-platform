@@ -36,10 +36,7 @@ class ApiJobsRepository implements JobsRepository {
       _local.readAppliedJobIds(candidateId);
 
   @override
-  Future<Result<void>> saveApplication(
-    String candidateId,
-    String jobId,
-  ) async {
+  Future<Result<void>> saveApplication(String candidateId, String jobId) async {
     final accessToken = _supabaseClient.auth.currentSession?.accessToken;
     if (accessToken == null) {
       return const ResultFailure(
