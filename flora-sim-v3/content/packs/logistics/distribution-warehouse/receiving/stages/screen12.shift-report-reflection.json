@@ -1,0 +1,96 @@
+{
+  "meta": {
+    "pack": "Logistics",
+    "domain": "Distribution Warehouse",
+    "department": "Receiving",
+    "stage": "receiving.shift-report-reflection",
+    "screen": "12",
+    "title": "Shift Report & Reflection",
+    "type": "stage",
+    "version": "0.1.0",
+    "rendererAgnostic": true,
+    "flowPosition": "after 11 Goods Receipt & Documentation, before 13 Performance Feedback",
+    "departmentFlowStep": "shift_report",
+    "note": "Communication stage, not a memory test. Backend-authoritative. The learner selects from the actual issues/actions recorded across the shift rather than free-inventing them; this is scored on recall and accuracy against real evidence.",
+    "assessmentModel": "append-only LearnerAction"
+  },
+
+  "purpose": "The learner prepares a brief end-of-shift report — what was received, what issues came up, what actions were taken — and reviews the supervisor's comments. This develops workplace communication rather than testing memorised procedure.",
+
+  "learningObjectives": [
+    "Summarise the shift's shipment accurately",
+    "Recall and represent the issues actually identified during the shift",
+    "Recall and represent the actions actually taken to resolve them",
+    "Read and acknowledge supervisor feedback"
+  ],
+
+  "input": {
+    "source": ["screen07.goods-inspection", "screen08.barcode-verification", "screen09.discrepancy-resolution", "screen10.receiving-decision", "screen11.goods-receipt-documentation"],
+    "note": "The runtime provides the actual set of issues and resolutions recorded this shift as selectable options; the learner picks from what happened, they do not write free-form invented content.",
+    "expected": {
+      "actualIssues": "[issueId]",
+      "actualActions": "[{ issueId, resolution }]",
+      "decision": "accept_shipment | partial_acceptance | reject_shipment"
+    }
+  },
+
+  "environment": {
+    "area": "receiving_office",
+    "objects": ["computer"],
+    "nearby": ["exit"]
+  },
+
+  "workflow": ["draft_shipment_summary", "select_issues_identified", "select_actions_taken", "read_supervisor_comments", "submit_shift_report", "proceed_to_performance_feedback"],
+
+  "npcs": {
+    "supervisor": { "role": "Supervisor", "guidanceOnly": true, "revealsAnswers": false, "example": "Good shift — you caught the seal issue early. Make sure your report mentions why you escalated it, not just that you did." }
+  },
+
+  "objects": ["computer"],
+
+  "learnerActionsCatalog": [
+    { "action": "drafted_shipment_summary",  "verb": "operate", "competencies": ["documentation", "communication"] },
+    { "action": "selected_issues_identified","verb": "operate", "competencies": ["attention_to_detail", "communication"] },
+    { "action": "selected_actions_taken",     "verb": "operate", "competencies": ["communication", "documentation"] },
+    { "action": "read_supervisor_comments",   "verb": "read",    "competencies": ["communication"] },
+    { "action": "submitted_shift_report",     "verb": "submitDecision", "competencies": ["communication", "documentation"] }
+  ],
+
+  "competencies": ["communication", "documentation", "attention_to_detail"],
+
+  "scenarios": [
+    { "id": "A", "name": "Clean shift",           "config": { "actualIssues": [], "actualActions": [] },                                                                                        "expectedReport": { "issuesIdentified": [], "actionsTaken": [] } },
+    { "id": "B", "name": "Single issue shift",     "config": { "actualIssues": ["P2-C01"], "actualActions": [ { "issueId": "P2-C01", "resolution": "quarantine" } ] },                            "expectedReport": { "issuesIdentified": ["P2-C01"], "actionsTaken": [ { "issueId": "P2-C01", "resolution": "quarantine" } ] } },
+    { "id": "C", "name": "Multi-issue shift with escalation", "config": { "actualIssues": ["P2-C01", "L1-04", "SEAL-01"], "actualActions": [ { "issueId": "P2-C01", "resolution": "quarantine" }, { "issueId": "L1-04", "resolution": "reject" }, { "issueId": "SEAL-01", "resolution": "escalate_to_supervisor" } ] }, "expectedReport": { "issuesIdentified": ["P2-C01", "L1-04", "SEAL-01"], "actionsTaken": [ { "issueId": "P2-C01", "resolution": "quarantine" }, { "issueId": "L1-04", "resolution": "reject" }, { "issueId": "SEAL-01", "resolution": "escalate_to_supervisor" } ] } }
+  ],
+
+  "assessmentRules": {
+    "measures": ["issue_recall_completeness", "issue_recall_accuracy", "action_recall_accuracy", "summary_quality"],
+    "definitions": {
+      "issue_recall_completeness": "actual issues from the shift that were included in issuesIdentified / total actual issues",
+      "issue_recall_accuracy": "included issues that were real (not fabricated) / total included",
+      "action_recall_accuracy": "actionsTaken entries matching the actual resolution recorded at Screen 09",
+      "summary_quality": "shipment summary references the actual decision and quantity outcome from Screens 10-11, not generic text"
+    },
+    "note": "This is evidence-based reflection, not free recall from memory — the learner selects from real shift data, so scoring measures accurate representation, not invention."
+  },
+
+  "completion": {
+    "criteria": ["drafted_shipment_summary", "selected_issues_identified", "selected_actions_taken", "read_supervisor_comments", "submitted_shift_report"],
+    "rule": "Stage completes when all report fields are completed and the report is submitted.",
+    "note": "Completion = report submitted. Recall completeness/accuracy is assessed separately via assessmentRules."
+  },
+
+  "output": {
+    "target": "screen13.performance-feedback",
+    "immutable": true,
+    "note": "The Shift Report becomes part of the immutable mission record and is surfaced verbatim in the Screen 13 evidence highlights.",
+    "shape": {
+      "shiftReportId": "string",
+      "shipmentSummary": "string",
+      "issuesIdentified": "[issueId]",
+      "actionsTaken": "[{ issueId, resolution }]",
+      "evidenceRef": "LearnerAction seq range for this stage"
+    }
+  }
+}

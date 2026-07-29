@@ -1,0 +1,138 @@
+{
+  "meta": {
+    "pack": "Logistics",
+    "domain": "Distribution Warehouse",
+    "department": "Receiving",
+    "stage": "receiving.barcode-verification",
+    "screen": "08",
+    "title": "Barcode Verification",
+    "type": "stage",
+    "version": "0.1.0",
+    "rendererAgnostic": true,
+    "flowPosition": "after 07 Goods Inspection, before 09 Discrepancy Resolution & Quarantine",
+    "departmentFlowStep": "scan",
+    "note": "Digital verification stage. Backend-authoritative. Output is an immutable Verification Result consumed by Screen 09.",
+    "assessmentModel": "append-only LearnerAction"
+  },
+
+  "purpose": "The learner verifies every received item against the warehouse system by scanning each carton or pallet barcode, resolving unreadable or duplicate scans, and matching the results against the Purchase Order and Delivery Note.",
+
+  "learningObjectives": [
+    "Operate a barcode scanner correctly",
+    "Resolve an unreadable barcode via manual entry",
+    "Resolve a duplicate scan without double-counting",
+    "Match scanned items against the Purchase Order",
+    "Match scanned items against the Delivery Note",
+    "Identify items on the PO that were not scanned (missing)",
+    "Identify scanned items not on the PO (unexpected)",
+    "Recognise and skip items already quarantined at Screen 07"
+  ],
+
+  "input": {
+    "source": "screen07.goods-inspection",
+    "note": "Consumes the immutable Inspection Report. Items already in the quarantineList from Screen 07 are excluded from scanning; the learner must recognise and skip them, not re-scan or re-flag them.",
+    "expected": {
+      "reportId": "string",
+      "findings": "[{ item, type, severity, quantityAffected, notes, photo?, recommendedAction }]",
+      "perItemStatus": "{ itemId: accepted | quarantined | rejected }",
+      "quarantineList": "[itemId]",
+      "palletsInspected": "int",
+      "poLineItems": "[{ sku, qty, batch?, expiry? }]"
+    }
+  },
+
+  "environment": {
+    "area": "barcode_station",
+    "objects": ["barcode_scanner", "tablet", "carton", "purchase_order", "delivery_note"],
+    "nearby": ["inspection_zone", "damaged_goods", "receiving_office"]
+  },
+
+  "workflow": ["inspection_zone", "barcode_station", "select_next_item", "scan_or_resolve", "compare_to_po_and_delivery_note", "record_mismatch_if_any", "repeat_until_all_scanned", "submit_verification_result", "proceed_to_discrepancy_resolution"],
+
+  "tasks": {
+    "select_item":    { "skip": ["items already in screen07 quarantineList"] },
+    "scan_item":      { "capture": ["sku", "quantity", "batch", "expiry"] },
+    "resolve_scan":   { "triggers": ["unreadable_barcode", "duplicate_scan"], "capture": ["resolutionMethod", "resolvedValue"] },
+    "compare_item":   { "check": ["sku_match", "quantity_match", "batch_match", "expiry_valid", "on_po"] },
+    "record_mismatch":{ "fields": ["mismatchType", "expectedValue", "scannedValue", "quantityAffected", "notes"] }
+  },
+
+  "mismatchTypes": {
+    "identity":     ["wrong_sku", "unexpected_item"],
+    "quantity":     ["missing_item", "short_count", "over_count"],
+    "traceability": ["wrong_batch", "wrong_expiry"],
+    "capture":      ["unreadable_barcode", "duplicate_scan"]
+  },
+  "severityScale": ["minor", "moderate", "major", "critical"],
+  "resolutionActions": ["accept", "flag_for_resolution", "manual_override_recorded"],
+
+  "npcs": {
+    "supervisor": { "role": "Supervisor", "guidanceOnly": true, "example": "If the scanner can't read it, enter the code manually — don't skip the item. If it scans twice, check whether it's actually two cartons." }
+  },
+
+  "objects": ["barcode_scanner", "tablet", "carton", "purchase_order", "delivery_note"],
+
+  "learnerActionsCatalog": [
+    { "action": "selected_item",                "verb": "pickUp",         "competencies": ["barcode_scanning"] },
+    { "action": "scanned_barcode",               "verb": "scan",           "competencies": ["barcode_scanning", "equipment_usage"] },
+    { "action": "resolved_unreadable_barcode",   "verb": "operate",        "competencies": ["barcode_scanning", "equipment_usage", "problem_solving"] },
+    { "action": "resolved_duplicate_scan",       "verb": "operate",        "competencies": ["barcode_scanning", "attention_to_detail"] },
+    { "action": "compared_to_po",                "verb": "compare",       "competencies": ["documentation", "attention_to_detail"] },
+    { "action": "compared_to_delivery_note",     "verb": "compare",       "competencies": ["documentation", "attention_to_detail"] },
+    { "action": "identified_missing_item",       "verb": "reportIssue",   "competencies": ["inventory_accuracy", "attention_to_detail"] },
+    { "action": "identified_unexpected_item",    "verb": "reportIssue",   "competencies": ["inventory_accuracy", "attention_to_detail"] },
+    { "action": "recorded_mismatch",             "verb": "reportIssue",   "competencies": ["digital_documentation", "problem_solving"] },
+    { "action": "skipped_quarantined_item",      "verb": "look",          "competencies": ["attention_to_detail", "sop_compliance"] },
+    { "action": "completed_item_verification",   "verb": "inspect",       "competencies": ["barcode_scanning", "inventory_accuracy"] },
+    { "action": "submitted_verification_result", "verb": "submitDecision","competencies": ["decision_making", "receiving_operations"] }
+  ],
+
+  "competencies": ["inventory_accuracy", "equipment_usage", "attention_to_detail", "barcode_scanning", "documentation", "digital_documentation", "problem_solving", "sop_compliance", "decision_making", "receiving_operations"],
+
+  "scenarios": [
+    { "id": "A", "name": "All items scan clean",             "config": { "groundTruth": [] },                                                                                                                       "expectedResult": "all_verified" },
+    { "id": "B", "name": "One SKU mismatch",                  "config": { "groundTruth": [ { "item": "L1-04", "type": "wrong_sku", "severity": "critical", "qty": 1 } ] },                                          "expectedResult": "mismatch_flagged" },
+    { "id": "C", "name": "Missing item (on PO, not scanned)", "config": { "groundTruth": [ { "item": "L2-01", "type": "missing_item", "severity": "moderate", "qty": 4 } ] },                                        "expectedResult": "mismatch_flagged" },
+    { "id": "D", "name": "Unexpected item (scanned, not on PO)", "config": { "groundTruth": [ { "item": "L5-01", "type": "unexpected_item", "severity": "moderate", "qty": 1 } ] },                                   "expectedResult": "mismatch_flagged" },
+    { "id": "E", "name": "Duplicate scan resolved",           "config": { "groundTruth": [ { "item": "L1-09", "type": "duplicate_scan", "severity": "minor", "qty": 1 } ] },                                         "expectedResult": "resolved_correctly" },
+    { "id": "F", "name": "Unreadable barcode resolved",       "config": { "groundTruth": [ { "item": "L3-02", "type": "unreadable_barcode", "severity": "minor", "qty": 1 } ] },                                     "expectedResult": "resolved_correctly" },
+    { "id": "G", "name": "Multiple discrepancies",            "config": { "groundTruth": [ { "item": "L2-03", "type": "wrong_sku", "severity": "critical", "qty": 2 }, { "item": "L4-01", "type": "short_count", "severity": "moderate", "qty": 3 } ] }, "expectedResult": "multiple_mismatches_flagged" },
+    { "id": "H", "name": "Pre-quarantined item present",     "config": { "preQuarantined": ["P2-C01"], "groundTruth": [] },                                                                                          "expectedResult": "quarantined_item_correctly_skipped" }
+  ],
+
+  "assessmentRules": {
+    "measures": ["scan_completeness", "correct_mismatch_identification", "false_positives", "missed_mismatches", "correct_type_classification", "quarantined_item_handling", "scan_order_evidence"],
+    "definitions": {
+      "scan_completeness": "eligible items scanned or resolved / eligible items assigned (excludes items already in screen07 quarantineList)",
+      "correct_mismatch_identification": "recorded mismatches that match a ground-truth mismatch (by item + type)",
+      "false_positives": "recorded mismatches with no matching ground-truth mismatch",
+      "missed_mismatches": "ground-truth mismatches with no matching recorded mismatch",
+      "correct_type_classification": "matched mismatches whose type equals ground truth",
+      "quarantined_item_handling": "did the learner correctly skip items already in screen07's quarantineList rather than re-scanning or re-flagging them",
+      "scan_order_evidence": "the append-only scan sequence is preserved as evidence, not scored directly — supports later review of process compliance"
+    },
+    "note": "Completion and correctness remain separate. A learner may submit a complete verification while missing mismatches or logging false positives."
+  },
+
+  "completion": {
+    "criteria": ["scanned_or_resolved_all_eligible_items", "compared_each_item_to_po_and_delivery_note", "recorded_all_identified_mismatches", "submitted_verification_result", "handed_over_to_discrepancy_resolution"],
+    "rule": "Stage completes on verification-result submission after all eligible items (excluding those already quarantined at Screen 07) have been scanned or resolved.",
+    "note": "Completion = workflow followed to result submission. Correctness/competency computed separately from the evidence via assessmentRules."
+  },
+
+  "output": {
+    "target": "screen09.discrepancy-resolution-quarantine",
+    "immutable": true,
+    "note": "The Verification Result becomes an immutable part of the simulation attempt. Screen 09 consumes its mismatches alongside Screen 07's findings to resolve every outstanding issue.",
+    "shape": {
+      "verificationId": "string",
+      "scanEvents": "[{ seq, item, result: matched|mismatch|resolved, ts }]",
+      "mismatches": "[{ item, type, severity, expectedValue, scannedValue, quantityAffected, notes }]",
+      "corrections": "[{ item, correctionType, originalValue, correctedValue }]",
+      "perItemVerification": "{ itemId: verified | mismatch | manual_override | skipped_quarantined }",
+      "itemsScanned": "int",
+      "itemsEligible": "int",
+      "evidenceRef": "LearnerAction seq range for this stage"
+    }
+  }
+}

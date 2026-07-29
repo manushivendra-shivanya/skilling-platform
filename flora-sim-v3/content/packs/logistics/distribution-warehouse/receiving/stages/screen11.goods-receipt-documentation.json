@@ -1,0 +1,95 @@
+{
+  "meta": {
+    "pack": "Logistics",
+    "domain": "Distribution Warehouse",
+    "department": "Receiving",
+    "stage": "receiving.goods-receipt-documentation",
+    "screen": "11",
+    "title": "Goods Receipt & Documentation",
+    "type": "stage",
+    "version": "0.1.0",
+    "rendererAgnostic": true,
+    "flowPosition": "after 10 Receiving Decision, before 12 Shift Report & Reflection",
+    "departmentFlowStep": "generate_grn",
+    "note": "Administrative stage. Backend-authoritative. Turns the Receiving Decision into net quantities, storage locations, and a formal Goods Receipt Note (GRN). Output is an immutable GRN record consumed by Screen 12.",
+    "assessmentModel": "append-only LearnerAction"
+  },
+
+  "purpose": "The learner finalises the paperwork: confirms received quantities per PO line item after netting out quarantined and rejected quantities, assigns a warehouse storage location to each accepted item, and generates the Goods Receipt Note.",
+
+  "learningObjectives": [
+    "Compute net accepted quantity per line item (PO qty minus quarantined/rejected qty)",
+    "Assign an appropriate storage location per accepted item",
+    "Generate a complete and accurate Goods Receipt Note",
+    "Verify the GRN against the Receiving Decision before submitting"
+  ],
+
+  "input": {
+    "source": ["screen10.receiving-decision", "screen09.discrepancy-resolution"],
+    "note": "Consumes the shipment decision plus the final quarantine/reject lists to compute what actually gets received into inventory.",
+    "expected": {
+      "decision": "accept_shipment | partial_acceptance | reject_shipment",
+      "finalQuarantineList": "[itemId]",
+      "finalRejectList": "[itemId]",
+      "poLineItems": "[{ sku, qty }]"
+    }
+  },
+
+  "environment": {
+    "area": "receiving_office",
+    "objects": ["computer", "printer", "label_printer"],
+    "nearby": ["quarantine", "unloading_area"]
+  },
+
+  "workflow": ["compute_net_quantities", "confirm_line_item_quantities", "assign_storage_location_per_item", "generate_grn", "verify_grn_against_decision", "submit_documentation", "proceed_to_shift_report"],
+
+  "locationLibrary": { "note": "Storage bins/racks reused from the department object library (rack, bin); assignment is by area capacity, not a fixed mapping." },
+
+  "learnerActionsCatalog": [
+    { "action": "confirmed_line_item_quantity", "verb": "operate",  "competencies": ["inventory_accuracy", "receiving_operations"] },
+    { "action": "assigned_storage_location",     "verb": "place",   "competencies": ["receiving_operations", "attention_to_detail"] },
+    { "action": "resolved_location_conflict",    "verb": "operate", "competencies": ["problem_solving", "receiving_operations"] },
+    { "action": "generated_grn",                 "verb": "operate", "competencies": ["digital_documentation", "receiving_operations"] },
+    { "action": "verified_grn_accuracy",         "verb": "compare", "competencies": ["attention_to_detail", "digital_documentation"] },
+    { "action": "submitted_documentation",       "verb": "submitDecision", "competencies": ["receiving_operations", "digital_documentation"] }
+  ],
+
+  "competencies": ["receiving_operations", "digital_documentation", "inventory_accuracy", "attention_to_detail", "problem_solving"],
+
+  "scenarios": [
+    { "id": "A", "name": "Straightforward — all accepted",      "config": { "poLineItems": [ { "sku": "SKU-4471", "qty": 40 } ], "finalQuarantineList": [], "finalRejectList": [] },                         "expectedNetQuantities": { "SKU-4471": 40 } },
+    { "id": "B", "name": "Partial — some quantity quarantined", "config": { "poLineItems": [ { "sku": "SKU-4471", "qty": 40 } ], "finalQuarantineList": ["P2-C01"], "finalRejectList": [], "quarantinedQty": { "SKU-4471": 4 } }, "expectedNetQuantities": { "SKU-4471": 36 } },
+    { "id": "C", "name": "Partial — some quantity rejected",    "config": { "poLineItems": [ { "sku": "SKU-4471", "qty": 40 } ], "finalQuarantineList": [], "finalRejectList": ["L1-04"], "rejectedQty": { "SKU-4471": 12 } }, "expectedNetQuantities": { "SKU-4471": 28 } },
+    { "id": "D", "name": "Storage location at capacity",         "config": { "poLineItems": [ { "sku": "SKU-4471", "qty": 40 } ], "finalQuarantineList": [], "finalRejectList": [], "locationConflict": true }, "expectedNetQuantities": { "SKU-4471": 40 } }
+  ],
+
+  "assessmentRules": {
+    "measures": ["quantity_accuracy", "location_assignment_completeness", "grn_accuracy", "conflict_handling"],
+    "definitions": {
+      "quantity_accuracy": "confirmed net quantity per line item == PO qty minus quarantined/rejected qty for that line item",
+      "location_assignment_completeness": "every accepted item has a storage location assigned",
+      "grn_accuracy": "generated GRN's quantities and locations match what was confirmed/assigned in this session",
+      "conflict_handling": "when a location is at capacity, did the learner resolve it (alternate location) rather than leaving it unassigned"
+    },
+    "note": "Completion and correctness remain separate. A learner may generate a GRN (complete) with an incorrect net quantity or an unassigned location (low correctness)."
+  },
+
+  "completion": {
+    "criteria": ["confirmed_quantities_for_all_line_items", "assigned_locations_for_all_accepted_items", "generated_grn", "verified_and_submitted_documentation"],
+    "rule": "Stage completes when quantities are confirmed, locations assigned, the GRN is generated, and documentation is submitted.",
+    "note": "Completion = documentation submitted. Quantity/location accuracy is assessed separately via assessmentRules."
+  },
+
+  "output": {
+    "target": "screen12.shift-report-reflection",
+    "immutable": true,
+    "note": "The GRN record becomes an immutable part of the simulation attempt and the system of record for what entered inventory.",
+    "shape": {
+      "grnId": "string",
+      "confirmedQuantities": "[{ sku, qtyConfirmed }]",
+      "locationAssignments": "{ itemId: locationId }",
+      "grnGenerated": "boolean",
+      "evidenceRef": "LearnerAction seq range for this stage"
+    }
+  }
+}

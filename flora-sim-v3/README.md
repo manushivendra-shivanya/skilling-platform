@@ -64,8 +64,10 @@ append-only evidence stream; **completion and correctness are scored separately.
 - Shipped: Screens 03–06 (Workplace Overview, Document Desk, shipment confirmation +
   revisioned carton counts, Inspection Zone placeholder), `/practise` routes, atomic
   persistence, append-only learner actions + audit events.
-- **Next milestone: complete the Screen 06 Inspection Zone contract — not WebGL yet.**
-  This is architecturally correct: the renderer is the last layer (ADR-002).
+- **Screens 06-13 are now all authored as stage contracts** — the full Receiving
+  mission, dock verification through mission-level performance feedback. Renderer
+  is still deferred: this is architecturally correct, the renderer is the last
+  layer (ADR-002). See `docs/FLORA-3D-CONTEXT.md` for the full context brief.
 
 ## Status & caveats
 
@@ -79,10 +81,12 @@ append-only evidence stream; **completion and correctness are scored separately.
 
 ## Next steps
 
-0. **Now:** complete the **Screen 06 Inspection Zone contract** (backend-authoritative).
-   WebGL viewer stays deferred until the contract is stable.
-1. Formalise the **content schema** as the shared contract between Backend and clients
-   (this package's `content/` is that schema + Receiving as data).
+0. **Now:** wire the Screen 06-13 stage contracts to the backend (headless runtime
+   skeleton: flow state machine + interaction resolver + LearnerAction emitter,
+   unit-testable, mirroring `tools/stage_runner.mjs`). WebGL viewer stays deferred
+   until the contracts are stable end to end.
+1. Build runner coverage for Screens 11-13 in `tools/stage_runner.mjs` (currently
+   06-10 only).
 2. Author a **second department (Put Away)** as data — proves reuse with zero engine
    changes. *That* is the real test the architecture holds.
 3. When ready for 3D: build the **WebGL viewer** (R3F or Babylon per ADR-001), embed

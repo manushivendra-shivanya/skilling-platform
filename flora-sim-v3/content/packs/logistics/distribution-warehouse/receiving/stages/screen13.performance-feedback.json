@@ -1,0 +1,89 @@
+{
+  "meta": {
+    "pack": "Logistics",
+    "domain": "Distribution Warehouse",
+    "department": "Receiving",
+    "stage": "receiving.performance-feedback",
+    "screen": "13",
+    "title": "Performance Feedback",
+    "type": "stage",
+    "version": "0.1.0",
+    "rendererAgnostic": true,
+    "flowPosition": "after 12 Shift Report & Reflection — mission end",
+    "departmentFlowStep": "feedback",
+    "note": "Aggregation stage, not a task. Backend-authoritative. Rolls up every LearnerAction across the whole Receiving mission (Screens 06-12) into a competency-based report. This contract defines the SHAPE of that report; the roll-up algorithm itself lives in Flora Backend, matching the backend-authoritative model of every other stage in this pack.",
+    "assessmentModel": "append-only LearnerAction"
+  },
+
+  "purpose": "Flora presents the outcome of the entire Receiving mission as a competency-based assessment — evidence and development recommendations, not a bare pass/fail score — so the learner sees what they demonstrated and what to improve.",
+
+  "learningObjectives": [
+    "Read and understand a competency-based performance report",
+    "Distinguish between completing the mission and demonstrating strong competency",
+    "Identify concrete next steps for improvement"
+  ],
+
+  "input": {
+    "source": ["screen06.receiving-dock", "screen07.goods-inspection", "screen08.barcode-verification", "screen09.discrepancy-resolution", "screen10.receiving-decision", "screen11.goods-receipt-documentation", "screen12.shift-report-reflection"],
+    "note": "Consumes the full evidenceRef range for the attempt (every LearnerAction emitted from Screen 06 onward) plus the department's competency taxonomy (receiving.department.json → competencies).",
+    "expected": {
+      "evidenceRef": "LearnerAction seq range for the whole attempt",
+      "decision": "accept_shipment | partial_acceptance | reject_shipment",
+      "competencyTaxonomy": "the department's technical/behavioural/digital/safety competency groups"
+    }
+  },
+
+  "environment": {
+    "area": "exit",
+    "objects": [],
+    "nearby": []
+  },
+
+  "workflow": ["compute_competency_rollup", "render_mission_outcome", "render_evidence_highlights", "render_recommendations", "acknowledge_feedback"],
+
+  "rollUp": {
+    "note": "Per-competency score = evidence-weighted aggregate of every LearnerAction across the attempt tagged with that competency (correct vs error/corrected results), computed by Flora Backend. This contract fixes the report shape so any renderer can display it; it does not fix the scoring formula, which is backend-owned like every correctnessModel in this pack.",
+    "missionOutcomeSource": "screen10.receiving-decision.decision",
+    "evidenceHighlightsSource": "notable ok/error/corrected LearnerActions across all stages, surfaced in chronological order",
+    "recommendationsSource": "competencies scoring below a backend-defined threshold, mapped to a short improvement action"
+  },
+
+  "learnerActionsCatalog": [
+    { "action": "acknowledged_feedback", "verb": "read", "competencies": [] }
+  ],
+
+  "competencies": ["technical", "behavioural", "digital", "safety"],
+
+  "outputExample": {
+    "missionOutcome": "Shipment Received",
+    "competencyScores": { "inventory_accuracy": 92, "goods_inspection": 88, "safety_awareness": 100, "decision_making": 74, "communication": 81 },
+    "evidenceHighlights": [
+      "Detected damaged carton",
+      "Correctly quarantined goods",
+      "Missed one barcode mismatch",
+      "Escalated broken security seal"
+    ],
+    "recommendations": [
+      "Improve barcode verification",
+      "Check all pallet labels before scanning",
+      "Excellent adherence to safety procedures"
+    ]
+  },
+
+  "completion": {
+    "criteria": ["viewed_mission_outcome", "viewed_competency_scores", "acknowledged_feedback"],
+    "rule": "Stage completes when the learner has viewed and acknowledged the feedback report. This is the terminal step of the Receiving mission.",
+    "note": "No separate correctness model — this stage reports the correctness computed by every prior stage, it does not generate new evidence to score."
+  },
+
+  "output": {
+    "target": null,
+    "note": "Terminal stage of the Receiving mission. In the department roadmap, mission completion is the trigger to unlock the next department (Put Away).",
+    "shape": {
+      "missionOutcome": "string",
+      "competencyScores": "{ competencyId: percent }",
+      "evidenceHighlights": "[string]",
+      "recommendations": "[string]"
+    }
+  }
+}

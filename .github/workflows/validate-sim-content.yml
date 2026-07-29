@@ -1,0 +1,33 @@
+name: Validate Flora simulation content
+
+on:
+  pull_request:
+    paths:
+      - 'flora-sim-v3/content/**'
+      - 'flora-sim-v3/tools/**'
+  push:
+    branches: [main]
+    paths:
+      - 'flora-sim-v3/content/**'
+      - 'flora-sim-v3/tools/**'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate JSON syntax
+        run: |
+          for f in $(find flora-sim-v3/content -name '*.json'); do
+            python3 -c "import json,sys; json.load(open(sys.argv[1]))" "$f" || exit 1
+            echo "OK  $f"
+          done
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run stage_runner reference checks
+        run: node tools/stage_runner.mjs
+        working-directory: flora-sim-v3/tools

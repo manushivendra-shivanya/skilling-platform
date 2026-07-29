@@ -1,0 +1,113 @@
+{
+  "meta": {
+    "pack": "Logistics",
+    "domain": "Distribution Warehouse",
+    "department": "Receiving",
+    "stage": "receiving.discrepancy-resolution",
+    "screen": "09",
+    "title": "Discrepancy Resolution & Quarantine",
+    "type": "stage",
+    "version": "0.1.0",
+    "rendererAgnostic": true,
+    "flowPosition": "after 08 Barcode Verification, before 10 Receiving Decision",
+    "departmentFlowStep": "record_discrepancies / move_damaged",
+    "note": "Judgement stage. Backend-authoritative. Merges Screen 07 findings and Screen 08 mismatches into one issue list and requires a resolution for every issue. Output is an immutable Resolution Set consumed by Screen 10.",
+    "assessmentModel": "append-only LearnerAction"
+  },
+
+  "purpose": "For every issue surfaced during inspection and barcode verification, the learner decides how to resolve it — accept, partially accept, quarantine, reject, or escalate to the supervisor — finalising the disposition of every flagged item before the shipment-level decision.",
+
+  "learningObjectives": [
+    "Consolidate issues from inspection and barcode verification into one worklist",
+    "Apply the correct resolution action per issue severity and type",
+    "Recognise when an issue is ambiguous enough to require supervisor escalation",
+    "Avoid over-flagging (quarantining/rejecting items with no real issue)",
+    "Avoid under-flagging (accepting items with an unresolved critical issue)",
+    "Finalise the quarantine and reject lists for the shipment"
+  ],
+
+  "input": {
+    "source": ["screen07.goods-inspection", "screen08.barcode-verification"],
+    "note": "Consumes Screen 07's findings + quarantineList and Screen 08's mismatches. The two lists are merged into a single issue worklist by the runtime; items already quarantined at Screen 07 still need a final disposition here (quarantine is provisional until this stage confirms it).",
+    "expected": {
+      "findings": "[{ item, type, severity, quantityAffected, notes, recommendedAction }]",
+      "quarantineList": "[itemId]",
+      "mismatches": "[{ item, type, severity, expectedValue, scannedValue, quantityAffected, notes }]"
+    }
+  },
+
+  "environment": {
+    "area": "damaged_goods",
+    "objects": ["carton", "incident_report", "quarantine_trolley", "tablet"],
+    "nearby": ["inspection_zone", "barcode_station", "quarantine", "receiving_office"]
+  },
+
+  "workflow": ["review_issue_worklist", "select_issue", "assess_severity_and_evidence", "choose_resolution_or_escalate", "confirm_resolution", "repeat_until_all_resolved", "finalise_quarantine_and_reject_lists", "submit_resolution_set", "proceed_to_receiving_decision"],
+
+  "resolutionActions": ["accept", "partial_accept", "quarantine", "reject", "escalate_to_supervisor"],
+
+  "npcs": {
+    "supervisor": {
+      "role": "Supervisor",
+      "guidanceOnly": true,
+      "revealsAnswers": false,
+      "example": "Ask yourself: can this item still be sold or used safely? If you're not sure, escalate rather than guess.",
+      "note": "Escalating is never penalised; escalating everything (no independent judgement) is."
+    }
+  },
+
+  "objects": ["carton", "incident_report", "quarantine_trolley", "tablet"],
+
+  "learnerActionsCatalog": [
+    { "action": "reviewed_issue",             "verb": "read",           "competencies": ["attention_to_detail"] },
+    { "action": "selected_resolution",         "verb": "submitDecision", "competencies": ["decision_making", "sop_compliance"] },
+    { "action": "escalated_to_supervisor",     "verb": "speak",         "competencies": ["communication", "decision_making"] },
+    { "action": "received_supervisor_guidance","verb": "speak",         "competencies": ["communication"] },
+    { "action": "moved_item_to_quarantine",    "verb": "place",         "competencies": ["safe_material_handling", "sop_compliance"] },
+    { "action": "confirmed_resolution",        "verb": "submitDecision","competencies": ["decision_making"] },
+    { "action": "submitted_resolution_set",    "verb": "submitDecision","competencies": ["decision_making", "sop_compliance"] }
+  ],
+
+  "competencies": ["decision_making", "sop_compliance", "problem_solving", "communication", "attention_to_detail", "safe_material_handling"],
+
+  "scenarios": [
+    { "id": "A", "name": "No issues carried forward",       "config": { "issues": [] },                                                                                                                                            "expectedResolutions": {} },
+    { "id": "B", "name": "Single moderate defect",           "config": { "issues": [ { "id": "P2-C01", "type": "crushed_carton", "severity": "moderate", "source": "inspection" } ] },                                              "expectedResolutions": { "P2-C01": "quarantine" } },
+    { "id": "C", "name": "Critical wrong SKU",                "config": { "issues": [ { "id": "L1-04", "type": "wrong_sku", "severity": "critical", "source": "barcode" } ] },                                                      "expectedResolutions": { "L1-04": "reject" } },
+    { "id": "D", "name": "Minor near-expiry",                 "config": { "issues": [ { "id": "P1-C05", "type": "near_expiry", "severity": "moderate", "source": "inspection" } ] },                                                 "expectedResolutions": { "P1-C05": "quarantine" } },
+    { "id": "E", "name": "Ambiguous packaging concern",       "config": { "issues": [ { "id": "P3-C02", "type": "loose_stretch_wrap", "severity": "minor", "source": "inspection", "ambiguous": true } ] },                          "expectedResolutions": { "P3-C02": "escalate_to_supervisor" } },
+    { "id": "F", "name": "Multiple mixed-severity issues",    "config": { "issues": [ { "id": "P2-C01", "type": "crushed_carton", "severity": "moderate", "source": "inspection" }, { "id": "L2-01", "type": "missing_item", "severity": "moderate", "source": "barcode" }, { "id": "L1-04", "type": "wrong_sku", "severity": "critical", "source": "barcode" } ] }, "expectedResolutions": { "P2-C01": "quarantine", "L2-01": "partial_accept", "L1-04": "reject" } },
+    { "id": "G", "name": "Safety-critical seal issue carried from Screen 06", "config": { "issues": [ { "id": "SEAL-01", "type": "broken_seal", "severity": "critical", "source": "dock" } ] }, "expectedResolutions": { "SEAL-01": "escalate_to_supervisor" } }
+  ],
+
+  "assessmentRules": {
+    "measures": ["per_issue_resolution_accuracy", "escalation_appropriateness", "over_flagging", "under_flagging"],
+    "definitions": {
+      "per_issue_resolution_accuracy": "chosen resolution == scenario.expectedResolutions[issueId], per issue",
+      "escalation_appropriateness": "escalated only issues genuinely marked ambiguous/safety-critical in the scenario, not routine ones",
+      "over_flagging": "quarantined or rejected an item with no matching issue, or a moderate issue resolved as reject when quarantine was expected",
+      "under_flagging": "accepted an item carrying a critical/unresolved issue"
+    },
+    "note": "Completion and correctness remain separate. A learner may resolve every issue (complete) while choosing the wrong action for several of them (low correctness)."
+  },
+
+  "completion": {
+    "criteria": ["reviewed_every_issue_in_worklist", "recorded_a_resolution_for_every_issue", "finalised_quarantine_and_reject_lists", "submitted_resolution_set", "handed_over_to_receiving_decision"],
+    "rule": "Stage completes when every issue in the merged worklist (Screen 07 findings + Screen 08 mismatches) has a recorded resolution and the set is submitted.",
+    "note": "Completion = every issue resolved and submitted. Correctness/competency computed separately via assessmentRules."
+  },
+
+  "output": {
+    "target": "screen10.receiving-decision",
+    "immutable": true,
+    "note": "The Resolution Set becomes an immutable part of the simulation attempt. Screen 10 consumes it, alongside the upstream stage summaries, to make the shipment-level decision.",
+    "shape": {
+      "resolutionId": "string",
+      "perIssueResolution": "{ issueId: accept | partial_accept | quarantine | reject | escalate_to_supervisor }",
+      "escalations": "[issueId]",
+      "finalQuarantineList": "[itemId]",
+      "finalRejectList": "[itemId]",
+      "evidenceRef": "LearnerAction seq range for this stage"
+    }
+  }
+}

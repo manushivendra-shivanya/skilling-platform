@@ -1,5 +1,24 @@
 # Changelog — flora-sim
 
+## v3.3.0 — 2026-07-29
+### Added
+- **Stage contracts for Screens 08-13**, completing the Receiving mission end to end:
+  Screen 08 Barcode Verification, Screen 09 Discrepancy Resolution & Quarantine,
+  Screen 10 Receiving Decision, Screen 11 Goods Receipt & Documentation, Screen 12
+  Shift Report & Reflection, Screen 13 Performance Feedback. Each screen consumes
+  the previous screen's immutable output; Screen 13 rolls up the whole attempt into
+  a competency-based mission report (not pass/fail).
+- **`docs/FLORA-3D-CONTEXT.md`** — the standing context brief for continuing this
+  work in a new session (architecture recap, current milestone, build order).
+- **`tools/stage_runner.mjs`** extended with reference runners for Screens 08, 09,
+  and 10 (mirrors the ground-truth/rubric scoring pattern from 06/07). Screens
+  11-13 have full contracts but no runner yet (11/12 are documentation/reflection
+  tasks, 13 is a pure aggregation of upstream evidence).
+### Fixed
+- **`tools/stage_runner.mjs`** loaded stage JSON relative to `tools/` instead of
+  `content/.../stages/` — the demo runs for Screens 06/07 had never actually
+  executed. Fixed the path; all ten demo runs (06/07/08/09/10) now run clean.
+
 ## v3.2.0 — 2026-07-28
 ### Added
 - **Stage contracts** (backend-authoritative, configurable): Screen 06 Receiving Dock
