@@ -1,0 +1,197 @@
+{
+  "meta": {
+    "pack": "Logistics",
+    "domain": "Distribution Warehouse",
+    "department": "Receiving",
+    "version": "0.1.0",
+    "rendererAgnostic": true,
+    "note": "Pure simulation content. Contains NO rendering code. Consumed by any renderer adapter (2D, browser-3D/R3F, Unity, XR) and by Flora's competency + assessment engine.",
+    "competencyEngine": "Flora CareerOS",
+    "assessmentModel": "append-only LearnerAction"
+  },
+
+  "areas": [
+    { "id": "parking",        "name": "Parking Area",        "order": 1,  "connectsTo": ["security_gate"],  "purpose": "Learner arrives at the workplace." },
+    { "id": "security_gate",  "name": "Security Gate",       "order": 2,  "connectsTo": ["locker_room"],    "purpose": "Identity / entry check with Security Guard." },
+    { "id": "locker_room",    "name": "Locker Room",         "order": 3,  "connectsTo": ["time_clock"],     "purpose": "Store belongings." },
+    { "id": "time_clock",     "name": "Time Clock",          "order": 4,  "connectsTo": ["ppe_station"],    "purpose": "Clock in — shift start timestamp." },
+    { "id": "ppe_station",    "name": "PPE Station",         "order": 5,  "connectsTo": ["supervisor_office"], "purpose": "Put on safety vest, helmet, gloves, boots." },
+    { "id": "supervisor_office","name": "Supervisor Office", "order": 6,  "connectsTo": ["receiving_office"], "purpose": "Shift briefing from Supervisor." },
+    { "id": "receiving_office","name": "Receiving Office",   "order": 7,  "connectsTo": ["loading_dock","exit"], "purpose": "Collect PO / delivery documents; later generate GRN & shift report. Revisited at end." },
+    { "id": "loading_dock",   "name": "Loading Dock",        "order": 8,  "connectsTo": ["truck_bay"],      "purpose": "Dock doors and levellers." },
+    { "id": "truck_bay",      "name": "Truck Bay",           "order": 9,  "connectsTo": ["unloading_area"], "purpose": "Meet and verify the delivery vehicle." },
+    { "id": "unloading_area", "name": "Unloading Area",      "order": 10, "connectsTo": ["inspection_zone"],"purpose": "Unload pallets and cartons." },
+    { "id": "inspection_zone","name": "Inspection Zone",     "order": 11, "connectsTo": ["barcode_station"],"purpose": "Inspect, count, measure goods." },
+    { "id": "barcode_station","name": "Barcode Station",     "order": 12, "connectsTo": ["damaged_goods","receiving_office"], "purpose": "Scan SKUs, compare to documents." },
+    { "id": "damaged_goods",  "name": "Damaged Goods Area",  "order": 13, "connectsTo": ["quarantine"],     "purpose": "Segregate damaged stock." },
+    { "id": "quarantine",     "name": "Quarantine Area",     "order": 14, "connectsTo": ["receiving_office"],"purpose": "Hold non-conforming / suspect stock." },
+    { "id": "exit",           "name": "Exit",                "order": 15, "connectsTo": [],                  "purpose": "End of shift." }
+  ],
+
+  "interactionVerbs": [
+    "walk", "look", "pickUp", "place", "open", "close", "read", "scan",
+    "inspect", "count", "compare", "measure", "wearPPE", "operate",
+    "speak", "reportIssue", "submitDecision"
+  ],
+
+  "objectLibrary": [
+    { "id": "purchase_order",    "name": "Purchase Order",     "category": "document",  "interactions": ["pickUp","read","compare"], "props": { "hasLineItems": true } },
+    { "id": "delivery_note",     "name": "Delivery Note",      "category": "document",  "interactions": ["pickUp","read","compare"] },
+    { "id": "invoice",           "name": "Invoice",            "category": "document",  "interactions": ["read","compare"] },
+    { "id": "inspection_checklist","name": "Inspection Checklist","category": "document","interactions": ["read","measure"] },
+    { "id": "sop_manual",        "name": "SOP Manual",         "category": "document",  "interactions": ["read"] },
+    { "id": "incident_report",   "name": "Incident Report",    "category": "document",  "interactions": ["read","reportIssue"] },
+
+    { "id": "barcode_scanner",   "name": "Barcode Scanner",    "category": "equipment", "interactions": ["pickUp","scan","operate"], "reusable": true },
+    { "id": "tablet",            "name": "Tablet",             "category": "equipment", "interactions": ["operate","read"], "reusable": true },
+    { "id": "computer",          "name": "Computer",           "category": "equipment", "interactions": ["operate","read"], "reusable": true },
+    { "id": "printer",           "name": "Printer",            "category": "equipment", "interactions": ["operate"], "reusable": true },
+    { "id": "label_printer",     "name": "Label Printer",      "category": "equipment", "interactions": ["operate"], "reusable": true },
+    { "id": "radio",             "name": "Radio",              "category": "equipment", "interactions": ["operate","speak"], "reusable": true },
+    { "id": "weighing_scale",    "name": "Weighing Scale",     "category": "equipment", "interactions": ["measure","operate"], "reusable": true },
+    { "id": "hand_pallet_truck", "name": "Hand Pallet Truck",  "category": "equipment", "interactions": ["operate"], "reusable": true },
+    { "id": "forklift",          "name": "Forklift",           "category": "equipment", "interactions": ["operate"], "reusable": true },
+
+    { "id": "truck",             "name": "Truck",              "category": "warehouse", "interactions": ["inspect","open"] },
+    { "id": "dock_door",         "name": "Dock Door",          "category": "warehouse", "interactions": ["open","close"] },
+    { "id": "pallet",            "name": "Pallet",             "category": "warehouse", "interactions": ["pickUp","place","operate","inspect"] },
+    { "id": "carton",            "name": "Carton",             "category": "warehouse", "interactions": ["pickUp","place","count","inspect","scan"] },
+    { "id": "rack",              "name": "Rack",               "category": "warehouse", "interactions": ["place"] },
+    { "id": "bin",               "name": "Bin",                "category": "warehouse", "interactions": ["place"] },
+    { "id": "stretch_wrap",      "name": "Stretch Wrap",       "category": "warehouse", "interactions": ["pickUp","operate"] },
+    { "id": "safety_cone",       "name": "Safety Cone",        "category": "warehouse", "interactions": ["pickUp","place"] }
+  ],
+
+  "peopleLibrary": [
+    { "id": "security_guard",   "role": "Security Guard",    "area": "security_gate",   "interactions": ["speak"], "dataDriven": true },
+    { "id": "supervisor",       "role": "Supervisor",        "area": "supervisor_office","interactions": ["speak","submitDecision"], "dataDriven": true },
+    { "id": "warehouse_associate","role": "Warehouse Associate","area": "unloading_area","interactions": ["speak","operate"], "dataDriven": true },
+    { "id": "truck_driver",     "role": "Truck Driver",      "area": "truck_bay",       "interactions": ["speak"], "dataDriven": true },
+    { "id": "forklift_operator","role": "Forklift Operator", "area": "unloading_area",  "interactions": ["speak","operate"], "dataDriven": true },
+    { "id": "quality_inspector","role": "Quality Inspector", "area": "inspection_zone", "interactions": ["speak","inspect"], "dataDriven": true }
+  ],
+  "peopleLibraryFuture": ["warehouse_manager", "inventory_controller", "dispatch_coordinator"],
+
+  "placement": {
+    "security_gate":    { "objects": [], "people": ["security_guard"] },
+    "time_clock":       { "objects": ["computer"], "people": [] },
+    "ppe_station":      { "objects": ["safety_cone"], "people": [] },
+    "supervisor_office":{ "objects": ["computer","sop_manual","radio"], "people": ["supervisor"] },
+    "receiving_office": { "objects": ["computer","printer","label_printer","purchase_order","delivery_note","invoice"], "people": [] },
+    "loading_dock":     { "objects": ["dock_door"], "people": [] },
+    "truck_bay":        { "objects": ["truck"], "people": ["truck_driver"] },
+    "unloading_area":   { "objects": ["pallet","carton","hand_pallet_truck","forklift","stretch_wrap"], "people": ["warehouse_associate","forklift_operator"] },
+    "inspection_zone":  { "objects": ["inspection_checklist","weighing_scale","carton"], "people": ["quality_inspector"] },
+    "barcode_station":  { "objects": ["barcode_scanner","tablet","carton"], "people": [] },
+    "damaged_goods":    { "objects": ["carton","incident_report"], "people": [] },
+    "quarantine":       { "objects": ["pallet","safety_cone"], "people": [] }
+  },
+
+  "flow": [
+    { "step": 1,  "id": "arrive",        "label": "Arrive at workplace",          "area": "parking",          "verbs": ["walk"],                     "competencies": ["time_management"],                       "emits": "arrived" },
+    { "step": 2,  "id": "clock_in",      "label": "Clock in",                     "area": "time_clock",       "verbs": ["operate"],                  "uses": ["computer"], "competencies": ["time_management","digital_documentation"], "emits": "clocked_in" },
+    { "step": 3,  "id": "wear_ppe",      "label": "Wear PPE",                     "area": "ppe_station",      "verbs": ["wearPPE"],                  "competencies": ["ppe_compliance"],                        "emits": "ppe_worn", "gate": true },
+    { "step": 4,  "id": "briefing",      "label": "Attend supervisor briefing",  "area": "supervisor_office","verbs": ["speak","read"],            "uses": ["supervisor","sop_manual"], "competencies": ["communication"], "emits": "briefed" },
+    { "step": 5,  "id": "collect_docs",  "label": "Collect receiving documents",  "area": "receiving_office", "verbs": ["pickUp","read"],           "uses": ["purchase_order","delivery_note"], "competencies": ["documentation","digital_documentation"], "emits": "docs_collected" },
+    { "step": 6,  "id": "meet_vehicle",  "label": "Meet delivery vehicle",        "area": "truck_bay",        "verbs": ["speak","walk"],            "uses": ["truck_driver","truck"], "competencies": ["communication"], "emits": "vehicle_met" },
+    { "step": 7,  "id": "verify_vehicle","label": "Verify vehicle",               "area": "truck_bay",        "verbs": ["inspect","compare"],       "uses": ["truck","delivery_note"], "competencies": ["attention_to_detail","documentation"], "emits": "vehicle_verified" },
+    { "step": 8,  "id": "unload",        "label": "Unload shipment",              "area": "unloading_area",   "verbs": ["operate","pickUp","place"], "uses": ["pallet","carton","hand_pallet_truck","forklift"], "competencies": ["safe_material_handling","equipment_usage"], "emits": "unloaded" },
+    { "step": 9,  "id": "inspect",       "label": "Inspect goods",                "area": "inspection_zone",  "verbs": ["inspect","look"],          "uses": ["carton","inspection_checklist"], "competencies": ["goods_inspection","attention_to_detail"], "emits": "inspected" },
+    { "step": 10, "id": "count",         "label": "Count cartons",                "area": "inspection_zone",  "verbs": ["count"],                    "uses": ["carton"], "competencies": ["inventory_accuracy","attention_to_detail"], "emits": "counted" },
+    { "step": 11, "id": "scan",          "label": "Scan barcodes",                "area": "barcode_station",  "verbs": ["scan","operate"],          "uses": ["barcode_scanner","carton"], "competencies": ["barcode_scanning","equipment_usage"], "emits": "scanned" },
+    { "step": 12, "id": "compare_docs",  "label": "Compare PO and delivery note", "area": "barcode_station",  "verbs": ["compare","read"],          "uses": ["purchase_order","delivery_note","tablet"], "competencies": ["documentation","attention_to_detail"], "emits": "documents_compared" },
+    { "step": 13, "id": "record_discrepancies","label": "Record discrepancies",   "area": "barcode_station",  "verbs": ["reportIssue","operate"],    "uses": ["tablet","incident_report"], "competencies": ["problem_solving","digital_documentation"], "emits": "discrepancies_recorded" },
+    { "step": 14, "id": "move_damaged",  "label": "Move damaged goods",           "area": "damaged_goods",    "verbs": ["pickUp","place"],          "uses": ["carton"], "competencies": ["safe_material_handling","hazard_identification"], "emits": "damaged_moved" },
+    { "step": 15, "id": "decide",        "label": "Decide: Accept / Partial / Reject", "area": "receiving_office", "verbs": ["submitDecision"],    "uses": ["computer"], "competencies": ["decision_making","receiving_operations"], "emits": "decision_submitted", "branch": ["accept","partial_accept","reject"] },
+    { "step": 16, "id": "generate_grn",  "label": "Generate receiving confirmation (GRN)", "area": "receiving_office", "verbs": ["operate","read"], "uses": ["computer","printer"], "competencies": ["receiving_operations","digital_documentation"], "emits": "grn_generated" },
+    { "step": 17, "id": "shift_report",  "label": "Submit shift report",          "area": "receiving_office", "verbs": ["operate"],                  "uses": ["computer"], "competencies": ["documentation","communication"], "emits": "shift_report_submitted" },
+    { "step": 18, "id": "feedback",      "label": "Receive assessment feedback",  "area": "exit",             "verbs": ["read"],                     "competencies": [], "emits": "feedback_shown" }
+  ],
+
+  "decisionRubric": {
+    "accept":         { "when": "shipment matches PO, no material discrepancy or damage" },
+    "partial_accept": { "when": "minor shortage/damage; accept conforming, quarantine the rest" },
+    "reject":         { "when": "wrong supplier, wrong SKU, major damage, or critical documentation failure" }
+  },
+
+  "scenarios": [
+    { "id": "perfect",            "name": "Perfect shipment",       "config": {},                                                              "expectedDecision": "accept",         "stresses": ["receiving_operations","documentation"] },
+    { "id": "missing_cartons",    "name": "Missing cartons",        "config": { "expectedCount": 40, "actualCount": 36 },                       "expectedDecision": "partial_accept", "stresses": ["inventory_accuracy","attention_to_detail","decision_making"] },
+    { "id": "wrong_sku",          "name": "Wrong SKU",              "config": { "poSku": "SKU-4471", "deliveredSku": "SKU-4470" },              "expectedDecision": "reject",         "stresses": ["barcode_scanning","documentation","decision_making"] },
+    { "id": "damaged_goods",      "name": "Damaged goods",          "config": { "damagedCartons": 5, "damageType": "crushed" },                 "expectedDecision": "partial_accept", "stresses": ["goods_inspection","hazard_identification"] },
+    { "id": "wet_goods",          "name": "Wet goods",              "config": { "condition": "water_damage" },                                  "expectedDecision": "reject",         "stresses": ["goods_inspection","decision_making"] },
+    { "id": "near_expiry",        "name": "Near-expiry goods",      "config": { "expiryDays": 20, "policyMinDays": 90 },                        "expectedDecision": "reject",         "stresses": ["goods_inspection","attention_to_detail"] },
+    { "id": "missing_docs",       "name": "Missing documentation",  "config": { "missing": ["delivery_note"] },                                 "expectedDecision": "reject",         "stresses": ["documentation","problem_solving"] },
+    { "id": "wrong_supplier",     "name": "Wrong supplier",         "config": { "poSupplier": "Acme Foods", "deliverySupplier": "Bolt Retail" }, "expectedDecision": "reject",        "stresses": ["documentation","decision_making"] },
+    { "id": "unreadable_barcode", "name": "Unreadable barcode",     "config": { "scanFails": true },                                            "expectedDecision": "partial_accept", "stresses": ["barcode_scanning","problem_solving","digital_documentation"] },
+    { "id": "mixed_pallets",      "name": "Mixed pallets",          "config": { "mixedSkuPerPallet": true },                                    "expectedDecision": "partial_accept", "stresses": ["inventory_accuracy","attention_to_detail"] },
+    { "id": "duplicate_shipment", "name": "Duplicate shipment",     "config": { "duplicateOfGrn": "GRN-1188" },                                 "expectedDecision": "reject",         "stresses": ["documentation","decision_making"] },
+    { "id": "temperature_dev",    "name": "Temperature deviation",  "config": { "requiredTempC": 4, "actualTempC": 14 },                        "expectedDecision": "reject",         "stresses": ["goods_inspection","hazard_identification","decision_making"] }
+  ],
+
+  "competencies": {
+    "technical":  [
+      { "id": "receiving_operations", "name": "Receiving Operations" },
+      { "id": "goods_inspection",     "name": "Goods Inspection" },
+      { "id": "inventory_accuracy",   "name": "Inventory Accuracy" },
+      { "id": "barcode_scanning",     "name": "Barcode Scanning" },
+      { "id": "documentation",        "name": "Documentation" }
+    ],
+    "behavioural":[
+      { "id": "attention_to_detail", "name": "Attention to Detail" },
+      { "id": "problem_solving",     "name": "Problem Solving" },
+      { "id": "communication",       "name": "Communication" },
+      { "id": "decision_making",     "name": "Decision Making" },
+      { "id": "time_management",     "name": "Time Management" }
+    ],
+    "digital":    [
+      { "id": "digital_documentation", "name": "Digital Documentation" },
+      { "id": "equipment_usage",       "name": "Equipment Usage" }
+    ],
+    "safety":     [
+      { "id": "ppe_compliance",        "name": "PPE Compliance" },
+      { "id": "hazard_identification", "name": "Hazard Identification" },
+      { "id": "safe_material_handling","name": "Safe Material Handling" }
+    ]
+  },
+
+  "assessment": {
+    "philosophy": "Evidence from workplace behaviour, not quiz answers. Completion and correctness are separate: a learner may complete the process while demonstrating weak competency.",
+    "records": ["actions", "sequence", "timing", "observations", "decisions", "errors", "corrections", "competencyEvidence"],
+    "learnerActionSchema": {
+      "learnerId": "string",
+      "sessionId": "string",
+      "seq": "int (monotonic, append-only)",
+      "ts": "epoch ms",
+      "action": "one of interactionVerbs",
+      "area": "area id",
+      "target": "object or person id (nullable)",
+      "flowStep": "flow step id",
+      "scenarioId": "scenario id",
+      "result": "ok | error | corrected",
+      "competencies": ["competency ids evidenced"],
+      "meta": "object (counts, scanned value, decision, temperature reading, etc.)"
+    },
+    "exampleTrace": [
+      { "seq": 1, "action": "walk",           "area": "loading_dock",   "flowStep": "meet_vehicle",  "result": "ok" },
+      { "seq": 2, "action": "read",           "area": "receiving_office","target": "purchase_order",  "flowStep": "collect_docs", "result": "ok",       "competencies": ["documentation"] },
+      { "seq": 3, "action": "compare",        "area": "barcode_station","target": "delivery_note",   "flowStep": "compare_docs", "result": "ok",       "competencies": ["attention_to_detail","documentation"] },
+      { "seq": 4, "action": "scan",           "area": "barcode_station","target": "carton",          "flowStep": "scan",         "result": "error",    "competencies": ["barcode_scanning"], "meta": { "reason": "unreadable" } },
+      { "seq": 5, "action": "inspect",        "area": "inspection_zone","target": "carton",          "flowStep": "inspect",      "result": "ok",       "competencies": ["goods_inspection"], "meta": { "found": "damage" } },
+      { "seq": 6, "action": "reportIssue",    "area": "barcode_station","target": "incident_report", "flowStep": "record_discrepancies", "result": "ok", "competencies": ["problem_solving","digital_documentation"] },
+      { "seq": 7, "action": "place",          "area": "quarantine",     "target": "carton",          "flowStep": "move_damaged", "result": "ok",       "competencies": ["safe_material_handling"] },
+      { "seq": 8, "action": "submitDecision", "area": "receiving_office","target": "computer",        "flowStep": "decide",       "result": "ok",       "competencies": ["decision_making","receiving_operations"], "meta": { "decision": "partial_accept" } }
+    ]
+  },
+
+  "learningOutcomes": [
+    "Perform a complete receiving workflow",
+    "Inspect incoming goods",
+    "Identify discrepancies",
+    "Apply SOPs",
+    "Use workplace equipment correctly",
+    "Follow safety procedures",
+    "Make appropriate receiving decisions",
+    "Demonstrate workplace competency"
+  ]
+}
