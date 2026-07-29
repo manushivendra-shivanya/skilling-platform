@@ -959,24 +959,57 @@ locally but not pushed with this milestone -- the push token in use lacks
 the `workflow` scope GitHub requires to add or modify Actions files. It
 needs adding through the GitHub UI or a token with that scope.
 
-### Jobs — Apply wired to the real BFF endpoint; job-applications migration still not applied
-Attempted to apply `20260729180000_phase_three_job_applications.sql` to the
-real project (`qoairksjpwkhwqxeollj`) as the prior milestone's "next
-implementation" called for. It is still not applied: the connected Supabase
-MCP server (`Supabase`) reached the account fine — `list_projects` succeeded
-— but both `get_project` and `list_tables` for `qoairksjpwkhwqxeollj`
-returned "You do not have permission to perform this action", and
-`list_projects` lists only the unrelated `nutridiet` project
-(`rspyrkcdzariizvqookp`), exactly as the prior milestone documented. A
-second, separate `supabase` (lowercase) MCP server is also present but
-requires an interactive OAuth authorization this non-interactive session
-cannot perform. No migration was applied and no live-database verification
-(tables, RLS, seeded jobs) was possible this milestone.
+### Jobs — job-applications migration applied; Apply wired to the real BFF endpoint
+The migration is now applied to the real project (`qoairksjpwkhwqxeollj`),
+but not from this session. This remote session's own `Supabase` MCP
+connector remained scoped to only the unrelated `nutridiet` project all the
+way through this milestone — `get_project`/`list_tables` for
+`qoairksjpwkhwqxeollj` kept returning "You do not have permission to perform
+this action" no matter how many times connector authentication was redone,
+and direct `psql` (including via the Supavisor session pooler, to work
+around `db.*.supabase.co` being IPv6-only) was a dead end too: this
+sandbox's network policy silently drops any outbound TCP that isn't port
+80/443, so raw Postgres connections cannot be made from here at all,
+independent of Supabase. Both are environment/connector limitations of this
+particular session, not fixable from inside it.
 
-That blocker does not gate the client side, so this milestone wired
-apps/candidate-mobile's Jobs "Apply" action to the real
-`POST /v1/jobs/:id/applications` endpoint, intentionally leaving job listing
-on mock data:
+The candidate's separate local Claude Code session had its own, differently
+-scoped `supabase` MCP connection with real access, and applied it directly
+from there. In doing so it found and fixed a real bug this migration shipped
+with: `role_profile_code text references role_profiles(code)` cannot work
+because `role_profiles` is versioned (primary key `id`, unique constraint on
+`(code, version)`, no unique constraint on `code` alone) — the first apply
+attempt failed with `ERROR 42830: there is no unique constraint matching
+given keys for referenced table "role_profiles"`. Fixed by matching the
+pattern every other table in the schema already uses
+(`role_competency_requirements`, `learning_pathways`,
+`simulation_definitions`): `jobs.role_profile_id uuid references
+role_profiles(id)`, with the seed insert resolving each role code to its
+published profile's id via a join instead of storing the code directly.
+`apps/api/src/jobs/jobs.service.ts` never selected the role-profile column,
+so no API code change was needed. The originally-committed migration file
+was renamed from `20260729180000_...` to `20260729182817_...` to match the
+version the server actually recorded (otherwise a future `supabase db push`
+would try to run it again), and a follow-up
+`20260729182917_phase_three_job_applications_advisor_remediation.sql` adds
+`jobs_role_profile_id_idx` — the Performance Advisor's unindexed-foreign-key
+finding on the new `role_profile_id` column, fixed the same way the existing
+`*_advisor_remediation` migrations already fix that class of finding.
+Reported from that session: both migrations applied; Security Advisor clean
+(no lints); remaining Performance Advisor lints are all "unused index" INFOs
+expected for tables with no query traffic yet; all three seeded jobs present
+with correct role-profile links (Apex → `warehouse_associate`, Meridian →
+`inventory_executive`, Northstar → `dispatch_executive`). That verification
+was performed by the other session against the live database, not by this
+one — this session still has no working path to query
+`qoairksjpwkhwqxeollj` directly and could not independently re-verify it.
+The fix commit was pushed to `origin/api-phase-3-2-job-applications` and
+cherry-picked into this branch clean (no conflicts).
+
+That blocker not being fixable from here didn't gate the client side, so
+this milestone separately wired apps/candidate-mobile's Jobs "Apply" action
+to the real `POST /v1/jobs/:id/applications` endpoint, intentionally leaving
+job listing on mock data:
 - Added `ApiJobsRepository`, composing over the untouched
   `LocalMockJobsRepository` for `loadJobs()` and `readAppliedJobIds()`, and
   overriding only `saveApplication()` to `POST` to the BFF with
@@ -1029,14 +1062,16 @@ APK** workflow remains the authoritative validator and has not yet run
 against this change.
 
 ### Next implementation
-Get the Supabase MCP connection actually project-scoped to
-`qoairksjpwkhwqxeollj` (an admin action outside this repository/session, not
-another authentication attempt from here), apply the job-applications
-migration, and verify `jobs`/`job_applications` exist with RLS enabled and
-the three seeded jobs present. Then decide how the Flutter Jobs feature gets
-a real job catalogue — either wire `loadJobs()` to `GET /v1/jobs` too, or
-seed/align mock ids with real ones — so the now-wired Apply action has real
-jobs to apply to end to end. Separately, still open: deepen Receiving's
+Decide how the Flutter Jobs feature gets a real job catalogue — either wire
+`loadJobs()` to `GET /v1/jobs` too, or seed/align mock ids with real ones —
+so the now-wired Apply action has real jobs to apply to end to end; today it
+still only works against mock ids that don't exist in the real database.
+Separately, this remote session's `Supabase` MCP connector should still be
+fixed to actually reach `qoairksjpwkhwqxeollj` (not another authentication
+attempt from inside the session — the connector's project allow-list needs
+changing wherever it was originally configured) so future work here doesn't
+depend on a parallel local session with its own differently-scoped
+connection. Also still open: deepen Receiving's
 content per the backlog in
 `docs/24-receiving-department-content-specification.md`; apply the same
 reusable-architecture pass to Receiving's ~15 bespoke draft/submit
@@ -1096,9 +1131,11 @@ work.
   Phase 2 records and narrowly scoped Phase 3 practice metadata; media
   authorisation, AI, employer and administrator operations remain behind the
   BFF, which now exists (`apps/api`) but implements only one endpoint
-  (`POST /v1/jobs/{id}/applications`) — not yet applied to a live database,
-  and the Flutter Jobs feature still calls `LocalMockJobsRepository`, not
-  this endpoint
+  (`POST /v1/jobs/{id}/applications`), now applied to the live
+  `qoairksjpwkhwqxeollj` database. The Flutter Jobs feature's Apply action
+  calls this endpoint when both Supabase and API configuration are present;
+  job listing itself still comes from `LocalMockJobsRepository`, whose mock
+  ids don't match the real seeded jobs yet
 - The Receiving mission is complete end to end (Document Desk through
   Performance Feedback) and the Put Away mission is complete end to end
   (Staging Area through Performance Feedback), both merged to `main`. No WMS
