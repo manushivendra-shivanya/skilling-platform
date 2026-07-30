@@ -927,13 +927,9 @@ class WorkplaceSimulationController
   Future<AddDocumentFindingResult> addDocumentFinding(
     AddDocumentFindingCommand command,
   ) async {
-    final current = state.valueOrNull;
-    final attempt = current?.attempt;
-    if (current == null ||
-        attempt == null ||
-        attempt.state != MissionState.inProgress) {
-      return AddDocumentFindingResult.invalidAttemptState;
-    }
+    final active = _activeAttempt();
+    if (active == null) return AddDocumentFindingResult.invalidAttemptState;
+    final (current, attempt) = active;
     final draft = attempt.documentReviewDraft ?? _newDocumentDraft(attempt);
     if (draft.status == drafts.OperationalDraftStatus.submitted) {
       return AddDocumentFindingResult.alreadySubmitted;
@@ -948,55 +944,52 @@ class WorkplaceSimulationController
     )) {
       return AddDocumentFindingResult.duplicateFinding;
     }
-    try {
-      final now = DateTime.now();
-      final finding = drafts.DocumentFinding(
-        id: '${attempt.id}-finding-${draft.findings.length + 1}',
-        sourceDocument: command.sourceDocument,
-        itemReference: command.itemReference.trim(),
-        findingType: command.findingType,
-        learnerNotes: command.learnerNotes.trim(),
-        createdAt: now,
-        updatedAt: now,
-        revisionNumber: 1,
-      );
-      var updated = attempt.copyWith(
-        documentReviewDraft: draft.copyWith(
-          findings: [...draft.findings, finding],
+    return _tryPersist(
+      () async {
+        final now = DateTime.now();
+        final finding = drafts.DocumentFinding(
+          id: '${attempt.id}-finding-${draft.findings.length + 1}',
+          sourceDocument: command.sourceDocument,
+          itemReference: command.itemReference.trim(),
+          findingType: command.findingType,
+          learnerNotes: command.learnerNotes.trim(),
+          createdAt: now,
           updatedAt: now,
-        ),
-      );
-      updated = _appendDraftAction(
-        updated,
-        stageId: 'document-verification',
-        taskId: 'record-document-finding',
-        actionType: ActionType.documentFindingAdded,
-        targetId: _documentTarget(finding.itemReference),
-        payload: {
-          'findingId': finding.id,
-          'sourceDocument': finding.sourceDocument.name,
-          'findingType': finding.findingType.name,
-          'learnerNotes': finding.learnerNotes,
-          'revisionNumber': finding.revisionNumber,
-        },
-      );
-      await _commit(current, updated);
-      return AddDocumentFindingResult.success;
-    } catch (_) {
-      return AddDocumentFindingResult.persistenceFailure;
-    }
+          revisionNumber: 1,
+        );
+        var updated = attempt.copyWith(
+          documentReviewDraft: draft.copyWith(
+            findings: [...draft.findings, finding],
+            updatedAt: now,
+          ),
+        );
+        updated = _appendDraftAction(
+          updated,
+          stageId: 'document-verification',
+          taskId: 'record-document-finding',
+          actionType: ActionType.documentFindingAdded,
+          targetId: _documentTarget(finding.itemReference),
+          payload: {
+            'findingId': finding.id,
+            'sourceDocument': finding.sourceDocument.name,
+            'findingType': finding.findingType.name,
+            'learnerNotes': finding.learnerNotes,
+            'revisionNumber': finding.revisionNumber,
+          },
+        );
+        await _commit(current, updated);
+      },
+      onSuccess: () => AddDocumentFindingResult.success,
+      onFailure: () => AddDocumentFindingResult.persistenceFailure,
+    );
   }
 
   Future<UpdateDocumentFindingResult> updateDocumentFinding(
     UpdateDocumentFindingCommand command,
   ) async {
-    final current = state.valueOrNull;
-    final attempt = current?.attempt;
-    if (current == null ||
-        attempt == null ||
-        attempt.state != MissionState.inProgress) {
-      return UpdateDocumentFindingResult.invalidAttemptState;
-    }
+    final active = _activeAttempt();
+    if (active == null) return UpdateDocumentFindingResult.invalidAttemptState;
+    final (current, attempt) = active;
     final draft = attempt.documentReviewDraft;
     if (draft == null) return UpdateDocumentFindingResult.findingNotFound;
     if (draft.status == drafts.OperationalDraftStatus.submitted) {
@@ -1009,52 +1002,52 @@ class WorkplaceSimulationController
     if (command.itemReference.trim().isEmpty) {
       return UpdateDocumentFindingResult.validationFailed;
     }
-    try {
-      final now = DateTime.now();
-      final previous = draft.findings[index];
-      final finding = previous.copyWith(
-        sourceDocument: command.sourceDocument,
-        itemReference: command.itemReference.trim(),
-        findingType: command.findingType,
-        learnerNotes: command.learnerNotes.trim(),
-        updatedAt: now,
-        revisionNumber: previous.revisionNumber + 1,
-      );
-      final findings = [...draft.findings]..[index] = finding;
-      var updated = attempt.copyWith(
-        documentReviewDraft: draft.copyWith(findings: findings, updatedAt: now),
-      );
-      updated = _appendDraftAction(
-        updated,
-        stageId: 'document-verification',
-        taskId: 'record-document-finding',
-        actionType: ActionType.documentFindingUpdated,
-        targetId: _documentTarget(finding.itemReference),
-        payload: {
-          'findingId': finding.id,
-          'sourceDocument': finding.sourceDocument.name,
-          'findingType': finding.findingType.name,
-          'learnerNotes': finding.learnerNotes,
-          'revisionNumber': finding.revisionNumber,
-        },
-      );
-      await _commit(current, updated);
-      return UpdateDocumentFindingResult.success;
-    } catch (_) {
-      return UpdateDocumentFindingResult.persistenceFailure;
-    }
+    return _tryPersist(
+      () async {
+        final now = DateTime.now();
+        final previous = draft.findings[index];
+        final finding = previous.copyWith(
+          sourceDocument: command.sourceDocument,
+          itemReference: command.itemReference.trim(),
+          findingType: command.findingType,
+          learnerNotes: command.learnerNotes.trim(),
+          updatedAt: now,
+          revisionNumber: previous.revisionNumber + 1,
+        );
+        final findings = [...draft.findings]..[index] = finding;
+        var updated = attempt.copyWith(
+          documentReviewDraft: draft.copyWith(
+            findings: findings,
+            updatedAt: now,
+          ),
+        );
+        updated = _appendDraftAction(
+          updated,
+          stageId: 'document-verification',
+          taskId: 'record-document-finding',
+          actionType: ActionType.documentFindingUpdated,
+          targetId: _documentTarget(finding.itemReference),
+          payload: {
+            'findingId': finding.id,
+            'sourceDocument': finding.sourceDocument.name,
+            'findingType': finding.findingType.name,
+            'learnerNotes': finding.learnerNotes,
+            'revisionNumber': finding.revisionNumber,
+          },
+        );
+        await _commit(current, updated);
+      },
+      onSuccess: () => UpdateDocumentFindingResult.success,
+      onFailure: () => UpdateDocumentFindingResult.persistenceFailure,
+    );
   }
 
   Future<RemoveDocumentFindingResult> removeDocumentFinding(
     RemoveDocumentFindingCommand command,
   ) async {
-    final current = state.valueOrNull;
-    final attempt = current?.attempt;
-    if (current == null ||
-        attempt == null ||
-        attempt.state != MissionState.inProgress) {
-      return RemoveDocumentFindingResult.invalidAttemptState;
-    }
+    final active = _activeAttempt();
+    if (active == null) return RemoveDocumentFindingResult.invalidAttemptState;
+    final (current, attempt) = active;
     final draft = attempt.documentReviewDraft;
     if (draft == null) return RemoveDocumentFindingResult.findingNotFound;
     if (draft.status == drafts.OperationalDraftStatus.submitted) {
@@ -1065,96 +1058,127 @@ class WorkplaceSimulationController
       if (item.id == command.findingId) finding = item;
     }
     if (finding == null) return RemoveDocumentFindingResult.findingNotFound;
-    try {
-      final now = DateTime.now();
-      var updated = attempt.copyWith(
-        documentReviewDraft: draft.copyWith(
-          findings: draft.findings
-              .where((item) => item.id != command.findingId)
-              .toList(growable: false),
-          updatedAt: now,
-        ),
-      );
-      updated = _appendDraftAction(
-        updated,
-        stageId: 'document-verification',
-        taskId: 'record-document-finding',
-        actionType: ActionType.documentFindingRemoved,
-        targetId: _documentTarget(finding.itemReference),
-        payload: {
-          'findingId': finding.id,
-          'revisionNumber': finding.revisionNumber + 1,
-        },
-      );
-      await _commit(current, updated);
-      return RemoveDocumentFindingResult.success;
-    } catch (_) {
-      return RemoveDocumentFindingResult.persistenceFailure;
-    }
+    return _tryPersist(
+      () async {
+        final now = DateTime.now();
+        var updated = attempt.copyWith(
+          documentReviewDraft: draft.copyWith(
+            findings: draft.findings
+                .where((item) => item.id != command.findingId)
+                .toList(growable: false),
+            updatedAt: now,
+          ),
+        );
+        updated = _appendDraftAction(
+          updated,
+          stageId: 'document-verification',
+          taskId: 'record-document-finding',
+          actionType: ActionType.documentFindingRemoved,
+          targetId: _documentTarget(finding!.itemReference),
+          payload: {
+            'findingId': finding.id,
+            'revisionNumber': finding.revisionNumber + 1,
+          },
+        );
+        await _commit(current, updated);
+      },
+      onSuccess: () => RemoveDocumentFindingResult.success,
+      onFailure: () => RemoveDocumentFindingResult.persistenceFailure,
+    );
   }
 
   Future<SaveDocumentReviewDraftResult> saveDocumentReviewDraft(
     SaveDocumentReviewDraftCommand command,
   ) async {
-    final current = state.valueOrNull;
-    final attempt = current?.attempt;
-    if (current == null ||
-        attempt == null ||
-        attempt.state != MissionState.inProgress) {
+    final active = _activeAttempt();
+    if (active == null)
       return SaveDocumentReviewDraftResult.invalidAttemptState;
-    }
+    final (current, attempt) = active;
     final draft = attempt.documentReviewDraft ?? _newDocumentDraft(attempt);
     if (draft.status == drafts.OperationalDraftStatus.submitted) {
       return SaveDocumentReviewDraftResult.alreadySubmitted;
     }
-    try {
-      final updated = _withAudit(
-        attempt.copyWith(documentReviewDraft: draft),
-        AttemptAuditEventType.documentReviewDraftSaved,
-        screenId: 'document-desk',
-        payload: {'findingCount': draft.findings.length},
-      );
-      await _commit(current, updated);
-      return SaveDocumentReviewDraftResult.success;
-    } catch (_) {
-      return SaveDocumentReviewDraftResult.persistenceFailure;
-    }
+    return _tryPersist(
+      () async {
+        final updated = _withAudit(
+          attempt.copyWith(documentReviewDraft: draft),
+          AttemptAuditEventType.documentReviewDraftSaved,
+          screenId: 'document-desk',
+          payload: {'findingCount': draft.findings.length},
+        );
+        await _commit(current, updated);
+      },
+      onSuccess: () => SaveDocumentReviewDraftResult.success,
+      onFailure: () => SaveDocumentReviewDraftResult.persistenceFailure,
+    );
   }
 
   Future<SubmitDocumentReviewResult> submitDocumentReview(
     SubmitDocumentReviewCommand command,
   ) async {
-    final current = state.valueOrNull;
-    var attempt = current?.attempt;
-    final scenario = current?.scenario;
-    if (current == null ||
-        attempt == null ||
-        scenario == null ||
-        attempt.state != MissionState.inProgress) {
-      return SubmitDocumentReviewResult.invalidAttemptState;
-    }
-    var working = attempt;
-    final draft = working.documentReviewDraft;
+    final active = _activeAttemptWithScenario();
+    if (active == null) return SubmitDocumentReviewResult.invalidAttemptState;
+    final (current, attempt, scenario) = active;
+    final draft = attempt.documentReviewDraft;
     if (draft == null || draft.findings.isEmpty) {
       return SubmitDocumentReviewResult.noFindings;
     }
     if (draft.status == drafts.OperationalDraftStatus.submitted) {
       return SubmitDocumentReviewResult.alreadySubmitted;
     }
-    try {
-      working = _withAudit(
-        working,
-        AttemptAuditEventType.documentFindingsSaveRequested,
-        screenId: 'document-desk',
-        payload: {'findingCount': draft.findings.length},
-      );
-      var outcomes = [...current.outcomes];
-      for (final taskId in const [
-        'open-purchase-order',
-        'open-delivery-note',
-      ]) {
-        if (working.actions.any((action) => action.taskId == taskId)) continue;
-        final task = current.mission.task(taskId);
+    return _tryPersist(
+      () async {
+        var working = _withAudit(
+          attempt,
+          AttemptAuditEventType.documentFindingsSaveRequested,
+          screenId: 'document-desk',
+          payload: {'findingCount': draft.findings.length},
+        );
+        var outcomes = [...current.outcomes];
+        for (final taskId in const [
+          'open-purchase-order',
+          'open-delivery-note',
+        ]) {
+          if (working.actions.any((action) => action.taskId == taskId)) {
+            continue;
+          }
+          final task = current.mission.task(taskId);
+          (working, outcomes) = _applyAction(
+            current,
+            working,
+            outcomes,
+            _newAction(
+              working,
+              stageId: 'document-verification',
+              taskId: taskId,
+              actionType: ActionType.openResource,
+              targetId: task.targetResourceIds.single,
+            ),
+            scenario,
+          );
+        }
+        for (final finding in draft.findings) {
+          (working, outcomes) = _applyAction(
+            current,
+            working,
+            outcomes,
+            _newAction(
+              working,
+              stageId: 'document-verification',
+              taskId: 'record-document-finding',
+              actionType: ActionType.classifyIssue,
+              targetId: _documentTarget(finding.itemReference),
+              payload: {
+                'findingId': finding.id,
+                'findingType': finding.findingType.name,
+                'learnerNotes': finding.learnerNotes,
+                'revisionNumber': finding.revisionNumber,
+                'submitted': true,
+              },
+            ),
+            scenario,
+          );
+        }
         (working, outcomes) = _applyAction(
           current,
           working,
@@ -1162,129 +1186,87 @@ class WorkplaceSimulationController
           _newAction(
             working,
             stageId: 'document-verification',
-            taskId: taskId,
-            actionType: ActionType.openResource,
-            targetId: task.targetResourceIds.single,
+            taskId: 'verify-documents',
+            actionType: ActionType.completeForm,
+            targetId: 'document-comparison-summary',
+            payload: {'submitted': true},
           ),
           scenario,
         );
-      }
-      for (final finding in draft.findings) {
-        (working, outcomes) = _applyAction(
-          current,
-          working,
-          outcomes,
-          _newAction(
-            working,
-            stageId: 'document-verification',
-            taskId: 'record-document-finding',
-            actionType: ActionType.classifyIssue,
-            targetId: _documentTarget(finding.itemReference),
-            payload: {
-              'findingId': finding.id,
-              'findingType': finding.findingType.name,
-              'learnerNotes': finding.learnerNotes,
-              'revisionNumber': finding.revisionNumber,
-              'submitted': true,
-            },
+        final now = DateTime.now();
+        working = working.copyWith(
+          documentReviewDraft: draft.copyWith(
+            status: drafts.OperationalDraftStatus.submitted,
+            updatedAt: now,
+            submittedAt: now,
           ),
-          scenario,
         );
-      }
-      (working, outcomes) = _applyAction(
-        current,
-        working,
-        outcomes,
-        _newAction(
+        working = _withAudit(
           working,
-          stageId: 'document-verification',
-          taskId: 'verify-documents',
-          actionType: ActionType.completeForm,
-          targetId: 'document-comparison-summary',
-          payload: {'submitted': true},
-        ),
-        scenario,
-      );
-      final now = DateTime.now();
-      working = working.copyWith(
-        documentReviewDraft: draft.copyWith(
-          status: drafts.OperationalDraftStatus.submitted,
-          updatedAt: now,
-          submittedAt: now,
-        ),
-      );
-      working = _withAudit(
-        working,
-        AttemptAuditEventType.documentFindingsSaved,
-        screenId: 'document-desk',
-        payload: {'findingCount': draft.findings.length},
-      );
-      await _commit(current, working, outcomes: outcomes);
-      return SubmitDocumentReviewResult.success;
-    } catch (_) {
-      await _recordWorkplaceEvent(
+          AttemptAuditEventType.documentFindingsSaved,
+          screenId: 'document-desk',
+          payload: {'findingCount': draft.findings.length},
+        );
+        await _commit(current, working, outcomes: outcomes);
+      },
+      onSuccess: () => SubmitDocumentReviewResult.success,
+      onFailure: () => SubmitDocumentReviewResult.persistenceFailure,
+      onCaught: () => _recordWorkplaceEvent(
         AttemptAuditEventType.documentFindingsSaveFailed,
         screenId: 'document-desk',
-      );
-      return SubmitDocumentReviewResult.persistenceFailure;
-    }
+      ),
+    );
   }
 
   Future<ConfirmShipmentIdentityResult> confirmShipmentIdentity(
     ConfirmShipmentIdentityCommand command,
   ) async {
-    final current = state.valueOrNull;
-    final attempt = current?.attempt;
-    if (current == null ||
-        attempt == null ||
-        attempt.state != MissionState.inProgress) {
+    final active = _activeAttempt();
+    if (active == null)
       return ConfirmShipmentIdentityResult.invalidAttemptState;
-    }
+    final (current, attempt) = active;
     final draft = attempt.receivingCountDraft ?? _newReceivingDraft(attempt);
     if (draft.status == drafts.OperationalDraftStatus.submitted) {
       return ConfirmShipmentIdentityResult.alreadySubmitted;
     }
-    try {
-      final now = DateTime.now();
-      var updated = attempt.copyWith(
-        receivingCountDraft: draft.copyWith(
-          shipmentConfirmed: command.confirmed,
-          updatedAt: now,
-        ),
-      );
-      final revision =
-          updated.actions
-              .where(
-                (item) =>
-                    item.actionType == ActionType.shipmentIdentityConfirmed,
-              )
-              .length +
-          1;
-      updated = _appendDraftAction(
-        updated,
-        stageId: 'receiving-count',
-        taskId: 'confirm-delivery-identity',
-        actionType: ActionType.shipmentIdentityConfirmed,
-        targetId: 'delivery-note-dn-2026-001',
-        payload: {'confirmed': command.confirmed, 'revisionNumber': revision},
-      );
-      await _commit(current, updated);
-      return ConfirmShipmentIdentityResult.success;
-    } catch (_) {
-      return ConfirmShipmentIdentityResult.persistenceFailure;
-    }
+    return _tryPersist(
+      () async {
+        final now = DateTime.now();
+        var updated = attempt.copyWith(
+          receivingCountDraft: draft.copyWith(
+            shipmentConfirmed: command.confirmed,
+            updatedAt: now,
+          ),
+        );
+        final revision =
+            updated.actions
+                .where(
+                  (item) =>
+                      item.actionType == ActionType.shipmentIdentityConfirmed,
+                )
+                .length +
+            1;
+        updated = _appendDraftAction(
+          updated,
+          stageId: 'receiving-count',
+          taskId: 'confirm-delivery-identity',
+          actionType: ActionType.shipmentIdentityConfirmed,
+          targetId: 'delivery-note-dn-2026-001',
+          payload: {'confirmed': command.confirmed, 'revisionNumber': revision},
+        );
+        await _commit(current, updated);
+      },
+      onSuccess: () => ConfirmShipmentIdentityResult.success,
+      onFailure: () => ConfirmShipmentIdentityResult.persistenceFailure,
+    );
   }
 
   Future<RecordCartonCountResult> recordCartonCount(
     RecordCartonCountCommand command,
   ) async {
-    final current = state.valueOrNull;
-    final attempt = current?.attempt;
-    if (current == null ||
-        attempt == null ||
-        attempt.state != MissionState.inProgress) {
-      return RecordCartonCountResult.invalidAttemptState;
-    }
+    final active = _activeAttempt();
+    if (active == null) return RecordCartonCountResult.invalidAttemptState;
+    final (current, attempt) = active;
     if (command.enteredQuantity < 0 || command.enteredQuantity > 500) {
       return RecordCartonCountResult.invalidQuantity;
     }
@@ -1299,51 +1281,48 @@ class WorkplaceSimulationController
     if (draft.countEntries.any((item) => item.cartonId == command.cartonId)) {
       return RecordCartonCountResult.duplicateEntry;
     }
-    try {
-      final resource = current.scenario!.resource(command.cartonId);
-      final now = DateTime.now();
-      final entry = drafts.ReceivingCountEntry(
-        id: '${attempt.id}-count-${draft.countEntries.length + 1}',
-        cartonId: command.cartonId,
-        sku: resource.content['sku']! as String,
-        enteredQuantity: command.enteredQuantity,
-        countMethod: command.countMethod,
-        learnerNotes: command.learnerNotes.trim(),
-        createdAt: now,
-        updatedAt: now,
-        revisionNumber: 1,
-      );
-      var updated = attempt.copyWith(
-        receivingCountDraft: draft.copyWith(
-          countEntries: [...draft.countEntries, entry],
+    return _tryPersist(
+      () async {
+        final resource = current.scenario!.resource(command.cartonId);
+        final now = DateTime.now();
+        final entry = drafts.ReceivingCountEntry(
+          id: '${attempt.id}-count-${draft.countEntries.length + 1}',
+          cartonId: command.cartonId,
+          sku: resource.content['sku']! as String,
+          enteredQuantity: command.enteredQuantity,
+          countMethod: command.countMethod,
+          learnerNotes: command.learnerNotes.trim(),
+          createdAt: now,
           updatedAt: now,
-        ),
-      );
-      updated = _appendDraftAction(
-        updated,
-        stageId: 'receiving-count',
-        taskId: 'confirm-received-counts',
-        actionType: ActionType.cartonCountRecorded,
-        targetId: entry.cartonId,
-        payload: _countPayload(entry),
-      );
-      await _commit(current, updated);
-      return RecordCartonCountResult.success;
-    } catch (_) {
-      return RecordCartonCountResult.persistenceFailure;
-    }
+          revisionNumber: 1,
+        );
+        var updated = attempt.copyWith(
+          receivingCountDraft: draft.copyWith(
+            countEntries: [...draft.countEntries, entry],
+            updatedAt: now,
+          ),
+        );
+        updated = _appendDraftAction(
+          updated,
+          stageId: 'receiving-count',
+          taskId: 'confirm-received-counts',
+          actionType: ActionType.cartonCountRecorded,
+          targetId: entry.cartonId,
+          payload: _countPayload(entry),
+        );
+        await _commit(current, updated);
+      },
+      onSuccess: () => RecordCartonCountResult.success,
+      onFailure: () => RecordCartonCountResult.persistenceFailure,
+    );
   }
 
   Future<UpdateCartonCountResult> updateCartonCount(
     UpdateCartonCountCommand command,
   ) async {
-    final current = state.valueOrNull;
-    final attempt = current?.attempt;
-    if (current == null ||
-        attempt == null ||
-        attempt.state != MissionState.inProgress) {
-      return UpdateCartonCountResult.invalidAttemptState;
-    }
+    final active = _activeAttempt();
+    if (active == null) return UpdateCartonCountResult.invalidAttemptState;
+    final (current, attempt) = active;
     if (command.enteredQuantity < 0 || command.enteredQuantity > 500) {
       return UpdateCartonCountResult.invalidQuantity;
     }
@@ -1356,48 +1335,45 @@ class WorkplaceSimulationController
       (item) => item.id == command.entryId,
     );
     if (index < 0) return UpdateCartonCountResult.entryNotFound;
-    try {
-      final now = DateTime.now();
-      final previous = draft.countEntries[index];
-      final entry = previous.copyWith(
-        enteredQuantity: command.enteredQuantity,
-        countMethod: command.countMethod,
-        learnerNotes: command.learnerNotes.trim(),
-        updatedAt: now,
-        revisionNumber: previous.revisionNumber + 1,
-      );
-      final entries = [...draft.countEntries]..[index] = entry;
-      var updated = attempt.copyWith(
-        receivingCountDraft: draft.copyWith(
-          countEntries: entries,
+    return _tryPersist(
+      () async {
+        final now = DateTime.now();
+        final previous = draft.countEntries[index];
+        final entry = previous.copyWith(
+          enteredQuantity: command.enteredQuantity,
+          countMethod: command.countMethod,
+          learnerNotes: command.learnerNotes.trim(),
           updatedAt: now,
-        ),
-      );
-      updated = _appendDraftAction(
-        updated,
-        stageId: 'receiving-count',
-        taskId: 'confirm-received-counts',
-        actionType: ActionType.cartonCountUpdated,
-        targetId: entry.cartonId,
-        payload: _countPayload(entry),
-      );
-      await _commit(current, updated);
-      return UpdateCartonCountResult.success;
-    } catch (_) {
-      return UpdateCartonCountResult.persistenceFailure;
-    }
+          revisionNumber: previous.revisionNumber + 1,
+        );
+        final entries = [...draft.countEntries]..[index] = entry;
+        var updated = attempt.copyWith(
+          receivingCountDraft: draft.copyWith(
+            countEntries: entries,
+            updatedAt: now,
+          ),
+        );
+        updated = _appendDraftAction(
+          updated,
+          stageId: 'receiving-count',
+          taskId: 'confirm-received-counts',
+          actionType: ActionType.cartonCountUpdated,
+          targetId: entry.cartonId,
+          payload: _countPayload(entry),
+        );
+        await _commit(current, updated);
+      },
+      onSuccess: () => UpdateCartonCountResult.success,
+      onFailure: () => UpdateCartonCountResult.persistenceFailure,
+    );
   }
 
   Future<RemoveCartonCountResult> removeCartonCount(
     RemoveCartonCountCommand command,
   ) async {
-    final current = state.valueOrNull;
-    final attempt = current?.attempt;
-    if (current == null ||
-        attempt == null ||
-        attempt.state != MissionState.inProgress) {
-      return RemoveCartonCountResult.invalidAttemptState;
-    }
+    final active = _activeAttempt();
+    if (active == null) return RemoveCartonCountResult.invalidAttemptState;
+    final (current, attempt) = active;
     final draft = attempt.receivingCountDraft;
     if (draft == null) return RemoveCartonCountResult.entryNotFound;
     if (draft.status == drafts.OperationalDraftStatus.submitted) {
@@ -1408,76 +1384,68 @@ class WorkplaceSimulationController
       if (item.id == command.entryId) entry = item;
     }
     if (entry == null) return RemoveCartonCountResult.entryNotFound;
-    try {
-      final now = DateTime.now();
-      var updated = attempt.copyWith(
-        receivingCountDraft: draft.copyWith(
-          countEntries: draft.countEntries
-              .where((item) => item.id != command.entryId)
-              .toList(growable: false),
-          updatedAt: now,
-        ),
-      );
-      updated = _appendDraftAction(
-        updated,
-        stageId: 'receiving-count',
-        taskId: 'confirm-received-counts',
-        actionType: ActionType.cartonCountRemoved,
-        targetId: entry.cartonId,
-        payload: {
-          'entryId': entry.id,
-          'revisionNumber': entry.revisionNumber + 1,
-        },
-      );
-      await _commit(current, updated);
-      return RemoveCartonCountResult.success;
-    } catch (_) {
-      return RemoveCartonCountResult.persistenceFailure;
-    }
+    return _tryPersist(
+      () async {
+        final now = DateTime.now();
+        var updated = attempt.copyWith(
+          receivingCountDraft: draft.copyWith(
+            countEntries: draft.countEntries
+                .where((item) => item.id != command.entryId)
+                .toList(growable: false),
+            updatedAt: now,
+          ),
+        );
+        updated = _appendDraftAction(
+          updated,
+          stageId: 'receiving-count',
+          taskId: 'confirm-received-counts',
+          actionType: ActionType.cartonCountRemoved,
+          targetId: entry!.cartonId,
+          payload: {
+            'entryId': entry.id,
+            'revisionNumber': entry.revisionNumber + 1,
+          },
+        );
+        await _commit(current, updated);
+      },
+      onSuccess: () => RemoveCartonCountResult.success,
+      onFailure: () => RemoveCartonCountResult.persistenceFailure,
+    );
   }
 
   Future<SaveReceivingCountDraftResult> saveReceivingCountDraft(
     SaveReceivingCountDraftCommand command,
   ) async {
-    final current = state.valueOrNull;
-    final attempt = current?.attempt;
-    if (current == null ||
-        attempt == null ||
-        attempt.state != MissionState.inProgress) {
+    final active = _activeAttempt();
+    if (active == null)
       return SaveReceivingCountDraftResult.invalidAttemptState;
-    }
+    final (current, attempt) = active;
     final draft = attempt.receivingCountDraft ?? _newReceivingDraft(attempt);
     if (draft.status == drafts.OperationalDraftStatus.submitted) {
       return SaveReceivingCountDraftResult.alreadySubmitted;
     }
-    try {
-      final updated = _withAudit(
-        attempt.copyWith(receivingCountDraft: draft),
-        AttemptAuditEventType.receivingCountDraftSaved,
-        screenId: 'receiving-dock',
-        payload: {'entryCount': draft.countEntries.length},
-      );
-      await _commit(current, updated);
-      return SaveReceivingCountDraftResult.success;
-    } catch (_) {
-      return SaveReceivingCountDraftResult.persistenceFailure;
-    }
+    return _tryPersist(
+      () async {
+        final updated = _withAudit(
+          attempt.copyWith(receivingCountDraft: draft),
+          AttemptAuditEventType.receivingCountDraftSaved,
+          screenId: 'receiving-dock',
+          payload: {'entryCount': draft.countEntries.length},
+        );
+        await _commit(current, updated);
+      },
+      onSuccess: () => SaveReceivingCountDraftResult.success,
+      onFailure: () => SaveReceivingCountDraftResult.persistenceFailure,
+    );
   }
 
   Future<SubmitReceivingCountResult> submitReceivingCount(
     SubmitReceivingCountCommand command,
   ) async {
-    final current = state.valueOrNull;
-    var attempt = current?.attempt;
-    final scenario = current?.scenario;
-    if (current == null ||
-        attempt == null ||
-        scenario == null ||
-        attempt.state != MissionState.inProgress) {
-      return SubmitReceivingCountResult.invalidAttemptState;
-    }
-    var working = attempt;
-    final draft = working.receivingCountDraft;
+    final active = _activeAttemptWithScenario();
+    if (active == null) return SubmitReceivingCountResult.invalidAttemptState;
+    final (current, attempt, scenario) = active;
+    final draft = attempt.receivingCountDraft;
     if (draft == null || !draft.shipmentConfirmed) {
       return SubmitReceivingCountResult.shipmentNotConfirmed;
     }
@@ -1493,29 +1461,15 @@ class WorkplaceSimulationController
         )) {
       return SubmitReceivingCountResult.incompleteCounts;
     }
-    try {
-      working = _withAudit(
-        working,
-        AttemptAuditEventType.receivingCountSubmissionRequested,
-        screenId: 'receiving-dock',
-        payload: {'entryCount': draft.countEntries.length},
-      );
-      var outcomes = [...current.outcomes];
-      (working, outcomes) = _applyAction(
-        current,
-        working,
-        outcomes,
-        _newAction(
-          working,
-          stageId: 'receiving-count',
-          taskId: 'confirm-delivery-identity',
-          actionType: ActionType.confirmAction,
-          targetId: 'delivery-note-dn-2026-001',
-          payload: {'conclusion': 'matchesExpectedDelivery'},
-        ),
-        scenario,
-      );
-      for (final entry in draft.countEntries) {
+    return _tryPersist(
+      () async {
+        var working = _withAudit(
+          attempt,
+          AttemptAuditEventType.receivingCountSubmissionRequested,
+          screenId: 'receiving-dock',
+          payload: {'entryCount': draft.countEntries.length},
+        );
+        var outcomes = [...current.outcomes];
         (working, outcomes) = _applyAction(
           current,
           working,
@@ -1523,54 +1477,65 @@ class WorkplaceSimulationController
           _newAction(
             working,
             stageId: 'receiving-count',
-            taskId: 'confirm-received-counts',
-            actionType: ActionType.countQuantity,
-            targetId: entry.cartonId,
-            payload: {
-              'physicalQuantity': entry.enteredQuantity,
-              'countMethod': entry.countMethod.name,
-              'revisionNumber': entry.revisionNumber,
-              'submitted': true,
-            },
+            taskId: 'confirm-delivery-identity',
+            actionType: ActionType.confirmAction,
+            targetId: 'delivery-note-dn-2026-001',
+            payload: {'conclusion': 'matchesExpectedDelivery'},
           ),
           scenario,
         );
-      }
-      final now = DateTime.now();
-      working = working.copyWith(
-        receivingCountDraft: draft.copyWith(
-          status: drafts.OperationalDraftStatus.submitted,
-          updatedAt: now,
-          submittedAt: now,
-        ),
-      );
-      working = _withAudit(
-        working,
-        AttemptAuditEventType.receivingCountSaved,
-        screenId: 'receiving-dock',
-        payload: {'entryCount': draft.countEntries.length},
-      );
-      await _commit(current, working, outcomes: outcomes);
-      return SubmitReceivingCountResult.success;
-    } catch (_) {
-      await _recordWorkplaceEvent(
+        for (final entry in draft.countEntries) {
+          (working, outcomes) = _applyAction(
+            current,
+            working,
+            outcomes,
+            _newAction(
+              working,
+              stageId: 'receiving-count',
+              taskId: 'confirm-received-counts',
+              actionType: ActionType.countQuantity,
+              targetId: entry.cartonId,
+              payload: {
+                'physicalQuantity': entry.enteredQuantity,
+                'countMethod': entry.countMethod.name,
+                'revisionNumber': entry.revisionNumber,
+                'submitted': true,
+              },
+            ),
+            scenario,
+          );
+        }
+        final now = DateTime.now();
+        working = working.copyWith(
+          receivingCountDraft: draft.copyWith(
+            status: drafts.OperationalDraftStatus.submitted,
+            updatedAt: now,
+            submittedAt: now,
+          ),
+        );
+        working = _withAudit(
+          working,
+          AttemptAuditEventType.receivingCountSaved,
+          screenId: 'receiving-dock',
+          payload: {'entryCount': draft.countEntries.length},
+        );
+        await _commit(current, working, outcomes: outcomes);
+      },
+      onSuccess: () => SubmitReceivingCountResult.success,
+      onFailure: () => SubmitReceivingCountResult.persistenceFailure,
+      onCaught: () => _recordWorkplaceEvent(
         AttemptAuditEventType.receivingCountSaveFailed,
         screenId: 'receiving-dock',
-      );
-      return SubmitReceivingCountResult.persistenceFailure;
-    }
+      ),
+    );
   }
 
   Future<RecordCartonInspectionResult> recordCartonInspection(
     RecordCartonInspectionCommand command,
   ) async {
-    final current = state.valueOrNull;
-    final attempt = current?.attempt;
-    if (current == null ||
-        attempt == null ||
-        attempt.state != MissionState.inProgress) {
-      return RecordCartonInspectionResult.invalidAttemptState;
-    }
+    final active = _activeAttempt();
+    if (active == null) return RecordCartonInspectionResult.invalidAttemptState;
+    final (current, attempt) = active;
     final task = current.mission.task('inspect-cartons');
     if (!task.targetResourceIds.contains(command.cartonId)) {
       return RecordCartonInspectionResult.cartonNotFound;
@@ -1584,48 +1549,45 @@ class WorkplaceSimulationController
     )) {
       return RecordCartonInspectionResult.duplicateEntry;
     }
-    try {
-      final now = DateTime.now();
-      final entry = drafts.CartonInspectionEntry(
-        id: '${attempt.id}-inspect-${draft.cartonInspections.length + 1}',
-        cartonId: command.cartonId,
-        finding: command.finding,
-        learnerNotes: command.learnerNotes.trim(),
-        createdAt: now,
-        updatedAt: now,
-        revisionNumber: 1,
-      );
-      var updated = attempt.copyWith(
-        inspectionDraft: draft.copyWith(
-          cartonInspections: [...draft.cartonInspections, entry],
+    return _tryPersist(
+      () async {
+        final now = DateTime.now();
+        final entry = drafts.CartonInspectionEntry(
+          id: '${attempt.id}-inspect-${draft.cartonInspections.length + 1}',
+          cartonId: command.cartonId,
+          finding: command.finding,
+          learnerNotes: command.learnerNotes.trim(),
+          createdAt: now,
           updatedAt: now,
-        ),
-      );
-      updated = _appendDraftAction(
-        updated,
-        stageId: 'physical-inspection',
-        taskId: 'inspect-cartons',
-        actionType: ActionType.cartonInspectionRecorded,
-        targetId: entry.cartonId,
-        payload: _inspectionPayload(entry),
-      );
-      await _commit(current, updated);
-      return RecordCartonInspectionResult.success;
-    } catch (_) {
-      return RecordCartonInspectionResult.persistenceFailure;
-    }
+          revisionNumber: 1,
+        );
+        var updated = attempt.copyWith(
+          inspectionDraft: draft.copyWith(
+            cartonInspections: [...draft.cartonInspections, entry],
+            updatedAt: now,
+          ),
+        );
+        updated = _appendDraftAction(
+          updated,
+          stageId: 'physical-inspection',
+          taskId: 'inspect-cartons',
+          actionType: ActionType.cartonInspectionRecorded,
+          targetId: entry.cartonId,
+          payload: _inspectionPayload(entry),
+        );
+        await _commit(current, updated);
+      },
+      onSuccess: () => RecordCartonInspectionResult.success,
+      onFailure: () => RecordCartonInspectionResult.persistenceFailure,
+    );
   }
 
   Future<UpdateCartonInspectionResult> updateCartonInspection(
     UpdateCartonInspectionCommand command,
   ) async {
-    final current = state.valueOrNull;
-    final attempt = current?.attempt;
-    if (current == null ||
-        attempt == null ||
-        attempt.state != MissionState.inProgress) {
-      return UpdateCartonInspectionResult.invalidAttemptState;
-    }
+    final active = _activeAttempt();
+    if (active == null) return UpdateCartonInspectionResult.invalidAttemptState;
+    final (current, attempt) = active;
     final draft = attempt.inspectionDraft;
     if (draft == null) return UpdateCartonInspectionResult.entryNotFound;
     if (draft.status == drafts.OperationalDraftStatus.submitted) {
@@ -1635,47 +1597,44 @@ class WorkplaceSimulationController
       (item) => item.id == command.entryId,
     );
     if (index < 0) return UpdateCartonInspectionResult.entryNotFound;
-    try {
-      final now = DateTime.now();
-      final previous = draft.cartonInspections[index];
-      final entry = previous.copyWith(
-        finding: command.finding,
-        learnerNotes: command.learnerNotes.trim(),
-        updatedAt: now,
-        revisionNumber: previous.revisionNumber + 1,
-      );
-      final entries = [...draft.cartonInspections]..[index] = entry;
-      var updated = attempt.copyWith(
-        inspectionDraft: draft.copyWith(
-          cartonInspections: entries,
+    return _tryPersist(
+      () async {
+        final now = DateTime.now();
+        final previous = draft.cartonInspections[index];
+        final entry = previous.copyWith(
+          finding: command.finding,
+          learnerNotes: command.learnerNotes.trim(),
           updatedAt: now,
-        ),
-      );
-      updated = _appendDraftAction(
-        updated,
-        stageId: 'physical-inspection',
-        taskId: 'inspect-cartons',
-        actionType: ActionType.cartonInspectionUpdated,
-        targetId: entry.cartonId,
-        payload: _inspectionPayload(entry),
-      );
-      await _commit(current, updated);
-      return UpdateCartonInspectionResult.success;
-    } catch (_) {
-      return UpdateCartonInspectionResult.persistenceFailure;
-    }
+          revisionNumber: previous.revisionNumber + 1,
+        );
+        final entries = [...draft.cartonInspections]..[index] = entry;
+        var updated = attempt.copyWith(
+          inspectionDraft: draft.copyWith(
+            cartonInspections: entries,
+            updatedAt: now,
+          ),
+        );
+        updated = _appendDraftAction(
+          updated,
+          stageId: 'physical-inspection',
+          taskId: 'inspect-cartons',
+          actionType: ActionType.cartonInspectionUpdated,
+          targetId: entry.cartonId,
+          payload: _inspectionPayload(entry),
+        );
+        await _commit(current, updated);
+      },
+      onSuccess: () => UpdateCartonInspectionResult.success,
+      onFailure: () => UpdateCartonInspectionResult.persistenceFailure,
+    );
   }
 
   Future<RemoveCartonInspectionResult> removeCartonInspection(
     RemoveCartonInspectionCommand command,
   ) async {
-    final current = state.valueOrNull;
-    final attempt = current?.attempt;
-    if (current == null ||
-        attempt == null ||
-        attempt.state != MissionState.inProgress) {
-      return RemoveCartonInspectionResult.invalidAttemptState;
-    }
+    final active = _activeAttempt();
+    if (active == null) return RemoveCartonInspectionResult.invalidAttemptState;
+    final (current, attempt) = active;
     final draft = attempt.inspectionDraft;
     if (draft == null) return RemoveCartonInspectionResult.entryNotFound;
     if (draft.status == drafts.OperationalDraftStatus.submitted) {
@@ -1686,44 +1645,41 @@ class WorkplaceSimulationController
       if (item.id == command.entryId) entry = item;
     }
     if (entry == null) return RemoveCartonInspectionResult.entryNotFound;
-    try {
-      final now = DateTime.now();
-      var updated = attempt.copyWith(
-        inspectionDraft: draft.copyWith(
-          cartonInspections: draft.cartonInspections
-              .where((item) => item.id != command.entryId)
-              .toList(growable: false),
-          updatedAt: now,
-        ),
-      );
-      updated = _appendDraftAction(
-        updated,
-        stageId: 'physical-inspection',
-        taskId: 'inspect-cartons',
-        actionType: ActionType.cartonInspectionRemoved,
-        targetId: entry.cartonId,
-        payload: {
-          'entryId': entry.id,
-          'revisionNumber': entry.revisionNumber + 1,
-        },
-      );
-      await _commit(current, updated);
-      return RemoveCartonInspectionResult.success;
-    } catch (_) {
-      return RemoveCartonInspectionResult.persistenceFailure;
-    }
+    return _tryPersist(
+      () async {
+        final now = DateTime.now();
+        var updated = attempt.copyWith(
+          inspectionDraft: draft.copyWith(
+            cartonInspections: draft.cartonInspections
+                .where((item) => item.id != command.entryId)
+                .toList(growable: false),
+            updatedAt: now,
+          ),
+        );
+        updated = _appendDraftAction(
+          updated,
+          stageId: 'physical-inspection',
+          taskId: 'inspect-cartons',
+          actionType: ActionType.cartonInspectionRemoved,
+          targetId: entry!.cartonId,
+          payload: {
+            'entryId': entry.id,
+            'revisionNumber': entry.revisionNumber + 1,
+          },
+        );
+        await _commit(current, updated);
+      },
+      onSuccess: () => RemoveCartonInspectionResult.success,
+      onFailure: () => RemoveCartonInspectionResult.persistenceFailure,
+    );
   }
 
   Future<RecordBarcodeScanResult> recordBarcodeScan(
     RecordBarcodeScanCommand command,
   ) async {
-    final current = state.valueOrNull;
-    final attempt = current?.attempt;
-    if (current == null ||
-        attempt == null ||
-        attempt.state != MissionState.inProgress) {
-      return RecordBarcodeScanResult.invalidAttemptState;
-    }
+    final active = _activeAttempt();
+    if (active == null) return RecordBarcodeScanResult.invalidAttemptState;
+    final (current, attempt) = active;
     final task = current.mission.task('scan-barcodes');
     if (!task.targetResourceIds.contains(command.cartonId)) {
       return RecordBarcodeScanResult.cartonNotFound;
@@ -1735,47 +1691,44 @@ class WorkplaceSimulationController
     if (draft.barcodeScans.any((item) => item.cartonId == command.cartonId)) {
       return RecordBarcodeScanResult.duplicateEntry;
     }
-    try {
-      final now = DateTime.now();
-      final entry = drafts.BarcodeScanEntry(
-        id: '${attempt.id}-scan-${draft.barcodeScans.length + 1}',
-        cartonId: command.cartonId,
-        status: command.status,
-        createdAt: now,
-        updatedAt: now,
-        revisionNumber: 1,
-      );
-      var updated = attempt.copyWith(
-        inspectionDraft: draft.copyWith(
-          barcodeScans: [...draft.barcodeScans, entry],
+    return _tryPersist(
+      () async {
+        final now = DateTime.now();
+        final entry = drafts.BarcodeScanEntry(
+          id: '${attempt.id}-scan-${draft.barcodeScans.length + 1}',
+          cartonId: command.cartonId,
+          status: command.status,
+          createdAt: now,
           updatedAt: now,
-        ),
-      );
-      updated = _appendDraftAction(
-        updated,
-        stageId: 'physical-inspection',
-        taskId: 'scan-barcodes',
-        actionType: ActionType.barcodeScanRecorded,
-        targetId: entry.cartonId,
-        payload: _scanPayload(entry),
-      );
-      await _commit(current, updated);
-      return RecordBarcodeScanResult.success;
-    } catch (_) {
-      return RecordBarcodeScanResult.persistenceFailure;
-    }
+          revisionNumber: 1,
+        );
+        var updated = attempt.copyWith(
+          inspectionDraft: draft.copyWith(
+            barcodeScans: [...draft.barcodeScans, entry],
+            updatedAt: now,
+          ),
+        );
+        updated = _appendDraftAction(
+          updated,
+          stageId: 'physical-inspection',
+          taskId: 'scan-barcodes',
+          actionType: ActionType.barcodeScanRecorded,
+          targetId: entry.cartonId,
+          payload: _scanPayload(entry),
+        );
+        await _commit(current, updated);
+      },
+      onSuccess: () => RecordBarcodeScanResult.success,
+      onFailure: () => RecordBarcodeScanResult.persistenceFailure,
+    );
   }
 
   Future<UpdateBarcodeScanResult> updateBarcodeScan(
     UpdateBarcodeScanCommand command,
   ) async {
-    final current = state.valueOrNull;
-    final attempt = current?.attempt;
-    if (current == null ||
-        attempt == null ||
-        attempt.state != MissionState.inProgress) {
-      return UpdateBarcodeScanResult.invalidAttemptState;
-    }
+    final active = _activeAttempt();
+    if (active == null) return UpdateBarcodeScanResult.invalidAttemptState;
+    final (current, attempt) = active;
     final draft = attempt.inspectionDraft;
     if (draft == null) return UpdateBarcodeScanResult.entryNotFound;
     if (draft.status == drafts.OperationalDraftStatus.submitted) {
@@ -1785,43 +1738,43 @@ class WorkplaceSimulationController
       (item) => item.id == command.entryId,
     );
     if (index < 0) return UpdateBarcodeScanResult.entryNotFound;
-    try {
-      final now = DateTime.now();
-      final previous = draft.barcodeScans[index];
-      final entry = previous.copyWith(
-        status: command.status,
-        updatedAt: now,
-        revisionNumber: previous.revisionNumber + 1,
-      );
-      final entries = [...draft.barcodeScans]..[index] = entry;
-      var updated = attempt.copyWith(
-        inspectionDraft: draft.copyWith(barcodeScans: entries, updatedAt: now),
-      );
-      updated = _appendDraftAction(
-        updated,
-        stageId: 'physical-inspection',
-        taskId: 'scan-barcodes',
-        actionType: ActionType.barcodeScanUpdated,
-        targetId: entry.cartonId,
-        payload: _scanPayload(entry),
-      );
-      await _commit(current, updated);
-      return UpdateBarcodeScanResult.success;
-    } catch (_) {
-      return UpdateBarcodeScanResult.persistenceFailure;
-    }
+    return _tryPersist(
+      () async {
+        final now = DateTime.now();
+        final previous = draft.barcodeScans[index];
+        final entry = previous.copyWith(
+          status: command.status,
+          updatedAt: now,
+          revisionNumber: previous.revisionNumber + 1,
+        );
+        final entries = [...draft.barcodeScans]..[index] = entry;
+        var updated = attempt.copyWith(
+          inspectionDraft: draft.copyWith(
+            barcodeScans: entries,
+            updatedAt: now,
+          ),
+        );
+        updated = _appendDraftAction(
+          updated,
+          stageId: 'physical-inspection',
+          taskId: 'scan-barcodes',
+          actionType: ActionType.barcodeScanUpdated,
+          targetId: entry.cartonId,
+          payload: _scanPayload(entry),
+        );
+        await _commit(current, updated);
+      },
+      onSuccess: () => UpdateBarcodeScanResult.success,
+      onFailure: () => UpdateBarcodeScanResult.persistenceFailure,
+    );
   }
 
   Future<RemoveBarcodeScanResult> removeBarcodeScan(
     RemoveBarcodeScanCommand command,
   ) async {
-    final current = state.valueOrNull;
-    final attempt = current?.attempt;
-    if (current == null ||
-        attempt == null ||
-        attempt.state != MissionState.inProgress) {
-      return RemoveBarcodeScanResult.invalidAttemptState;
-    }
+    final active = _activeAttempt();
+    if (active == null) return RemoveBarcodeScanResult.invalidAttemptState;
+    final (current, attempt) = active;
     final draft = attempt.inspectionDraft;
     if (draft == null) return RemoveBarcodeScanResult.entryNotFound;
     if (draft.status == drafts.OperationalDraftStatus.submitted) {
@@ -1832,79 +1785,70 @@ class WorkplaceSimulationController
       if (item.id == command.entryId) entry = item;
     }
     if (entry == null) return RemoveBarcodeScanResult.entryNotFound;
-    try {
-      final now = DateTime.now();
-      var updated = attempt.copyWith(
-        inspectionDraft: draft.copyWith(
-          barcodeScans: draft.barcodeScans
-              .where((item) => item.id != command.entryId)
-              .toList(growable: false),
-          updatedAt: now,
-        ),
-      );
-      updated = _appendDraftAction(
-        updated,
-        stageId: 'physical-inspection',
-        taskId: 'scan-barcodes',
-        actionType: ActionType.barcodeScanRemoved,
-        targetId: entry.cartonId,
-        payload: {
-          'entryId': entry.id,
-          'revisionNumber': entry.revisionNumber + 1,
-        },
-      );
-      await _commit(current, updated);
-      return RemoveBarcodeScanResult.success;
-    } catch (_) {
-      return RemoveBarcodeScanResult.persistenceFailure;
-    }
+    return _tryPersist(
+      () async {
+        final now = DateTime.now();
+        var updated = attempt.copyWith(
+          inspectionDraft: draft.copyWith(
+            barcodeScans: draft.barcodeScans
+                .where((item) => item.id != command.entryId)
+                .toList(growable: false),
+            updatedAt: now,
+          ),
+        );
+        updated = _appendDraftAction(
+          updated,
+          stageId: 'physical-inspection',
+          taskId: 'scan-barcodes',
+          actionType: ActionType.barcodeScanRemoved,
+          targetId: entry!.cartonId,
+          payload: {
+            'entryId': entry.id,
+            'revisionNumber': entry.revisionNumber + 1,
+          },
+        );
+        await _commit(current, updated);
+      },
+      onSuccess: () => RemoveBarcodeScanResult.success,
+      onFailure: () => RemoveBarcodeScanResult.persistenceFailure,
+    );
   }
 
   Future<SaveInspectionDraftResult> saveInspectionDraft(
     SaveInspectionDraftCommand command,
   ) async {
-    final current = state.valueOrNull;
-    final attempt = current?.attempt;
-    if (current == null ||
-        attempt == null ||
-        attempt.state != MissionState.inProgress) {
-      return SaveInspectionDraftResult.invalidAttemptState;
-    }
+    final active = _activeAttempt();
+    if (active == null) return SaveInspectionDraftResult.invalidAttemptState;
+    final (current, attempt) = active;
     final draft = attempt.inspectionDraft ?? _newInspectionDraft(attempt);
     if (draft.status == drafts.OperationalDraftStatus.submitted) {
       return SaveInspectionDraftResult.alreadySubmitted;
     }
-    try {
-      final updated = _withAudit(
-        attempt.copyWith(inspectionDraft: draft),
-        AttemptAuditEventType.inspectionDraftSaved,
-        screenId: 'inspection-zone',
-        payload: {
-          'inspectionCount': draft.cartonInspections.length,
-          'scanCount': draft.barcodeScans.length,
-        },
-      );
-      await _commit(current, updated);
-      return SaveInspectionDraftResult.success;
-    } catch (_) {
-      return SaveInspectionDraftResult.persistenceFailure;
-    }
+    return _tryPersist(
+      () async {
+        final updated = _withAudit(
+          attempt.copyWith(inspectionDraft: draft),
+          AttemptAuditEventType.inspectionDraftSaved,
+          screenId: 'inspection-zone',
+          payload: {
+            'inspectionCount': draft.cartonInspections.length,
+            'scanCount': draft.barcodeScans.length,
+          },
+        );
+        await _commit(current, updated);
+      },
+      onSuccess: () => SaveInspectionDraftResult.success,
+      onFailure: () => SaveInspectionDraftResult.persistenceFailure,
+    );
   }
 
   Future<SubmitInspectionResult> submitInspection(
     SubmitInspectionCommand command,
   ) async {
-    final current = state.valueOrNull;
-    var attempt = current?.attempt;
-    final scenario = current?.scenario;
-    if (current == null ||
-        attempt == null ||
-        scenario == null ||
-        attempt.state != MissionState.inProgress) {
-      return SubmitInspectionResult.invalidAttemptState;
-    }
-    var working = attempt;
-    final draft = working.inspectionDraft;
+    final active = _activeAttemptWithScenario();
+    if (active == null) return SubmitInspectionResult.invalidAttemptState;
+    final (current, attempt, scenario) = active;
+    final draft = attempt.inspectionDraft;
     if (draft == null) return SubmitInspectionResult.incompleteInspection;
     if (draft.status == drafts.OperationalDraftStatus.submitted) {
       return SubmitInspectionResult.alreadySubmitted;
@@ -1925,92 +1869,89 @@ class WorkplaceSimulationController
         )) {
       return SubmitInspectionResult.incompleteScans;
     }
-    try {
-      working = _withAudit(
-        working,
-        AttemptAuditEventType.inspectionSubmissionRequested,
-        screenId: 'inspection-zone',
-        payload: {
-          'inspectionCount': draft.cartonInspections.length,
-          'scanCount': draft.barcodeScans.length,
-        },
-      );
-      var outcomes = [...current.outcomes];
-      for (final entry in draft.cartonInspections) {
-        final compliant = entry.finding == drafts.CartonFinding.compliant;
-        (working, outcomes) = _applyAction(
-          current,
-          working,
-          outcomes,
-          _newAction(
-            working,
-            stageId: 'physical-inspection',
-            taskId: 'inspect-cartons',
-            actionType: compliant
-                ? ActionType.inspectItem
-                : ActionType.recordIssue,
-            targetId: entry.cartonId,
-            payload: compliant
-                ? const {'finding': 'compliant'}
-                : {'issueType': entry.finding.wireName},
-          ),
-          scenario,
+    return _tryPersist(
+      () async {
+        var working = _withAudit(
+          attempt,
+          AttemptAuditEventType.inspectionSubmissionRequested,
+          screenId: 'inspection-zone',
+          payload: {
+            'inspectionCount': draft.cartonInspections.length,
+            'scanCount': draft.barcodeScans.length,
+          },
         );
-      }
-      for (final entry in draft.barcodeScans) {
-        (working, outcomes) = _applyAction(
-          current,
-          working,
-          outcomes,
-          _newAction(
+        var outcomes = [...current.outcomes];
+        for (final entry in draft.cartonInspections) {
+          final compliant = entry.finding == drafts.CartonFinding.compliant;
+          (working, outcomes) = _applyAction(
+            current,
             working,
-            stageId: 'physical-inspection',
-            taskId: 'scan-barcodes',
-            actionType: ActionType.scanBarcode,
-            targetId: entry.cartonId,
-            payload: {'barcodeStatus': entry.status.name},
+            outcomes,
+            _newAction(
+              working,
+              stageId: 'physical-inspection',
+              taskId: 'inspect-cartons',
+              actionType: compliant
+                  ? ActionType.inspectItem
+                  : ActionType.recordIssue,
+              targetId: entry.cartonId,
+              payload: compliant
+                  ? const {'finding': 'compliant'}
+                  : {'issueType': entry.finding.wireName},
+            ),
+            scenario,
+          );
+        }
+        for (final entry in draft.barcodeScans) {
+          (working, outcomes) = _applyAction(
+            current,
+            working,
+            outcomes,
+            _newAction(
+              working,
+              stageId: 'physical-inspection',
+              taskId: 'scan-barcodes',
+              actionType: ActionType.scanBarcode,
+              targetId: entry.cartonId,
+              payload: {'barcodeStatus': entry.status.name},
+            ),
+            scenario,
+          );
+        }
+        final now = DateTime.now();
+        working = working.copyWith(
+          inspectionDraft: draft.copyWith(
+            status: drafts.OperationalDraftStatus.submitted,
+            updatedAt: now,
+            submittedAt: now,
           ),
-          scenario,
         );
-      }
-      final now = DateTime.now();
-      working = working.copyWith(
-        inspectionDraft: draft.copyWith(
-          status: drafts.OperationalDraftStatus.submitted,
-          updatedAt: now,
-          submittedAt: now,
-        ),
-      );
-      working = _withAudit(
-        working,
-        AttemptAuditEventType.inspectionSaved,
-        screenId: 'inspection-zone',
-        payload: {
-          'inspectionCount': draft.cartonInspections.length,
-          'scanCount': draft.barcodeScans.length,
-        },
-      );
-      await _commit(current, working, outcomes: outcomes);
-      return SubmitInspectionResult.success;
-    } catch (_) {
-      await _recordWorkplaceEvent(
+        working = _withAudit(
+          working,
+          AttemptAuditEventType.inspectionSaved,
+          screenId: 'inspection-zone',
+          payload: {
+            'inspectionCount': draft.cartonInspections.length,
+            'scanCount': draft.barcodeScans.length,
+          },
+        );
+        await _commit(current, working, outcomes: outcomes);
+      },
+      onSuccess: () => SubmitInspectionResult.success,
+      onFailure: () => SubmitInspectionResult.persistenceFailure,
+      onCaught: () => _recordWorkplaceEvent(
         AttemptAuditEventType.inspectionSaveFailed,
         screenId: 'inspection-zone',
-      );
-      return SubmitInspectionResult.persistenceFailure;
-    }
+      ),
+    );
   }
 
   Future<RecordDispositionResult> recordDisposition(
     RecordDispositionCommand command,
   ) async {
-    final current = state.valueOrNull;
-    final attempt = current?.attempt;
-    if (current == null ||
-        attempt == null ||
-        attempt.state != MissionState.inProgress) {
-      return RecordDispositionResult.invalidAttemptState;
-    }
+    final active = _activeAttempt();
+    if (active == null) return RecordDispositionResult.invalidAttemptState;
+    final (current, attempt) = active;
     final task = current.mission.task('assign-dispositions');
     if (!task.targetResourceIds.contains(command.cartonId)) {
       return RecordDispositionResult.cartonNotFound;
@@ -2026,48 +1967,45 @@ class WorkplaceSimulationController
     if (draft.entries.any((item) => item.cartonId == command.cartonId)) {
       return RecordDispositionResult.duplicateEntry;
     }
-    try {
-      final now = DateTime.now();
-      final entry = drafts.DispositionEntry(
-        id: '${attempt.id}-disposition-${draft.entries.length + 1}',
-        cartonId: command.cartonId,
-        disposition: command.disposition,
-        reason: command.reason.trim(),
-        createdAt: now,
-        updatedAt: now,
-        revisionNumber: 1,
-      );
-      var updated = attempt.copyWith(
-        dispositionDraft: draft.copyWith(
-          entries: [...draft.entries, entry],
+    return _tryPersist(
+      () async {
+        final now = DateTime.now();
+        final entry = drafts.DispositionEntry(
+          id: '${attempt.id}-disposition-${draft.entries.length + 1}',
+          cartonId: command.cartonId,
+          disposition: command.disposition,
+          reason: command.reason.trim(),
+          createdAt: now,
           updatedAt: now,
-        ),
-      );
-      updated = _appendDraftAction(
-        updated,
-        stageId: 'exception-handling',
-        taskId: 'assign-dispositions',
-        actionType: ActionType.dispositionRecorded,
-        targetId: entry.cartonId,
-        payload: _dispositionPayload(entry),
-      );
-      await _commit(current, updated);
-      return RecordDispositionResult.success;
-    } catch (_) {
-      return RecordDispositionResult.persistenceFailure;
-    }
+          revisionNumber: 1,
+        );
+        var updated = attempt.copyWith(
+          dispositionDraft: draft.copyWith(
+            entries: [...draft.entries, entry],
+            updatedAt: now,
+          ),
+        );
+        updated = _appendDraftAction(
+          updated,
+          stageId: 'exception-handling',
+          taskId: 'assign-dispositions',
+          actionType: ActionType.dispositionRecorded,
+          targetId: entry.cartonId,
+          payload: _dispositionPayload(entry),
+        );
+        await _commit(current, updated);
+      },
+      onSuccess: () => RecordDispositionResult.success,
+      onFailure: () => RecordDispositionResult.persistenceFailure,
+    );
   }
 
   Future<UpdateDispositionResult> updateDisposition(
     UpdateDispositionCommand command,
   ) async {
-    final current = state.valueOrNull;
-    final attempt = current?.attempt;
-    if (current == null ||
-        attempt == null ||
-        attempt.state != MissionState.inProgress) {
-      return UpdateDispositionResult.invalidAttemptState;
-    }
+    final active = _activeAttempt();
+    if (active == null) return UpdateDispositionResult.invalidAttemptState;
+    final (current, attempt) = active;
     if (command.disposition != DispositionType.accept &&
         command.reason.trim().isEmpty) {
       return UpdateDispositionResult.reasonRequired;
@@ -2081,44 +2019,41 @@ class WorkplaceSimulationController
       (item) => item.id == command.entryId,
     );
     if (index < 0) return UpdateDispositionResult.entryNotFound;
-    try {
-      final now = DateTime.now();
-      final previous = draft.entries[index];
-      final entry = previous.copyWith(
-        disposition: command.disposition,
-        reason: command.reason.trim(),
-        updatedAt: now,
-        revisionNumber: previous.revisionNumber + 1,
-      );
-      final entries = [...draft.entries]..[index] = entry;
-      var updated = attempt.copyWith(
-        dispositionDraft: draft.copyWith(entries: entries, updatedAt: now),
-      );
-      updated = _appendDraftAction(
-        updated,
-        stageId: 'exception-handling',
-        taskId: 'assign-dispositions',
-        actionType: ActionType.dispositionUpdated,
-        targetId: entry.cartonId,
-        payload: _dispositionPayload(entry),
-      );
-      await _commit(current, updated);
-      return UpdateDispositionResult.success;
-    } catch (_) {
-      return UpdateDispositionResult.persistenceFailure;
-    }
+    return _tryPersist(
+      () async {
+        final now = DateTime.now();
+        final previous = draft.entries[index];
+        final entry = previous.copyWith(
+          disposition: command.disposition,
+          reason: command.reason.trim(),
+          updatedAt: now,
+          revisionNumber: previous.revisionNumber + 1,
+        );
+        final entries = [...draft.entries]..[index] = entry;
+        var updated = attempt.copyWith(
+          dispositionDraft: draft.copyWith(entries: entries, updatedAt: now),
+        );
+        updated = _appendDraftAction(
+          updated,
+          stageId: 'exception-handling',
+          taskId: 'assign-dispositions',
+          actionType: ActionType.dispositionUpdated,
+          targetId: entry.cartonId,
+          payload: _dispositionPayload(entry),
+        );
+        await _commit(current, updated);
+      },
+      onSuccess: () => UpdateDispositionResult.success,
+      onFailure: () => UpdateDispositionResult.persistenceFailure,
+    );
   }
 
   Future<RemoveDispositionResult> removeDisposition(
     RemoveDispositionCommand command,
   ) async {
-    final current = state.valueOrNull;
-    final attempt = current?.attempt;
-    if (current == null ||
-        attempt == null ||
-        attempt.state != MissionState.inProgress) {
-      return RemoveDispositionResult.invalidAttemptState;
-    }
+    final active = _activeAttempt();
+    if (active == null) return RemoveDispositionResult.invalidAttemptState;
+    final (current, attempt) = active;
     final draft = attempt.dispositionDraft;
     if (draft == null) return RemoveDispositionResult.entryNotFound;
     if (draft.status == drafts.OperationalDraftStatus.submitted) {
@@ -2129,76 +2064,67 @@ class WorkplaceSimulationController
       if (item.id == command.entryId) entry = item;
     }
     if (entry == null) return RemoveDispositionResult.entryNotFound;
-    try {
-      final now = DateTime.now();
-      var updated = attempt.copyWith(
-        dispositionDraft: draft.copyWith(
-          entries: draft.entries
-              .where((item) => item.id != command.entryId)
-              .toList(growable: false),
-          updatedAt: now,
-        ),
-      );
-      updated = _appendDraftAction(
-        updated,
-        stageId: 'exception-handling',
-        taskId: 'assign-dispositions',
-        actionType: ActionType.dispositionRemoved,
-        targetId: entry.cartonId,
-        payload: {
-          'entryId': entry.id,
-          'revisionNumber': entry.revisionNumber + 1,
-        },
-      );
-      await _commit(current, updated);
-      return RemoveDispositionResult.success;
-    } catch (_) {
-      return RemoveDispositionResult.persistenceFailure;
-    }
+    return _tryPersist(
+      () async {
+        final now = DateTime.now();
+        var updated = attempt.copyWith(
+          dispositionDraft: draft.copyWith(
+            entries: draft.entries
+                .where((item) => item.id != command.entryId)
+                .toList(growable: false),
+            updatedAt: now,
+          ),
+        );
+        updated = _appendDraftAction(
+          updated,
+          stageId: 'exception-handling',
+          taskId: 'assign-dispositions',
+          actionType: ActionType.dispositionRemoved,
+          targetId: entry!.cartonId,
+          payload: {
+            'entryId': entry.id,
+            'revisionNumber': entry.revisionNumber + 1,
+          },
+        );
+        await _commit(current, updated);
+      },
+      onSuccess: () => RemoveDispositionResult.success,
+      onFailure: () => RemoveDispositionResult.persistenceFailure,
+    );
   }
 
   Future<SaveDispositionDraftResult> saveDispositionDraft(
     SaveDispositionDraftCommand command,
   ) async {
-    final current = state.valueOrNull;
-    final attempt = current?.attempt;
-    if (current == null ||
-        attempt == null ||
-        attempt.state != MissionState.inProgress) {
-      return SaveDispositionDraftResult.invalidAttemptState;
-    }
+    final active = _activeAttempt();
+    if (active == null) return SaveDispositionDraftResult.invalidAttemptState;
+    final (current, attempt) = active;
     final draft = attempt.dispositionDraft ?? _newDispositionDraft(attempt);
     if (draft.status == drafts.OperationalDraftStatus.submitted) {
       return SaveDispositionDraftResult.alreadySubmitted;
     }
-    try {
-      final updated = _withAudit(
-        attempt.copyWith(dispositionDraft: draft),
-        AttemptAuditEventType.dispositionsDraftSaved,
-        screenId: 'quarantine-zone',
-        payload: {'entryCount': draft.entries.length},
-      );
-      await _commit(current, updated);
-      return SaveDispositionDraftResult.success;
-    } catch (_) {
-      return SaveDispositionDraftResult.persistenceFailure;
-    }
+    return _tryPersist(
+      () async {
+        final updated = _withAudit(
+          attempt.copyWith(dispositionDraft: draft),
+          AttemptAuditEventType.dispositionsDraftSaved,
+          screenId: 'quarantine-zone',
+          payload: {'entryCount': draft.entries.length},
+        );
+        await _commit(current, updated);
+      },
+      onSuccess: () => SaveDispositionDraftResult.success,
+      onFailure: () => SaveDispositionDraftResult.persistenceFailure,
+    );
   }
 
   Future<SubmitDispositionsResult> submitDispositions(
     SubmitDispositionsCommand command,
   ) async {
-    final current = state.valueOrNull;
-    var attempt = current?.attempt;
-    final scenario = current?.scenario;
-    if (current == null ||
-        attempt == null ||
-        scenario == null ||
-        attempt.state != MissionState.inProgress) {
-      return SubmitDispositionsResult.invalidAttemptState;
-    }
-    var working = attempt;
-    final draft = working.dispositionDraft;
+    final active = _activeAttemptWithScenario();
+    if (active == null) return SubmitDispositionsResult.invalidAttemptState;
+    final (current, attempt, scenario) = active;
+    final draft = attempt.dispositionDraft;
     if (draft == null) return SubmitDispositionsResult.incompleteDispositions;
     if (draft.status == drafts.OperationalDraftStatus.submitted) {
       return SubmitDispositionsResult.alreadySubmitted;
@@ -2212,70 +2138,65 @@ class WorkplaceSimulationController
         )) {
       return SubmitDispositionsResult.incompleteDispositions;
     }
-    try {
-      working = _withAudit(
-        working,
-        AttemptAuditEventType.dispositionsSubmissionRequested,
-        screenId: 'quarantine-zone',
-        payload: {'entryCount': draft.entries.length},
-      );
-      var outcomes = [...current.outcomes];
-      for (final entry in draft.entries) {
-        (working, outcomes) = _applyAction(
-          current,
-          working,
-          outcomes,
-          _newAction(
-            working,
-            stageId: 'exception-handling',
-            taskId: 'assign-dispositions',
-            actionType: ActionType.selectDisposition,
-            targetId: entry.cartonId,
-            payload: {
-              'disposition': entry.disposition.wireName,
-              'reason': entry.reason,
-            },
-          ),
-          scenario,
+    return _tryPersist(
+      () async {
+        var working = _withAudit(
+          attempt,
+          AttemptAuditEventType.dispositionsSubmissionRequested,
+          screenId: 'quarantine-zone',
+          payload: {'entryCount': draft.entries.length},
         );
-      }
-      final now = DateTime.now();
-      working = working.copyWith(
-        dispositionDraft: draft.copyWith(
-          status: drafts.OperationalDraftStatus.submitted,
-          updatedAt: now,
-          submittedAt: now,
-        ),
-      );
-      working = _withAudit(
-        working,
-        AttemptAuditEventType.dispositionsSaved,
-        screenId: 'quarantine-zone',
-        payload: {'entryCount': draft.entries.length},
-      );
-      await _commit(current, working, outcomes: outcomes);
-      return SubmitDispositionsResult.success;
-    } catch (_) {
-      await _recordWorkplaceEvent(
+        var outcomes = [...current.outcomes];
+        for (final entry in draft.entries) {
+          (working, outcomes) = _applyAction(
+            current,
+            working,
+            outcomes,
+            _newAction(
+              working,
+              stageId: 'exception-handling',
+              taskId: 'assign-dispositions',
+              actionType: ActionType.selectDisposition,
+              targetId: entry.cartonId,
+              payload: {
+                'disposition': entry.disposition.wireName,
+                'reason': entry.reason,
+              },
+            ),
+            scenario,
+          );
+        }
+        final now = DateTime.now();
+        working = working.copyWith(
+          dispositionDraft: draft.copyWith(
+            status: drafts.OperationalDraftStatus.submitted,
+            updatedAt: now,
+            submittedAt: now,
+          ),
+        );
+        working = _withAudit(
+          working,
+          AttemptAuditEventType.dispositionsSaved,
+          screenId: 'quarantine-zone',
+          payload: {'entryCount': draft.entries.length},
+        );
+        await _commit(current, working, outcomes: outcomes);
+      },
+      onSuccess: () => SubmitDispositionsResult.success,
+      onFailure: () => SubmitDispositionsResult.persistenceFailure,
+      onCaught: () => _recordWorkplaceEvent(
         AttemptAuditEventType.dispositionsSaveFailed,
         screenId: 'quarantine-zone',
-      );
-      return SubmitDispositionsResult.persistenceFailure;
-    }
+      ),
+    );
   }
 
   Future<ConfirmQuarantineResult> confirmQuarantine(
     ConfirmQuarantineCommand command,
   ) async {
-    final current = state.valueOrNull;
-    var attempt = current?.attempt;
-    final scenario = current?.scenario;
-    if (current == null ||
-        attempt == null ||
-        scenario == null ||
-        attempt.state != MissionState.inProgress) {
-      return ConfirmQuarantineResult.invalidAttemptState;
-    }
+    final active = _activeAttemptWithScenario();
+    if (active == null) return ConfirmQuarantineResult.invalidAttemptState;
+    final (current, attempt, scenario) = active;
     if (attempt.dispositionDraft?.status !=
         drafts.OperationalDraftStatus.submitted) {
       return ConfirmQuarantineResult.dispositionsNotSubmitted;
@@ -2283,37 +2204,38 @@ class WorkplaceSimulationController
     if (attempt.completedTaskIds.contains('confirm-quarantine')) {
       return ConfirmQuarantineResult.alreadyConfirmed;
     }
-    try {
-      var working = attempt;
-      var outcomes = [...current.outcomes];
-      (working, outcomes) = _applyAction(
-        current,
-        working,
-        outcomes,
-        _newAction(
+    return _tryPersist(
+      () async {
+        var working = attempt;
+        var outcomes = [...current.outcomes];
+        (working, outcomes) = _applyAction(
+          current,
           working,
-          stageId: 'exception-handling',
-          taskId: 'confirm-quarantine',
-          actionType: ActionType.confirmAction,
-          targetId: 'quarantine-record',
-          payload: {'allExceptionsSeparated': true},
-        ),
-        scenario,
-      );
-      working = _withAudit(
-        working,
-        AttemptAuditEventType.quarantineConfirmed,
-        screenId: 'quarantine-zone',
-      );
-      await _commit(current, working, outcomes: outcomes);
-      return ConfirmQuarantineResult.success;
-    } catch (_) {
-      await _recordWorkplaceEvent(
+          outcomes,
+          _newAction(
+            working,
+            stageId: 'exception-handling',
+            taskId: 'confirm-quarantine',
+            actionType: ActionType.confirmAction,
+            targetId: 'quarantine-record',
+            payload: {'allExceptionsSeparated': true},
+          ),
+          scenario,
+        );
+        working = _withAudit(
+          working,
+          AttemptAuditEventType.quarantineConfirmed,
+          screenId: 'quarantine-zone',
+        );
+        await _commit(current, working, outcomes: outcomes);
+      },
+      onSuccess: () => ConfirmQuarantineResult.success,
+      onFailure: () => ConfirmQuarantineResult.persistenceFailure,
+      onCaught: () => _recordWorkplaceEvent(
         AttemptAuditEventType.quarantineConfirmationFailed,
         screenId: 'quarantine-zone',
-      );
-      return ConfirmQuarantineResult.persistenceFailure;
-    }
+      ),
+    );
   }
 
   Future<SetDiscrepancyReportFlagsResult> setDiscrepancyReportFlags(
@@ -3086,6 +3008,56 @@ class WorkplaceSimulationController
       throw const AuthenticationFailure('Sign in again to save the mission.');
     }
     return candidateId;
+  }
+
+  /// The (state, in-progress attempt) pair every draft record/update/remove/
+  /// save-draft command requires, or null if there isn't one. Replaces the
+  /// same four-line guard repeated at the top of every one of those methods.
+  (WorkplaceSimulationState, SimulationAttempt)? _activeAttempt() {
+    final current = state.valueOrNull;
+    final attempt = current?.attempt;
+    if (current == null ||
+        attempt == null ||
+        attempt.state != MissionState.inProgress) {
+      return null;
+    }
+    return (current, attempt);
+  }
+
+  /// As [_activeAttempt], for the submit-time methods that also need the
+  /// generated scenario to evaluate actions against.
+  (WorkplaceSimulationState, SimulationAttempt, GeneratedScenario)?
+  _activeAttemptWithScenario() {
+    final current = state.valueOrNull;
+    final attempt = current?.attempt;
+    final scenario = current?.scenario;
+    if (current == null ||
+        attempt == null ||
+        scenario == null ||
+        attempt.state != MissionState.inProgress) {
+      return null;
+    }
+    return (current, attempt, scenario);
+  }
+
+  /// Runs a draft/submit mutation, mapping any thrown exception to
+  /// [onFailure] instead of letting it propagate -- replaces the identical
+  /// try/catch/persistenceFailure block at the end of every draft command.
+  /// [onCaught] runs additional side effects (e.g. a failure audit event)
+  /// before [onFailure] is returned, for the submit methods that need one.
+  Future<TResult> _tryPersist<TResult>(
+    Future<void> Function() action, {
+    required TResult Function() onSuccess,
+    required TResult Function() onFailure,
+    Future<void> Function()? onCaught,
+  }) async {
+    try {
+      await action();
+      return onSuccess();
+    } catch (_) {
+      if (onCaught != null) await onCaught();
+      return onFailure();
+    }
   }
 
   Future<AppFailure?> _guard(Future<void> Function() action) async {

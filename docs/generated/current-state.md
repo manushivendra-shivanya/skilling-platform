@@ -1123,19 +1123,69 @@ work; the mechanism to select and score against them already exists now.
 - `flutter build apk --debug --no-pub --target-platform android-arm64` —
   succeeded locally
 
+### Receiving controller refactor — shared guard/persist helpers
+Removed the duplicated boilerplate across Receiving's 25 bespoke draft/
+submit methods (`document findings`, `receiving count`, `physical
+inspection` — carton inspections and barcode scans, `dispositions` and
+`confirm quarantine`) in `workplace_simulation_controller.dart`. Every one
+of those methods shared the exact same four-part shape: (1) guard on an
+active, in-progress attempt (and, for the four `submit*`/`confirm*`
+methods, also require a generated scenario), (2) domain-specific
+validation, (3) a mutation wrapped in try/catch that returns `success` or
+`persistenceFailure`, and sometimes (4) an `onCaught` side-effect (an audit
+event) before returning failure.
+
+Extracted three private helpers rather than forcing all four draft types
+(and the two standalone confirm actions) into one generic
+`recordAction()`-style entry-CRUD abstraction:
+- `_activeAttempt()` — returns `(state, attempt)` or `null` if there's no
+  in-progress attempt
+- `_activeAttemptWithScenario()` — same, plus the generated scenario,
+  for the methods that need it (all `submit*`/`confirm*` methods)
+- `_tryPersist(action, {onSuccess, onFailure, onCaught})` — runs the
+  mutation, returns the typed result, and optionally runs a caught-side
+  audit event before returning failure
+
+Each of the 25 methods was rewritten to use these helpers in place of its
+manual guard clause and try/catch block, with no change to validation
+order, error cases, payload shapes, or audit/event side effects — this is
+a pure internal refactor, not a behavior change.
+
+**Deliberately not attempted**: collapsing the four draft types (document
+findings, receiving counts, carton inspections + barcode scans,
+dispositions) into one generic entry-CRUD method. They're structurally
+identical at the guard/persist level (now shared via the helpers above)
+but differ in per-entry validation, payload construction, and submission
+scoring logic in ways that would make a single generic method more
+complex to read than the current explicit per-group methods — three
+similar methods beat one deeply-parameterized one here.
+
+### Receiving controller refactor — local validation
+- `dart format .` — passed
+- `flutter analyze --no-pub` — passed (same 7 pre-existing info-level
+  hints: 4 in `api_jobs_repository.dart`, 3 pre-existing
+  `curly_braces_in_flow_control_structures` hints in this same file,
+  unrelated to this change)
+- Focused WMS suite — 36/36 passed, run after each of the four refactored
+  groups (document findings, receiving count, physical inspection,
+  disposition) to confirm zero regression incrementally, not just at the
+  end
+- Full suite — 93 of 96 passed; the three failures are the same
+  pre-existing baseline flakes as every prior milestone (navigation back
+  button, phase-one shells, onboarding versioned consent), confirmed
+  unrelated
+- `flutter build apk --debug --no-pub --target-platform android-arm64` —
+  succeeded locally
+
 ### Next implementation
-Receiving's controller refactor toward removing duplicated boilerplate
-across its ~15 bespoke draft/submit methods is still open — scoped
-separately from this pass since it touches live, shipped, already-tested
-code rather than adding new capability, and deserves its own careful,
-independently-validated change. Also still open: authoring the three
-deferred scenario-catalog entries (needs a real `ScenarioGenerator` change
-for multi-exception, new task content for the other two); screen-level UI
-for the supervisor dialogue just added; fixing this remote session's
-`Supabase` MCP connector to actually reach `qoairksjpwkhwqxeollj`; deciding
-how the Flutter Jobs feature gets a real job catalogue so the already-wired
-Apply action has real jobs to apply to; and the doc 23 bounded-context
-merge, still explicitly deferred pending its own 5 approval gates.
+Authoring the three deferred scenario-catalog entries (needs a real
+`ScenarioGenerator` change for multi-exception, new task content for the
+other two); screen-level UI for the supervisor dialogue added in the
+content-deepening pass; fixing this remote session's `Supabase` MCP
+connector to actually reach `qoairksjpwkhwqxeollj`; deciding how the
+Flutter Jobs feature gets a real job catalogue so the already-wired Apply
+action has real jobs to apply to; and the doc 23 bounded-context merge,
+still explicitly deferred pending its own 5 approval gates.
 
 ## Target product architecture proposal
 
