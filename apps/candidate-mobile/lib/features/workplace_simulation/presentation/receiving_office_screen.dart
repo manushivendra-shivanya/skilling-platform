@@ -9,8 +9,10 @@ import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_state_view.dart';
 import '../application/workplace_interaction_contracts.dart';
 import '../application/workplace_simulation_controller.dart';
+import '../domain/simulation_content.dart';
 import '../domain/simulation_enums.dart';
 import '../domain/workplace_task_drafts.dart';
+import 'widgets/supervisor_dialogue.dart';
 
 class ReceivingOfficeScreen extends ConsumerStatefulWidget {
   const ReceivingOfficeScreen({
@@ -350,7 +352,27 @@ class _ReceivingOfficeScreenState extends ConsumerState<ReceivingOfficeScreen> {
     setState(() => _saving = false);
     if (result != NotifySupervisorResult.success) {
       _showMessage('The supervisor could not be notified.');
+      return;
     }
+    final mission = ref
+        .read(workplaceSimulationControllerProvider(widget.missionId))
+        .valueOrNull
+        ?.mission;
+    if (mission == null) return;
+    SimulationResource? supervisor;
+    for (final item in mission.resources) {
+      if (item.resourceType == ResourceType.person) supervisor = item;
+    }
+    if (supervisor == null) return;
+    final acknowledgement = npcDialogueLines(
+      supervisor,
+    ).where((item) => item.trigger == 'supervisor_notified').toList();
+    if (acknowledgement.isEmpty || !mounted) return;
+    await showSupervisorLines(
+      context,
+      supervisorTitle: supervisor.title,
+      lines: acknowledgement.first.lines,
+    );
   }
 
   Future<void> _completeMission() async {

@@ -11,6 +11,7 @@ import '../application/workplace_interaction_contracts.dart';
 import '../application/workplace_simulation_controller.dart';
 import '../domain/simulation_enums.dart';
 import '../domain/workplace_task_drafts.dart';
+import 'widgets/supervisor_dialogue.dart';
 
 class DocumentDeskScreen extends ConsumerStatefulWidget {
   const DocumentDeskScreen({
@@ -29,6 +30,7 @@ class DocumentDeskScreen extends ConsumerStatefulWidget {
 class _DocumentDeskScreenState extends ConsumerState<DocumentDeskScreen> {
   bool _saving = false;
   bool _tracked = false;
+  bool _greetingShown = false;
 
   @override
   Widget build(BuildContext context) {
@@ -84,6 +86,28 @@ class _DocumentDeskScreenState extends ConsumerState<DocumentDeskScreen> {
                       screenId: 'document-desk',
                     ),
               );
+            }
+            final supervisorResources = value.mission.resources
+                .where((item) => item.resourceType == ResourceType.person)
+                .toList();
+            if (!_greetingShown && supervisorResources.isNotEmpty) {
+              final supervisor = supervisorResources.first;
+              final greeting = npcDialogueLines(
+                supervisor,
+              ).where((item) => item.trigger == 'mission_start').toList();
+              if (greeting.isNotEmpty) {
+                _greetingShown = true;
+                final supervisorTitle = supervisor.title;
+                final lines = greeting.first.lines;
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (!mounted) return;
+                  showSupervisorLines(
+                    context,
+                    supervisorTitle: supervisorTitle,
+                    lines: lines,
+                  );
+                });
+              }
             }
             final po = value.mission.resources.firstWhere(
               (item) => item.id == 'purchase-order-po-2026-001',
