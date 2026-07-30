@@ -1143,18 +1143,28 @@ No implementation for the target architecture should begin until these are
 approved:
 
 1. **Product boundary:** Flora evidence/readiness versus regulated assessment.
+   Approved — see ADR-0018.
 2. **Canonical taxonomy:** internal role/competency model and SSC/NOS mappings.
+   Approved — see ADR-0018.
 3. **Evidence semantics:** source types, verification, freshness and
-   supersession.
+   supersession. Approved — see ADR-0018.
 4. **Readiness policy:** coverage, unknowns, explanation and prohibited uses.
+   Approved — see ADR-0018.
 5. **Sharing model:** purpose, recipient, duration, revocation and audit.
+   Approved — see ADR-0018.
 6. **Employer decision boundary:** permitted matching and prohibited automated
-   decisions.
+   decisions. Approved — see ADR-0018.
 7. **Partner authority matrix:** source-of-truth rules per integration.
+   Approved — see ADR-0018.
 8. **Mobile architecture conformance:** preserve ADR-0016, Flutter and the
-   Android build pipeline across every product module.
+   Android build pipeline across every product module. Satisfied.
 9. **Route conformance:** preserve ADR-0017 and the canonical `/practise`
-   Workplace Simulation hierarchy without `/practice` aliases.
+   Workplace Simulation hierarchy without `/practice` aliases. Satisfied.
+
+All nine gates are resolved. This does not itself authorise building the
+target-architecture layers named in section 3 — see section 19: WMS
+continues unaffected, and the next architecture-only milestone is still the
+Career taxonomy and Evidence contract design named there.
 
 ## 19. Immediate development-flow impact
 
