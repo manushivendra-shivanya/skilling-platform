@@ -9,8 +9,10 @@ import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_state_view.dart';
 import '../application/workplace_interaction_contracts.dart';
 import '../application/workplace_simulation_controller.dart';
+import '../domain/simulation_content.dart';
 import '../domain/simulation_enums.dart';
 import '../domain/workplace_task_drafts.dart';
+import 'widgets/supervisor_dialogue.dart';
 
 class InspectionZoneScreen extends ConsumerStatefulWidget {
   const InspectionZoneScreen({
@@ -46,6 +48,13 @@ class _InspectionZoneScreenState extends ConsumerState<InspectionZoneScreen> {
           icon: const Icon(Icons.arrow_back),
         ),
         title: const Text('Inspection Zone'),
+        actions: [
+          IconButton(
+            tooltip: 'Ask the supervisor',
+            onPressed: _saving ? null : _askSupervisor,
+            icon: const Icon(Icons.forum_outlined),
+          ),
+        ],
       ),
       body: SafeArea(
         child: simulation.when(
@@ -541,6 +550,28 @@ class _InspectionZoneScreenState extends ConsumerState<InspectionZoneScreen> {
           screenId: 'inspection-zone',
         );
     if (mounted) widget.onBack();
+  }
+
+  Future<void> _askSupervisor() async {
+    final scenario = ref
+        .read(workplaceSimulationControllerProvider(widget.missionId))
+        .valueOrNull
+        ?.scenario;
+    if (scenario == null) return;
+    SimulationResource? supervisor;
+    for (final item in scenario.resources) {
+      if (item.resourceType == ResourceType.person) supervisor = item;
+    }
+    if (supervisor == null) return;
+    final topics = npcDialogueLines(
+      supervisor,
+    ).where((item) => item.trigger == 'learner_asks').toList();
+    if (topics.isEmpty || !mounted) return;
+    await showAskSupervisorMenu(
+      context,
+      supervisorTitle: supervisor.title,
+      topics: topics,
+    );
   }
 
   void _showMessage(String message) {

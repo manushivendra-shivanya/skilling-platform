@@ -1177,15 +1177,75 @@ similar methods beat one deeply-parameterized one here.
 - `flutter build apk --debug --no-pub --target-platform android-arm64` —
   succeeded locally
 
+### Supervisor NPC dialogue — screen-level UI
+Closed the remaining gap from the content-deepening pass: the
+`receiving-supervisor` person resource and its `content.dialogue` array
+were loadable content with no screen consuming them. Added a shared
+`presentation/widgets/supervisor_dialogue.dart` (`npcDialogueLines()` to
+parse a resource's dialogue array, `showSupervisorLines()` and
+`showAskSupervisorMenu()` bottom-sheet presenters built on the existing
+`showAppBottomSheet` helper) and wired all three `trigger` kinds actually
+authored in `receive_shipment_mission.json` to the screen where they're
+contextually relevant:
+- `mission_start` — Document Desk shows the supervisor's greeting
+  automatically, once, the first time the screen builds with an
+  in-progress attempt.
+- `learner_asks` (`near_expiry_policy`, `skip_inspection`) — Inspection
+  Zone gained an "Ask the supervisor" AppBar action that opens a topic
+  menu; tapping a topic shows its guidance-only answer.
+- `supervisor_notified` (`shift_report_acknowledged`) — Receiving Office
+  shows the supervisor's acknowledgement line right after
+  `notifySupervisor()` succeeds.
+
+All guidance-only per the content spec's own constraint — none of this
+reveals a finding, a disposition or scoring information; it's flavor and
+policy reinforcement layered on top of the existing draft/submit flow,
+with no controller or domain changes required (the person resource was
+already loaded into `scenario.resources`/`mission.resources`, just
+unrendered).
+
+**Deliberately not attempted**: a general-purpose "chat with any NPC"
+system. Only the specific triggers actually present in this mission's
+content were wired up; extending to other NPCs/missions is straightforward
+once that content exists, but there's no other content to build against
+yet.
+
+### Supervisor NPC dialogue — local validation
+- `dart format .` — passed
+- `flutter analyze --no-pub` — passed (same 7 pre-existing info-level
+  hints, unrelated)
+- Three new widget tests (one screen each, `supervisor_dialogue_greeting_
+  test.dart`, `supervisor_dialogue_ask_test.dart`, `supervisor_dialogue_
+  acknowledgement_test.dart`) proving each trigger actually renders on its
+  screen and shows the real JSON-authored line, not just that the schema
+  parses. **Split into three files, one `testWidgets` each** — every other
+  WMS widget-test file in this codebase already follows that one-per-file
+  convention, and a single combined file with three `testWidgets` blocks
+  reproducibly hung the second and third test for the full 10-minute
+  runner timeout when run together, while each passed in seconds when run
+  standalone or in its own file. Root cause not further isolated (matching
+  existing convention resolved it without needing to); worth remembering
+  if this pattern is hit again.
+- Focused WMS suite — 39/39 passed (36 previous + 3 new)
+- Full suite — 96 of 99 passed; the three failures are the same
+  pre-existing baseline flakes as every prior milestone, confirmed
+  unrelated
+- `flutter build apk --debug --no-pub --target-platform android-arm64` —
+  succeeded locally; installed and manually confirmed on a connected
+  device (Samsung SM-S928B) via `adb install -r`
+
 ### Next implementation
 Authoring the three deferred scenario-catalog entries (needs a real
 `ScenarioGenerator` change for multi-exception, new task content for the
-other two); screen-level UI for the supervisor dialogue added in the
-content-deepening pass; fixing this remote session's `Supabase` MCP
-connector to actually reach `qoairksjpwkhwqxeollj`; deciding how the
-Flutter Jobs feature gets a real job catalogue so the already-wired Apply
-action has real jobs to apply to; and the doc 23 bounded-context merge,
-still explicitly deferred pending its own 5 approval gates.
+other two); fixing this remote session's `Supabase` MCP connector to
+actually reach `qoairksjpwkhwqxeollj`; deciding how the Flutter Jobs
+feature gets a real job catalogue so the already-wired Apply action has
+real jobs to apply to; and the doc 23 bounded-context merge, still
+explicitly deferred pending its own 9 architecture decision gates (section
+18 of `docs/23-ai-employability-infrastructure-platform.md` — product
+boundary, canonical taxonomy, evidence semantics, readiness policy,
+sharing model, employer decision boundary, partner authority matrix,
+mobile architecture conformance, route conformance).
 
 ## Target product architecture proposal
 
