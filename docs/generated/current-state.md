@@ -1238,6 +1238,40 @@ yet.
   succeeded locally; installed and manually confirmed on a connected
   device (Samsung SM-S928B) via `adb install -r`
 
+### Doc 23 architecture gates — all 9 resolved
+Reviewed section 18's 9 gates against actual repo state and closed all of
+them:
+- **Gate 8 (mobile architecture conformance, ADR-0016) — satisfied.**
+  Flutter remains the candidate platform; the Android build pipeline is
+  untouched by anything non-conformant.
+- **Gate 9 (route conformance, ADR-0017) — satisfied.** The canonical
+  `/practise` Workplace Simulation hierarchy has no `/practice` aliases
+  anywhere in the app.
+- **Gates 1–7 (product boundary, canonical taxonomy, evidence semantics,
+  readiness policy, sharing model, employer decision boundary, partner
+  authority matrix) — approved and recorded as
+  `docs/adr/0018-flora-evidence-and-employability-governance.md`.** Headline
+  decisions: Flora is an evidence/decision-support provider, never a
+  certification authority (every evidence surface must carry a disclaimer
+  string); Flora owns a canonical internal taxonomy with external standards
+  as versioned mappings, not primary identifiers; evidence is append-only,
+  provenance-labelled (`systemObserved`/`issuerVerified`/`partnerAttested`/
+  `candidateReported`/`unverified`) and freshness-aware — retakes accumulate,
+  corrections supersede, nothing is deleted; readiness is a 4-outcome,
+  time-bound projection (`demonstrated`/`developing`/`insufficientEvidence`/
+  `staleEvidence`) that must never silently read as "not ready," and the WMS
+  pilot's safest label is "Simulation benchmark demonstrated," never
+  "job ready"; sharing is candidate-controlled, purpose-bound, time-limited,
+  revocable and audited (DPDP-aligned); automated candidate ranking is
+  prohibited in the employer-portal MVP — Flora presents evidence, the
+  employer decides; and cross-partner fact conflicts trigger a reconciliation
+  case rather than last-write-wins, per a per-fact authority matrix.
+- This ADR governs layers that don't exist yet (Competency Passport,
+  Employer Portal, partner integrations) — it doesn't authorise building them,
+  and WMS's existing controller/action/audit/timing/scoring boundaries are
+  unaffected. It's the constraint those future features must be built against,
+  recorded now so it isn't decided ad hoc later.
+
 ### WMS remote persistence foundation
 - Applied two additive migrations to the live JobSkills Supabase project
   (`qoairksjpwkhwqxeollj`):
@@ -1283,16 +1317,25 @@ yet.
 
 ### Next implementation
 Wire the WMS BFF/Supabase sync adapter against the newly applied `wms_*`
-tables; author the three deferred scenario-catalog entries (needs a real
-`ScenarioGenerator` change for multi-exception, new task content for the
-other two); decide how the Flutter Jobs feature gets a real job catalogue so
-the already-wired Apply action has real jobs to apply to; and the doc 23
-bounded-context merge, still
-explicitly deferred pending its own 9 architecture decision gates (section
-18 of `docs/23-ai-employability-infrastructure-platform.md` — product
-boundary, canonical taxonomy, evidence semantics, readiness policy,
-sharing model, employer decision boundary, partner authority matrix,
-mobile architecture conformance, route conformance).
+tables.
+
+The three deferred scenario-catalog entries remain on hold until their
+required design work is closed:
+- `multi-exception-shipment` needs not just a `ScenarioGenerator` change for
+  resources carrying simultaneous issues, but also a domain/UI change because
+  `RecordCartonInspectionCommand.finding` currently accepts a single
+  `CartonFinding`.
+- `clerical-only-discrepancy` is near-duplicate of the already-shipped
+  `perfect-delivery` scenario until PO/DN documents become scenario-swappable;
+  the current screens look up fixed resource ids directly.
+- `wrong-supplier-delivery` must be caught at Receiving Dock during
+  `confirmShipmentIdentity`, not during carton inspection. It requires a real
+  candidate conclusion payload, non-zero scoring, a wrong-supplier generator
+  condition and an early-completion rule so a correct rejection can pass
+  without requiring downstream mandatory tasks.
+
+Also still open: decide how the Flutter Jobs feature gets a real job catalogue
+so the already-wired Apply action has real jobs to apply to.
 
 ## Target product architecture proposal
 
