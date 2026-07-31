@@ -49,9 +49,11 @@ class _JobsContent extends ConsumerWidget {
         112,
       ),
       children: [
-        const Text(
-          'Demo opportunities • No live employer connection',
-          style: TextStyle(color: AppColors.inkMuted),
+        Text(
+          state.isLiveData
+              ? 'Openings from verified employers'
+              : 'Demo opportunities • No live employer connection',
+          style: const TextStyle(color: AppColors.inkMuted),
         ),
         const SizedBox(height: AppSpacing.md),
         AppTextField(
@@ -96,8 +98,12 @@ class _JobsContent extends ConsumerWidget {
                   const SizedBox(height: AppSpacing.sm),
                   AppStatusChip(
                     label: state.appliedJobIds.contains(job.id)
-                        ? 'Demo application saved'
-                        : 'View match explanation',
+                        ? (state.isLiveData
+                              ? 'Application submitted'
+                              : 'Demo application saved')
+                        : (state.isLiveData
+                              ? 'View details'
+                              : 'View match explanation'),
                     tone: state.appliedJobIds.contains(job.id)
                         ? AppChipTone.success
                         : AppChipTone.info,
@@ -122,6 +128,7 @@ class _JobsContent extends ConsumerWidget {
       child: _JobDetails(
         job: job,
         alreadyApplied: state.appliedJobIds.contains(job.id),
+        isLiveData: state.isLiveData,
         onApply: () => ref.read(jobsControllerProvider.notifier).apply(job.id),
       ),
     );
@@ -132,11 +139,13 @@ class _JobDetails extends StatefulWidget {
   const _JobDetails({
     required this.job,
     required this.alreadyApplied,
+    required this.isLiveData,
     required this.onApply,
   });
 
   final JobOpportunity job;
   final bool alreadyApplied;
+  final bool isLiveData;
   final Future<AppFailure?> Function() onApply;
 
   @override
@@ -156,23 +165,28 @@ class _JobDetailsState extends State<_JobDetails> {
         Text('${widget.job.employer} • ${widget.job.location}'),
         const SizedBox(height: AppSpacing.md),
         Text(
-          'Why this may match',
+          widget.isLiveData ? 'About this role' : 'Why this may match',
           style: Theme.of(context).textTheme.titleMedium,
         ),
         const SizedBox(height: AppSpacing.xs),
-        Text(widget.job.matchReason),
+        Text(widget.job.description),
         const SizedBox(height: AppSpacing.md),
-        const Text(
-          'Eligibility, salary, shifts, and employer verification are not available in this mock feed.',
-        ),
-        const SizedBox(height: AppSpacing.md),
+        if (!widget.isLiveData)
+          const Text(
+            'Eligibility, salary, shifts, and employer verification are not available in this mock feed.',
+          ),
+        if (!widget.isLiveData) const SizedBox(height: AppSpacing.md),
         CheckboxListTile(
           contentPadding: EdgeInsets.zero,
           value: _sharingConfirmed,
           onChanged: widget.alreadyApplied
               ? null
               : (value) => setState(() => _sharingConfirmed = value ?? false),
-          title: const Text('Share this demo profile for this application'),
+          title: Text(
+            widget.isLiveData
+                ? 'Share your profile for this application'
+                : 'Share this demo profile for this application',
+          ),
           subtitle: const Text('Required before applying.'),
         ),
         if (_error != null)
@@ -183,10 +197,14 @@ class _JobDetailsState extends State<_JobDetails> {
               : _apply,
           child: Text(
             widget.alreadyApplied
-                ? 'Demo application already saved'
+                ? (widget.isLiveData
+                      ? 'Application already submitted'
+                      : 'Demo application already saved')
                 : _saving
-                ? 'Saving…'
-                : 'Save demo application',
+                ? (widget.isLiveData ? 'Submitting…' : 'Saving…')
+                : (widget.isLiveData
+                      ? 'Submit application'
+                      : 'Save demo application'),
           ),
         ),
         const SizedBox(height: AppSpacing.sm),

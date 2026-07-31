@@ -36,6 +36,17 @@ export class JobsService {
     return data ?? [];
   }
 
+  async listApplicationsForCandidate(candidateId: string): Promise<string[]> {
+    const { data, error } = await this.supabase.admin
+      .from('job_applications')
+      .select('job_id')
+      .eq('candidate_id', candidateId);
+    if (error) {
+      throw new Error(`Failed to load applications: ${error.message}`);
+    }
+    return (data ?? []).map((row: { job_id: string }) => row.job_id);
+  }
+
   /**
    * Idempotent: a repeated call for the same candidate and job (whatever
    * Idempotency-Key is sent) returns the existing application rather than

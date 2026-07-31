@@ -24,6 +24,11 @@ export class JobsController {
     return { jobs: await this.jobs.listPublishedJobs() };
   }
 
+  @Get('applications')
+  async myApplications(@CurrentCandidate() candidateId: string) {
+    return { jobIds: await this.jobs.listApplicationsForCandidate(candidateId) };
+  }
+
   @Post(':id/applications')
   @HttpCode(200)
   async apply(

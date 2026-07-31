@@ -107,17 +107,15 @@ final learningRepositoryProvider = Provider<LearningRepository>(
 );
 
 final jobsRepositoryProvider = Provider<JobsRepository>((ref) {
-  final local = LocalMockJobsRepository(ref.watch(secureKeyValueStoreProvider));
   final config = ref.watch(appConfigProvider);
   if (config.hasSupabaseConfiguration && config.hasApiConfiguration) {
     return ApiJobsRepository(
-      local: local,
       dio: Dio(),
       supabaseClient: Supabase.instance.client,
       apiBaseUrl: config.apiBaseUrl,
     );
   }
-  return local;
+  return LocalMockJobsRepository(ref.watch(secureKeyValueStoreProvider));
 });
 
 final candidateIntelligenceRepositoryProvider =

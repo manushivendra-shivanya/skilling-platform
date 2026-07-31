@@ -71,6 +71,8 @@ class FakeSupabaseAdmin {
         return builder;
       },
       maybeSingle: async () => ({ data: filtered[0] ?? null, error: null }),
+      then: (resolve: (result: { data: unknown; error: null }) => void) =>
+        resolve({ data: filtered, error: null }),
       insert: (row: { job_id: string; candidate_id: string }) => {
         const created = {
           id: `app-${this.nextId++}`,
@@ -176,6 +178,31 @@ describe('JobsService', () => {
     await expect(
       service.applyToJob('candidate-1', 'job-1', 'key-1'),
     ).rejects.toMatchObject({ code: 'CONSENT_REQUIRED' });
+  });
+
+  it('lists only the applications belonging to the requesting candidate', async () => {
+    const admin = new FakeSupabaseAdmin();
+    admin.applications = [
+      {
+        id: 'app-1',
+        job_id: 'job-1',
+        candidate_id: 'candidate-1',
+        status: 'submitted',
+        created_at: new Date().toISOString(),
+      },
+      {
+        id: 'app-2',
+        job_id: 'job-2',
+        candidate_id: 'candidate-2',
+        status: 'submitted',
+        created_at: new Date().toISOString(),
+      },
+    ];
+    const service = buildService(admin);
+
+    const jobIds = await service.listApplicationsForCandidate('candidate-1');
+
+    expect(jobIds).toEqual(['job-1']);
   });
 });
 

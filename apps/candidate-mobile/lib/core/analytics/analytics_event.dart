@@ -57,6 +57,9 @@ class AnalyticsEvent {
   factory AnalyticsEvent.mockApplicationCreated() =>
       const AnalyticsEvent(name: 'mock_job_application_created');
 
+  factory AnalyticsEvent.jobApplicationCreated() =>
+      const AnalyticsEvent(name: 'job_application_created');
+
   factory AnalyticsEvent.diagnosticCompleted(String definitionVersion) =>
       AnalyticsEvent(
         name: 'diagnostic_completed',

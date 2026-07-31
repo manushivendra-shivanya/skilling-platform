@@ -13,6 +13,9 @@ class LocalMockJobsRepository implements JobsRepository {
   final SecureKeyValueStore _store;
 
   @override
+  bool get isLiveData => false;
+
+  @override
   Future<Result<List<JobOpportunity>>> loadJobs() async {
     return const Success([
       JobOpportunity(
@@ -21,7 +24,7 @@ class LocalMockJobsRepository implements JobsRepository {
         employer: 'NorthStar Logistics (Demo)',
         location: 'Lucknow',
         isSupervisorRole: false,
-        matchReason:
+        description:
             'Matches your interest in warehouse operations. This explanation is mock data.',
       ),
       JobOpportunity(
@@ -30,7 +33,7 @@ class LocalMockJobsRepository implements JobsRepository {
         employer: 'SwiftCart Fulfilment (Demo)',
         location: 'Noida',
         isSupervisorRole: false,
-        matchReason:
+        description:
             'Inventory learning can support this role. No eligibility decision has been made.',
       ),
       JobOpportunity(
@@ -39,7 +42,7 @@ class LocalMockJobsRepository implements JobsRepository {
         employer: 'MetroHub Services (Demo)',
         location: 'Delhi NCR',
         isSupervisorRole: true,
-        matchReason:
+        description:
             'Shown as a progression option. Experience requirements are not verified in this demo.',
       ),
     ]);
