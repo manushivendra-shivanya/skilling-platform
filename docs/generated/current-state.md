@@ -1469,24 +1469,72 @@ decision on whether the redesign is worth it, not silently dropped.
 - API regression check after this slice: `npm test -- --runInBand`,
   `npm run build` and `npm run lint` in `apps/api` all passed
 
+### Multi-exception-shipment and clerical-only-discrepancy — the last two
+### scenario-catalog entries
+Both held entries are shipped, closing out the scenario-catalog work
+started with `perfect-delivery` and `wrong-supplier-delivery`.
+
+**`multi-exception-shipment`** needed the domain/UI change flagged when it
+was deferred: a carton can now carry more than one finding.
+- `CartonInspectionEntry.finding` (a single `CartonFinding`) is now
+  `findings` (`List<CartonFinding>`), threaded through
+  `RecordCartonInspectionCommand`/`UpdateCartonInspectionCommand`. The
+  controller validates findings are non-empty, contain no duplicates, and
+  never mix `compliant` with another finding
+  (`invalidFindings` on both result enums).
+- `submitInspection` fans out one scored `LearnerAction` per finding
+  instead of one per carton, so a carton with two issues earns credit for
+  both against the existing per-issue-type evaluation rules — no
+  evaluation-rule changes needed, each fanned-out action is scored
+  independently exactly like before.
+- New `ScenarioVariationRule.allowStackedTarget` (additive, defaults
+  false): lets a rule assign its issue to a resource an earlier rule this
+  generation already claimed. Every rule authored before this field
+  existed is unaffected — a resource still gets at most one issue unless a
+  rule opts in.
+- Inspection Zone's editor replaced the single-select finding dropdown
+  with a checklist (compliant mutually exclusive with everything else).
+- New scenario: carton-001 carries `packaging_damage` + `near_expiry`
+  simultaneously, no other carton has an issue.
+
+**`clerical-only-discrepancy`** shipped as the reporting-only distinction
+explicitly chosen over the larger alternative (making PO/DN documents
+scenario-swappable, which today they aren't — Document Desk reads them
+from static mission JSON, and document-finding scoring runs against fixed
+synthetic side-resources, not the PO/DN content itself). Same generated
+content as `perfect-delivery` (empty variation rules), a separate
+scenarioId so instructors/analytics can track and label runs assigned
+under this framing. Documented as a deliberate tradeoff, not an oversight.
+
+### Multi-exception and clerical-only — local validation
+- `dart format .` — passed
+- `flutter analyze --no-pub` — passed (same 7 pre-existing info-level
+  hints, unrelated)
+- New generator-level test: `multi-exception-shipment` assigns exactly two
+  issues to carton-001 and nothing to any other resource
+- New controller-level tests: a carton with two findings earns 7 correct
+  `inspect-cartons` outcomes across 6 cartons (5 compliant + carton-001's
+  2 findings), covering both feedback codes; recording an empty findings
+  list or `compliant` mixed with another finding is rejected as
+  `invalidFindings`
+- Focused WMS suite — 44/44 passed (41 previous + 3 new)
+- Full suite — 101 of 104 passed; the three failures are the same
+  pre-existing baseline flakes as every prior milestone, confirmed
+  unrelated
+- `flutter build apk --debug --no-pub --target-platform android-arm64` —
+  succeeded locally
+
 ### Next implementation
 Add controller/UI exposure for WMS pending-sync state and decide whether to
 widen the repository contract so Flutter can send the optional generated
-scenario snapshot to the BFF.
-
-Two of the three deferred scenario-catalog entries remain on hold until
-their required design work is closed — `wrong-supplier-delivery` (the
-third) shipped in the wrong-supplier-delivery milestone above:
-- `multi-exception-shipment` needs not just a `ScenarioGenerator` change for
-  resources carrying simultaneous issues, but also a domain/UI change because
-  `RecordCartonInspectionCommand.finding` currently accepts a single
-  `CartonFinding`.
-- `clerical-only-discrepancy` is near-duplicate of the already-shipped
-  `perfect-delivery` scenario until PO/DN documents become scenario-swappable;
-  the current screens look up fixed resource ids directly.
+scenario snapshot to the BFF. The full scenario-catalog set proposed in
+doc 24 is now shipped.
 
 Also still open: deciding how the Flutter Jobs feature gets a real job
-catalogue so the already-wired Apply action has real jobs to apply to.
+catalogue so the already-wired Apply action has real jobs to apply to; and
+the still-unresolved "learning experience broken, not clear" report — the
+user's device has been offline every time this was raised this session, so
+it's never actually been seen.
 
 ## Target product architecture proposal
 

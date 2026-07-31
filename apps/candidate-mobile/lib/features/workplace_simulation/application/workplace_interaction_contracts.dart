@@ -328,24 +328,24 @@ enum SubmitReceivingCountResult {
 class RecordCartonInspectionCommand {
   const RecordCartonInspectionCommand({
     required this.cartonId,
-    required this.finding,
+    required this.findings,
     this.learnerNotes = '',
   });
 
   final String cartonId;
-  final CartonFinding finding;
+  final List<CartonFinding> findings;
   final String learnerNotes;
 }
 
 class UpdateCartonInspectionCommand {
   const UpdateCartonInspectionCommand({
     required this.entryId,
-    required this.finding,
+    required this.findings,
     this.learnerNotes = '',
   });
 
   final String entryId;
-  final CartonFinding finding;
+  final List<CartonFinding> findings;
   final String learnerNotes;
 }
 
@@ -390,6 +390,7 @@ enum RecordCartonInspectionResult {
   success,
   cartonNotFound,
   duplicateEntry,
+  invalidFindings,
   alreadySubmitted,
   invalidAttemptState,
   persistenceFailure,
@@ -398,6 +399,7 @@ enum RecordCartonInspectionResult {
 enum UpdateCartonInspectionResult {
   success,
   entryNotFound,
+  invalidFindings,
   alreadySubmitted,
   invalidAttemptState,
   persistenceFailure,

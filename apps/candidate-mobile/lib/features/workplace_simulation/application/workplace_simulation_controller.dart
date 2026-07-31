@@ -1597,6 +1597,9 @@ class WorkplaceSimulationController
     if (!task.targetResourceIds.contains(command.cartonId)) {
       return RecordCartonInspectionResult.cartonNotFound;
     }
+    if (!_validFindings(command.findings)) {
+      return RecordCartonInspectionResult.invalidFindings;
+    }
     final draft = attempt.inspectionDraft ?? _newInspectionDraft(attempt);
     if (draft.status == drafts.OperationalDraftStatus.submitted) {
       return RecordCartonInspectionResult.alreadySubmitted;
@@ -1612,7 +1615,7 @@ class WorkplaceSimulationController
         final entry = drafts.CartonInspectionEntry(
           id: '${attempt.id}-inspect-${draft.cartonInspections.length + 1}',
           cartonId: command.cartonId,
-          finding: command.finding,
+          findings: command.findings,
           learnerNotes: command.learnerNotes.trim(),
           createdAt: now,
           updatedAt: now,
@@ -1645,6 +1648,9 @@ class WorkplaceSimulationController
     final active = _activeAttempt();
     if (active == null) return UpdateCartonInspectionResult.invalidAttemptState;
     final (current, attempt) = active;
+    if (!_validFindings(command.findings)) {
+      return UpdateCartonInspectionResult.invalidFindings;
+    }
     final draft = attempt.inspectionDraft;
     if (draft == null) return UpdateCartonInspectionResult.entryNotFound;
     if (draft.status == drafts.OperationalDraftStatus.submitted) {
@@ -1659,7 +1665,7 @@ class WorkplaceSimulationController
         final now = DateTime.now();
         final previous = draft.cartonInspections[index];
         final entry = previous.copyWith(
-          finding: command.finding,
+          findings: command.findings,
           learnerNotes: command.learnerNotes.trim(),
           updatedAt: now,
           revisionNumber: previous.revisionNumber + 1,
@@ -1939,25 +1945,30 @@ class WorkplaceSimulationController
         );
         var outcomes = [...current.outcomes];
         for (final entry in draft.cartonInspections) {
-          final compliant = entry.finding == drafts.CartonFinding.compliant;
-          (working, outcomes) = _applyAction(
-            current,
-            working,
-            outcomes,
-            _newAction(
+          // A carton may carry more than one simultaneous finding (a
+          // multi-exception shipment); each is scored as its own action so
+          // catching two issues on one carton earns credit for both.
+          for (final finding in entry.findings) {
+            final compliant = finding == drafts.CartonFinding.compliant;
+            (working, outcomes) = _applyAction(
+              current,
               working,
-              stageId: 'physical-inspection',
-              taskId: 'inspect-cartons',
-              actionType: compliant
-                  ? ActionType.inspectItem
-                  : ActionType.recordIssue,
-              targetId: entry.cartonId,
-              payload: compliant
-                  ? const {'finding': 'compliant'}
-                  : {'issueType': entry.finding.wireName},
-            ),
-            scenario,
-          );
+              outcomes,
+              _newAction(
+                working,
+                stageId: 'physical-inspection',
+                taskId: 'inspect-cartons',
+                actionType: compliant
+                    ? ActionType.inspectItem
+                    : ActionType.recordIssue,
+                targetId: entry.cartonId,
+                payload: compliant
+                    ? const {'finding': 'compliant'}
+                    : {'issueType': finding.wireName},
+              ),
+              scenario,
+            );
+          }
         }
         for (final entry in draft.barcodeScans) {
           (working, outcomes) = _applyAction(
@@ -2984,10 +2995,23 @@ class WorkplaceSimulationController
 
   JsonMap _inspectionPayload(drafts.CartonInspectionEntry entry) => {
     'entryId': entry.id,
-    'finding': entry.finding.wireName,
+    'findings': entry.findings.map((item) => item.wireName).toList(),
     'learnerNotes': entry.learnerNotes,
     'revisionNumber': entry.revisionNumber,
   };
+
+  /// Findings must be non-empty, contain no duplicates, and never mix
+  /// [drafts.CartonFinding.compliant] with another finding on the same
+  /// carton.
+  bool _validFindings(List<drafts.CartonFinding> findings) {
+    if (findings.isEmpty) return false;
+    final unique = findings.toSet();
+    if (unique.length != findings.length) return false;
+    if (unique.contains(drafts.CartonFinding.compliant) && unique.length > 1) {
+      return false;
+    }
+    return true;
+  }
 
   JsonMap _scanPayload(drafts.BarcodeScanEntry entry) => {
     'entryId': entry.id,

@@ -287,7 +287,7 @@ class CartonInspectionEntry {
   const CartonInspectionEntry({
     required this.id,
     required this.cartonId,
-    required this.finding,
+    required this.findings,
     required this.learnerNotes,
     required this.createdAt,
     required this.updatedAt,
@@ -296,21 +296,25 @@ class CartonInspectionEntry {
 
   final String id;
   final String cartonId;
-  final CartonFinding finding;
+
+  /// One or more findings recorded for this carton. Non-empty;
+  /// [CartonFinding.compliant] never appears alongside another finding --
+  /// enforced by the controller before an entry is created or updated.
+  final List<CartonFinding> findings;
   final String learnerNotes;
   final DateTime createdAt;
   final DateTime updatedAt;
   final int revisionNumber;
 
   CartonInspectionEntry copyWith({
-    CartonFinding? finding,
+    List<CartonFinding>? findings,
     String? learnerNotes,
     DateTime? updatedAt,
     int? revisionNumber,
   }) => CartonInspectionEntry(
     id: id,
     cartonId: cartonId,
-    finding: finding ?? this.finding,
+    findings: findings ?? this.findings,
     learnerNotes: learnerNotes ?? this.learnerNotes,
     createdAt: createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
@@ -320,7 +324,7 @@ class CartonInspectionEntry {
   JsonMap toJson() => {
     'id': id,
     'cartonId': cartonId,
-    'finding': finding.wireName,
+    'findings': findings.map((item) => item.wireName).toList(),
     'learnerNotes': learnerNotes,
     'createdAt': createdAt.toUtc().toIso8601String(),
     'updatedAt': updatedAt.toUtc().toIso8601String(),
@@ -330,7 +334,10 @@ class CartonInspectionEntry {
   factory CartonInspectionEntry.fromJson(JsonMap json) => CartonInspectionEntry(
     id: json.string('id'),
     cartonId: json.string('cartonId'),
-    finding: CartonFinding.fromWireName(json.string('finding')),
+    findings: json
+        .stringList('findings')
+        .map(CartonFinding.fromWireName)
+        .toList(growable: false),
     learnerNotes: json.optionalString('learnerNotes') ?? '',
     createdAt: DateTime.parse(json.string('createdAt')),
     updatedAt: DateTime.parse(json.string('updatedAt')),

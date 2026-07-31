@@ -605,6 +605,34 @@
         }
       ],
       "pedagogicalIntent": "Tests the earliest possible catch point — this delivery is actually from a different supplier than PO-2026-001 expects, and it should be caught at delivery confirmation on Receiving Dock, before any counting or inspection effort is spent on stock that should never have been accepted onto the dock. Correctly rejecting it ends the shift immediately as a successful outcome; accepting it and continuing is a critical process error regardless of how the rest of the shift goes."
+    },
+    {
+      "id": "multi-exception-shipment",
+      "name": "Multi-exception shipment",
+      "variationRules": [
+        {
+          "type": "assign_issue",
+          "issue": "packaging_damage",
+          "severity": "major",
+          "eligibleTargets": ["carton-001"],
+          "count": 1
+        },
+        {
+          "type": "assign_issue",
+          "issue": "near_expiry",
+          "severity": "major",
+          "eligibleTargets": ["carton-001"],
+          "count": 1,
+          "allowStackedTarget": true
+        }
+      ],
+      "pedagogicalIntent": "carton-001 carries two simultaneous, independent issues — packaging damage and near-expiry stock. Tests whether the learner records every finding on a carton rather than stopping at the first one; a common shortcut is to log the first issue found and move on."
+    },
+    {
+      "id": "clerical-only-discrepancy",
+      "name": "Paperwork mismatch, physically correct",
+      "variationRules": [],
+      "pedagogicalIntent": "Every carton scans, inspects and counts clean, exactly like perfect-delivery — this entry exists as its own trackable scenario id rather than new generated content, so instructors and analytics can distinguish runs assigned for this specific framing: PO/delivery-note quantities disagree with each other, but the physical count matches the delivery note exactly. Tests whether the learner distinguishes a clerical discrepancy (still must be recorded) from a physical receiving problem (nothing to quarantine or reject)."
     }
   ],
   "scoringRule": {

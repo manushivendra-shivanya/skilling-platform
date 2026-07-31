@@ -132,6 +132,36 @@ void main() {
     expect(regular.resources.expand((item) => item.issues), isNotEmpty);
   });
 
+  test(
+    'the multi-exception-shipment scenario stacks two issues on one carton',
+    () async {
+      final mission = await repository.getMission(
+        'receive-incoming-shipment-01',
+      );
+      const generator = ScenarioGenerator();
+
+      final scenario = generator.generate(
+        mission,
+        48127,
+        scenarioId: 'multi-exception-shipment',
+      );
+
+      final cartonOne = scenario.resource('carton-001');
+      expect(
+        cartonOne.issues.map((item) => item.issueType),
+        containsAll(['packaging_damage', 'near_expiry']),
+      );
+      expect(cartonOne.issues, hasLength(2));
+      expect(
+        scenario.resources
+            .where((item) => item.id != 'carton-001')
+            .expand((item) => item.issues),
+        isEmpty,
+        reason: 'only carton-001 carries an issue in this scenario',
+      );
+    },
+  );
+
   test('selecting an unknown scenario id fails clearly', () async {
     final mission = await repository.getMission('receive-incoming-shipment-01');
 
