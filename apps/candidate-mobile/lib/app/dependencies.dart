@@ -34,6 +34,8 @@ import '../features/voice/data/secure_voice_interview_repository.dart';
 import '../features/voice/domain/voice_interview_repository.dart';
 import '../features/workplace_simulation/data/asset_simulation_content_repository.dart';
 import '../features/workplace_simulation/data/local_simulation_attempt_repository.dart';
+import '../features/workplace_simulation/data/offline_first_simulation_attempt_repository.dart';
+import '../features/workplace_simulation/data/wms_remote_sync_client.dart';
 import '../features/workplace_simulation/domain/simulation_repositories.dart';
 
 final appConfigProvider = Provider<AppConfig>(
@@ -154,8 +156,20 @@ final simulationContentRepositoryProvider =
     );
 
 final simulationAttemptRepositoryProvider =
-    Provider<SimulationAttemptRepository>(
-      (ref) => LocalSimulationAttemptRepository(
-        ref.watch(secureKeyValueStoreProvider),
-      ),
-    );
+    Provider<SimulationAttemptRepository>((ref) {
+      final store = ref.watch(secureKeyValueStoreProvider);
+      final local = LocalSimulationAttemptRepository(store);
+      final config = ref.watch(appConfigProvider);
+      if (config.hasSupabaseConfiguration && config.hasApiConfiguration) {
+        return OfflineFirstSimulationAttemptRepository(
+          local: local,
+          store: store,
+          remote: WmsRemoteSyncClient(
+            dio: Dio(),
+            supabaseClient: Supabase.instance.client,
+            apiBaseUrl: config.apiBaseUrl,
+          ),
+        );
+      }
+      return local;
+    });

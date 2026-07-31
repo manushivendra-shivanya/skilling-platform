@@ -66,8 +66,10 @@ flowchart TD
     WMSCTRL --> WMSSCENARIO[Deterministic Seeded Scenario]
     WMSCTRL --> WMSSCORE[Scoring, Critical Errors and Remediation]
     WMSSCORE --> WMSEVIDENCE[Versioned Competency Evidence]
-    WMSCTRL --> WMSLOCAL[Candidate-owned Encrypted Local Attempts]
-    WMSCTRL -. Future Flutter adapter .-> WMSREMOTE[WMS Remote Persistence Schema]
+    WMSCTRL --> WMSOFFLINE[Offline-first WMS Attempt Repository]
+    WMSOFFLINE --> WMSLOCAL[Candidate-owned Encrypted Local Attempts]
+    WMSOFFLINE --> WMSPENDING[Encrypted WMS Pending Sync Queue]
+    WMSOFFLINE --> WMSCLIENT[WMS BFF Sync Client]
 
     VOICE --> CONSENT[Purpose-separated Voice Consent]
     CONSENT --> MIC[Microphone Permission and Readiness]
@@ -116,6 +118,7 @@ flowchart TD
     QUEUE -. Future signed resumable credentials .-> API
     HUMAN -. Future reviewer workflow .-> API
     WMSSYNC --> WMSREMOTE
+    WMSCLIENT --> WMSSYNC
     APP -. Consequential and privileged operations .-> API
     API --> JOBSKILLS
     API -. Future .-> REDIS

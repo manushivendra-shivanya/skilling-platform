@@ -23,8 +23,10 @@ Last updated: 2026-07-31
   project
 - WMS BFF sync boundary implemented for candidate-owned attempt lifecycle,
   scoreable learner actions, unscored audit events, results and generated
-  evidence; Flutter still needs the client adapter before mobile remote sync
-  is active
+  evidence
+- Flutter WMS now uses an offline-first sync adapter when both Supabase and
+  `API_BASE_URL` are configured: local encrypted writes remain authoritative,
+  while BFF sync failures create a persistent pending-sync snapshot for retry
 
 ### Current UI
 - Phase 1.1 application foundation replaces the default Flutter counter demo
@@ -88,8 +90,8 @@ The Receiving and Put Away WMS missions are complete end to end locally, and
 the live JobSkills database now has candidate-owned WMS persistence tables for
 attempt lifecycle, scoreable learner actions, unscored audit events, results
 and generated evidence. The NestJS BFF now exposes an idempotent WMS sync
-endpoint for those tables. The app still uses the local encrypted repository
-until the Flutter client adapter is wired.
+endpoint for those tables. The Flutter app now wraps the local WMS repository
+with a best-effort BFF sync adapter when remote configuration is present.
 
 ### Phase 1.1 validation record
 - `flutter pub get` — passed
@@ -1425,9 +1427,52 @@ decision on whether the redesign is worth it, not silently dropped.
 - `npm run build` in `apps/api` — passed
 - `npm run lint` in `apps/api` — passed
 
+### Flutter WMS offline-first sync adapter
+- Added an API-gated `OfflineFirstSimulationAttemptRepository` wrapper around
+  the existing local WMS repository
+- When `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY` and `API_BASE_URL` are
+  configured, WMS writes still persist locally first and then call
+  `POST /v1/workplace-simulation/attempts/:attemptId/sync` with the verified
+  Supabase access token
+- If the BFF is offline, the user is unauthenticated, or the sync call fails,
+  the local controller mutation still succeeds and an encrypted pending-sync
+  snapshot remains queued for retry
+- The pending snapshot stores the latest attempt aggregate and preserves an
+  already-queued result/evidence payload across later attempt-only writes,
+  matching the controller's submit flow (`saveResult` followed by final
+  `saveAttempt`)
+- The sync client maps BFF/network/auth failures into the existing
+  `AppFailure` taxonomy and uses deterministic idempotency keys
+- Default local development remains unchanged: without Supabase/API config, the
+  app keeps using `LocalSimulationAttemptRepository` only
+- Known limitation: the optional generated scenario snapshot is still not sent
+  by Flutter because the current `SimulationAttemptRepository` contract does
+  not carry a `GeneratedScenario`; syncing that snapshot requires a separate
+  domain-contract widening slice
+
+### Flutter WMS sync validation
+- Added focused repository tests for local-first queueing, retry flush,
+  result/evidence sync and preserving queued result payloads across later
+  attempt-only writes
+- Direct Dart formatter
+  (`/opt/homebrew/share/flutter/bin/cache/dart-sdk/bin/dart format .`) —
+  passed; 174 files checked
+- Direct Dart analyzer
+  (`/opt/homebrew/share/flutter/bin/cache/dart-sdk/bin/dart analyze`) —
+  passed with the same 7 pre-existing info-level hints in `api_jobs_repository`
+  and `workplace_simulation_controller`
+- `flutter analyze --no-pub`,
+  `flutter test --no-pub test/features/workplace_simulation/offline_first_attempt_repository_test.dart`
+  and other Flutter wrapper commands are still blocked in this sandbox by the
+  local Flutter SDK trying to write under
+  `/opt/homebrew/share/flutter/bin/cache` (`Operation not permitted`)
+- API regression check after this slice: `npm test -- --runInBand`,
+  `npm run build` and `npm run lint` in `apps/api` all passed
+
 ### Next implementation
-Wire the Flutter WMS client adapter to call the BFF sync endpoint while
-preserving local-first behaviour and pending-sync/offline states.
+Add controller/UI exposure for WMS pending-sync state and decide whether to
+widen the repository contract so Flutter can send the optional generated
+scenario snapshot to the BFF.
 
 Two of the three deferred scenario-catalog entries remain on hold until
 their required design work is closed — `wrong-supplier-delivery` (the
@@ -1498,15 +1543,15 @@ catalogue so the already-wired Apply action has real jobs to apply to.
   Apply action calls the Jobs endpoint when both Supabase and API
   configuration are present; job listing itself still comes from
   `LocalMockJobsRepository`, whose mock ids don't match the real seeded jobs
-  yet. The Flutter WMS runtime still needs a client adapter before it calls
-  the WMS sync endpoint.
+  yet. The Flutter WMS runtime calls the WMS sync endpoint only in builds that
+  provide both Supabase and API configuration; otherwise it remains purely
+  local.
 - The Receiving mission is complete end to end (Document Desk through
   Performance Feedback) and the Put Away mission is complete end to end
   (Staging Area through Performance Feedback), both merged to `main`. WMS
-  now has a live Supabase persistence schema and a BFF sync endpoint, but the
-  Flutter runtime still writes to the local encrypted repository until the
-  Flutter adapter is implemented. No WMS screen is withheld pending approval;
-  the WebGL/3D
+  now has a live Supabase persistence schema, a BFF sync endpoint and an
+  API-gated Flutter offline-first sync adapter. No WMS screen is withheld
+  pending approval; the WebGL/3D
   spatial interaction layer remains deliberately deferred per direct
   discussion with the product owner rather than a specific ADR (see the Put
   Away workstation screens entry above for the correction to a stale
