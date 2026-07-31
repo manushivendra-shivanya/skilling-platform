@@ -11,12 +11,14 @@ class JobsState {
   const JobsState({
     required this.jobs,
     required this.appliedJobIds,
+    required this.isLiveData,
     this.query = '',
     this.supervisorOnly = false,
   });
 
   final List<JobOpportunity> jobs;
   final Set<String> appliedJobIds;
+  final bool isLiveData;
   final String query;
   final bool supervisorOnly;
 
@@ -39,6 +41,7 @@ class JobsState {
     return JobsState(
       jobs: jobs,
       appliedJobIds: appliedJobIds ?? this.appliedJobIds,
+      isLiveData: isLiveData,
       query: query ?? this.query,
       supervisorOnly: supervisorOnly ?? this.supervisorOnly,
     );
@@ -63,19 +66,19 @@ class JobsController extends AsyncNotifier<JobsState> {
       throw const AuthenticationFailure('Sign in again to view jobs.');
     }
     _candidateId = session.candidateId;
-    final jobs = (await ref.read(jobsRepositoryProvider).loadJobs()).when(
+    final repository = ref.read(jobsRepositoryProvider);
+    final jobs = (await repository.loadJobs()).when(
       success: (value) => value,
       failure: (failure) => throw failure,
     );
-    final applied =
-        (await ref
-                .read(jobsRepositoryProvider)
-                .readAppliedJobIds(session.candidateId))
-            .when(
-              success: (value) => value,
-              failure: (failure) => throw failure,
-            );
-    return JobsState(jobs: jobs, appliedJobIds: applied);
+    final applied = (await repository.readAppliedJobIds(
+      session.candidateId,
+    )).when(success: (value) => value, failure: (failure) => throw failure);
+    return JobsState(
+      jobs: jobs,
+      appliedJobIds: applied,
+      isLiveData: repository.isLiveData,
+    );
   }
 
   void search(String query) {
@@ -107,7 +110,11 @@ class JobsController extends AsyncNotifier<JobsState> {
         unawaited(
           ref
               .read(analyticsTrackerProvider)
-              .track(AnalyticsEvent.mockApplicationCreated()),
+              .track(
+                value.isLiveData
+                    ? AnalyticsEvent.jobApplicationCreated()
+                    : AnalyticsEvent.mockApplicationCreated(),
+              ),
         );
         return null;
       },

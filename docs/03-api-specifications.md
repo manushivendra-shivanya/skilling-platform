@@ -103,7 +103,10 @@ human-review status; they cannot perform autonomous rejection or shortlisting.
 - `GET /jobs`
 - `GET /jobs/{id}`
 - `POST /jobs/{id}/applications`
-- `GET /me/applications`
+- `GET /jobs/applications` (implemented; returns the authenticated
+  candidate's own applied job ids, scoped server-side by the auth token --
+  originally specified as `GET /me/applications`, kept under `/jobs` to
+  reuse the existing controller)
 - `POST /applications/{id}/withdraw`
 - `GET /me/interviews`
 - `POST /interviews/{id}/response`

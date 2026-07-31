@@ -1576,10 +1576,63 @@ without the controller needing to pass it again.
 - `flutter build apk --debug --no-pub --target-platform android-arm64` —
   succeeded locally
 
+### Real Jobs catalogue
+Wired the Jobs feature to the real backend end to end. More of the backend
+already existed than expected -- `GET /jobs` was already live against a
+real, migrated `jobs` table; the gap was entirely on the Flutter side and
+one missing BFF endpoint.
+
+- `ApiJobsRepository.loadJobs()`/`readAppliedJobIds()` now call the real
+  BFF instead of delegating to `LocalMockJobsRepository`. That delegation
+  is gone entirely -- `ApiJobsRepository` no longer takes a `local`
+  constructor param.
+- New BFF endpoint `GET /jobs/applications` (`JobsController.
+  myApplications`/`JobsService.listApplicationsForCandidate`), scoped to
+  the authenticated candidate via the existing `CandidateAuthGuard` --
+  there was previously no way to read a candidate's own applications back,
+  only to create one.
+- Found and fixed a real, previously-undetectable bug on the way: the
+  Apply flow's "share this profile" checkbox never actually granted
+  `employer_sharing` consent server-side, and the real `applyToJob`
+  requires an active grant in `consent_grants` or it rejects with
+  `CONSENT_REQUIRED`. This was invisible until now because mock job ids
+  never matched the real `jobs` table, so a real apply call always failed
+  for an unrelated reason first. `ApiJobsRepository.saveApplication` now
+  upserts the consent grant directly against Supabase (mirroring
+  `SupabaseCandidateOnboardingRepository`'s existing upsert pattern)
+  immediately before the apply call it gates.
+- `JobOpportunity.matchReason` renamed to `description` -- the real `jobs`
+  table has no personalized "why this matched you" field, only a plain job
+  description, so the field (and now the UI heading "About this role" in
+  live mode) says what it actually holds instead of implying personalized
+  matching that doesn't exist.
+- `isSupervisorRole` (drives a real filter toggle) has no backing field in
+  `jobs`/`role_profiles` either -- derived via a visible, testable
+  title-keyword heuristic (`jobTitleLooksLikeSupervisorRole`: contains
+  "supervisor"/"lead"/"manager"), not fabricated per-job data.
+- `JobsRepository.isLiveData` (false for the mock fallback, true for the
+  real one) drives the UI: "Demo opportunities" copy, "(Demo)" employer
+  suffixes, and "mock feed" disclaimers only ever show when the app
+  genuinely is running against the config-gated mock fallback (missing
+  Supabase/API dart-defines) -- never alongside real data.
+
+### Real Jobs catalogue — local validation
+- `dart format .` / `flutter analyze --no-pub` (Flutter) — passed (same 6
+  pre-existing info-level hints, unrelated)
+- New unit tests for `jobTitleLooksLikeSupervisorRole` (case-insensitive
+  match, individual-contributor titles correctly excluded)
+- Full Flutter suite — 110 of 113 passed; the three failures are the same
+  pre-existing baseline flakes as every prior milestone, confirmed
+  unrelated
+- `flutter build apk --debug --no-pub --target-platform android-arm64` —
+  succeeded locally
+- New BFF test: `listApplicationsForCandidate` scopes strictly to the
+  requesting candidate
+- `npm test -- --runInBand`, `npm run build`, `npm run lint` in `apps/api`
+  — all passed (12/12 tests, including the new one)
+
 ### Next implementation
-Deciding how the Flutter Jobs feature gets a real job catalogue so the
-already-wired Apply action has real jobs to apply to. Also still open: the
-still-unresolved "learning experience broken, not clear" report — the
+The still-unresolved "learning experience broken, not clear" report — the
 user's device has been offline every time this was raised this session, so
 it's never actually been seen.
 

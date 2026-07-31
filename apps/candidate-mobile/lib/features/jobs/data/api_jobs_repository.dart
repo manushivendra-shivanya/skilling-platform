@@ -4,36 +4,92 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/errors/app_failure.dart';
 import '../../../core/errors/result.dart';
 import '../domain/jobs_repository.dart';
-import 'local_mock_jobs_repository.dart';
 
-/// Applies to a job through the real `POST /v1/jobs/:id/applications`
-/// endpoint on the NestJS BFF (`apps/api`). Job listing and the locally
-/// tracked "applied" set stay on [LocalMockJobsRepository] until the Jobs
-/// feature has a real job catalogue to list against -- mock job ids will not
-/// match a real job in the target database, so an apply call against a mock
-/// listing is expected to fail there until that catalogue is wired too.
+/// Job listing, applied-job tracking and applications all go through the
+/// real NestJS BFF (`apps/api`) and Supabase. The config-gated fallback
+/// (see `isLiveData`) is a separate [JobsRepository] implementation,
+/// `LocalMockJobsRepository`, not something this class delegates to.
 class ApiJobsRepository implements JobsRepository {
   ApiJobsRepository({
-    required LocalMockJobsRepository local,
     required Dio dio,
     required SupabaseClient supabaseClient,
     required String apiBaseUrl,
-  }) : _local = local,
-       _dio = dio,
+  }) : _dio = dio,
        _supabaseClient = supabaseClient,
        _apiBaseUrl = apiBaseUrl;
 
-  final LocalMockJobsRepository _local;
   final Dio _dio;
   final SupabaseClient _supabaseClient;
   final String _apiBaseUrl;
 
   @override
-  Future<Result<List<JobOpportunity>>> loadJobs() => _local.loadJobs();
+  bool get isLiveData => true;
 
   @override
-  Future<Result<Set<String>>> readAppliedJobIds(String candidateId) =>
-      _local.readAppliedJobIds(candidateId);
+  Future<Result<List<JobOpportunity>>> loadJobs() async {
+    final accessToken = _supabaseClient.auth.currentSession?.accessToken;
+    if (accessToken == null) {
+      return const ResultFailure(
+        AuthenticationFailure('Sign in again to view jobs.'),
+      );
+    }
+    try {
+      final response = await _dio.get<Object?>(
+        '$_apiBaseUrl/jobs',
+        options: Options(headers: {'Authorization': 'Bearer $accessToken'}),
+      );
+      final body = response.data;
+      final jobs = body is Map ? body['jobs'] : null;
+      if (jobs is! List) {
+        throw const FormatException('Unexpected jobs response shape');
+      }
+      return Success([
+        for (final entry in jobs.cast<Map<String, Object?>>()) _fromJson(entry),
+      ]);
+    } on DioException catch (error, stackTrace) {
+      return ResultFailure(_mapError(error, stackTrace));
+    } catch (error, stackTrace) {
+      return ResultFailure(
+        UnexpectedFailure(
+          'Jobs could not be loaded.',
+          cause: error,
+          stackTrace: stackTrace,
+        ),
+      );
+    }
+  }
+
+  @override
+  Future<Result<Set<String>>> readAppliedJobIds(String candidateId) async {
+    final accessToken = _supabaseClient.auth.currentSession?.accessToken;
+    if (accessToken == null) {
+      return const ResultFailure(
+        AuthenticationFailure('Sign in again to view your applications.'),
+      );
+    }
+    try {
+      final response = await _dio.get<Object?>(
+        '$_apiBaseUrl/jobs/applications',
+        options: Options(headers: {'Authorization': 'Bearer $accessToken'}),
+      );
+      final body = response.data;
+      final jobIds = body is Map ? body['jobIds'] : null;
+      if (jobIds is! List) {
+        throw const FormatException('Unexpected applications response shape');
+      }
+      return Success(jobIds.whereType<String>().toSet());
+    } on DioException catch (error, stackTrace) {
+      return ResultFailure(_mapError(error, stackTrace));
+    } catch (error, stackTrace) {
+      return ResultFailure(
+        UnexpectedFailure(
+          'Your applications could not be loaded.',
+          cause: error,
+          stackTrace: stackTrace,
+        ),
+      );
+    }
+  }
 
   @override
   Future<Result<void>> saveApplication(String candidateId, String jobId) async {
@@ -43,6 +99,13 @@ class ApiJobsRepository implements JobsRepository {
         AuthenticationFailure('Sign in again to apply for this job.'),
       );
     }
+    // The apply screen only enables its button once the candidate has
+    // confirmed sharing their profile with the employer -- granting the
+    // consent here, immediately before the apply call it gates, keeps that
+    // confirmation meaningful without threading UI state through the
+    // repository layer.
+    final consentGranted = await _grantEmployerSharingConsent(candidateId);
+    if (consentGranted != null) return ResultFailure(consentGranted);
     try {
       await _dio.post<Object?>(
         '$_apiBaseUrl/jobs/$jobId/applications',
@@ -67,7 +130,38 @@ class ApiJobsRepository implements JobsRepository {
         ),
       );
     }
-    return _local.saveApplication(candidateId, jobId);
+    return const Success(null);
+  }
+
+  Future<AppFailure?> _grantEmployerSharingConsent(String candidateId) async {
+    try {
+      await _supabaseClient.from('consent_grants').upsert({
+        'candidate_id': candidateId,
+        'purpose': JobsConsentVersions.employerSharingPurpose,
+        'policy_version': JobsConsentVersions.employerSharingVersion,
+        'granted_at': DateTime.now().toUtc().toIso8601String(),
+        'revoked_at': null,
+      }, onConflict: 'candidate_id,purpose,policy_version');
+      return null;
+    } on PostgrestException catch (error, stackTrace) {
+      return NetworkFailure(
+        'Your sharing consent could not be saved. Try again.',
+        cause: error,
+        stackTrace: stackTrace,
+      );
+    }
+  }
+
+  JobOpportunity _fromJson(Map<String, Object?> json) {
+    final title = json['title'] as String? ?? '';
+    return JobOpportunity(
+      id: json['id'] as String? ?? '',
+      title: title,
+      employer: json['employer_name'] as String? ?? '',
+      location: json['location'] as String? ?? '',
+      isSupervisorRole: jobTitleLooksLikeSupervisorRole(title),
+      description: json['description'] as String? ?? '',
+    );
   }
 
   AppFailure _mapError(DioException error, StackTrace stackTrace) {
