@@ -1269,26 +1269,95 @@ them:
   boundaries are unaffected. It's the constraint those future features must
   be built against, recorded now so it isn't decided ad hoc later.
 
+### Wrong-supplier-delivery scenario — content-authored early completion
+Shipped the one cleanly-scoped deferred scenario. Turned out to need more
+than the original note suggested — this delivery's pedagogical intent
+(`docs/24-receiving-department-content-specification.md`) is specifically
+to be caught at delivery confirmation on Receiving Dock, *before* any
+counting or inspection effort, not as a carton-inspection finding. That
+meant fixing a real gap: `confirmShipmentIdentity` already captured the
+candidate's true/false answer, but `submitReceivingCount` required
+`shipmentConfirmed == true` just to proceed and then hardcoded the scored
+outcome to "matches" regardless — there was no path for a candidate who
+correctly said "no" to go anywhere except being permanently stuck.
+
+Added, content-authored rather than special-cased in code:
+- `MissionDefinition.earlyCompletionRules` (new, additive, empty by
+  default) — a rule an mission can author to declare "if this task's
+  action resolves this way, the mission ends here as a successful
+  outcome," matched by `MissionScoringService` **before** its normal
+  mandatory-task-completeness check, never touching how any other mission
+  or scenario is scored. `receive_shipment_mission.json` authors exactly
+  one: correctly rejecting the wrong-supplier delivery scores using only
+  the categories/tasks touched before the terminal action (not penalised
+  for the downstream work the mission never expected this branch to
+  reach), and returns `status: passed`.
+- `ReceivingCountDraft.shipmentConfirmed` is now `bool?` (`null` =
+  undecided, distinct from an explicit `false` rejection — previously a
+  plain `bool` couldn't tell "not yet acted" from "confirmed wrong").
+- New controller method `rejectShipmentIdentity()`: records the real
+  scored confirm-delivery-identity outcome, then submits the mission
+  immediately.
+- New critical error `accepted-wrong-supplier-delivery` (declarative, via
+  the existing `criticalErrorRules` mechanism, no new code): accepting a
+  wrong-supplier delivery and continuing is `criticalFailure` regardless
+  of how the rest of the shift goes, per policy — correctly stopping bad
+  work early is success; wrongly continuing past it is a critical process
+  error.
+- Receiving Dock's identity-confirmation UI replaced a single checkbox
+  (which couldn't express "explicitly rejected") with two explicit
+  buttons plus a distinct, confirmation-gated "Reject shipment & end
+  shift" action, since one is now mission-ending and irreversible.
+
+**Deliberately not attempted**: `multi-exception-shipment` and
+`clerical-only-discrepancy` remain on hold — scoping surfaced they need
+their own real design work (a stacked-issue carton needs
+`RecordCartonInspectionCommand.finding` to become a list, not a single
+value, since it's currently unreportable by the candidate even if
+generated; a meaningfully distinct clerical-only scenario needs documents
+to become scenario-swappable, which they aren't today, or it's just a
+duplicate of `perfect-delivery`). Both explicitly deferred pending a
+decision on whether the redesign is worth it, not silently dropped.
+
+### Wrong-supplier-delivery — local validation
+- `dart format .` — passed
+- `flutter analyze --no-pub` — passed (same 7 pre-existing info-level
+  hints, unrelated)
+- Two new controller-level tests added to
+  `workplace_simulation_controller_test.dart`, run against the real
+  content/generator/scoring pipeline (not mocked): correctly rejecting
+  ends the mission as `passed` with `mandatoryTasksCompleted: true` and
+  none of the downstream tasks touched; wrongly accepting and continuing
+  through `submitReceivingCount` + `completeMission` produces
+  `criticalFailure` with `accepted-wrong-supplier-delivery` in
+  `criticalErrors`
+- Fixed 3 pre-existing scoring tests that hardcoded the old
+  `matchesExpectedDelivery` wire value now that `confirm-delivery-identity`
+  carries real points (10, up from 0) — normal-scenario weighted-score math
+  is otherwise unchanged, confirmed by these same tests passing at their
+  original expected values once the payload was corrected
+- Focused WMS suite — 41/41 passed (39 previous + 2 new)
+- Full suite — 98 of 101 passed; the three failures are the same
+  pre-existing baseline flakes as every prior milestone, confirmed
+  unrelated
+- `flutter build apk --debug --no-pub --target-platform android-arm64` —
+  succeeded locally
+
 ### Next implementation
-The three deferred scenario-catalog entries are on hold, not just
-unscheduled — a scoping pass surfaced that two of the three are bigger than
-originally noted: `multi-exception-shipment` needs not just a
-`ScenarioGenerator` change (a resource carrying two simultaneous issues,
-straightforward) but also a domain/UI change, since
-`RecordCartonInspectionCommand.finding` is a single `CartonFinding`, not a
-list — a stacked-issue carton would generate correctly but be unreportable
-by the candidate as currently built. `clerical-only-discrepancy` turns out
-near-duplicate of the already-shipped `perfect-delivery` scenario, since
-the PO/DN documents aren't scenario-varied at all (fixed resource IDs,
-looked up directly in three screens) — a meaningfully distinct clerical-only
-scenario needs documents to become scenario-swappable, which they aren't
-today. Only `wrong-supplier-delivery` is cleanly scoped as noted (new issue
-type, new `CartonFinding` value, one generator case, one evaluation rule).
-All three explicitly held pending a future decision on whether the bigger
-two are worth the redesign. Also still open: fixing this remote session's
-`Supabase` MCP connector to actually reach `qoairksjpwkhwqxeollj`; and
-deciding how the Flutter Jobs feature gets a real job catalogue so the
-already-wired Apply action has real jobs to apply to.
+`multi-exception-shipment` and `clerical-only-discrepancy` scenario
+variants, pending the redesign decisions noted above; fixing this remote
+session's `Supabase` MCP connector to actually reach
+`qoairksjpwkhwqxeollj`; deciding how the Flutter Jobs feature gets a real
+job catalogue so the already-wired Apply action has real jobs to apply to.
+Also still open: an unmerged branch `agent/wms-remote-persistence` (built
+by a different session) adding a Supabase remote-persistence schema for
+WMS attempts/actions/audit-events/results/evidence — reviewed and the
+migration SQL looks sound (RLS enabled, candidate-scoped policies,
+append-only guards), but this session's Supabase MCP connector still can't
+reach the real project to confirm it was actually applied live, and the
+branch is stale relative to `main` (predates the ADR-0018 doc changes) so
+merging needs the `current-state.md` conflict reconciled by hand, not a
+blind merge.
 
 ## Target product architecture proposal
 

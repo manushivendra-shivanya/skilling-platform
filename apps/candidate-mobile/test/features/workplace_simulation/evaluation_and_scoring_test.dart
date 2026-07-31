@@ -302,7 +302,7 @@ Future<_Run> _successfulRun() async {
     'confirm-delivery-identity',
     ActionType.confirmAction,
     targetId: 'delivery-note-dn-2026-001',
-    payload: const {'conclusion': 'matchesExpectedDelivery'},
+    payload: const {'conclusion': 'matches_expected_delivery'},
   );
   for (final carton in _cartons(scenario)) {
     add(

@@ -215,7 +215,10 @@ class ReceivingCountDraft {
 
   final String attemptId;
   final String taskId;
-  final bool shipmentConfirmed;
+
+  /// `null` -- not yet decided; `true` -- confirmed matches the expected
+  /// delivery; `false` -- confirmed it does NOT match (e.g. wrong supplier).
+  final bool? shipmentConfirmed;
   final List<ReceivingCountEntry> countEntries;
   final OperationalDraftStatus status;
   final DateTime createdAt;
@@ -253,7 +256,7 @@ class ReceivingCountDraft {
   factory ReceivingCountDraft.fromJson(JsonMap json) => ReceivingCountDraft(
     attemptId: json.string('attemptId'),
     taskId: json.string('taskId'),
-    shipmentConfirmed: json.boolean('shipmentConfirmed'),
+    shipmentConfirmed: json['shipmentConfirmed'] as bool?,
     countEntries: json
         .mapList('countEntries')
         .map(ReceivingCountEntry.fromJson)

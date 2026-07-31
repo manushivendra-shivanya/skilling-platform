@@ -270,6 +270,7 @@ class MissionDefinition {
     this.scenarios = const [],
     required this.scoringRule,
     required this.criticalErrorRules,
+    this.earlyCompletionRules = const [],
   });
 
   final String id;
@@ -299,6 +300,11 @@ class MissionDefinition {
   final List<NamedScenario> scenarios;
   final ScoringRule scoringRule;
   final List<CriticalErrorRule> criticalErrorRules;
+
+  /// Terminal-exception rules for scenarios where correctly stopping bad
+  /// work early is itself success. Empty for missions that don't author any
+  /// -- existing content and scoring are unaffected.
+  final List<EarlyCompletionRule> earlyCompletionRules;
 
   String get versionedId => '$id@$version';
 
@@ -360,6 +366,12 @@ class MissionDefinition {
           .mapList('criticalErrorRules')
           .map(CriticalErrorRule.fromJson)
           .toList(growable: false),
+      earlyCompletionRules: json['earlyCompletionRules'] is List<Object?>
+          ? json
+                .mapList('earlyCompletionRules')
+                .map(EarlyCompletionRule.fromJson)
+                .toList(growable: false)
+          : const [],
     );
     mission.validateReferences();
     return mission;
@@ -369,6 +381,13 @@ class MissionDefinition {
     final definedStageIds = stages.map((item) => item.id).toSet();
     final definedTaskIds = tasks.map((item) => item.id).toSet();
     final definedResourceIds = resources.map((item) => item.id).toSet();
+    for (final rule in earlyCompletionRules) {
+      if (!definedTaskIds.contains(rule.triggerTaskId)) {
+        throw FormatException(
+          'Early completion rule ${rule.id} references an undefined task',
+        );
+      }
+    }
     if (!definedStageIds.containsAll(stageIds)) {
       throw const FormatException('Mission references an undefined stage');
     }
@@ -829,6 +848,53 @@ class CriticalErrorRule {
       feedback: json.string('feedback'),
     );
   }
+}
+
+/// A content-authored rule for terminal exception scenarios where correctly
+/// stopping bad work before it starts is itself the successful outcome --
+/// e.g. rejecting a wrong-supplier delivery at Receiving Dock rather than
+/// spending counting/inspection effort on stock that should never have been
+/// accepted. Matched against a scored action outcome by
+/// [MissionScoringService] before the normal mandatory-task completeness
+/// check, so it never changes how any other mission or scenario is scored.
+class EarlyCompletionRule {
+  const EarlyCompletionRule({
+    required this.id,
+    required this.triggerTaskId,
+    required this.triggerActionType,
+    required this.requiredOutcome,
+    required this.resultStatus,
+    required this.completionLabel,
+    required this.skipRemainingMandatoryTasks,
+    required this.evidenceScope,
+    this.requiredPayload = const {},
+  });
+
+  final String id;
+  final String triggerTaskId;
+  final ActionType triggerActionType;
+  final JsonMap requiredPayload;
+  final OutcomeType requiredOutcome;
+  final MissionStatus resultStatus;
+  final String completionLabel;
+  final bool skipRemainingMandatoryTasks;
+  final String evidenceScope;
+
+  factory EarlyCompletionRule.fromJson(JsonMap json) => EarlyCompletionRule(
+    id: json.string('id'),
+    triggerTaskId: json.string('triggerTaskId'),
+    triggerActionType: ActionType.fromWireName(
+      json.string('triggerActionType'),
+    ),
+    requiredPayload: json['requiredPayload'] is Map<String, Object?>
+        ? json.object('requiredPayload')
+        : const {},
+    requiredOutcome: OutcomeType.fromWireName(json.string('requiredOutcome')),
+    resultStatus: MissionStatus.fromWireName(json.string('resultStatus')),
+    completionLabel: json.string('completionLabel'),
+    skipRemainingMandatoryTasks: json.boolean('skipRemainingMandatoryTasks'),
+    evidenceScope: json.string('evidenceScope'),
+  );
 }
 
 class RemediationRecommendation {

@@ -269,6 +269,18 @@ enum ConfirmShipmentIdentityResult {
   persistenceFailure,
 }
 
+/// Ends the mission immediately after the candidate has recorded that the
+/// shipment does NOT match the expected delivery (e.g. wrong supplier) --
+/// the correct response is to stop before spending counting/inspection
+/// effort on stock that should never have been accepted onto the dock.
+enum RejectShipmentIdentityResult {
+  success,
+  notYetRejected,
+  alreadySubmitted,
+  invalidAttemptState,
+  persistenceFailure,
+}
+
 enum RecordCartonCountResult {
   success,
   invalidQuantity,

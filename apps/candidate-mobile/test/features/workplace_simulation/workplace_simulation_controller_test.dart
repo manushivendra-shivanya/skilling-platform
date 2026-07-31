@@ -811,4 +811,149 @@ void main() {
       expect(result.status, isNot(MissionStatus.passed));
     },
   );
+
+  test('correctly rejecting a wrong-supplier delivery ends the mission early '
+      'as passed', () async {
+    final container = await _wrongSupplierContainer();
+    addTearDown(container.dispose);
+    final controller = container.read(
+      workplaceSimulationControllerProvider(
+        WorkplaceSimulationController.missionId,
+      ).notifier,
+    );
+
+    expect(
+      await controller.confirmShipmentIdentity(
+        const ConfirmShipmentIdentityCommand(confirmed: false),
+      ),
+      ConfirmShipmentIdentityResult.success,
+    );
+    expect(
+      await controller.rejectShipmentIdentity(),
+      RejectShipmentIdentityResult.success,
+    );
+
+    final state = container
+        .read(
+          workplaceSimulationControllerProvider(
+            WorkplaceSimulationController.missionId,
+          ),
+        )
+        .requireValue;
+    expect(state.attempt!.state, MissionState.completed);
+    final result = state.result;
+    expect(result, isNotNull);
+    expect(result!.status, MissionStatus.passed);
+    expect(result.mandatoryTasksCompleted, isTrue);
+    expect(
+      result.correctActions,
+      contains('Wrong supplier rejected at receiving dock'),
+    );
+    // Only the confirm-delivery-identity task was ever scored -- no
+    // counting, inspection, quarantine or discrepancy-report effort was
+    // expected or penalised for this terminal-exception branch.
+    expect(state.attempt!.completedTaskIds, isNot(contains('inspect-cartons')));
+  });
+
+  test('accepting a wrong-supplier delivery and continuing is a critical '
+      'process error', () async {
+    final container = await _wrongSupplierContainer();
+    addTearDown(container.dispose);
+    final controller = container.read(
+      workplaceSimulationControllerProvider(
+        WorkplaceSimulationController.missionId,
+      ).notifier,
+    );
+
+    expect(
+      await controller.confirmShipmentIdentity(
+        const ConfirmShipmentIdentityCommand(confirmed: true),
+      ),
+      ConfirmShipmentIdentityResult.success,
+    );
+    final state = container
+        .read(
+          workplaceSimulationControllerProvider(
+            WorkplaceSimulationController.missionId,
+          ),
+        )
+        .requireValue;
+    for (final cartonId
+        in state.mission.task('confirm-received-counts').targetResourceIds) {
+      expect(
+        await controller.recordCartonCount(
+          RecordCartonCountCommand(
+            cartonId: cartonId,
+            enteredQuantity: 0,
+            countMethod: CountMethod.individual,
+          ),
+        ),
+        RecordCartonCountResult.success,
+      );
+    }
+    expect(
+      await controller.submitReceivingCount(
+        const SubmitReceivingCountCommand(),
+      ),
+      SubmitReceivingCountResult.success,
+    );
+
+    expect(await controller.completeMission(), CompleteMissionResult.success);
+    final result = container
+        .read(
+          workplaceSimulationControllerProvider(
+            WorkplaceSimulationController.missionId,
+          ),
+        )
+        .requireValue
+        .result;
+    expect(result, isNotNull);
+    expect(result!.status, MissionStatus.criticalFailure);
+    expect(
+      result.criticalErrors.map((item) => item.ruleId),
+      contains('accepted-wrong-supplier-delivery'),
+    );
+  });
+}
+
+Future<ProviderContainer> _wrongSupplierContainer() async {
+  final container = ProviderContainer(
+    overrides: [
+      candidateSessionRepositoryProvider.overrideWithValue(
+        InMemoryCandidateSessionRepository(
+          session: const CandidateSession(
+            candidateId: 'wrong-supplier-candidate',
+            isAuthenticated: true,
+          ),
+        ),
+      ),
+      simulationContentRepositoryProvider.overrideWithValue(
+        AssetSimulationContentRepository(),
+      ),
+      simulationAttemptRepositoryProvider.overrideWithValue(
+        InMemorySimulationAttemptRepository(),
+      ),
+    ],
+  );
+  await container.read(
+    workplaceSimulationControllerProvider(
+      WorkplaceSimulationController.missionId,
+    ).future,
+  );
+  final controller = container.read(
+    workplaceSimulationControllerProvider(
+      WorkplaceSimulationController.missionId,
+    ).notifier,
+  );
+  await controller.startMission(
+    scenarioSeed: 48127,
+    scenarioId: 'wrong-supplier-delivery',
+  );
+  await controller.setBriefingAcknowledged(true);
+  final result = await controller.beginShift();
+  if (result != BeginShiftResult.success) {
+    container.dispose();
+    throw StateError('Could not prepare wrong-supplier test attempt: $result');
+  }
+  return container;
 }
