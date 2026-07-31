@@ -721,6 +721,7 @@ class ScenarioVariationRule {
     required this.severity,
     required this.eligibleTargets,
     required this.count,
+    this.allowStackedTarget = false,
   });
 
   final String type;
@@ -729,12 +730,20 @@ class ScenarioVariationRule {
   final List<String> eligibleTargets;
   final int count;
 
+  /// When true, this rule may assign its issue to a resource an earlier
+  /// rule already claimed this generation -- e.g. a multi-exception carton
+  /// carrying two simultaneous issues. Defaults to false, matching every
+  /// rule authored before this field existed: a resource can receive at
+  /// most one issue per scenario.
+  final bool allowStackedTarget;
+
   factory ScenarioVariationRule.fromJson(JsonMap json) => ScenarioVariationRule(
     type: json.string('type'),
     issue: json.string('issue'),
     severity: IssueSeverity.values.byName(json.string('severity')),
     eligibleTargets: json.stringList('eligibleTargets'),
     count: json.integer('count'),
+    allowStackedTarget: json.boolean('allowStackedTarget'),
   );
 }
 

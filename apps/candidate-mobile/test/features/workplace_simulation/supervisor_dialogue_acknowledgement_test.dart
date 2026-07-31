@@ -189,7 +189,7 @@ Future<void> _completeInspectionAndQuarantineStages(
     await controller.recordCartonInspection(
       RecordCartonInspectionCommand(
         cartonId: cartonId,
-        finding: CartonFinding.compliant,
+        findings: const [CartonFinding.compliant],
       ),
     );
   }

@@ -494,7 +494,7 @@ void main() {
           await controller.recordCartonInspection(
             RecordCartonInspectionCommand(
               cartonId: cartonId,
-              finding: CartonFinding.compliant,
+              findings: const [CartonFinding.compliant],
             ),
           ),
           RecordCartonInspectionResult.success,
@@ -506,7 +506,7 @@ void main() {
         await controller.updateCartonInspection(
           UpdateCartonInspectionCommand(
             entryId: firstInspection.id,
-            finding: CartonFinding.packagingDamage,
+            findings: const [CartonFinding.packagingDamage],
           ),
         ),
         UpdateCartonInspectionResult.success,
@@ -912,6 +912,145 @@ void main() {
     expect(
       result.criticalErrors.map((item) => item.ruleId),
       contains('accepted-wrong-supplier-delivery'),
+    );
+  });
+
+  test(
+    'a carton with two simultaneous findings scores credit for both',
+    () async {
+      final container = ProviderContainer(
+        overrides: [
+          candidateSessionRepositoryProvider.overrideWithValue(
+            InMemoryCandidateSessionRepository(
+              session: const CandidateSession(
+                candidateId: 'multi-exception-candidate',
+                isAuthenticated: true,
+              ),
+            ),
+          ),
+          simulationContentRepositoryProvider.overrideWithValue(
+            AssetSimulationContentRepository(),
+          ),
+          simulationAttemptRepositoryProvider.overrideWithValue(
+            InMemorySimulationAttemptRepository(),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+      await container.read(
+        workplaceSimulationControllerProvider(
+          WorkplaceSimulationController.missionId,
+        ).future,
+      );
+      final controller = container.read(
+        workplaceSimulationControllerProvider(
+          WorkplaceSimulationController.missionId,
+        ).notifier,
+      );
+      expect(
+        await controller.startMission(
+          scenarioSeed: 48127,
+          scenarioId: 'multi-exception-shipment',
+        ),
+        isNull,
+      );
+      await controller.setBriefingAcknowledged(true);
+      expect(await controller.beginShift(), BeginShiftResult.success);
+      final state = container
+          .read(
+            workplaceSimulationControllerProvider(
+              WorkplaceSimulationController.missionId,
+            ),
+          )
+          .requireValue;
+
+      expect(
+        await controller.recordCartonInspection(
+          const RecordCartonInspectionCommand(
+            cartonId: 'carton-001',
+            findings: [CartonFinding.packagingDamage, CartonFinding.nearExpiry],
+          ),
+        ),
+        RecordCartonInspectionResult.success,
+      );
+      for (final cartonId
+          in state.mission.task('inspect-cartons').targetResourceIds) {
+        if (cartonId == 'carton-001') continue;
+        expect(
+          await controller.recordCartonInspection(
+            RecordCartonInspectionCommand(
+              cartonId: cartonId,
+              findings: const [CartonFinding.compliant],
+            ),
+          ),
+          RecordCartonInspectionResult.success,
+        );
+      }
+      for (final cartonId
+          in state.mission.task('scan-barcodes').targetResourceIds) {
+        expect(
+          await controller.recordBarcodeScan(
+            RecordBarcodeScanCommand(
+              cartonId: cartonId,
+              status: BarcodeStatus.readable,
+            ),
+          ),
+          RecordBarcodeScanResult.success,
+        );
+      }
+      expect(
+        await controller.submitInspection(const SubmitInspectionCommand()),
+        SubmitInspectionResult.success,
+      );
+
+      final afterSubmit = container
+          .read(
+            workplaceSimulationControllerProvider(
+              WorkplaceSimulationController.missionId,
+            ),
+          )
+          .requireValue;
+      // 5 compliant cartons (1 outcome each) + carton-001's 2 findings.
+      final correctInspectionOutcomes = afterSubmit.outcomes.where(
+        (item) =>
+            item.taskId == 'inspect-cartons' &&
+            item.outcomeType == OutcomeType.correct,
+      );
+      expect(correctInspectionOutcomes, hasLength(7));
+      expect(
+        correctInspectionOutcomes.map((item) => item.feedbackCode),
+        containsAll(['damage_identified', 'near_expiry_identified']),
+      );
+    },
+  );
+
+  test('recording findings that mix compliant with another finding is '
+      'rejected', () async {
+    final container = await _wrongSupplierContainer();
+    addTearDown(container.dispose);
+    final controller = container.read(
+      workplaceSimulationControllerProvider(
+        WorkplaceSimulationController.missionId,
+      ).notifier,
+    );
+
+    expect(
+      await controller.recordCartonInspection(
+        const RecordCartonInspectionCommand(
+          cartonId: 'carton-001',
+          findings: [CartonFinding.compliant, CartonFinding.packagingDamage],
+        ),
+      ),
+      RecordCartonInspectionResult.invalidFindings,
+    );
+    expect(
+      await controller.recordCartonInspection(
+        const RecordCartonInspectionCommand(
+          cartonId: 'carton-001',
+          findings: [],
+        ),
+      ),
+      RecordCartonInspectionResult.invalidFindings,
     );
   });
 }

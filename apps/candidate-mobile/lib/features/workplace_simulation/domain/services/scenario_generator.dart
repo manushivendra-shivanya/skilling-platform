@@ -29,7 +29,8 @@ class ScenarioGenerator {
       }
       final targets = [
         ...rule.eligibleTargets.where(
-          (target) => !assignedTargets.contains(target),
+          (target) =>
+              rule.allowStackedTarget || !assignedTargets.contains(target),
         ),
       ];
       if (targets.length < rule.count) {

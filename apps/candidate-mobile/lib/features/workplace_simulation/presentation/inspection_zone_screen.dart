@@ -164,7 +164,11 @@ class _InspectionZoneScreenState extends ConsumerState<InspectionZoneScreen> {
                                         if (entry == null)
                                           const Text('Not inspected')
                                         else ...[
-                                          Text(_findingLabel(entry.finding)),
+                                          Text(
+                                            entry.findings
+                                                .map(_findingLabel)
+                                                .join(', '),
+                                          ),
                                           Text(
                                             'Revision ${entry.revisionNumber}',
                                             style: Theme.of(
@@ -338,7 +342,7 @@ class _InspectionZoneScreenState extends ConsumerState<InspectionZoneScreen> {
           .recordCartonInspection(
             RecordCartonInspectionCommand(
               cartonId: cartonId,
-              finding: input.$1,
+              findings: input.$1,
               learnerNotes: input.$2,
             ),
           );
@@ -353,7 +357,7 @@ class _InspectionZoneScreenState extends ConsumerState<InspectionZoneScreen> {
           .updateCartonInspection(
             UpdateCartonInspectionCommand(
               entryId: entry.id,
-              finding: input.$1,
+              findings: input.$1,
               learnerNotes: input.$2,
             ),
           );
@@ -363,12 +367,12 @@ class _InspectionZoneScreenState extends ConsumerState<InspectionZoneScreen> {
     }
   }
 
-  Future<(CartonFinding, String)?> _showInspectionEditor(
+  Future<(List<CartonFinding>, String)?> _showInspectionEditor(
     CartonInspectionEntry? entry,
   ) async {
-    var finding = entry?.finding ?? CartonFinding.compliant;
+    var findings = (entry?.findings ?? const [CartonFinding.compliant]).toSet();
     final notes = TextEditingController(text: entry?.learnerNotes);
-    final result = await showDialog<(CartonFinding, String)>(
+    final result = await showDialog<(List<CartonFinding>, String)>(
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
@@ -376,24 +380,31 @@ class _InspectionZoneScreenState extends ConsumerState<InspectionZoneScreen> {
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                DropdownButtonFormField<CartonFinding>(
-                  initialValue: finding,
-                  decoration: const InputDecoration(
-                    labelText: 'Finding',
-                    border: OutlineInputBorder(),
-                  ),
-                  items: [
-                    for (final value in CartonFinding.values)
-                      DropdownMenuItem(
-                        value: value,
-                        child: Text(_findingLabel(value)),
-                      ),
-                  ],
-                  onChanged: (value) {
-                    if (value != null) setDialogState(() => finding = value);
-                  },
+                const Text(
+                  'Select every finding that applies. A compliant carton '
+                  "can't also carry another finding.",
                 ),
+                for (final value in CartonFinding.values)
+                  CheckboxListTile(
+                    contentPadding: EdgeInsets.zero,
+                    value: findings.contains(value),
+                    title: Text(_findingLabel(value)),
+                    onChanged: (selected) {
+                      setDialogState(() {
+                        if (selected != true) {
+                          findings = {...findings}..remove(value);
+                          return;
+                        }
+                        findings = value == CartonFinding.compliant
+                            ? {CartonFinding.compliant}
+                            : ({...findings}
+                                ..remove(CartonFinding.compliant)
+                                ..add(value));
+                      });
+                    },
+                  ),
                 const SizedBox(height: AppSpacing.md),
                 TextField(
                   controller: notes,
@@ -412,7 +423,12 @@ class _InspectionZoneScreenState extends ConsumerState<InspectionZoneScreen> {
               child: const Text('Cancel'),
             ),
             FilledButton(
-              onPressed: () => Navigator.pop(context, (finding, notes.text)),
+              onPressed: findings.isEmpty
+                  ? null
+                  : () => Navigator.pop(context, (
+                      findings.toList(growable: false),
+                      notes.text,
+                    )),
               child: const Text('Save finding'),
             ),
           ],
