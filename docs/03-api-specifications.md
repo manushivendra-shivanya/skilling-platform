@@ -45,6 +45,7 @@
 - `POST /simulation-attempts/{id}/submit`
 - `GET /simulation-attempts/{id}/result`
 - `POST /simulation-attempts/{id}/appeals`
+- `POST /workplace-simulation/attempts/{id}/sync`
 
 Example event batch:
 ```json
@@ -55,6 +56,28 @@ Example event batch:
   ]
 }
 ```
+
+### Workplace Simulation sync
+
+`POST /workplace-simulation/attempts/{id}/sync` is the BFF persistence
+boundary for the local-first Workplace Management Simulation controller. It
+requires:
+
+- `Authorization: Bearer <candidate JWT>`
+- `Idempotency-Key`
+
+The request body contains the already-produced controller state:
+
+- `attempt` — lifecycle, timer, completed tasks, drafts, scoreable learner
+  actions and unscored audit events
+- `generatedScenario` — optional generated scenario snapshot
+- `result` — optional deterministic result with generated evidence
+
+The BFF derives `candidate_id` from the verified session and rejects mismatched
+client-supplied candidate ids. `LearnerAction` remains the only scoreable
+behaviour stream; technical or lifecycle events must be sent as
+`AttemptAuditEvent`, and any learner action with `isTechnical: true` is
+rejected.
 
 ## Voice APIs
 - `POST /voice/sessions`
