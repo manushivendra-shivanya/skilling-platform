@@ -20,6 +20,7 @@ class LocalSimulationAttemptRepository implements SimulationAttemptRepository {
     required String missionVersion,
     required int scenarioSeed,
     String? scenarioId,
+    GeneratedScenario? generatedScenario,
   }) async {
     final counterKey = _counterKey(candidateId, missionId);
     final attemptNumber =
@@ -226,6 +227,12 @@ class LocalSimulationAttemptRepository implements SimulationAttemptRepository {
     await _store.remove(_activeKey(candidateId, missionId));
   }
 
+  @override
+  Future<int> pendingSyncCount(String candidateId) async => 0;
+
+  @override
+  Future<void> flushPendingSyncs(String candidateId) async {}
+
   Future<void> _writeAttempt(SimulationAttempt attempt) async {
     await _store.write(
       _activeKey(attempt.candidateId, attempt.missionId),
@@ -290,12 +297,14 @@ class InMemorySimulationAttemptRepository
     required String missionVersion,
     required int scenarioSeed,
     String? scenarioId,
+    GeneratedScenario? generatedScenario,
   }) => _delegate.createAttempt(
     candidateId: candidateId,
     missionId: missionId,
     missionVersion: missionVersion,
     scenarioSeed: scenarioSeed,
     scenarioId: scenarioId,
+    generatedScenario: generatedScenario,
   );
 
   @override
@@ -315,4 +324,12 @@ class InMemorySimulationAttemptRepository
   @override
   Future<void> saveResult(String candidateId, SimulationResult result) =>
       _delegate.saveResult(candidateId, result);
+
+  @override
+  Future<int> pendingSyncCount(String candidateId) =>
+      _delegate.pendingSyncCount(candidateId);
+
+  @override
+  Future<void> flushPendingSyncs(String candidateId) =>
+      _delegate.flushPendingSyncs(candidateId);
 }

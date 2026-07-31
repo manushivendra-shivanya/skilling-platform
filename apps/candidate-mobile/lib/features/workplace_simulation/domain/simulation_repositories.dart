@@ -16,12 +16,17 @@ abstract interface class SimulationContentRepository {
 }
 
 abstract interface class SimulationAttemptRepository {
+  /// [generatedScenario] is the attempt's deterministic scenario snapshot
+  /// (from `mission` + [scenarioSeed] + [scenarioId]), optional because only
+  /// a remote-syncing implementation needs the raw generated JSON -- local
+  /// storage can always regenerate it deterministically from the seed.
   Future<SimulationAttempt> createAttempt({
     required String candidateId,
     required String missionId,
     required String missionVersion,
     required int scenarioSeed,
     String? scenarioId,
+    GeneratedScenario? generatedScenario,
   });
 
   Future<SimulationAttempt?> getActiveAttempt(
@@ -50,4 +55,13 @@ abstract interface class SimulationAttemptRepository {
   Future<SimulationResult?> getResult(String candidateId, String attemptId);
 
   Future<void> clearActiveAttempt(String candidateId, String missionId);
+
+  /// Number of writes for this candidate still queued for remote sync.
+  /// Always 0 for a local-only implementation -- there is no remote to be
+  /// behind.
+  Future<int> pendingSyncCount(String candidateId);
+
+  /// Retries every queued write for this candidate. A no-op for a
+  /// local-only implementation.
+  Future<void> flushPendingSyncs(String candidateId);
 }

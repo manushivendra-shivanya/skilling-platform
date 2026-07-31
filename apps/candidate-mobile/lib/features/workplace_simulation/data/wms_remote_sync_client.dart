@@ -20,6 +20,7 @@ class WmsRemoteSyncClient {
   Future<void> sync({
     required SimulationAttempt attempt,
     SimulationResult? result,
+    GeneratedScenario? generatedScenario,
   }) async {
     final accessToken = _supabaseClient.auth.currentSession?.accessToken;
     if (accessToken == null) {
@@ -31,7 +32,11 @@ class WmsRemoteSyncClient {
     try {
       await _dio.post<Object?>(
         '$_apiBaseUrl/workplace-simulation/attempts/${attempt.id}/sync',
-        data: {'attempt': attempt.toJson(), 'result': result?.toJson()},
+        data: {
+          'attempt': attempt.toJson(),
+          'result': result?.toJson(),
+          'generatedScenario': generatedScenario?.toJson(),
+        },
         options: Options(
           headers: {
             'Authorization': 'Bearer $accessToken',

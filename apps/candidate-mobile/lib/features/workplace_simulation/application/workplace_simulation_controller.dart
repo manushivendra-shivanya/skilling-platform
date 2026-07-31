@@ -100,6 +100,9 @@ class WorkplaceSimulationController
               .read(simulationAttemptRepositoryProvider)
               .getResult(session.candidateId, attempt!.id)
         : null;
+    final pendingSyncCount = await ref
+        .read(simulationAttemptRepositoryProvider)
+        .pendingSyncCount(session.candidateId);
     return WorkplaceSimulationState(
       pack: pack,
       workplace: workplace,
@@ -110,7 +113,35 @@ class WorkplaceSimulationController
       scenario: scenario,
       outcomes: outcomes,
       result: result,
+      pendingSyncCount: pendingSyncCount,
     );
+  }
+
+  /// Re-reads how many of this candidate's WMS writes are still queued for
+  /// remote sync. Cheap and safe to call opportunistically -- e.g. when a
+  /// screen that shows sync status becomes visible.
+  Future<void> refreshPendingSyncStatus() async {
+    final current = state.valueOrNull;
+    if (current == null) return;
+    final candidateId = _candidateId;
+    if (candidateId == null) return;
+    final count = await ref
+        .read(simulationAttemptRepositoryProvider)
+        .pendingSyncCount(candidateId);
+    final latest = state.valueOrNull;
+    if (latest == null) return;
+    state = AsyncData(latest.copyWith(pendingSyncCount: count));
+  }
+
+  /// Retries every queued write for this candidate, then refreshes the
+  /// pending count. A no-op when the app isn't configured for remote sync.
+  Future<void> retryPendingSyncs() async {
+    final candidateId = _candidateId;
+    if (candidateId == null) return;
+    await ref
+        .read(simulationAttemptRepositoryProvider)
+        .flushPendingSyncs(candidateId);
+    await refreshPendingSyncStatus();
   }
 
   Future<AppFailure?> startMission({int? scenarioSeed, String? scenarioId}) {
@@ -128,16 +159,23 @@ class WorkplaceSimulationController
         // creating an attempt against an unknown scenario.
         current.mission.scenarioFor(scenarioId);
       }
+      final resolvedSeed =
+          scenarioSeed ??
+          DateTime.now().microsecondsSinceEpoch.remainder(0x7fffffff);
+      final generatedScenario = _scenarioGenerator.generate(
+        current.mission,
+        resolvedSeed,
+        scenarioId: scenarioId,
+      );
       final attempt = await ref
           .read(simulationAttemptRepositoryProvider)
           .createAttempt(
             candidateId: candidateId,
             missionId: current.mission.id,
             missionVersion: current.mission.version,
-            scenarioSeed:
-                scenarioSeed ??
-                DateTime.now().microsecondsSinceEpoch.remainder(0x7fffffff),
+            scenarioSeed: resolvedSeed,
             scenarioId: scenarioId,
+            generatedScenario: generatedScenario,
           );
       var briefing = _stateService.transition(attempt, MissionState.briefing);
       await ref.read(simulationAttemptRepositoryProvider).saveAttempt(briefing);
@@ -163,11 +201,7 @@ class WorkplaceSimulationController
       state = AsyncData(
         current.copyWith(
           attempt: briefing,
-          scenario: _scenarioGenerator.generate(
-            current.mission,
-            briefing.scenarioSeed,
-            scenarioId: briefing.scenarioId,
-          ),
+          scenario: generatedScenario,
           outcomes: const [],
           clearResult: true,
         ),

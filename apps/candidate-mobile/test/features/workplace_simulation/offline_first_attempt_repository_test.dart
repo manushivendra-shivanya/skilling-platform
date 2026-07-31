@@ -100,7 +100,36 @@ void main() {
       expect(remote.lastResult?.attemptId, attempt.id);
     },
   );
+
+  test('queues and later flushes the generated scenario snapshot, retaining it '
+      'across a later attempt-only write', () async {
+    final remote = _FakeWmsRemoteSyncClient(fail: true);
+    final repository = _repository(remote, fixedTime);
+    final attempt = await repository.createAttempt(
+      candidateId: 'candidate-1',
+      missionId: 'mission-1',
+      missionVersion: '1.0.0',
+      scenarioSeed: 42,
+      generatedScenario: _scenario(attemptScenarioSeed: 42),
+    );
+    final touched = attempt.copyWith(currentStageId: 'document-verification');
+    await repository.saveAttempt(touched);
+    remote.fail = false;
+
+    await repository.flushPendingSyncs('candidate-1');
+
+    expect(remote.lastGeneratedScenario?.seed, 42);
+    expect(remote.lastAttempt?.currentStageId, 'document-verification');
+  });
 }
+
+GeneratedScenario _scenario({required int attemptScenarioSeed}) =>
+    GeneratedScenario(
+      missionId: 'mission-1',
+      missionVersion: '1.0.0',
+      seed: attemptScenarioSeed,
+      resources: const [],
+    );
 
 OfflineFirstSimulationAttemptRepository _repository(
   _FakeWmsRemoteSyncClient remote,
@@ -157,11 +186,13 @@ class _FakeWmsRemoteSyncClient implements WmsRemoteSyncClient {
   int calls = 0;
   SimulationAttempt? lastAttempt;
   SimulationResult? lastResult;
+  GeneratedScenario? lastGeneratedScenario;
 
   @override
   Future<void> sync({
     required SimulationAttempt attempt,
     SimulationResult? result,
+    GeneratedScenario? generatedScenario,
   }) async {
     calls += 1;
     if (fail) {
@@ -169,5 +200,6 @@ class _FakeWmsRemoteSyncClient implements WmsRemoteSyncClient {
     }
     lastAttempt = attempt;
     lastResult = result;
+    lastGeneratedScenario = generatedScenario;
   }
 }

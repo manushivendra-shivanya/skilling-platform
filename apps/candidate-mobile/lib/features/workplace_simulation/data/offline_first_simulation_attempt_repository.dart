@@ -30,6 +30,7 @@ class OfflineFirstSimulationAttemptRepository
     required String missionVersion,
     required int scenarioSeed,
     String? scenarioId,
+    GeneratedScenario? generatedScenario,
   }) async {
     final attempt = await _local.createAttempt(
       candidateId: candidateId,
@@ -37,8 +38,9 @@ class OfflineFirstSimulationAttemptRepository
       missionVersion: missionVersion,
       scenarioSeed: scenarioSeed,
       scenarioId: scenarioId,
+      generatedScenario: generatedScenario,
     );
-    await _queueAndTrySync(attempt);
+    await _queueAndTrySync(attempt, generatedScenario: generatedScenario);
     return attempt;
   }
 
@@ -106,18 +108,24 @@ class OfflineFirstSimulationAttemptRepository
   Future<void> clearActiveAttempt(String candidateId, String missionId) =>
       _local.clearActiveAttempt(candidateId, missionId);
 
+  @override
   Future<int> pendingSyncCount(String candidateId) async {
     final ids = await _pendingIds(candidateId);
     return ids.length;
   }
 
+  @override
   Future<void> flushPendingSyncs(String candidateId) async {
     final ids = await _pendingIds(candidateId);
     for (final attemptId in ids) {
       final snapshot = await _readSnapshot(candidateId, attemptId);
       if (snapshot == null) continue;
       try {
-        await _remote.sync(attempt: snapshot.attempt, result: snapshot.result);
+        await _remote.sync(
+          attempt: snapshot.attempt,
+          result: snapshot.result,
+          generatedScenario: snapshot.generatedScenario,
+        );
         await _removeSnapshot(candidateId, attemptId);
       } catch (_) {
         // Keep the snapshot queued. The controller can retry by calling this
@@ -129,10 +137,20 @@ class OfflineFirstSimulationAttemptRepository
   Future<void> _queueAndTrySync(
     SimulationAttempt attempt, {
     SimulationResult? result,
+    GeneratedScenario? generatedScenario,
   }) async {
-    await _writeSnapshot(attempt, result: result);
+    await _writeSnapshot(
+      attempt,
+      result: result,
+      generatedScenario: generatedScenario,
+    );
     try {
-      await _remote.sync(attempt: attempt, result: result);
+      final retained = await _readSnapshot(attempt.candidateId, attempt.id);
+      await _remote.sync(
+        attempt: attempt,
+        result: result,
+        generatedScenario: generatedScenario ?? retained?.generatedScenario,
+      );
       await _removeSnapshot(attempt.candidateId, attempt.id);
     } catch (_) {
       // Local-first guarantee: a remote outage must not make controller
@@ -143,14 +161,17 @@ class OfflineFirstSimulationAttemptRepository
   Future<void> _writeSnapshot(
     SimulationAttempt attempt, {
     SimulationResult? result,
+    GeneratedScenario? generatedScenario,
   }) async {
     final existing = await _readSnapshot(attempt.candidateId, attempt.id);
     final retainedResult = result ?? existing?.result;
+    final retainedScenario = generatedScenario ?? existing?.generatedScenario;
     await _store.write(
       _snapshotKey(attempt.candidateId, attempt.id),
       jsonEncode({
         'attempt': attempt.toJson(),
         'result': retainedResult?.toJson(),
+        'generatedScenario': retainedScenario?.toJson(),
       }),
     );
     final ids = await _pendingIds(attempt.candidateId);
@@ -173,10 +194,14 @@ class OfflineFirstSimulationAttemptRepository
     final attemptJson = decoded['attempt'];
     if (attemptJson is! Map<String, Object?>) return null;
     final resultJson = decoded['result'];
+    final generatedScenarioJson = decoded['generatedScenario'];
     return _PendingWmsSync(
       attempt: SimulationAttempt.fromJson(attemptJson),
       result: resultJson is Map<String, Object?>
           ? SimulationResult.fromJson(resultJson)
+          : null,
+      generatedScenario: generatedScenarioJson is Map<String, Object?>
+          ? GeneratedScenario.fromJson(generatedScenarioJson)
           : null,
     );
   }
@@ -211,8 +236,13 @@ class OfflineFirstSimulationAttemptRepository
 }
 
 class _PendingWmsSync {
-  const _PendingWmsSync({required this.attempt, this.result});
+  const _PendingWmsSync({
+    required this.attempt,
+    this.result,
+    this.generatedScenario,
+  });
 
   final SimulationAttempt attempt;
   final SimulationResult? result;
+  final GeneratedScenario? generatedScenario;
 }
