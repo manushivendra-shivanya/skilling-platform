@@ -67,7 +67,7 @@ flowchart TD
     WMSCTRL --> WMSSCORE[Scoring, Critical Errors and Remediation]
     WMSSCORE --> WMSEVIDENCE[Versioned Competency Evidence]
     WMSCTRL --> WMSLOCAL[Candidate-owned Encrypted Local Attempts]
-    WMSCTRL -. Future adapter .-> WMSREMOTE[WMS Remote Persistence Schema]
+    WMSCTRL -. Future Flutter adapter .-> WMSREMOTE[WMS Remote Persistence Schema]
 
     VOICE --> CONSENT[Purpose-separated Voice Consent]
     CONSENT --> MIC[Microphone Permission and Readiness]
@@ -106,16 +106,18 @@ flowchart TD
     ACTIONS --> APK[Signed Android Debug APK]
     APK --> DEVICE[Samsung S24 Ultra]
 
-    API[NestJS BFF - PLANNED]
+    API[NestJS BFF]
+    API --> JOBAPI[Jobs Apply API]
+    API --> WMSSYNC[WMS Attempt Sync API]
     REDIS[Redis - PLANNED]
     AI[Python AI Services - PLANNED]
     WEB[Next.js Web Apps - PLANNED]
 
     QUEUE -. Future signed resumable credentials .-> API
     HUMAN -. Future reviewer workflow .-> API
-    WMSREMOTE -. Transactional sync to be wired .-> API
+    WMSSYNC --> WMSREMOTE
     APP -. Consequential and privileged operations .-> API
-    API -. Future .-> JOBSKILLS
+    API --> JOBSKILLS
     API -. Future .-> REDIS
     API -. Future .-> AI
     WEB -. Future .-> API

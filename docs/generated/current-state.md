@@ -20,7 +20,11 @@ Last updated: 2026-07-31
 - Phase 3.1 recorded-turn voice foundation and JobSkills voice schema; GitHub
   build, ARM64 APK publication, clean installation and launch passed
 - WMS remote persistence foundation applied to the live JobSkills Supabase
-  project; Flutter/BFF synchronization remains the next implementation slice
+  project
+- WMS BFF sync boundary implemented for candidate-owned attempt lifecycle,
+  scoreable learner actions, unscored audit events, results and generated
+  evidence; Flutter still needs the client adapter before mobile remote sync
+  is active
 
 ### Current UI
 - Phase 1.1 application foundation replaces the default Flutter counter demo
@@ -83,8 +87,9 @@ main
 The Receiving and Put Away WMS missions are complete end to end locally, and
 the live JobSkills database now has candidate-owned WMS persistence tables for
 attempt lifecycle, scoreable learner actions, unscored audit events, results
-and generated evidence. The app still uses the local encrypted repository
-until a sync adapter is wired.
+and generated evidence. The NestJS BFF now exposes an idempotent WMS sync
+endpoint for those tables. The app still uses the local encrypted repository
+until the Flutter client adapter is wired.
 
 ### Phase 1.1 validation record
 - `flutter pub get` — passed
@@ -1389,9 +1394,40 @@ decision on whether the redesign is worth it, not silently dropped.
 - `flutter build apk --debug --no-pub --target-platform android-arm64` —
   succeeded locally
 
+### WMS BFF sync boundary
+- Added `POST /v1/workplace-simulation/attempts/:attemptId/sync` to
+  `apps/api`
+- The endpoint requires a verified candidate JWT and `Idempotency-Key`
+  header, derives `candidate_id` from the authenticated session and rejects
+  mismatched client-supplied candidate ids
+- The BFF persists the already-produced controller state to the new `wms_*`
+  tables: attempt lifecycle/timer/draft/scenario state, scoreable learner
+  actions, unscored audit events, optional deterministic result and optional
+  generated competency evidence
+- `LearnerAction` remains the only scoreable behavioural stream; the service
+  rejects `isTechnical: true` learner actions so technical/lifecycle events
+  stay in `AttemptAuditEvent`
+- Repeated sync requests are idempotent for existing action, audit and
+  evidence ids; attempt and result aggregates are upserted by their stable
+  keys
+- This is a backend persistence boundary only: no Flutter repository adapter,
+  no UI change, no scoring engine change, no DB schema change and no APK
+  change were introduced in this slice
+- Known temporary limitation: WMS sync is application-level ordered
+  persistence rather than a single Postgres transaction/RPC wrapper
+
+### WMS BFF sync validation
+- `npm install` in `apps/api` — passed using the existing lockfile
+- `npm test -- --runInBand workplace-simulation.service.spec.ts` — passed;
+  4 focused tests cover full aggregate sync, idempotent repeated sync,
+  technical-event rejection from learner actions and candidate-id mismatch
+  rejection
+- `npm run build` in `apps/api` — passed
+- `npm run lint` in `apps/api` — passed
+
 ### Next implementation
-Wire the WMS BFF/Supabase sync adapter against the newly applied `wms_*`
-tables.
+Wire the Flutter WMS client adapter to call the BFF sync endpoint while
+preserving local-first behaviour and pending-sync/offline states.
 
 Two of the three deferred scenario-catalog entries remain on hold until
 their required design work is closed — `wrong-supplier-delivery` (the
@@ -1457,18 +1493,20 @@ catalogue so the already-wired Apply action has real jobs to apply to.
 - The direct Supabase adapter is intentionally limited to candidate-owned
   Phase 2 records and narrowly scoped Phase 3 practice metadata; media
   authorisation, AI, employer and administrator operations remain behind the
-  BFF, which now exists (`apps/api`) but implements only one endpoint
-  (`POST /v1/jobs/{id}/applications`), now applied to the live
-  `qoairksjpwkhwqxeollj` database. The Flutter Jobs feature's Apply action
-  calls this endpoint when both Supabase and API configuration are present;
-  job listing itself still comes from `LocalMockJobsRepository`, whose mock
-  ids don't match the real seeded jobs yet
+  BFF, which now exists (`apps/api`) and implements candidate job application
+  submission plus the WMS attempt sync boundary. The Flutter Jobs feature's
+  Apply action calls the Jobs endpoint when both Supabase and API
+  configuration are present; job listing itself still comes from
+  `LocalMockJobsRepository`, whose mock ids don't match the real seeded jobs
+  yet. The Flutter WMS runtime still needs a client adapter before it calls
+  the WMS sync endpoint.
 - The Receiving mission is complete end to end (Document Desk through
   Performance Feedback) and the Put Away mission is complete end to end
   (Staging Area through Performance Feedback), both merged to `main`. WMS
-  now has a live Supabase persistence schema, but the Flutter runtime still
-  writes to the local encrypted repository until a BFF/Supabase sync adapter
-  is implemented. No WMS screen is withheld pending approval; the WebGL/3D
+  now has a live Supabase persistence schema and a BFF sync endpoint, but the
+  Flutter runtime still writes to the local encrypted repository until the
+  Flutter adapter is implemented. No WMS screen is withheld pending approval;
+  the WebGL/3D
   spatial interaction layer remains deliberately deferred per direct
   discussion with the product owner rather than a specific ADR (see the Put
   Away workstation screens entry above for the correction to a stale
