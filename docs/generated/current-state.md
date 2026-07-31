@@ -1,6 +1,6 @@
 # Current Repository State
 
-Last updated: 2026-07-31
+Last updated: 2026-08-01
 
 ## Status
 
@@ -1635,6 +1635,70 @@ one missing BFF endpoint.
 The still-unresolved "learning experience broken, not clear" report — the
 user's device has been offline every time this was raised this session, so
 it's never actually been seen.
+
+## Career Passport v0.1 — candidate evidence governance
+The first slice of ADR-0018 that actually surfaces evidence to a candidate,
+scoped deliberately narrow: a governed view of WMS evidence in Profile, not
+an employer-facing product.
+
+- New `lib/features/career_passport/` feature. `EvidenceVerificationStatus`
+  (in `workplace_simulation/domain/simulation_runtime.dart`, next to the WMS
+  `EvidenceRecord` it labels) carries ADR-0018's exact provenance vocabulary
+  -- `systemObserved`/`candidateReported`/`partnerAttested`/
+  `issuerVerified`/`unverified`. `EvidenceGenerationService` now assigns
+  `systemObserved` (WMS evidence is Flora's own deterministic simulation
+  output) instead of the placeholder literal `system_verified_local` it used
+  before this slice.
+- Freshness is derived, never stored: `deriveCareerPassportEntries` (pure,
+  unit-tested) groups evidence by competency, marks the newest record
+  `active` (or `stale` past a 180-day window), and marks every older record
+  for that competency `superseded` -- retakes accumulate and correct, they
+  never overwrite or delete.
+- Evidence source for v0.1: the candidate's current attempt result on each
+  of the two known WMS missions (`receive-incoming-shipment-01`,
+  `put-away-incoming-stock-01`), read through the existing
+  `SimulationAttemptRepository` (`getActiveAttempt` + `getResult`) -- the
+  same local-first/offline-synced path the missions themselves already use.
+  Deliberately not a new BFF read endpoint or a direct
+  `wms_competency_evidence` query: those become worth building once
+  cross-attempt history (not just "your latest result") is an actual
+  requirement.
+- Visibility is a new, purpose-bound consent grant --
+  `career_passport_sharing` -- distinct from the `employer_sharing` grant
+  Jobs uses per application, reusing `consent_grants` (no schema change) and
+  the Jobs feature's upsert pattern, plus a revoke path
+  (`update ... set revoked_at = now()`) that no existing feature needed
+  before this one. Private by default; local-only (unconfigured) builds
+  render the toggle disabled with an explanatory subtitle instead of a
+  broken one, since there is nowhere to record a grant.
+- Profile now shows a "Career Passport" section (between "Readiness
+  evidence" -- the unrelated legacy intelligence-quiz evidence stream, left
+  untouched -- and "Privacy and consent") with the required disclaimer
+  ("Flora provides simulation evidence, not certification."), a
+  view-details sheet listing every entry with provenance/freshness/score
+  chips, the shareable-with-employers toggle, and fixed "share with
+  employer" boundary copy explaining that turning sharing on does not push
+  anything anywhere -- there is no employer portal yet to receive it.
+- All decisions stay human-owned: nothing in this slice ranks, scores, or
+  certifies a candidate; freshness and provenance are informational labels,
+  not gates.
+- Explicitly out of scope, per direct instruction: employer portal,
+  government/NCVET integration, AI scoring, credential/certificate issuing.
+
+### Career Passport v0.1 — local validation
+- `dart format .` / `flutter analyze --no-pub` (Flutter) — passed (same
+  pre-existing info-level hints, unrelated)
+- New unit tests: `deriveCareerPassportEntries` (active/superseded/stale
+  across competencies, staleness window), `competencyDisplayName`, and
+  `WmsCareerPassportRepository.loadEvidence` (completed-vs-in-progress
+  attempts, both known missions) plus its local-only sharing branch
+  (`canManageSharing` false, `setShareable` fails clearly without a
+  Supabase client)
+- Full Flutter suite — same three pre-existing baseline flakes as every
+  prior milestone (confirmed by reproducing them against `main` before this
+  change), no new failures
+- `flutter build apk --debug --no-pub --target-platform android-arm64` —
+  succeeded locally; installed on the connected Samsung device
 
 ## Target product architecture proposal
 

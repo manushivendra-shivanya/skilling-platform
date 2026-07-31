@@ -583,6 +583,35 @@ class SimulationResult {
   );
 }
 
+/// Evidence provenance vocabulary from ADR-0018. Flora only ever assigns
+/// [systemObserved] today (WMS evidence generated from a candidate's own
+/// deterministic simulation run) -- the remaining values exist so the
+/// Career Passport layer has a stable vocabulary to render and reason about
+/// as partner- and issuer-sourced evidence are introduced later.
+abstract final class EvidenceVerificationStatus {
+  static const systemObserved = 'systemObserved';
+  static const candidateReported = 'candidateReported';
+  static const partnerAttested = 'partnerAttested';
+  static const issuerVerified = 'issuerVerified';
+  static const unverified = 'unverified';
+
+  static const values = [
+    systemObserved,
+    candidateReported,
+    partnerAttested,
+    issuerVerified,
+    unverified,
+  ];
+
+  static String displayLabel(String value) => switch (value) {
+    systemObserved => 'System observed',
+    candidateReported => 'Candidate reported',
+    partnerAttested => 'Partner attested',
+    issuerVerified => 'Issuer verified',
+    _ => 'Unverified',
+  };
+}
+
 class EvidenceRecord {
   const EvidenceRecord({
     required this.id,

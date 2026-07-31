@@ -12,6 +12,8 @@ import '../core/storage/secure_key_value_store.dart';
 import '../features/authentication/data/mock_development_auth_repository.dart';
 import '../features/authentication/data/supabase_phone_auth_repository.dart';
 import '../features/authentication/domain/development_auth_repository.dart';
+import '../features/career_passport/data/wms_career_passport_repository.dart';
+import '../features/career_passport/domain/career_passport_repository.dart';
 import '../features/home/data/mock_home_dashboard_repository.dart';
 import '../features/home/domain/home_dashboard_repository.dart';
 import '../features/intelligence/data/offline_first_candidate_intelligence_repository.dart';
@@ -171,3 +173,15 @@ final simulationAttemptRepositoryProvider =
       }
       return local;
     });
+
+final careerPassportRepositoryProvider = Provider<CareerPassportRepository>((
+  ref,
+) {
+  final config = ref.watch(appConfigProvider);
+  return WmsCareerPassportRepository(
+    attemptRepository: ref.watch(simulationAttemptRepositoryProvider),
+    supabaseClient: config.hasSupabaseConfiguration
+        ? Supabase.instance.client
+        : null,
+  );
+});
