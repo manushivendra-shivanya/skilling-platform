@@ -1700,6 +1700,83 @@ an employer-facing product.
 - `flutter build apk --debug --no-pub --target-platform android-arm64` —
   succeeded locally; installed on the connected Samsung device
 
+## Employer Evidence Review MVP
+The first employer-facing surface of any kind in this codebase, built
+deliberately narrow: a read-only API, not an employer portal (no employer
+login, no UI). No Flutter change was needed or made -- this is entirely
+`apps/api`.
+
+- **No employer identity existed anywhere** before this slice (`jobs.
+  employer_name` was always a plain text label, nothing else). Resolved by
+  asking the product owner rather than guessing: a new `public.employers`
+  table (id, name, hashed API key, seeded out-of-band -- no signup/login
+  flow) is the entire employer identity model for this MVP, enforced by a
+  new `EmployerAuthGuard` mirroring `CandidateAuthGuard`'s shape (`Authorization:
+  Bearer <key>`, hash-compared server-side, never trusts a client-supplied
+  employer id).
+- **Access rule**, per explicit product direction (application/employer-scoped,
+  not a blanket global toggle): an employer may view a candidate's evidence
+  only if that candidate has a non-`withdrawn` application to one of *this*
+  employer's jobs (`jobs.employer_id`, new nullable FK, backfilled for the
+  three existing seeded jobs) **and** both `employer_sharing` and
+  `career_passport_sharing` consent are currently active. There is no
+  browsing, no query across all "shareable" candidates, and no path from
+  the API back to a candidate an employer hasn't been applied to by.
+- **Audit**: every evidence read -- allowed or denied, and why -- is written
+  to a new append-only `public.employer_evidence_access_log` before the
+  response is returned; a failed audit write fails the request rather than
+  silently disclosing evidence unaudited.
+- **Governance parity, not duplication**: `deriveEvidenceFreshness` in
+  `apps/api/src/employer/employer-evidence.ts` is a direct TypeScript port
+  of the Flutter `deriveCareerPassportEntries` logic (same grouping/ranking
+  rule, same 180-day staleness window) -- an employer and a candidate can
+  never see a different freshness verdict on the same evidence. Every
+  response carries the required disclaimer ("Flora provides simulation
+  evidence, not certification.") and decision-boundary copy ("Employer
+  reviews evidence and decides.") as data, not just UI copy, since there is
+  no UI. Evidence is always returned newest-first -- no score-based
+  ranking, no shortlist field, no "certified" language anywhere in the
+  response shape.
+- Two new routes, both behind `EmployerAuthGuard`: `GET /employer/applicants`
+  (roster of this employer's own non-withdrawn applicants, no evidence, not
+  audited) and `GET /employer/applicants/{candidateId}/evidence` (the gated,
+  audited evidence read). See `docs/03-api-specifications.md`.
+- Explicitly out of scope, per direct instruction: employer portal UI,
+  automated rejection, any scoring change, government/NCVET integration.
+
+### Employer Evidence Review MVP — local validation
+- `npm test -- --runInBand`, `npm run build`, `npm run lint` in `apps/api`
+  — all passed (22/22 tests, including 10 new: 4 `deriveEvidenceFreshness`
+  parity tests and 6 `EmployerService` access-rule/audit tests)
+- No Flutter changes in this slice, so no APK build/install was needed or
+  performed
+
+### Outstanding: migration not yet applied anywhere
+`supabase/migrations/20260801100000_employer_evidence_review_mvp.sql` is
+written, reviewed and included in this slice's PR, but **has not been
+applied to any database**. The Supabase MCP connector available in this
+session only has access to a project called `nutridiet`
+(`rspyrkcdzariizvqookp`) -- not the `JobSkills` project
+(`qoairksjpwkhwqxeollj`) that WMS, Jobs and Career Passport actually run
+on, so applying it here would have hit the wrong project entirely. Per
+direct instruction, this is deferred as a follow-up task rather than
+guessed at:
+
+- **Apply** `supabase/migrations/20260801100000_employer_evidence_review_mvp.sql`
+  to the `JobSkills` project (`qoairksjpwkhwqxeollj`), via the Supabase CLI,
+  dashboard SQL editor, or an MCP connector actually scoped to that
+  project.
+- The migration is additive-only: creates `public.employers` and
+  `public.employer_evidence_access_log`, adds a nullable
+  `jobs.employer_id` column, and seeds/backfills the three existing seeded
+  employers with development-only API keys (hashes only -- raw keys are
+  in the migration's own comments, clearly marked as dev/seed credentials,
+  not production secrets).
+- Until this runs, `EmployerAuthGuard` will reject every request (no
+  `employers` rows to match against) and the two new routes are dead code
+  in production, even though `apps/api` builds and its own test suite
+  passes without a live database.
+
 ## Target product architecture proposal
 
 - Added the proposed Flora AI Employability Infrastructure architecture in

@@ -112,6 +112,32 @@ human-review status; they cannot perform autonomous rejection or shortlisting.
 - `POST /interviews/{id}/response`
 
 ## Employer APIs
+The list below is the aspirational full employer-portal surface from the
+target architecture proposal -- none of it is implemented yet. Two narrower,
+already-implemented routes exist ahead of it as part of the Employer
+Evidence Review MVP (see `docs/generated/current-state.md`):
+
+- `GET /employer/applicants` -- the requesting employer's own job
+  applicants (candidate id, job id/title, application status), excluding
+  withdrawn applications. No evidence, not audited.
+- `GET /employer/applicants/{candidateId}/evidence` -- read-only Career
+  Passport evidence for one candidate, gated on candidateId having an
+  active (non-withdrawn) application to one of the requesting employer's
+  jobs, plus active `employer_sharing` and `career_passport_sharing`
+  consent. Every call is recorded in `employer_evidence_access_log`,
+  allowed or denied. The response always carries the disclaimer
+  ("Flora provides simulation evidence, not certification.") and the
+  decision-boundary copy ("Employer reviews evidence and decides.")
+  alongside the evidence, each item labelled with its provenance
+  (`verificationStatus`) and freshness (`active`/`superseded`/`stale`).
+  Evidence is returned newest-first; nothing is ranked, scored, or
+  auto-shortlisted.
+
+Both routes are guarded by `EmployerAuthGuard`: a per-employer API key
+(hashed, seeded directly into `public.employers` -- no employer login flow,
+no employer portal UI) sent as `Authorization: Bearer <key>`.
+
+The full future surface:
 - `POST /employer/requisitions`
 - `GET /employer/requisitions`
 - `GET /employer/requisitions/{id}/matches`
