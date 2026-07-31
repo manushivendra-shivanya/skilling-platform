@@ -1,4 +1,4 @@
-# Supabase Phase 2 foundation
+# JobSkills Supabase foundation
 
 This directory contains the reviewed database migration for the separate
 `JobSkills` Supabase project.
@@ -13,5 +13,13 @@ Pass them with `--dart-define` per environment. Never place secret or
 
 All exposed tables enable row-level security. Candidate-owned policies bind
 rows to `auth.uid()`; reference taxonomies expose published versions only.
+
+Workplace Management Simulation persistence is represented by the `wms_*`
+tables. The schema preserves the approved WMS boundaries: attempt timing is
+operational lifecycle state, `wms_learner_actions` is the only scoreable
+behaviour stream, and `wms_attempt_audit_events` is unscored and append-only.
+The Flutter runtime remains local-first until a future BFF/Supabase adapter is
+wired to these tables.
+
 Production promotion requires security/performance advisor review and a
 staging smoke test.

@@ -67,6 +67,7 @@ flowchart TD
     WMSCTRL --> WMSSCORE[Scoring, Critical Errors and Remediation]
     WMSSCORE --> WMSEVIDENCE[Versioned Competency Evidence]
     WMSCTRL --> WMSLOCAL[Candidate-owned Encrypted Local Attempts]
+    WMSCTRL -. Future adapter .-> WMSREMOTE[WMS Remote Persistence Schema]
 
     VOICE --> CONSENT[Purpose-separated Voice Consent]
     CONSENT --> MIC[Microphone Permission and Readiness]
@@ -84,6 +85,7 @@ flowchart TD
     JOBSKILLS --> CATALOG[Read-only Published Taxonomy and Content]
     JOBSKILLS --> VOICEDATA[Voice Schema, Prompt and Rubric Registry]
     JOBSKILLS --> PRIVMEDIA[Private Voice Media Bucket]
+    JOBSKILLS --> WMSDATA[WMS Attempts, Actions, Audit, Results and Evidence]
 
     APP --> THEME[Material 3 Design System]
     THEME --> ACCESS[Accessible Shared Components]
@@ -111,6 +113,7 @@ flowchart TD
 
     QUEUE -. Future signed resumable credentials .-> API
     HUMAN -. Future reviewer workflow .-> API
+    WMSREMOTE -. Transactional sync to be wired .-> API
     APP -. Consequential and privileged operations .-> API
     API -. Future .-> JOBSKILLS
     API -. Future .-> REDIS
