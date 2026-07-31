@@ -13,6 +13,7 @@ class WorkplaceSimulationState {
     this.scenario,
     this.outcomes = const [],
     this.result,
+    this.pendingSyncCount = 0,
   });
 
   final SimulationPack pack;
@@ -24,6 +25,11 @@ class WorkplaceSimulationState {
   final GeneratedScenario? scenario;
   final List<ActionOutcome> outcomes;
   final SimulationResult? result;
+
+  /// Number of this candidate's WMS writes still queued for remote sync.
+  /// Always 0 when the app isn't configured for remote sync, or once every
+  /// queued write has been flushed.
+  final int pendingSyncCount;
 
   bool get canContinue =>
       attempt != null &&
@@ -37,6 +43,7 @@ class WorkplaceSimulationState {
     List<ActionOutcome>? outcomes,
     SimulationResult? result,
     bool clearResult = false,
+    int? pendingSyncCount,
   }) => WorkplaceSimulationState(
     pack: pack,
     workplace: workplace,
@@ -47,5 +54,6 @@ class WorkplaceSimulationState {
     scenario: scenario ?? this.scenario,
     outcomes: outcomes ?? this.outcomes,
     result: clearResult ? null : result ?? this.result,
+    pendingSyncCount: pendingSyncCount ?? this.pendingSyncCount,
   );
 }

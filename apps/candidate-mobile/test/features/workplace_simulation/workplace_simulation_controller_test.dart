@@ -1,10 +1,15 @@
 import 'package:candidate_mobile/app/dependencies.dart';
+import 'package:candidate_mobile/core/errors/app_failure.dart';
 import 'package:candidate_mobile/core/repositories/candidate_session_repository.dart';
+import 'package:candidate_mobile/core/storage/secure_key_value_store.dart';
 import 'package:candidate_mobile/features/workplace_simulation/application/workplace_interaction_contracts.dart';
 import 'package:candidate_mobile/features/workplace_simulation/application/workplace_simulation_controller.dart';
 import 'package:candidate_mobile/features/workplace_simulation/data/asset_simulation_content_repository.dart';
 import 'package:candidate_mobile/features/workplace_simulation/data/local_simulation_attempt_repository.dart';
+import 'package:candidate_mobile/features/workplace_simulation/data/offline_first_simulation_attempt_repository.dart';
+import 'package:candidate_mobile/features/workplace_simulation/data/wms_remote_sync_client.dart';
 import 'package:candidate_mobile/features/workplace_simulation/domain/simulation_enums.dart';
+import 'package:candidate_mobile/features/workplace_simulation/domain/simulation_runtime.dart';
 import 'package:candidate_mobile/features/workplace_simulation/domain/workplace_task_drafts.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -1053,6 +1058,83 @@ void main() {
       RecordCartonInspectionResult.invalidFindings,
     );
   });
+
+  test('exposes pending WMS sync count and retries queued syncs through the '
+      'controller', () async {
+    final store = InMemorySecureKeyValueStore();
+    final remote = _FailingThenSucceedingSyncClient();
+    final container = ProviderContainer(
+      overrides: [
+        candidateSessionRepositoryProvider.overrideWithValue(
+          InMemoryCandidateSessionRepository(
+            session: const CandidateSession(
+              candidateId: 'pending-sync-candidate',
+              isAuthenticated: true,
+            ),
+          ),
+        ),
+        simulationContentRepositoryProvider.overrideWithValue(
+          AssetSimulationContentRepository(),
+        ),
+        simulationAttemptRepositoryProvider.overrideWithValue(
+          OfflineFirstSimulationAttemptRepository(
+            local: LocalSimulationAttemptRepository(store),
+            store: store,
+            remote: remote,
+          ),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+    await container.read(
+      workplaceSimulationControllerProvider(
+        WorkplaceSimulationController.missionId,
+      ).future,
+    );
+    final controller = container.read(
+      workplaceSimulationControllerProvider(
+        WorkplaceSimulationController.missionId,
+      ).notifier,
+    );
+
+    expect(await controller.startMission(scenarioSeed: 48127), isNull);
+    await controller.refreshPendingSyncStatus();
+    var state = container
+        .read(
+          workplaceSimulationControllerProvider(
+            WorkplaceSimulationController.missionId,
+          ),
+        )
+        .requireValue;
+    expect(state.pendingSyncCount, 1);
+
+    remote.fail = false;
+    await controller.retryPendingSyncs();
+    state = container
+        .read(
+          workplaceSimulationControllerProvider(
+            WorkplaceSimulationController.missionId,
+          ),
+        )
+        .requireValue;
+    expect(state.pendingSyncCount, 0);
+    expect(remote.lastGeneratedScenario, isNotNull);
+  });
+}
+
+class _FailingThenSucceedingSyncClient implements WmsRemoteSyncClient {
+  bool fail = true;
+  GeneratedScenario? lastGeneratedScenario;
+
+  @override
+  Future<void> sync({
+    required SimulationAttempt attempt,
+    SimulationResult? result,
+    GeneratedScenario? generatedScenario,
+  }) async {
+    if (fail) throw const NetworkFailure('offline');
+    lastGeneratedScenario = generatedScenario;
+  }
 }
 
 Future<ProviderContainer> _wrongSupplierContainer() async {

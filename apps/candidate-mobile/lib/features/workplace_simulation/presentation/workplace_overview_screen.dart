@@ -3,7 +3,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_spacing.dart';
+import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_state_view.dart';
 import '../application/workplace_interaction_contracts.dart';
@@ -31,6 +33,8 @@ class _WorkplaceOverviewScreenState
     extends ConsumerState<WorkplaceOverviewScreen> {
   Timer? _timer;
   bool _tracked = false;
+  bool _syncStatusChecked = false;
+  bool _retryingSync = false;
 
   @override
   void initState() {
@@ -103,6 +107,18 @@ class _WorkplaceOverviewScreenState
                     ),
               );
             }
+            if (!_syncStatusChecked) {
+              _syncStatusChecked = true;
+              unawaited(
+                ref
+                    .read(
+                      workplaceSimulationControllerProvider(
+                        widget.missionId,
+                      ).notifier,
+                    )
+                    .refreshPendingSyncStatus(),
+              );
+            }
             final overview = ref
                 .read(
                   workplaceSimulationControllerProvider(
@@ -140,6 +156,14 @@ class _WorkplaceOverviewScreenState
                             '${overview.completedStageCount} of '
                             '${overview.totalStageCount} stages',
                           ),
+                          if (value.pendingSyncCount > 0) ...[
+                            const SizedBox(height: AppSpacing.md),
+                            _PendingSyncBanner(
+                              count: value.pendingSyncCount,
+                              retrying: _retryingSync,
+                              onRetry: _retrySync,
+                            ),
+                          ],
                           const SizedBox(height: AppSpacing.lg),
                           if (columns == 1)
                             Column(
@@ -263,6 +287,15 @@ class _WorkplaceOverviewScreenState
     _showMessage('Your shift could not be saved. Please try again.');
   }
 
+  Future<void> _retrySync() async {
+    setState(() => _retryingSync = true);
+    await ref
+        .read(workplaceSimulationControllerProvider(widget.missionId).notifier)
+        .retryPendingSyncs();
+    if (!mounted) return;
+    setState(() => _retryingSync = false);
+  }
+
   String _duration(Duration duration) {
     final minutes = duration.inMinutes;
     final seconds = duration.inSeconds % 60;
@@ -320,6 +353,56 @@ class _StationCard extends StatelessWidget {
           '${station.progressLabel}'
           '${station.isRecommended ? ' · Recommended' : ''}',
           style: Theme.of(context).textTheme.labelLarge,
+        ),
+      ],
+    ),
+  );
+}
+
+class _PendingSyncBanner extends StatelessWidget {
+  const _PendingSyncBanner({
+    required this.count,
+    required this.retrying,
+    required this.onRetry,
+  });
+
+  final int count;
+  final bool retrying;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) => AppCard(
+    backgroundColor: AppColors.warningSoft,
+    semanticLabel:
+        '$count ${count == 1 ? 'update' : 'updates'} waiting to sync',
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Icon(Icons.cloud_off_outlined),
+        const SizedBox(width: AppSpacing.sm),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '$count ${count == 1 ? 'update' : 'updates'} waiting to sync',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const SizedBox(height: AppSpacing.xs),
+              const Text(
+                'Your progress is saved on this device. It will sync '
+                'automatically once you have a connection.',
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(width: AppSpacing.sm),
+        AppButton(
+          label: 'Retry',
+          variant: AppButtonVariant.secondary,
+          expand: false,
+          isLoading: retrying,
+          onPressed: retrying ? null : onRetry,
         ),
       ],
     ),

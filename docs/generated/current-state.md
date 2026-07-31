@@ -1524,15 +1524,62 @@ under this framing. Documented as a deliberate tradeoff, not an oversight.
 - `flutter build apk --debug --no-pub --target-platform android-arm64` —
   succeeded locally
 
-### Next implementation
-Add controller/UI exposure for WMS pending-sync state and decide whether to
-widen the repository contract so Flutter can send the optional generated
-scenario snapshot to the BFF. The full scenario-catalog set proposed in
-doc 24 is now shipped.
+### WMS pending-sync UI and generated-scenario snapshot sync
+Closed both remaining items from the offline-sync slice.
 
-Also still open: deciding how the Flutter Jobs feature gets a real job
-catalogue so the already-wired Apply action has real jobs to apply to; and
-the still-unresolved "learning experience broken, not clear" report — the
+**Pending-sync UI exposure.** `pendingSyncCount`/`flushPendingSyncs` existed
+only on the concrete `OfflineFirstSimulationAttemptRepository`, unreachable
+through the interface-typed provider without an unsafe cast. Added both to
+the `SimulationAttemptRepository` interface itself — trivial for
+`LocalSimulationAttemptRepository`/`InMemorySimulationAttemptRepository`
+(`pendingSyncCount` always 0, `flushPendingSyncs` a no-op; there's no
+remote to be behind), real logic unchanged in the offline-first
+implementation. `WorkplaceSimulationState.pendingSyncCount` is refreshed on
+controller `build()` and via a new `refreshPendingSyncStatus()` method; a
+new `retryPendingSyncs()` flushes the queue then refreshes the count.
+Workplace Overview shows a banner ("N updates waiting to sync" + Retry)
+whenever the count is above zero, hidden entirely otherwise — invisible
+when the app isn't built with Supabase/API dart-defines, since the count
+is always 0 in that configuration.
+
+**Generated-scenario snapshot sync.** The BFF's `WmsSyncRequest` already
+had an unused `generatedScenario?` field wired straight to the
+`wms_attempts.generated_scenario` column — nothing to change on the BFF.
+The gap was entirely on the Flutter side: `_scenarioGenerator.generate()`
+only ever landed in transient Riverpod state, never reached any repository
+method. `SimulationAttemptRepository.createAttempt` gained an optional
+`GeneratedScenario? generatedScenario` parameter (local repositories
+accept and ignore it — they already regenerate deterministically from
+`scenarioSeed`/`scenarioId`); `startMission()` now generates the scenario
+*before* calling `createAttempt` and passes it through once, instead of
+generating a second, redundant copy afterward purely for in-memory state.
+`OfflineFirstSimulationAttemptRepository`'s snapshot model retains the
+generated scenario across subsequent writes exactly like it already
+retained `result` — captured once at creation, resent on every later sync
+without the controller needing to pass it again.
+
+### Pending-sync and scenario-snapshot — local validation
+- `dart format .` — passed
+- `flutter analyze --no-pub` — passed (same 7 pre-existing info-level
+  hints, unrelated)
+- New repository-level test: the generated-scenario snapshot queues while
+  offline, retains across a later attempt-only write, and flushes to the
+  remote client once connectivity recovers
+- New controller-level test: `pendingSyncCount` reaches 1 after
+  `startMission()` against a failing remote, `retryPendingSyncs()` drains
+  it to 0 once the remote recovers, and the flushed sync call actually
+  carried a `GeneratedScenario`
+- Focused WMS suite — 50/50 passed (48 previous + 2 new)
+- Full suite — 107 of 110 passed; the three failures are the same
+  pre-existing baseline flakes as every prior milestone, confirmed
+  unrelated
+- `flutter build apk --debug --no-pub --target-platform android-arm64` —
+  succeeded locally
+
+### Next implementation
+Deciding how the Flutter Jobs feature gets a real job catalogue so the
+already-wired Apply action has real jobs to apply to. Also still open: the
+still-unresolved "learning experience broken, not clear" report — the
 user's device has been offline every time this was raised this session, so
 it's never actually been seen.
 
