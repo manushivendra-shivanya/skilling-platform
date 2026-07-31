@@ -12,6 +12,7 @@ import '../../../core/widgets/app_state_view.dart';
 import '../../../core/widgets/app_status_banner.dart';
 import '../../authentication/presentation/candidate_session_controller.dart';
 import '../../authentication/presentation/development_auth_controller.dart';
+import '../../career_passport/presentation/career_passport_section.dart';
 import '../../intelligence/domain/candidate_intelligence.dart';
 import '../../intelligence/presentation/candidate_intelligence_controller.dart';
 import '../../onboarding/domain/candidate_onboarding_draft.dart';
@@ -111,6 +112,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             ],
           ),
         ],
+        const SizedBox(height: AppSpacing.md),
+        const CareerPassportSection(),
         const SizedBox(height: AppSpacing.md),
         _Section(
           title: 'Privacy and consent',

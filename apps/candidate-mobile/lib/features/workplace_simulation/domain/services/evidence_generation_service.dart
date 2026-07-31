@@ -58,7 +58,7 @@ class EvidenceGenerationService {
             'Generated from the append-only action trail for '
             '${mission.title}.',
         issuedAt: issuedAt,
-        verificationStatus: 'system_verified_local',
+        verificationStatus: EvidenceVerificationStatus.systemObserved,
       ),
   ];
 
