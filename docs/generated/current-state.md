@@ -1,6 +1,6 @@
 # Current Repository State
 
-Last updated: 2026-07-28
+Last updated: 2026-07-31
 
 ## Status
 
@@ -19,6 +19,8 @@ Last updated: 2026-07-28
   migrations; GitHub build and ARM64 APK distribution passed
 - Phase 3.1 recorded-turn voice foundation and JobSkills voice schema; GitHub
   build, ARM64 APK publication, clean installation and launch passed
+- WMS remote persistence foundation applied to the live JobSkills Supabase
+  project; Flutter/BFF synchronization remains the next implementation slice
 
 ### Current UI
 - Phase 1.1 application foundation replaces the default Flutter counter demo
@@ -75,12 +77,14 @@ Last updated: 2026-07-28
 - Unused jni dependency removed
 
 ### Active branch
-feature/flutter-foundation
+main
 
 ### Latest verified milestone
-The additive Workplace Management Simulation backbone and approved Screens
-01–05 are connected. Screen 06 proves the Inspection Zone unlock and route
-boundary without implementing inspection behaviour.
+The Receiving and Put Away WMS missions are complete end to end locally, and
+the live JobSkills database now has candidate-owned WMS persistence tables for
+attempt lifecycle, scoreable learner actions, unscored audit events, results
+and generated evidence. The app still uses the local encrypted repository
+until a sync adapter is wired.
 
 ### Phase 1.1 validation record
 - `flutter pub get` — passed
@@ -1249,25 +1253,67 @@ them:
   `docs/adr/0018-flora-evidence-and-employability-governance.md`.** Headline
   decisions: Flora is an evidence/decision-support provider, never a
   certification authority (every evidence surface must carry a disclaimer
-  string); Flora owns a canonical internal taxonomy with external
-  standards as versioned mappings, not primary identifiers; evidence is
-  append-only, provenance-labelled (`systemObserved` /`issuerVerified`/
-  `partnerAttested`/`candidateReported`/`unverified`) and freshness-aware —
-  retakes accumulate, corrections supersede, nothing is deleted; readiness
-  is a 4-outcome, time-bound projection (`demonstrated`/`developing`/
-  `insufficientEvidence`/`staleEvidence`) that must never silently read as
-  "not ready," and the WMS pilot's safest label is "Simulation benchmark
-  demonstrated," never "job ready"; sharing is candidate-controlled,
-  purpose-bound, time-limited, revocable and audited (DPDP-aligned);
-  automated candidate ranking is prohibited in the employer-portal MVP —
-  Flora presents evidence, the employer decides; and cross-partner fact
-  conflicts trigger a reconciliation case rather than last-write-wins, per
-  a per-fact authority matrix.
+  string); Flora owns a canonical internal taxonomy with external standards
+  as versioned mappings, not primary identifiers; evidence is append-only,
+  provenance-labelled (`systemObserved`/`issuerVerified`/`partnerAttested`/
+  `candidateReported`/`unverified`) and freshness-aware — retakes accumulate,
+  corrections supersede, nothing is deleted; readiness is a 4-outcome,
+  time-bound projection (`demonstrated`/`developing`/`insufficientEvidence`/
+  `staleEvidence`) that must never silently read as "not ready," and the WMS
+  pilot's safest label is "Simulation benchmark demonstrated," never
+  "job ready"; sharing is candidate-controlled, purpose-bound, time-limited,
+  revocable and audited (DPDP-aligned); automated candidate ranking is
+  prohibited in the employer-portal MVP — Flora presents evidence, the
+  employer decides; and cross-partner fact conflicts trigger a reconciliation
+  case rather than last-write-wins, per a per-fact authority matrix.
 - This ADR governs layers that don't exist yet (Competency Passport,
-  Employer Portal, partner integrations) — it doesn't authorise building
-  them, and WMS's existing controller/action/audit/timing/scoring
-  boundaries are unaffected. It's the constraint those future features must
-  be built against, recorded now so it isn't decided ad hoc later.
+  Employer Portal, partner integrations) — it doesn't authorise building them,
+  and WMS's existing controller/action/audit/timing/scoring boundaries are
+  unaffected. It's the constraint those future features must be built against,
+  recorded now so it isn't decided ad hoc later.
+
+### WMS remote persistence foundation
+- Applied two additive migrations to the live JobSkills Supabase project
+  (`qoairksjpwkhwqxeollj`):
+  `20260731042608_wms_remote_persistence_foundation` and
+  `20260731155145_wms_remote_persistence_grant_remediation`
+- Added five `public.wms_*` tables:
+  `wms_attempts`, `wms_learner_actions`,
+  `wms_attempt_audit_events`, `wms_attempt_results` and
+  `wms_competency_evidence`
+- `wms_attempts` stores the WMS aggregate and operational timer lifecycle:
+  `timer_status`, `created_at`, `briefing_acknowledged_at`,
+  `shift_started_at`, `paused_at`, `timer_resumed_at`, `submitted_at`,
+  `completed_at`, `elapsed_simulation_seconds`, generated scenario snapshot,
+  completed task ids and draft JSON
+- `wms_learner_actions` is the only scoreable behaviour stream; it enforces
+  append ordering with `unique (attempt_id, sequence_number)` and rejects
+  technical events through `check (is_technical = false)`
+- `wms_attempt_audit_events` is the unscored lifecycle/analytics stream, also
+  append-ordered per attempt
+- `wms_attempt_results` and `wms_competency_evidence` store deterministic
+  result/evidence payloads without claiming regulated certification authority
+- All five WMS tables have RLS enabled, candidate ownership policies, indexed
+  candidate/query paths and least-privilege authenticated grants after the
+  grant-remediation migration
+- This is a persistence foundation only: no Flutter repository adapter, BFF
+  transaction endpoint, APK change, Career Passport governance or
+  employer-facing evidence review was introduced in this slice
+
+### WMS remote persistence validation
+- Supabase migration history — verified on JobSkills; both WMS migrations are
+  recorded
+- Supabase catalog check — verified five `wms_*` public tables
+- Supabase RLS check — verified RLS enabled on all five WMS tables
+- Supabase policy check — verified candidate read/create/update policies for
+  attempts and candidate read/append/create policies for action, audit, result
+  and evidence tables
+- Supabase grant check — initial broad grants were found and corrected; final
+  authenticated privileges are limited to `select/insert/update` on attempts
+  and `select/insert` on action, audit, result and evidence tables
+- Supabase CLI is not installed in this environment, so migrations were
+  created locally and applied through the Supabase connector rather than
+  `supabase migration new` / `supabase db push`
 
 ### Wrong-supplier-delivery scenario — content-authored early completion
 Shipped the one cleanly-scoped deferred scenario. Turned out to need more
@@ -1344,20 +1390,22 @@ decision on whether the redesign is worth it, not silently dropped.
   succeeded locally
 
 ### Next implementation
-`multi-exception-shipment` and `clerical-only-discrepancy` scenario
-variants, pending the redesign decisions noted above; fixing this remote
-session's `Supabase` MCP connector to actually reach
-`qoairksjpwkhwqxeollj`; deciding how the Flutter Jobs feature gets a real
-job catalogue so the already-wired Apply action has real jobs to apply to.
-Also still open: an unmerged branch `agent/wms-remote-persistence` (built
-by a different session) adding a Supabase remote-persistence schema for
-WMS attempts/actions/audit-events/results/evidence — reviewed and the
-migration SQL looks sound (RLS enabled, candidate-scoped policies,
-append-only guards), but this session's Supabase MCP connector still can't
-reach the real project to confirm it was actually applied live, and the
-branch is stale relative to `main` (predates the ADR-0018 doc changes) so
-merging needs the `current-state.md` conflict reconciled by hand, not a
-blind merge.
+Wire the WMS BFF/Supabase sync adapter against the newly applied `wms_*`
+tables.
+
+Two of the three deferred scenario-catalog entries remain on hold until
+their required design work is closed — `wrong-supplier-delivery` (the
+third) shipped in the wrong-supplier-delivery milestone above:
+- `multi-exception-shipment` needs not just a `ScenarioGenerator` change for
+  resources carrying simultaneous issues, but also a domain/UI change because
+  `RecordCartonInspectionCommand.finding` currently accepts a single
+  `CartonFinding`.
+- `clerical-only-discrepancy` is near-duplicate of the already-shipped
+  `perfect-delivery` scenario until PO/DN documents become scenario-swappable;
+  the current screens look up fixed resource ids directly.
+
+Also still open: deciding how the Flutter Jobs feature gets a real job
+catalogue so the already-wired Apply action has real jobs to apply to.
 
 ## Target product architecture proposal
 
@@ -1417,9 +1465,11 @@ blind merge.
   ids don't match the real seeded jobs yet
 - The Receiving mission is complete end to end (Document Desk through
   Performance Feedback) and the Put Away mission is complete end to end
-  (Staging Area through Performance Feedback), both merged to `main`. No WMS
-  screen is withheld pending approval; the WebGL/3D spatial interaction
-  layer remains the only deliberately deferred WMS scope, per direct
+  (Staging Area through Performance Feedback), both merged to `main`. WMS
+  now has a live Supabase persistence schema, but the Flutter runtime still
+  writes to the local encrypted repository until a BFF/Supabase sync adapter
+  is implemented. No WMS screen is withheld pending approval; the WebGL/3D
+  spatial interaction layer remains deliberately deferred per direct
   discussion with the product owner rather than a specific ADR (see the Put
   Away workstation screens entry above for the correction to a stale
   "ADR-001" citation).
