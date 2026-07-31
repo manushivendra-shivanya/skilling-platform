@@ -4,9 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_card.dart';
+import '../../../core/widgets/app_feedback.dart';
 import '../../../core/widgets/app_state_view.dart';
 import '../application/workplace_interaction_contracts.dart';
 import '../application/workplace_simulation_controller.dart';
@@ -18,12 +20,14 @@ class ReceivingDockScreen extends ConsumerStatefulWidget {
     required this.missionId,
     required this.onBack,
     required this.onOpenInspectionZone,
+    required this.onMissionComplete,
     super.key,
   });
 
   final String missionId;
   final VoidCallback onBack;
   final VoidCallback onOpenInspectionZone;
+  final VoidCallback onMissionComplete;
 
   @override
   ConsumerState<ReceivingDockScreen> createState() =>
@@ -121,19 +125,71 @@ class _ReceivingDockScreenState extends ConsumerState<ReceivingDockScreen> {
                         'Apex Consumer Products · PO-2026-001 · DN-2026-001',
                       ),
                       const SizedBox(height: AppSpacing.md),
-                      CheckboxListTile(
-                        contentPadding: EdgeInsets.zero,
-                        value: draft?.shipmentConfirmed ?? false,
-                        title: const Text(
-                          'Physical shipment matches these delivery references',
-                        ),
-                        subtitle: const Text(
-                          'Confirm the shipment identity before submission.',
-                        ),
-                        onChanged: _saving
-                            ? null
-                            : (value) => _confirmIdentity(value ?? false),
+                      Text(
+                        'Shipment identity',
+                        style: Theme.of(context).textTheme.titleLarge,
                       ),
+                      const SizedBox(height: AppSpacing.xs),
+                      const Text(
+                        'Confirm whether the physical shipment matches these delivery references before submission.',
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                      Wrap(
+                        spacing: AppSpacing.sm,
+                        runSpacing: AppSpacing.sm,
+                        children: [
+                          AppButton(
+                            label: 'Matches expected delivery',
+                            variant: draft?.shipmentConfirmed == true
+                                ? AppButtonVariant.primary
+                                : AppButtonVariant.secondary,
+                            expand: false,
+                            onPressed: _saving
+                                ? null
+                                : () => _confirmIdentity(true),
+                          ),
+                          AppButton(
+                            label: "Doesn't match — wrong supplier",
+                            variant: draft?.shipmentConfirmed == false
+                                ? AppButtonVariant.primary
+                                : AppButtonVariant.secondary,
+                            expand: false,
+                            onPressed: _saving
+                                ? null
+                                : () => _confirmIdentity(false),
+                          ),
+                        ],
+                      ),
+                      if (draft?.shipmentConfirmed == false) ...[
+                        const SizedBox(height: AppSpacing.md),
+                        AppCard(
+                          backgroundColor: AppColors.warningSoft,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'This does not match the expected delivery',
+                                style: Theme.of(context).textTheme.titleMedium,
+                              ),
+                              const SizedBox(height: AppSpacing.xs),
+                              const Text(
+                                'Rejecting here ends the shift immediately. '
+                                'No further counting or inspection is needed '
+                                'for stock that should never be accepted '
+                                'onto the dock.',
+                              ),
+                              const SizedBox(height: AppSpacing.sm),
+                              AppButton(
+                                label: 'Reject shipment & end shift',
+                                variant: AppButtonVariant.destructive,
+                                expand: false,
+                                isLoading: _saving,
+                                onPressed: _saving ? null : _rejectShipment,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                       const SizedBox(height: AppSpacing.lg),
                       Text(
                         'Carton counts',
@@ -260,6 +316,36 @@ class _ReceivingDockScreenState extends ConsumerState<ReceivingDockScreen> {
         );
     if (mounted && result != ConfirmShipmentIdentityResult.success) {
       _showMessage('Shipment confirmation could not be saved.');
+    }
+  }
+
+  Future<void> _rejectShipment() async {
+    final confirmed = await showAppConfirmationDialog(
+      context: context,
+      title: 'End the shift now?',
+      message:
+          'Rejecting this delivery submits your shift immediately. You '
+          "won't be able to count, inspect or dispose of any cartons "
+          'afterwards.',
+      confirmLabel: 'Reject & end shift',
+      isDestructive: true,
+    );
+    if (!confirmed || !mounted) return;
+    setState(() => _saving = true);
+    final result = await ref
+        .read(workplaceSimulationControllerProvider(widget.missionId).notifier)
+        .rejectShipmentIdentity();
+    if (!mounted) return;
+    setState(() => _saving = false);
+    switch (result) {
+      case RejectShipmentIdentityResult.success:
+        widget.onMissionComplete();
+      case RejectShipmentIdentityResult.notYetRejected:
+        _showMessage('Mark the delivery as not matching before rejecting.');
+      case RejectShipmentIdentityResult.alreadySubmitted:
+        _showMessage('The receiving count has already been submitted.');
+      default:
+        _showMessage('The shipment could not be rejected.');
     }
   }
 

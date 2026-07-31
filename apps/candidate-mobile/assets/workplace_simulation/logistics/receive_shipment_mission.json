@@ -243,16 +243,29 @@
       "availableActions": ["confirm_action", "shipment_identity_confirmed"],
       "targetResourceIds": ["delivery-note-dn-2026-001"],
       "competencyMappings": [{"competencyId": "inventory-accuracy", "weight": 1.0}],
-      "maximumPoints": 0,
+      "maximumPoints": 10,
       "scoreCategoryId": "inventory-accuracy",
-      "evaluationRules": [{
-        "actionType": "confirm_action",
-        "requiredPayload": {"conclusion": "matchesExpectedDelivery"},
-        "outcomeType": "correct",
-        "pointsAwarded": 0,
-        "feedbackCode": "delivery_identity_confirmed",
-        "correctActionLabel": "Confirmed the expected delivery"
-      }]
+      "evaluationRules": [
+        {
+          "actionType": "confirm_action",
+          "requiredPayload": {"conclusion": "matches_expected_delivery"},
+          "targetLacksIssue": "wrong_supplier",
+          "outcomeType": "correct",
+          "pointsAwarded": 10,
+          "feedbackCode": "delivery_identity_confirmed",
+          "correctActionLabel": "Confirmed the expected delivery"
+        },
+        {
+          "actionType": "confirm_action",
+          "requiredPayload": {"conclusion": "wrong_supplier_or_reference"},
+          "targetHasIssue": "wrong_supplier",
+          "outcomeType": "correct",
+          "pointsAwarded": 10,
+          "feedbackCode": "wrong_supplier_rejected",
+          "correctActionLabel": "Rejected the wrong-supplier delivery at the dock",
+          "missedIssueCode": "wrong_supplier"
+        }
+      ]
     },
     {
       "id": "confirm-received-counts",
@@ -578,6 +591,20 @@
       "name": "Perfect delivery",
       "variationRules": [],
       "pedagogicalIntent": "No carton has a physical defect assigned — every carton scans, inspects and counts clean. The standing PO/DN paperwork mismatch (SKU-1002 short by 2, unauthorised SKU-1094) is fixed mission content, not scenario-varied, so document verification is still exercised. Tests whether the learner still performs full physical inspection discipline when nothing is visibly wrong with the cartons themselves — the most common real failure mode is skipping inspection steps once the paperwork already flagged something."
+    },
+    {
+      "id": "wrong-supplier-delivery",
+      "name": "Wrong supplier at the dock",
+      "variationRules": [
+        {
+          "type": "assign_issue",
+          "issue": "wrong_supplier",
+          "severity": "critical",
+          "eligibleTargets": ["delivery-note-dn-2026-001"],
+          "count": 1
+        }
+      ],
+      "pedagogicalIntent": "Tests the earliest possible catch point — this delivery is actually from a different supplier than PO-2026-001 expects, and it should be caught at delivery confirmation on Receiving Dock, before any counting or inspection effort is spent on stock that should never have been accepted onto the dock. Correctly rejecting it ends the shift immediately as a successful outcome; accepting it and continuing is a critical process error regardless of how the rest of the shift goes."
     }
   ],
   "scoringRule": {
@@ -599,6 +626,20 @@
     {"id": "accept-unreadable-barcode", "title": "Accepted Unverified Barcode", "description": "Unverified goods entered normal inventory.", "severity": "critical", "trigger": {"actionType": "select_disposition", "targetHasIssue": "unreadable_barcode", "selectedDisposition": "accept"}, "scorePenalty": 20, "preventsPassing": true, "feedback": "Unreadable-barcode goods must remain on hold."},
     {"id": "record-false-quantity", "title": "Recorded Incorrect Quantity", "description": "The received count was knowingly falsified.", "severity": "critical", "trigger": {"actionType": "count_quantity", "requiredPayload": {"knowinglyIncorrect": true}}, "scorePenalty": 25, "preventsPassing": true, "feedback": "Received quantities must be recorded accurately."},
     {"id": "approve-without-inspection", "title": "Approved Without Inspection", "description": "The shipment was approved before mandatory inspection.", "severity": "critical", "trigger": {"actionType": "make_decision", "requiredPayload": {"decision": "partially_accept"}}, "scorePenalty": 25, "preventsPassing": true, "feedback": "Mandatory inspection must be completed before approval."},
-    {"id": "omit-discrepancy-report", "title": "Omitted Discrepancy Report", "description": "Required exceptions were intentionally omitted.", "severity": "critical", "trigger": {"actionType": "complete_form", "requiredPayload": {"intentionallyOmitted": true}}, "scorePenalty": 25, "preventsPassing": true, "feedback": "Discrepancy reports must be complete and truthful."}
+    {"id": "omit-discrepancy-report", "title": "Omitted Discrepancy Report", "description": "Required exceptions were intentionally omitted.", "severity": "critical", "trigger": {"actionType": "complete_form", "requiredPayload": {"intentionallyOmitted": true}}, "scorePenalty": 25, "preventsPassing": true, "feedback": "Discrepancy reports must be complete and truthful."},
+    {"id": "accepted-wrong-supplier-delivery", "title": "Accepted a Wrong-Supplier Delivery", "description": "Stock from an unverified or incorrect supplier entered the receiving process as if it matched the purchase order.", "severity": "critical", "trigger": {"actionType": "confirm_action", "targetHasIssue": "wrong_supplier", "requiredPayload": {"conclusion": "matches_expected_delivery"}}, "scorePenalty": 25, "preventsPassing": true, "feedback": "Delivery identity must be verified against the purchase order and supplier before counting or inspecting stock."}
+  ],
+  "earlyCompletionRules": [
+    {
+      "id": "wrong-supplier-rejected",
+      "triggerTaskId": "confirm-delivery-identity",
+      "triggerActionType": "confirm_action",
+      "requiredPayload": {"conclusion": "wrong_supplier_or_reference"},
+      "requiredOutcome": "correct",
+      "resultStatus": "passed",
+      "completionLabel": "Wrong supplier rejected at receiving dock",
+      "skipRemainingMandatoryTasks": true,
+      "evidenceScope": "early_terminal_exception"
+    }
   ]
 }

@@ -1315,12 +1315,87 @@ them:
   created locally and applied through the Supabase connector rather than
   `supabase migration new` / `supabase db push`
 
+### Wrong-supplier-delivery scenario — content-authored early completion
+Shipped the one cleanly-scoped deferred scenario. Turned out to need more
+than the original note suggested — this delivery's pedagogical intent
+(`docs/24-receiving-department-content-specification.md`) is specifically
+to be caught at delivery confirmation on Receiving Dock, *before* any
+counting or inspection effort, not as a carton-inspection finding. That
+meant fixing a real gap: `confirmShipmentIdentity` already captured the
+candidate's true/false answer, but `submitReceivingCount` required
+`shipmentConfirmed == true` just to proceed and then hardcoded the scored
+outcome to "matches" regardless — there was no path for a candidate who
+correctly said "no" to go anywhere except being permanently stuck.
+
+Added, content-authored rather than special-cased in code:
+- `MissionDefinition.earlyCompletionRules` (new, additive, empty by
+  default) — a rule an mission can author to declare "if this task's
+  action resolves this way, the mission ends here as a successful
+  outcome," matched by `MissionScoringService` **before** its normal
+  mandatory-task-completeness check, never touching how any other mission
+  or scenario is scored. `receive_shipment_mission.json` authors exactly
+  one: correctly rejecting the wrong-supplier delivery scores using only
+  the categories/tasks touched before the terminal action (not penalised
+  for the downstream work the mission never expected this branch to
+  reach), and returns `status: passed`.
+- `ReceivingCountDraft.shipmentConfirmed` is now `bool?` (`null` =
+  undecided, distinct from an explicit `false` rejection — previously a
+  plain `bool` couldn't tell "not yet acted" from "confirmed wrong").
+- New controller method `rejectShipmentIdentity()`: records the real
+  scored confirm-delivery-identity outcome, then submits the mission
+  immediately.
+- New critical error `accepted-wrong-supplier-delivery` (declarative, via
+  the existing `criticalErrorRules` mechanism, no new code): accepting a
+  wrong-supplier delivery and continuing is `criticalFailure` regardless
+  of how the rest of the shift goes, per policy — correctly stopping bad
+  work early is success; wrongly continuing past it is a critical process
+  error.
+- Receiving Dock's identity-confirmation UI replaced a single checkbox
+  (which couldn't express "explicitly rejected") with two explicit
+  buttons plus a distinct, confirmation-gated "Reject shipment & end
+  shift" action, since one is now mission-ending and irreversible.
+
+**Deliberately not attempted**: `multi-exception-shipment` and
+`clerical-only-discrepancy` remain on hold — scoping surfaced they need
+their own real design work (a stacked-issue carton needs
+`RecordCartonInspectionCommand.finding` to become a list, not a single
+value, since it's currently unreportable by the candidate even if
+generated; a meaningfully distinct clerical-only scenario needs documents
+to become scenario-swappable, which they aren't today, or it's just a
+duplicate of `perfect-delivery`). Both explicitly deferred pending a
+decision on whether the redesign is worth it, not silently dropped.
+
+### Wrong-supplier-delivery — local validation
+- `dart format .` — passed
+- `flutter analyze --no-pub` — passed (same 7 pre-existing info-level
+  hints, unrelated)
+- Two new controller-level tests added to
+  `workplace_simulation_controller_test.dart`, run against the real
+  content/generator/scoring pipeline (not mocked): correctly rejecting
+  ends the mission as `passed` with `mandatoryTasksCompleted: true` and
+  none of the downstream tasks touched; wrongly accepting and continuing
+  through `submitReceivingCount` + `completeMission` produces
+  `criticalFailure` with `accepted-wrong-supplier-delivery` in
+  `criticalErrors`
+- Fixed 3 pre-existing scoring tests that hardcoded the old
+  `matchesExpectedDelivery` wire value now that `confirm-delivery-identity`
+  carries real points (10, up from 0) — normal-scenario weighted-score math
+  is otherwise unchanged, confirmed by these same tests passing at their
+  original expected values once the payload was corrected
+- Focused WMS suite — 41/41 passed (39 previous + 2 new)
+- Full suite — 98 of 101 passed; the three failures are the same
+  pre-existing baseline flakes as every prior milestone, confirmed
+  unrelated
+- `flutter build apk --debug --no-pub --target-platform android-arm64` —
+  succeeded locally
+
 ### Next implementation
 Wire the WMS BFF/Supabase sync adapter against the newly applied `wms_*`
 tables.
 
-The three deferred scenario-catalog entries remain on hold until their
-required design work is closed:
+Two of the three deferred scenario-catalog entries remain on hold until
+their required design work is closed — `wrong-supplier-delivery` (the
+third) shipped in the wrong-supplier-delivery milestone above:
 - `multi-exception-shipment` needs not just a `ScenarioGenerator` change for
   resources carrying simultaneous issues, but also a domain/UI change because
   `RecordCartonInspectionCommand.finding` currently accepts a single
@@ -1328,14 +1403,9 @@ required design work is closed:
 - `clerical-only-discrepancy` is near-duplicate of the already-shipped
   `perfect-delivery` scenario until PO/DN documents become scenario-swappable;
   the current screens look up fixed resource ids directly.
-- `wrong-supplier-delivery` must be caught at Receiving Dock during
-  `confirmShipmentIdentity`, not during carton inspection. It requires a real
-  candidate conclusion payload, non-zero scoring, a wrong-supplier generator
-  condition and an early-completion rule so a correct rejection can pass
-  without requiring downstream mandatory tasks.
 
-Also still open: decide how the Flutter Jobs feature gets a real job catalogue
-so the already-wired Apply action has real jobs to apply to.
+Also still open: deciding how the Flutter Jobs feature gets a real job
+catalogue so the already-wired Apply action has real jobs to apply to.
 
 ## Target product architecture proposal
 

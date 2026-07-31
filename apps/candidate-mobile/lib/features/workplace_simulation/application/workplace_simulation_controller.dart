@@ -1261,6 +1261,63 @@ class WorkplaceSimulationController
     );
   }
 
+  /// Ends the mission immediately after the candidate has recorded (via
+  /// [confirmShipmentIdentity]) that the shipment does not match the
+  /// expected delivery. Records the real scored confirm-delivery-identity
+  /// outcome, then submits -- correctly stopping before counting or
+  /// inspection effort is spent on stock that should never have been
+  /// accepted onto the dock is itself the successful outcome for a
+  /// wrong-supplier scenario; scoring for that is content-authored via
+  /// `MissionDefinition.earlyCompletionRules`, not special-cased here.
+  Future<RejectShipmentIdentityResult> rejectShipmentIdentity() async {
+    final active = _activeAttemptWithScenario();
+    if (active == null) return RejectShipmentIdentityResult.invalidAttemptState;
+    final (current, attempt, scenario) = active;
+    final draft = attempt.receivingCountDraft;
+    if (draft == null || draft.shipmentConfirmed != false) {
+      return RejectShipmentIdentityResult.notYetRejected;
+    }
+    if (draft.status == drafts.OperationalDraftStatus.submitted) {
+      return RejectShipmentIdentityResult.alreadySubmitted;
+    }
+    final recorded = await _tryPersist(
+      () async {
+        var working = attempt;
+        var outcomes = [...current.outcomes];
+        (working, outcomes) = _applyAction(
+          current,
+          working,
+          outcomes,
+          _newAction(
+            working,
+            stageId: 'receiving-count',
+            taskId: 'confirm-delivery-identity',
+            actionType: ActionType.confirmAction,
+            targetId: 'delivery-note-dn-2026-001',
+            payload: {'conclusion': 'wrong_supplier_or_reference'},
+          ),
+          scenario,
+        );
+        final now = DateTime.now();
+        working = working.copyWith(
+          receivingCountDraft: draft.copyWith(
+            status: drafts.OperationalDraftStatus.submitted,
+            updatedAt: now,
+            submittedAt: now,
+          ),
+        );
+        await _commit(current, working, outcomes: outcomes);
+      },
+      onSuccess: () => true,
+      onFailure: () => false,
+    );
+    if (!recorded) return RejectShipmentIdentityResult.persistenceFailure;
+    final completion = await completeMission(screenId: 'receiving-dock');
+    return completion == CompleteMissionResult.success
+        ? RejectShipmentIdentityResult.success
+        : RejectShipmentIdentityResult.persistenceFailure;
+  }
+
   Future<RecordCartonCountResult> recordCartonCount(
     RecordCartonCountCommand command,
   ) async {
@@ -1446,7 +1503,7 @@ class WorkplaceSimulationController
     if (active == null) return SubmitReceivingCountResult.invalidAttemptState;
     final (current, attempt, scenario) = active;
     final draft = attempt.receivingCountDraft;
-    if (draft == null || !draft.shipmentConfirmed) {
+    if (draft == null || draft.shipmentConfirmed != true) {
       return SubmitReceivingCountResult.shipmentNotConfirmed;
     }
     if (draft.status == drafts.OperationalDraftStatus.submitted) {
@@ -1480,7 +1537,7 @@ class WorkplaceSimulationController
             taskId: 'confirm-delivery-identity',
             actionType: ActionType.confirmAction,
             targetId: 'delivery-note-dn-2026-001',
-            payload: {'conclusion': 'matchesExpectedDelivery'},
+            payload: {'conclusion': 'matches_expected_delivery'},
           ),
           scenario,
         );
@@ -2844,7 +2901,7 @@ class WorkplaceSimulationController
     return drafts.ReceivingCountDraft(
       attemptId: attempt.id,
       taskId: 'confirm-received-counts',
-      shipmentConfirmed: false,
+      shipmentConfirmed: null,
       countEntries: const [],
       status: drafts.OperationalDraftStatus.draft,
       createdAt: now,

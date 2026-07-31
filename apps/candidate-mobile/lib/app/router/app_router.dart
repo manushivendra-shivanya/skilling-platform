@@ -448,6 +448,8 @@ GoRouter createAppRouter({
             onBack: () => context.go(workplaceOverviewPath(missionId)),
             onOpenInspectionZone: () =>
                 context.go(workplaceInspectionZonePath(missionId)),
+            onMissionComplete: () =>
+                context.go(workplacePerformanceFeedbackPath(missionId)),
           );
         },
       ),

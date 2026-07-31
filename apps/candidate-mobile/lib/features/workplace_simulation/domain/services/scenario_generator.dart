@@ -84,6 +84,9 @@ class ScenarioGenerator {
         }
       case 'near_expiry':
         next['expiryDate'] = '2026-09-15';
+      case 'wrong_supplier':
+        next['expectedSupplier'] = content['supplier'];
+        next['supplier'] = 'Northline Wholesale Traders';
       default:
         break;
     }
