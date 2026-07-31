@@ -1234,18 +1234,61 @@ yet.
   succeeded locally; installed and manually confirmed on a connected
   device (Samsung SM-S928B) via `adb install -r`
 
+### Doc 23 architecture gates — all 9 resolved
+Reviewed section 18's 9 gates against actual repo state and closed all of
+them:
+- **Gate 8 (mobile architecture conformance, ADR-0016) — satisfied.**
+  Flutter remains the candidate platform; the Android build pipeline is
+  untouched by anything non-conformant.
+- **Gate 9 (route conformance, ADR-0017) — satisfied.** The canonical
+  `/practise` Workplace Simulation hierarchy has no `/practice` aliases
+  anywhere in the app.
+- **Gates 1–7 (product boundary, canonical taxonomy, evidence semantics,
+  readiness policy, sharing model, employer decision boundary, partner
+  authority matrix) — approved and recorded as
+  `docs/adr/0018-flora-evidence-and-employability-governance.md`.** Headline
+  decisions: Flora is an evidence/decision-support provider, never a
+  certification authority (every evidence surface must carry a disclaimer
+  string); Flora owns a canonical internal taxonomy with external
+  standards as versioned mappings, not primary identifiers; evidence is
+  append-only, provenance-labelled (`systemObserved` /`issuerVerified`/
+  `partnerAttested`/`candidateReported`/`unverified`) and freshness-aware —
+  retakes accumulate, corrections supersede, nothing is deleted; readiness
+  is a 4-outcome, time-bound projection (`demonstrated`/`developing`/
+  `insufficientEvidence`/`staleEvidence`) that must never silently read as
+  "not ready," and the WMS pilot's safest label is "Simulation benchmark
+  demonstrated," never "job ready"; sharing is candidate-controlled,
+  purpose-bound, time-limited, revocable and audited (DPDP-aligned);
+  automated candidate ranking is prohibited in the employer-portal MVP —
+  Flora presents evidence, the employer decides; and cross-partner fact
+  conflicts trigger a reconciliation case rather than last-write-wins, per
+  a per-fact authority matrix.
+- This ADR governs layers that don't exist yet (Competency Passport,
+  Employer Portal, partner integrations) — it doesn't authorise building
+  them, and WMS's existing controller/action/audit/timing/scoring
+  boundaries are unaffected. It's the constraint those future features must
+  be built against, recorded now so it isn't decided ad hoc later.
+
 ### Next implementation
-Authoring the three deferred scenario-catalog entries (needs a real
-`ScenarioGenerator` change for multi-exception, new task content for the
-other two); fixing this remote session's `Supabase` MCP connector to
-actually reach `qoairksjpwkhwqxeollj`; deciding how the Flutter Jobs
-feature gets a real job catalogue so the already-wired Apply action has
-real jobs to apply to; and the doc 23 bounded-context merge, still
-explicitly deferred pending its own 9 architecture decision gates (section
-18 of `docs/23-ai-employability-infrastructure-platform.md` — product
-boundary, canonical taxonomy, evidence semantics, readiness policy,
-sharing model, employer decision boundary, partner authority matrix,
-mobile architecture conformance, route conformance).
+The three deferred scenario-catalog entries are on hold, not just
+unscheduled — a scoping pass surfaced that two of the three are bigger than
+originally noted: `multi-exception-shipment` needs not just a
+`ScenarioGenerator` change (a resource carrying two simultaneous issues,
+straightforward) but also a domain/UI change, since
+`RecordCartonInspectionCommand.finding` is a single `CartonFinding`, not a
+list — a stacked-issue carton would generate correctly but be unreportable
+by the candidate as currently built. `clerical-only-discrepancy` turns out
+near-duplicate of the already-shipped `perfect-delivery` scenario, since
+the PO/DN documents aren't scenario-varied at all (fixed resource IDs,
+looked up directly in three screens) — a meaningfully distinct clerical-only
+scenario needs documents to become scenario-swappable, which they aren't
+today. Only `wrong-supplier-delivery` is cleanly scoped as noted (new issue
+type, new `CartonFinding` value, one generator case, one evaluation rule).
+All three explicitly held pending a future decision on whether the bigger
+two are worth the redesign. Also still open: fixing this remote session's
+`Supabase` MCP connector to actually reach `qoairksjpwkhwqxeollj`; and
+deciding how the Flutter Jobs feature gets a real job catalogue so the
+already-wired Apply action has real jobs to apply to.
 
 ## Target product architecture proposal
 
