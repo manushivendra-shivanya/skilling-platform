@@ -9,11 +9,13 @@ class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({
     required this.onContinue,
     this.onOpenComponentGallery,
+    this.onOpenWms3dPreview,
     super.key,
   });
 
   final VoidCallback onContinue;
   final VoidCallback? onOpenComponentGallery;
+  final VoidCallback? onOpenWms3dPreview;
 
   @override
   Widget build(BuildContext context) {
@@ -78,6 +80,14 @@ class WelcomeScreen extends StatelessWidget {
                         label: 'View design system',
                         variant: AppButtonVariant.text,
                         onPressed: onOpenComponentGallery,
+                      ),
+                    ],
+                    if (onOpenWms3dPreview != null) ...[
+                      const SizedBox(height: AppSpacing.xs),
+                      AppButton(
+                        label: 'WMS 3D preview (dev)',
+                        variant: AppButtonVariant.text,
+                        onPressed: onOpenWms3dPreview,
                       ),
                     ],
                   ],

@@ -38,6 +38,7 @@ import '../../features/workplace_simulation/presentation/quarantine_zone_screen.
 import '../../features/workplace_simulation/presentation/receiving_dock_screen.dart';
 import '../../features/workplace_simulation/presentation/receiving_office_screen.dart';
 import '../../features/workplace_simulation/presentation/staging_area_screen.dart';
+import '../../features/workplace_simulation_3d/presentation/workplace_3d_preview_screen.dart';
 import '../../features/workplace_simulation/presentation/location_planning_screen.dart';
 import '../../features/workplace_simulation/presentation/transport_placement_screen.dart';
 import '../../features/workplace_simulation/presentation/putaway_office_screen.dart';
@@ -148,6 +149,8 @@ const workplacePutawayOfficeRoutePattern =
     '/practise/workplace-simulation/:missionId/putaway-office';
 const designSystemGalleryRoutePath = '/dev/design-system';
 const designSystemGalleryRouteName = 'design-system-gallery';
+const wms3dPreviewRoutePath = '/dev/wms-3d-preview';
+const wms3dPreviewRouteName = 'wms-3d-preview';
 
 String workplaceSimulationPath(String missionId) =>
     '$workplaceSimulationHubRoutePath/$missionId';
@@ -248,6 +251,9 @@ GoRouter createAppRouter({
           onContinue: () => context.push(languageSelectionRoutePath),
           onOpenComponentGallery: showDevelopmentTools
               ? () => context.push(designSystemGalleryRoutePath)
+              : null,
+          onOpenWms3dPreview: showDevelopmentTools
+              ? () => context.push(wms3dPreviewRoutePath)
               : null,
         ),
       ),
@@ -591,6 +597,13 @@ GoRouter createAppRouter({
           path: designSystemGalleryRoutePath,
           name: designSystemGalleryRouteName,
           builder: (context, state) => const DesignSystemGalleryScreen(),
+        ),
+      if (showDevelopmentTools)
+        GoRoute(
+          path: wms3dPreviewRoutePath,
+          name: wms3dPreviewRouteName,
+          builder: (context, state) =>
+              Workplace3dPreviewScreen(onBack: () => context.pop()),
         ),
     ],
     errorBuilder: (context, state) => AppRouteErrorScreen(
