@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 
 import '../../../app/theme/app_spacing.dart';
 import '../../../core/errors/app_failure.dart';
@@ -8,6 +9,7 @@ import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_chip.dart';
 import '../../../core/widgets/app_feedback.dart';
 import '../../../core/widgets/app_skeleton.dart';
+import '../../workplace_simulation/domain/simulation_enums.dart';
 import '../../workplace_simulation/domain/simulation_runtime.dart';
 import '../domain/career_passport.dart';
 import 'career_passport_controller.dart';
@@ -196,36 +198,50 @@ class _CareerPassportEntryTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final evidence = entry.evidence;
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            competencyDisplayName(evidence.competencyId),
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
-          const SizedBox(height: AppSpacing.xxs),
-          Text(evidence.description),
-          const SizedBox(height: AppSpacing.xs),
-          Wrap(
-            spacing: AppSpacing.xs,
-            runSpacing: AppSpacing.xxs,
-            children: [
-              AppStatusChip(
-                label: EvidenceVerificationStatus.displayLabel(
-                  evidence.verificationStatus,
+    return InkWell(
+      onTap: () => showAppBottomSheet<void>(
+        context: context,
+        title: competencyDisplayName(evidence.competencyId),
+        child: _CareerPassportEntryDetails(entry: entry),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    competencyDisplayName(evidence.competencyId),
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
                 ),
-                tone: _provenanceTone(evidence.verificationStatus),
-              ),
-              AppStatusChip(
-                label: _freshnessLabel(entry.freshness),
-                tone: _freshnessTone(entry.freshness),
-              ),
-              AppStatusChip(label: '${evidence.score}%'),
-            ],
-          ),
-        ],
+                const Icon(Icons.chevron_right, size: 20),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.xxs),
+            Text(evidence.description),
+            const SizedBox(height: AppSpacing.xs),
+            Wrap(
+              spacing: AppSpacing.xs,
+              runSpacing: AppSpacing.xxs,
+              children: [
+                AppStatusChip(
+                  label: EvidenceVerificationStatus.displayLabel(
+                    evidence.verificationStatus,
+                  ),
+                  tone: _provenanceTone(evidence.verificationStatus),
+                ),
+                AppStatusChip(
+                  label: _freshnessLabel(entry.freshness),
+                  tone: _freshnessTone(entry.freshness),
+                ),
+                AppStatusChip(label: '${evidence.score}%'),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -251,4 +267,81 @@ class _CareerPassportEntryTile extends StatelessWidget {
         EvidenceFreshnessState.superseded => AppChipTone.neutral,
         EvidenceFreshnessState.stale => AppChipTone.warning,
       };
+}
+
+/// Full detail for a single evidence record -- everything
+/// [_CareerPassportEntryTile]'s summary chips don't have room for: which
+/// simulation attempt produced it, the mission and scenario it was
+/// generated against, and exactly when it was issued. Nothing here is
+/// fetched separately; [EvidenceRecord] already carries every field shown.
+class _CareerPassportEntryDetails extends StatelessWidget {
+  const _CareerPassportEntryDetails({required this.entry});
+
+  final CareerPassportEntry entry;
+
+  @override
+  Widget build(BuildContext context) {
+    final evidence = entry.evidence;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(evidence.title, style: Theme.of(context).textTheme.titleMedium),
+        const SizedBox(height: AppSpacing.xxs),
+        Text(evidence.description),
+        const SizedBox(height: AppSpacing.md),
+        _DetailRow(label: 'Mission', value: evidence.missionId),
+        _DetailRow(label: 'Mission version', value: evidence.missionVersion),
+        _DetailRow(label: 'Scenario seed', value: '${evidence.scenarioSeed}'),
+        _DetailRow(label: 'Attempt', value: evidence.attemptId),
+        _DetailRow(
+          label: 'Evidence type',
+          value: _evidenceTypeLabel(evidence.evidenceType),
+        ),
+        _DetailRow(
+          label: 'Issued',
+          value: DateFormat.yMMMd().add_jm().format(
+            evidence.issuedAt.toLocal(),
+          ),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        const AppBottomSheetCloseButton(),
+      ],
+    );
+  }
+
+  String _evidenceTypeLabel(EvidenceType evidenceType) =>
+      switch (evidenceType) {
+        EvidenceType.simulationObservation => 'Simulation observation',
+      };
+}
+
+class _DetailRow extends StatelessWidget {
+  const _DetailRow({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.xxs),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 120,
+            child: Text(
+              label,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ),
+          Expanded(
+            child: Text(value, style: Theme.of(context).textTheme.bodyMedium),
+          ),
+        ],
+      ),
+    );
+  }
 }
