@@ -13,12 +13,24 @@ import '../domain/career_passport.dart';
 import 'career_passport_controller.dart';
 
 const _disclaimer = 'Flora provides simulation evidence, not certification.';
+
+// What the toggle actually does, split by its current state so the
+// wording is a statement of fact ("On." / "Off.") rather than a vague
+// description of the feature in general.
+const _sharingOnSubtitle =
+    'On. Employers you\'ve applied to can review your Career Passport '
+    'evidence for that application -- never employers you haven\'t applied '
+    'to, and never for automatic ranking or certification. Turn this off '
+    'any time to immediately stop new access.';
+const _sharingOffSubtitle =
+    'Off. Employers cannot see your Career Passport evidence, even for '
+    'jobs you\'ve applied to.';
+
 const _sharingBoundaryCopy =
-    'Turning this on does not send your Career Passport anywhere '
-    'automatically -- it only marks your evidence as visible if an '
-    'employer you apply to requests it. Flora does not have an employer '
-    'portal yet, so employers cannot browse or search your Career '
-    'Passport directly.';
+    'Sharing only ever applies to employers whose job you applied to -- '
+    'Flora has no employer portal for browsing or searching candidates. '
+    'The employer reviews your evidence and decides; Flora does not rank, '
+    'shortlist or certify you.';
 
 class CareerPassportSection extends ConsumerWidget {
   const CareerPassportSection({super.key});
@@ -120,10 +132,10 @@ class _CareerPassportBody extends ConsumerWidget {
           onChanged: state.canManageSharing
               ? (value) => _toggleShareable(context, ref)
               : null,
-          title: const Text('Shareable with employers'),
+          title: const Text('Shared with employers where you applied'),
           subtitle: Text(
             state.canManageSharing
-                ? 'Private by default. $_sharingBoundaryCopy'
+                ? (state.isShareable ? _sharingOnSubtitle : _sharingOffSubtitle)
                 : 'Sharing requires an account connection.',
           ),
         ),
@@ -156,9 +168,9 @@ class _CareerPassportDetails extends StatelessWidget {
       children: [
         Text(_disclaimer, style: Theme.of(context).textTheme.bodyMedium),
         const Text(
-          'Every decision about who sees this evidence, and what it means, '
-          'stays with you and the people you choose to share it with -- '
-          'Flora does not rank or certify candidates.',
+          'Who can see this evidence is entirely your choice. When you do '
+          'share it, the employer reviews it and decides -- Flora never '
+          'ranks, shortlists or certifies you.',
         ),
         const SizedBox(height: AppSpacing.md),
         for (final entry in entries) ...[

@@ -1820,6 +1820,87 @@ confirmed live:
   direct report from whoever applied it. `EmployerAuthGuard` and the two
   employer routes should now work end-to-end against `JobSkills`.
 
+## Employer Evidence Review E2E validation + minimal internal QC surface
+Closes the loop on the Employer Evidence Review MVP: a real (not mocked)
+end-to-end test suite, a manual QC page, and candidate-side copy that
+matches what the API actually enforces.
+
+- **New `apps/api/test/employer-evidence-review.e2e-spec.ts`** -- boots the
+  real `AppModule` with `@nestjs/testing` + `supertest`, and seeds/tears
+  down its own throwaway employers, jobs, a candidate and consent/evidence
+  rows directly against whatever `SUPABASE_URL`/`SUPABASE_SERVICE_ROLE_KEY`
+  point at, no mocks. Covers: an employer key lists only that employer's
+  own applicants; evidence is returned (with disclaimer, decision
+  boundary, freshness labels, and no ranking/shortlist/certified fields)
+  only when the candidate applied to that employer's job **and** both
+  `employer_sharing` and `career_passport_sharing` consent are active;
+  denial is audited with the correct reason (`NO_ACTIVE_APPLICATION` /
+  `SHARING_NOT_ACTIVE`); one employer can never read another's applicant's
+  evidence. New `npm run test:e2e` script and `test/jest-e2e.json`.
+  **Not runnable from the authoring session** -- same Supabase-project
+  access gap as the migration above (only `nutridiet` is reachable here).
+  It compiles clean and correctly `describe.skip`s (not "passes") without
+  live credentials; running it for real against `JobSkills` is the
+  verification step this milestone still needs from whoever has that
+  access.
+- **`GET /v1/dev/employer-review`** -- a single self-contained, dependency-free
+  HTML/JS page (`apps/api/src/dev/employer-review-harness.html`) for manual
+  QC: employer API key input, applicant list, evidence detail as both
+  rendered cards and raw JSON, disclaimer and decision-boundary text shown
+  prominently, clearly labelled "not the employer portal." Served
+  same-origin (default API base `/v1`) so no CORS configuration was
+  needed. Hard-gated: 404s whenever `NODE_ENV=production`, verified in the
+  browser against the real compiled route (not just reasoned about).
+  Fixed a real, pre-existing build gap while wiring this up: this repo had
+  no `tsconfig.build.json`, so `nest build` was silently compiling `test/`
+  files into the production `dist/` output and mis-inferring `rootDir`,
+  which put compiled controllers one directory level away from their
+  copied static assets. Added the standard Nest CLI `tsconfig.build.json`
+  (excludes `test`, matches the framework's own scaffold) -- fixes the
+  asset path and, as a side effect, stops shipping test code in the build.
+- **Candidate-side sharing copy, `career_passport_section.dart`**: the
+  toggle is now labelled "Shared with employers where you applied" (not
+  the old generic "Shareable with employers"), with on/off subtitles that
+  state the real rule as fact -- "Employers you've applied to can review
+  your Career Passport evidence for that application... Turn this off any
+  time to immediately stop new access" / "Employers cannot see your Career
+  Passport evidence, even for jobs you've applied to." The details-sheet
+  boundary copy and human-decision line were tightened to match the
+  employer-side wording ("the employer reviews your evidence and
+  decides"). Also removed the old decorative "Employer profile visibility"
+  switch from Profile's "Privacy and consent" section (`profile_screen.
+  dart`) -- it was never wired to anything and, now that a real toggle
+  exists in the Career Passport section, having two employer-visibility-ish
+  switches on the same screen was actively confusing, not just redundant.
+  Replaced with a plain pointer row.
+
+### This milestone -- local validation
+- `dart format .` / `flutter analyze --no-pub` -- passed (same
+  pre-existing info-level hints, unrelated)
+- `npm run build` / `npm run lint` / `npm test -- --runInBand` in
+  `apps/api` -- all passed (22/22 unit tests, unchanged)
+- `npm run test:e2e` -- compiles and correctly skips (7 skipped, not
+  passed) without live Supabase credentials; not executed against
+  `JobSkills` from this session, see above
+- Manually verified the dev harness renders correctly and its error path
+  works end-to-end (harness -> fetch -> `EmployerAuthGuard` -> Supabase ->
+  `AppExceptionFilter` -> error surfaced in the page) against a locally
+  running server with placeholder Supabase credentials; the happy-path
+  rendering (applicant rows, evidence cards) was not exercised against
+  real data for the same access-gap reason
+- Removing the profile screen's dead switch shifted page layout enough to
+  break two existing widget tests that scrolled by a fixed pixel delta
+  instead of calling `ensureVisible` before tapping
+  (`phase_one_shells_test.dart`); fixed by adding `ensureVisible` calls,
+  confirmed against a clean `main` baseline first to be sure it was a real
+  regression and not a pre-existing flake
+- Full Flutter suite -- 121 of 124 passed; the three failures are the same
+  pre-existing baseline flakes as every prior milestone, confirmed
+  unrelated
+- `flutter build apk --debug --no-pub --target-platform android-arm64` --
+  succeeded locally; **not yet installed** -- no device was connected to
+  this machine when this milestone finished
+
 ## Target product architecture proposal
 
 - Added the proposed Flora AI Employability Infrastructure architecture in

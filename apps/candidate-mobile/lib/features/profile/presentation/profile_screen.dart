@@ -28,7 +28,6 @@ class ProfileScreen extends ConsumerStatefulWidget {
 }
 
 class _ProfileScreenState extends ConsumerState<ProfileScreen> {
-  bool _employerVisibility = false;
   bool _notificationsEnabled = false;
   bool _loggingOut = false;
 
@@ -118,15 +117,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         _Section(
           title: 'Privacy and consent',
           children: [
-            SwitchListTile(
-              contentPadding: EdgeInsets.zero,
-              value: _employerVisibility,
-              onChanged: (value) => setState(() => _employerVisibility = value),
-              title: const Text('Employer profile visibility'),
-              subtitle: const Text(
-                'Off by default. A separate employer-sharing grant is required before any evidence is shared.',
-              ),
-            ),
             _DetailRow(
               label: 'Platform terms',
               value:
@@ -144,8 +134,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   'Not accepted',
             ),
             const _DetailRow(
-              label: 'Voice and employer sharing',
-              value: 'Requested separately when those features are used',
+              label: 'Voice sharing',
+              value: 'Requested separately when that feature is used',
+            ),
+            const _DetailRow(
+              label: 'Employer sharing',
+              value: 'Controlled in the Career Passport section above',
             ),
           ],
         ),

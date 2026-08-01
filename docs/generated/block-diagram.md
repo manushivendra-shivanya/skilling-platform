@@ -49,6 +49,10 @@ flowchart TD
     INTELCTRL --> LOCALINTEL[Encrypted Local State and Pending Sync]
     INTELCTRL --> OFFLINE[Offline-first Supabase Repository]
 
+    ME --> CAREERPASSPORT[Career Passport Section]
+    CAREERPASSPORT --> WMSOFFLINE
+    CAREERPASSPORT -->|Evidence history and sharing consent| JOBSKILLS
+
     DIAG --> DIAGENGINE[Versioned Deterministic Diagnostic Engine]
     DIAGENGINE --> PATHWAY[Explainable Role Gaps and Pathway]
     LEARN --> CONTENT[Versioned Content, Download and Progress]
@@ -88,6 +92,7 @@ flowchart TD
     JOBSKILLS --> VOICEDATA[Voice Schema, Prompt and Rubric Registry]
     JOBSKILLS --> PRIVMEDIA[Private Voice Media Bucket]
     JOBSKILLS --> WMSDATA[WMS Attempts, Actions, Audit, Results and Evidence]
+    JOBSKILLS --> EMPLOYERDATA[Employers, Job Applications and Evidence Access Audit]
 
     APP --> THEME[Material 3 Design System]
     THEME --> ACCESS[Accessible Shared Components]
@@ -111,6 +116,11 @@ flowchart TD
     API[NestJS BFF]
     API --> JOBAPI[Jobs Apply API]
     API --> WMSSYNC[WMS Attempt Sync API]
+    API --> EMPLOYERAPI[Employer Evidence Review API]
+    EMPLOYERAPI --> EMPLOYERGUARD[Employer API Key Guard]
+    EMPLOYERAPI --> EMPLOYERAUDIT[Evidence Access Audit Log]
+    API --> DEVHARNESS[Internal Dev QC Harness - non-production only]
+    DEVHARNESS -. Manual QC calls .-> EMPLOYERAPI
     REDIS[Redis - PLANNED]
     AI[Python AI Services - PLANNED]
     WEB[Next.js Web Apps - PLANNED]
@@ -121,6 +131,8 @@ flowchart TD
     WMSCLIENT --> WMSSYNC
     APP -. Consequential and privileged operations .-> API
     API --> JOBSKILLS
+    EMPLOYERGUARD --> JOBSKILLS
+    EMPLOYERAUDIT --> JOBSKILLS
     API -. Future .-> REDIS
     API -. Future .-> AI
     WEB -. Future .-> API
