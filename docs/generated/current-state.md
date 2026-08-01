@@ -2332,6 +2332,65 @@ shaped to serve this purpose too (`purpose = 'employer_review'`,
   `listAppliedEmployers` tests) -- a gap worth closing alongside applying
   the migration, not before
 
+### Micro-lesson 10-second clip content foundation
+- Added a feature-first `micro_lessons` slice in the Flutter candidate app for
+  short warehouse and supply-chain process clips. This is content
+  infrastructure only: no final video player UI, scoring integration or
+  employer evidence surface was introduced in this slice.
+- Added the typed `MicroLessonClip` contract covering id, title, domain,
+  role, process area, temperature zone, 10-second duration, video and
+  thumbnail URLs, transcript, description, expected observation, expected
+  decision, competency tags, lesson content, assessment question, answer
+  options, correct answer id, scoring rules and audit-event definitions.
+- Added validation that keeps the clip format strict: clips must be exactly
+  10 seconds, assessment clips must define audit events, correct answers must
+  reference an answer option id, technical failures are never scoreable and
+  duplicate clip ids are rejected.
+- Added an asset-backed local clip repository and Riverpod controller so Learn,
+  Practice or future assessment screens can load clips without knowing where
+  final media will be hosted.
+- Added the first Hyperpure-style warehouse seed catalogue at
+  `apps/candidate-mobile/assets/micro_lessons/warehouse_clips.json` with
+  seven placeholder-media clips: frozen receiving temperature check,
+  wrong-supplier receiving stop, FNV quality segregation, chilled dairy
+  immediate put-away, ambient staples location scan, restaurant-route
+  dispatch loading and returned-goods quarantine.
+- Video and thumbnail URLs are intentionally nullable in the v0 content pack
+  so generated clips can be attached later without changing the app contract.
+- Three generated MP4 clips have been attached as bundled Flutter assets and
+  linked through `asset://` URLs in the catalogue: frozen goods temperature
+  check, wrong-supplier receiving stop and FNV quality inspection. Remaining
+  catalogue entries keep nullable video URLs until their clips are produced.
+
+### Micro-lesson clip validation record
+- Direct Dart formatter
+  (`/opt/homebrew/share/flutter/bin/cache/dart-sdk/bin/dart format
+  lib/features/micro_lessons test/features/micro_lessons
+  lib/app/dependencies.dart`) — passed; 8 files checked.
+- Direct Dart analyzer
+  (`/opt/homebrew/share/flutter/bin/cache/dart-sdk/bin/dart analyze`) —
+  passed with only the 7 pre-existing info-level hints in
+  `api_jobs_repository.dart` and `workplace_simulation_controller.dart`;
+  no micro-lesson analyzer issues remain.
+- `flutter pub get`, `flutter analyze --no-pub`,
+  `flutter test --no-pub test/features/micro_lessons --reporter expanded`,
+  `flutter test --no-pub` and
+  `flutter build apk --debug --no-pub --target-platform android-arm64` —
+  all blocked before project execution because the local Flutter wrapper
+  attempted to write under `/opt/homebrew/share/flutter/bin/cache` and the
+  managed workspace denied it (`Operation not permitted`). Tests are added
+  but not claimed as executed.
+- Focused tests added for loading the shipped clip catalogue, validating all
+  clip definitions, rejecting invalid clip JSON before UI use and grouping
+  clips by domain/competency through the controller.
+
+### Next micro-lesson implementation
+Wire the `micro_lessons` catalogue into the Learning or Practice tab with a
+temporary low-bandwidth player shell: show placeholder/thumbnail states when a
+video URL is not yet supplied, then support Learn, Practice and Assessment
+modes without recording scoreable evidence until the assessment controller and
+Career Passport evidence mapping are explicitly approved.
+
 ## Target product architecture proposal
 
 - Added the proposed Flora AI Employability Infrastructure architecture in

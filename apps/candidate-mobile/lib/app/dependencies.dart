@@ -24,6 +24,8 @@ import '../features/jobs/data/local_mock_jobs_repository.dart';
 import '../features/jobs/domain/jobs_repository.dart';
 import '../features/learning/data/mock_learning_repository.dart';
 import '../features/learning/domain/learning_repository.dart';
+import '../features/micro_lessons/data/asset_micro_lesson_clip_repository.dart';
+import '../features/micro_lessons/domain/micro_lesson_clip_repository.dart';
 import '../features/onboarding/data/local_onboarding_entry_repository.dart';
 import '../features/onboarding/data/secure_candidate_onboarding_repository.dart';
 import '../features/onboarding/data/supabase_candidate_onboarding_repository.dart';
@@ -106,6 +108,10 @@ final homeDashboardRepositoryProvider = Provider<HomeDashboardRepository>(
 
 final learningRepositoryProvider = Provider<LearningRepository>(
   (ref) => MockLearningRepository(),
+);
+
+final microLessonClipRepositoryProvider = Provider<MicroLessonClipRepository>(
+  (ref) => const AssetMicroLessonClipRepository(),
 );
 
 final jobsRepositoryProvider = Provider<JobsRepository>((ref) {

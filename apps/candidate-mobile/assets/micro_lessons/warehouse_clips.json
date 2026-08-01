@@ -1,0 +1,439 @@
+{
+  "version": "warehouse-micro-clips-v1",
+  "clips": [
+    {
+      "id": "clip_receiving_frozen_001",
+      "title": "Frozen goods temperature check",
+      "domain": "receiving",
+      "role": "Warehouse Operations Associate",
+      "processArea": "Receiving Dock",
+      "temperatureZone": "frozen",
+      "durationSeconds": 10,
+      "videoUrl": "asset://assets/micro_lessons/videos/receiving_frozen_temperature_check.mp4",
+      "thumbnailUrl": null,
+      "transcript": "A refrigerated truck arrives. The receiving associate checks the frozen cartons with a temperature probe before accepting the shipment.",
+      "description": "A frozen-food delivery arrives for restaurant supply. The learner must notice that temperature is checked before acceptance.",
+      "expectedObservation": "Frozen goods must be temperature-checked before acceptance.",
+      "expectedDecision": "Hold acceptance until cold-chain condition is verified and escalate if outside limits.",
+      "competencyTags": [
+        "cold_chain_receiving_check",
+        "food_safety_compliance",
+        "receiving_discipline"
+      ],
+      "lessonContent": "Frozen products can become unsafe if the cold chain is broken. The first receiving action is to verify temperature and condition before the cartons enter normal stock flow.",
+      "assessmentQuestion": "What should the associate check before accepting frozen goods?",
+      "answerOptions": [
+        {
+          "id": "temperature_condition",
+          "label": "Product temperature and cold-chain condition",
+          "feedback": "Correct. Temperature and cold-chain condition decide whether frozen goods can be accepted."
+        },
+        {
+          "id": "carton_colour",
+          "label": "Carton colour",
+          "feedback": "Carton colour is not the safety control. Temperature and condition come first."
+        },
+        {
+          "id": "driver_name",
+          "label": "Driver name",
+          "feedback": "Driver identity may matter administratively, but it does not replace cold-chain verification."
+        }
+      ],
+      "correctAnswer": "temperature_condition",
+      "scoringRules": {
+        "maxPoints": 10,
+        "correctAnswerPoints": 10,
+        "evidenceSource": "systemObserved",
+        "technicalFailuresScoreable": false
+      },
+      "auditEvents": [
+        {
+          "eventType": "clipStarted",
+          "when": "onPlaybackStart",
+          "payload": {
+            "mode": "assessment"
+          }
+        },
+        {
+          "eventType": "clipAnswerSubmitted",
+          "when": "onAnswerSubmit",
+          "payload": {
+            "scoreable": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "clip_receiving_supplier_001",
+      "title": "Wrong supplier at receiving",
+      "domain": "receiving",
+      "role": "Receiving Associate",
+      "processArea": "Receiving Dock",
+      "temperatureZone": "mixed",
+      "durationSeconds": 10,
+      "videoUrl": "asset://assets/micro_lessons/videos/receiving_wrong_supplier_stop.mp4",
+      "thumbnailUrl": null,
+      "transcript": "The associate compares the delivery note with carton labels and notices the supplier name does not match the expected delivery.",
+      "description": "A delivery arrives with a supplier mismatch. The learner must catch it before counting or inspection effort is spent.",
+      "expectedObservation": "Supplier identity on cartons does not match the delivery note or purchase order.",
+      "expectedDecision": "Reject or hold the delivery at the dock and notify the supervisor before unloading continues.",
+      "competencyTags": [
+        "shipment_identity_verification",
+        "receiving_exception_control",
+        "supervisor_escalation"
+      ],
+      "lessonContent": "A wrong-supplier delivery is caught at the earliest receiving step. Continuing to count or inspect the wrong shipment wastes effort and risks accepting stock that should never enter the dock flow.",
+      "assessmentQuestion": "What is the safest next action when supplier identity does not match?",
+      "answerOptions": [
+        {
+          "id": "reject_and_escalate",
+          "label": "Stop unloading, reject or hold, and escalate",
+          "feedback": "Correct. Supplier mismatch is a dock-level stop condition."
+        },
+        {
+          "id": "continue_count",
+          "label": "Continue counting first",
+          "feedback": "Counting should not continue when the delivery identity itself is wrong."
+        },
+        {
+          "id": "accept_later_fix",
+          "label": "Accept now and fix paperwork later",
+          "feedback": "That creates a serious receiving control failure."
+        }
+      ],
+      "correctAnswer": "reject_and_escalate",
+      "scoringRules": {
+        "maxPoints": 10,
+        "correctAnswerPoints": 10,
+        "evidenceSource": "systemObserved",
+        "technicalFailuresScoreable": false
+      },
+      "auditEvents": [
+        {
+          "eventType": "clipStarted",
+          "when": "onPlaybackStart",
+          "payload": {
+            "mode": "assessment"
+          }
+        },
+        {
+          "eventType": "clipAnswerSubmitted",
+          "when": "onAnswerSubmit",
+          "payload": {
+            "scoreable": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "clip_inspection_fnv_001",
+      "title": "FNV damage segregation",
+      "domain": "inspection",
+      "role": "Quality Associate",
+      "processArea": "FNV Inspection Table",
+      "temperatureZone": "fnv",
+      "durationSeconds": 10,
+      "videoUrl": "asset://assets/micro_lessons/videos/inspection_fnv_quality_check.mp4",
+      "thumbnailUrl": null,
+      "transcript": "A quality associate checks tomatoes and leafy greens, finds visible damage, and moves one crate aside for quality hold.",
+      "description": "Fresh produce is inspected for visible spoilage, bruising, excess moisture, and freshness before acceptance.",
+      "expectedObservation": "One FNV crate has visible quality damage and should not flow into accepted stock.",
+      "expectedDecision": "Separate the damaged crate and record it for quality hold or supervisor review.",
+      "competencyTags": [
+        "fnv_quality_inspection",
+        "quality_hold_decision",
+        "food_safety_compliance"
+      ],
+      "lessonContent": "FNV quality issues must be separated at inspection. Mixing damaged stock with accepted crates can affect restaurant order quality and food safety.",
+      "assessmentQuestion": "What should be done with the damaged FNV crate?",
+      "answerOptions": [
+        {
+          "id": "segregate_quality_hold",
+          "label": "Move it aside for quality hold",
+          "feedback": "Correct. Damaged produce should be segregated and recorded."
+        },
+        {
+          "id": "mix_with_accepted",
+          "label": "Mix it with accepted crates",
+          "feedback": "Mixing damaged stock hides the issue and weakens quality control."
+        },
+        {
+          "id": "ignore_if_small",
+          "label": "Ignore it if only one crate is affected",
+          "feedback": "Small exceptions still need to be recorded and controlled."
+        }
+      ],
+      "correctAnswer": "segregate_quality_hold",
+      "scoringRules": {
+        "maxPoints": 10,
+        "correctAnswerPoints": 10,
+        "evidenceSource": "systemObserved",
+        "technicalFailuresScoreable": false
+      },
+      "auditEvents": [
+        {
+          "eventType": "clipStarted",
+          "when": "onPlaybackStart",
+          "payload": {
+            "mode": "assessment"
+          }
+        },
+        {
+          "eventType": "clipAnswerSubmitted",
+          "when": "onAnswerSubmit",
+          "payload": {
+            "scoreable": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "clip_putaway_dairy_001",
+      "title": "Chilled dairy immediate put-away",
+      "domain": "put-away",
+      "role": "Put-away Associate",
+      "processArea": "Chilled Storage",
+      "temperatureZone": "dairy",
+      "durationSeconds": 10,
+      "videoUrl": null,
+      "thumbnailUrl": null,
+      "transcript": "The associate scans dairy crates and moves them quickly from receiving into a chilled room instead of leaving them at ambient temperature.",
+      "description": "Chilled dairy products are transferred into cold storage without unnecessary dwell time.",
+      "expectedObservation": "Dairy stock should not remain in the ambient receiving area.",
+      "expectedDecision": "Scan and move dairy crates into chilled storage promptly.",
+      "competencyTags": [
+        "chilled_dairy_handling",
+        "putaway_zone_control",
+        "cold_chain_receiving_check"
+      ],
+      "lessonContent": "Chilled dairy has a narrow handling window. The correct process is to scan, verify, and move it to the chilled zone quickly while preserving traceability.",
+      "assessmentQuestion": "What is the priority after chilled dairy is verified?",
+      "answerOptions": [
+        {
+          "id": "move_to_chilled",
+          "label": "Move it to chilled storage promptly",
+          "feedback": "Correct. Chilled dairy should not dwell at ambient temperature."
+        },
+        {
+          "id": "leave_at_dock",
+          "label": "Leave it at the dock until all goods are received",
+          "feedback": "That increases cold-chain risk."
+        },
+        {
+          "id": "store_ambient",
+          "label": "Store it in ambient racks temporarily",
+          "feedback": "Dairy must go to the correct chilled zone."
+        }
+      ],
+      "correctAnswer": "move_to_chilled",
+      "scoringRules": {
+        "maxPoints": 10,
+        "correctAnswerPoints": 10,
+        "evidenceSource": "systemObserved",
+        "technicalFailuresScoreable": false
+      },
+      "auditEvents": [
+        {
+          "eventType": "clipStarted",
+          "when": "onPlaybackStart",
+          "payload": {
+            "mode": "assessment"
+          }
+        },
+        {
+          "eventType": "clipAnswerSubmitted",
+          "when": "onAnswerSubmit",
+          "payload": {
+            "scoreable": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "clip_putaway_ambient_001",
+      "title": "Ambient staples location scan",
+      "domain": "put-away",
+      "role": "Inventory Associate",
+      "processArea": "Ambient Storage",
+      "temperatureZone": "ambient",
+      "durationSeconds": 10,
+      "videoUrl": null,
+      "thumbnailUrl": null,
+      "transcript": "The associate scans a carton of staples, then scans the rack location label before placing it in the ambient storage bay.",
+      "description": "Ambient staples such as rice, flour, pulses, spices, and oil cans are placed only after product and location scans.",
+      "expectedObservation": "Both item barcode and rack location must be scanned to prevent inventory mismatch.",
+      "expectedDecision": "Scan product and location before completing put-away.",
+      "competencyTags": [
+        "putaway_scan_accuracy",
+        "inventory_location_control",
+        "ambient_storage_discipline"
+      ],
+      "lessonContent": "Location accuracy matters as much as physical movement. A missed rack scan can make stock unavailable for restaurant orders even when it is physically present.",
+      "assessmentQuestion": "Which scans are required before put-away is completed?",
+      "answerOptions": [
+        {
+          "id": "product_and_location",
+          "label": "Product barcode and rack location",
+          "feedback": "Correct. Both scans preserve inventory accuracy."
+        },
+        {
+          "id": "product_only",
+          "label": "Product barcode only",
+          "feedback": "Product-only scanning does not prove the item reached the right bin."
+        },
+        {
+          "id": "location_only",
+          "label": "Rack location only",
+          "feedback": "Location-only scanning does not prove which stock was placed."
+        }
+      ],
+      "correctAnswer": "product_and_location",
+      "scoringRules": {
+        "maxPoints": 10,
+        "correctAnswerPoints": 10,
+        "evidenceSource": "systemObserved",
+        "technicalFailuresScoreable": false
+      },
+      "auditEvents": [
+        {
+          "eventType": "clipStarted",
+          "when": "onPlaybackStart",
+          "payload": {
+            "mode": "assessment"
+          }
+        },
+        {
+          "eventType": "clipAnswerSubmitted",
+          "when": "onAnswerSubmit",
+          "payload": {
+            "scoreable": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "clip_dispatch_loading_001",
+      "title": "Restaurant order route loading",
+      "domain": "dispatch",
+      "role": "Dispatch Executive",
+      "processArea": "Dispatch Bay",
+      "temperatureZone": "mixed",
+      "durationSeconds": 10,
+      "videoUrl": null,
+      "thumbnailUrl": null,
+      "transcript": "A dispatch executive checks route totes for a hotel, a restaurant, and a cafe before loading them into the correct vehicle bay.",
+      "description": "Mixed customer orders are loaded by route and customer sequence to avoid wrong deliveries.",
+      "expectedObservation": "Totes must match route/customer labels before loading.",
+      "expectedDecision": "Verify route sequence and load only the correct totes into the assigned vehicle.",
+      "competencyTags": [
+        "dispatch_route_verification",
+        "customer_order_accuracy",
+        "loading_sequence_control"
+      ],
+      "lessonContent": "Hotels, restaurants, and cafes depend on accurate route loading. A tote placed in the wrong vehicle can create a missed delivery even if picking was correct.",
+      "assessmentQuestion": "What should be checked before route loading?",
+      "answerOptions": [
+        {
+          "id": "route_customer_match",
+          "label": "Route and customer labels match the vehicle bay",
+          "feedback": "Correct. Route/customer match prevents wrong delivery."
+        },
+        {
+          "id": "box_weight",
+          "label": "Only the box weight",
+          "feedback": "Weight does not confirm route or customer accuracy."
+        },
+        {
+          "id": "fastest_loading",
+          "label": "Load whatever is closest first",
+          "feedback": "Speed cannot override route control."
+        }
+      ],
+      "correctAnswer": "route_customer_match",
+      "scoringRules": {
+        "maxPoints": 10,
+        "correctAnswerPoints": 10,
+        "evidenceSource": "systemObserved",
+        "technicalFailuresScoreable": false
+      },
+      "auditEvents": [
+        {
+          "eventType": "clipStarted",
+          "when": "onPlaybackStart",
+          "payload": {
+            "mode": "assessment"
+          }
+        },
+        {
+          "eventType": "clipAnswerSubmitted",
+          "when": "onAnswerSubmit",
+          "payload": {
+            "scoreable": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "clip_returns_quarantine_001",
+      "title": "Returned goods quarantine",
+      "domain": "supervisor",
+      "role": "Hub Supervisor",
+      "processArea": "Returns and Quarantine",
+      "temperatureZone": "mixed",
+      "durationSeconds": 10,
+      "videoUrl": null,
+      "thumbnailUrl": null,
+      "transcript": "A returned carton from a restaurant delivery is placed in a quarantine area while the supervisor checks the return reason and condition.",
+      "description": "Returned food-service goods are separated from saleable stock until disposition is approved.",
+      "expectedObservation": "Returned goods must not be mixed back into available inventory without review.",
+      "expectedDecision": "Move returns to quarantine and wait for supervisor disposition.",
+      "competencyTags": [
+        "returns_quarantine_control",
+        "supervisor_disposition",
+        "food_safety_compliance"
+      ],
+      "lessonContent": "Returns may have unknown handling history. Quarantine protects customers and inventory accuracy until the approved disposition is recorded.",
+      "assessmentQuestion": "Where should returned goods go before approval?",
+      "answerOptions": [
+        {
+          "id": "quarantine",
+          "label": "Quarantine area",
+          "feedback": "Correct. Returned goods require controlled review before disposition."
+        },
+        {
+          "id": "available_stock",
+          "label": "Available stock rack",
+          "feedback": "Returned goods cannot be mixed into available stock without review."
+        },
+        {
+          "id": "nearest_empty_space",
+          "label": "Nearest empty space",
+          "feedback": "Returns need controlled quarantine, not convenience storage."
+        }
+      ],
+      "correctAnswer": "quarantine",
+      "scoringRules": {
+        "maxPoints": 10,
+        "correctAnswerPoints": 10,
+        "evidenceSource": "systemObserved",
+        "technicalFailuresScoreable": false
+      },
+      "auditEvents": [
+        {
+          "eventType": "clipStarted",
+          "when": "onPlaybackStart",
+          "payload": {
+            "mode": "assessment"
+          }
+        },
+        {
+          "eventType": "clipAnswerSubmitted",
+          "when": "onAnswerSubmit",
+          "payload": {
+            "scoreable": true
+          }
+        }
+      ]
+    }
+  ]
+}
