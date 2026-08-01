@@ -37,4 +37,6 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
+    - assets/micro_lessons/
+    - assets/micro_lessons/videos/
     - assets/workplace_simulation/logistics/

@@ -59,6 +59,11 @@ flowchart TD
     DIAG --> DIAGENGINE[Versioned Deterministic Diagnostic Engine]
     DIAGENGINE --> PATHWAY[Explainable Role Gaps and Pathway]
     LEARN --> CONTENT[Versioned Content, Download and Progress]
+    LEARN --> MICROCLIPS[10-second Micro-lesson Clip Catalogue]
+    PRACTISE --> MICROCLIPS
+    MICROCLIPS --> CLIPREPO[Asset-backed Local Clip Repository]
+    CLIPREPO --> CLIPJSON[Warehouse Clip JSON and Future Media URLs]
+    MICROCLIPS --> CLIPVALIDATION[Clip Contract and Validation]
     PRACTISE --> SIMEVENTS[Ordered Simulation Event Batch]
     SIMEVENTS --> SCORE[Deterministic Scoring]
     SCORE --> EVIDENCE[Competency Evidence]
