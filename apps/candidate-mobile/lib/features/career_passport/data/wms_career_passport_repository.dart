@@ -3,17 +3,18 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/errors/app_failure.dart';
 import '../../../core/errors/result.dart';
 import '../../workplace_simulation/application/workplace_simulation_controller.dart';
-import '../../workplace_simulation/domain/simulation_enums.dart';
 import '../../workplace_simulation/domain/simulation_repositories.dart';
 import '../../workplace_simulation/domain/simulation_runtime.dart';
 import '../domain/career_passport.dart';
 import '../domain/career_passport_repository.dart';
 
-/// v0.1 evidence source: the current (most recent) attempt result per known
-/// WMS mission, read through the same [SimulationAttemptRepository] the
-/// missions themselves use -- local-first, and already kept in sync with
-/// the BFF when Supabase is configured. There is no cross-attempt history
-/// yet; a candidate who retries a mission sees only their latest result.
+/// Evidence history across every attempt on each known WMS mission, not
+/// just the current one -- retakes accumulate, they never replace an
+/// earlier record. When Supabase is configured this reads the candidate's
+/// full `wms_competency_evidence` history directly (RLS-scoped, mirroring
+/// the existing direct-read pattern used for consent grants); otherwise it
+/// falls back to this device's local attempt history via
+/// [SimulationAttemptRepository.listResults].
 const _knownMissionIds = [
   WorkplaceSimulationController.missionId,
   WorkplaceSimulationController.putAwayMissionId,
@@ -33,29 +34,59 @@ class WmsCareerPassportRepository implements CareerPassportRepository {
   bool get canManageSharing => _supabaseClient != null;
 
   @override
-  Future<Result<List<EvidenceRecord>>> loadEvidence(String candidateId) async {
+  Future<Result<List<EvidenceRecord>>> loadEvidence(String candidateId) {
+    final client = _supabaseClient;
+    return client == null
+        ? _loadFromLocalHistory(candidateId)
+        : _loadFromSupabase(client, candidateId);
+  }
+
+  Future<Result<List<EvidenceRecord>>> _loadFromLocalHistory(
+    String candidateId,
+  ) async {
     try {
       final evidence = <EvidenceRecord>[];
       for (final missionId in _knownMissionIds) {
-        final attempt = await _attemptRepository.getActiveAttempt(
+        final results = await _attemptRepository.listResults(
           candidateId,
           missionId,
         );
-        if (attempt == null ||
-            (attempt.state != MissionState.completed &&
-                attempt.state != MissionState.evaluated)) {
-          continue;
+        for (final result in results) {
+          evidence.addAll(result.evidence);
         }
-        final result = await _attemptRepository.getResult(
-          candidateId,
-          attempt.id,
-        );
-        if (result != null) evidence.addAll(result.evidence);
       }
       return Success(evidence);
     } catch (error, stackTrace) {
       return ResultFailure(
         StorageFailure(
+          'Your Career Passport evidence could not be loaded.',
+          cause: error,
+          stackTrace: stackTrace,
+        ),
+      );
+    }
+  }
+
+  Future<Result<List<EvidenceRecord>>> _loadFromSupabase(
+    SupabaseClient client,
+    String candidateId,
+  ) async {
+    try {
+      final rows = await client
+          .from('wms_competency_evidence')
+          .select('evidence')
+          .eq('candidate_id', candidateId)
+          .order('issued_at', ascending: false);
+      final evidence = [
+        for (final row in (rows as List).cast<Map<String, Object?>>())
+          EvidenceRecord.fromJson(
+            (row['evidence'] as Map).cast<String, Object?>(),
+          ),
+      ];
+      return Success(evidence);
+    } on PostgrestException catch (error, stackTrace) {
+      return ResultFailure(
+        NetworkFailure(
           'Your Career Passport evidence could not be loaded.',
           cause: error,
           stackTrace: stackTrace,

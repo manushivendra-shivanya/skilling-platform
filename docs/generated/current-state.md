@@ -1700,6 +1700,48 @@ an employer-facing product.
 - `flutter build apk --debug --no-pub --target-platform android-arm64` —
   succeeded locally; installed on the connected Samsung device
 
+## Career Passport evidence history
+Closed the gap v0.1 documented and deliberately deferred: evidence now
+accumulates across every attempt on a mission, not just the current one.
+
+- `SimulationAttemptRepository` gained `listResults(candidateId, missionId)`
+  -- every result ever saved for that candidate/mission, newest first.
+  Implemented in all three conformers: `LocalSimulationAttemptRepository`
+  (new append-only history index of attempt ids per candidate/mission,
+  alongside the existing active/counter/result keys), its
+  `InMemorySimulationAttemptRepository` delegate, and
+  `OfflineFirstSimulationAttemptRepository` (delegates straight to local --
+  this reads the current device's history only, not merged with whatever
+  the BFF holds from other devices, which is documented on the method
+  rather than silently assumed away).
+- `WmsCareerPassportRepository.loadEvidence` now branches on configuration
+  instead of always going through `SimulationAttemptRepository`: when
+  Supabase is configured it reads the candidate's full
+  `wms_competency_evidence` history directly (the `evidence` jsonb column
+  already stores the original camelCase payload, so it parses straight
+  through `EvidenceRecord.fromJson` with no column-mapping code) -- true
+  cross-device, cross-attempt history, not just this device's. Local-only
+  builds fall back to the new `listResults` path across both known
+  missions.
+- `deriveCareerPassportEntries` (from v0.1) needed no change -- it was
+  already written to group and rank an arbitrary number of records per
+  competency, so retake evidence now correctly resolves to one `active` (or
+  `stale`) record per competency with the rest `superseded`, exactly as
+  designed, once it started receiving more than one record per competency.
+
+### Career Passport evidence history — local validation
+- `dart format .` / `flutter analyze --no-pub` (Flutter) — passed (same
+  pre-existing info-level hints, unrelated)
+- New tests: `LocalSimulationAttemptRepository.listResults` (empty with no
+  history, excludes un-scored attempts, returns retakes newest-first) and
+  `WmsCareerPassportRepository` retake accumulation (two scored attempts on
+  the same mission surface as two evidence records, not one)
+- Full Flutter suite — 121 of 124 passed; the three failures are the same
+  pre-existing baseline flakes as every prior milestone, confirmed
+  unrelated
+- `flutter build apk --debug --no-pub --target-platform android-arm64` —
+  succeeded locally; installed on the connected Samsung device
+
 ## Employer Evidence Review MVP
 The first employer-facing surface of any kind in this codebase, built
 deliberately narrow: a read-only API, not an employer portal (no employer

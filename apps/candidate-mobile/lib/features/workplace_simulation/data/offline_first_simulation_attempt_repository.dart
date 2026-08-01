@@ -104,6 +104,16 @@ class OfflineFirstSimulationAttemptRepository
   Future<SimulationResult?> getResult(String candidateId, String attemptId) =>
       _local.getResult(candidateId, attemptId);
 
+  /// Reads this device's local history only -- it is not merged with
+  /// whatever the BFF has synced from other devices. Fine for a
+  /// single-device candidate; a genuinely multi-device history needs a
+  /// remote read, which this offline-first adapter deliberately never does.
+  @override
+  Future<List<SimulationResult>> listResults(
+    String candidateId,
+    String missionId,
+  ) => _local.listResults(candidateId, missionId);
+
   @override
   Future<void> clearActiveAttempt(String candidateId, String missionId) =>
       _local.clearActiveAttempt(candidateId, missionId);
