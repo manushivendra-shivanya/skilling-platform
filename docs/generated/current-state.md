@@ -2119,6 +2119,44 @@ content-specification.md` section 3.4.
   test suite's default-scenario playthroughs do not exercise either new
   issue type, since neither is part of the default seed-48127 rule set
 
+## Career Passport v0.2 -- evidence detail view
+First slice of "Career Passport v0.2" (historical evidence details,
+export/share link, employer-specific grants). Historical evidence
+*collection* across every attempt/retake was already done in the "Career
+Passport evidence history" milestone; the actual gap was that the summary
+list only ever showed three chips per record (provenance, freshness,
+score) with no way to see which simulation attempt, mission or scenario
+produced a given piece of evidence.
+
+- Tapping a `_CareerPassportEntryTile` now opens a nested detail bottom
+  sheet (stacked on the existing `useRootNavigator: true` sheet) showing
+  every field `EvidenceRecord` already carries but the summary tile had no
+  room for: mission id, mission version, scenario seed, attempt id,
+  evidence type and a formatted issued-at timestamp (`intl`'s
+  `DateFormat`, already a declared dependency, not newly added).
+- No new repository method, no schema change, no new data fetch -- the
+  detail view is a pure presentation addition over data
+  `CareerPassportController.build()` already loads in full.
+- Deliberately did not add a "view full mission result" drill-down
+  (replaying the underlying `SimulationAttempt`/`SimulationResult`) --
+  `CareerPassportEntry` only carries the flattened `EvidenceRecord`, and
+  wiring a live attempt lookup behind it is separate, larger scope than
+  "show the fields already on the record."
+
+### Career Passport evidence detail -- local validation
+- `dart format .` / `flutter analyze --no-pub` -- passed (same
+  pre-existing info-level hints, unrelated)
+- New `test/features/career_passport/presentation/career_passport_section_test.dart`
+  -- a widget test proving the tap-to-detail flow end to end (not just
+  that the underlying data model is correct, which
+  `career_passport_test.dart` already covers), using a fake
+  `CareerPassportRepository` rather than the Supabase-backed one
+- Full Flutter suite -- 126 of 129 passed; the three failures are the
+  same pre-existing baseline flakes as every prior milestone, confirmed
+  unrelated
+- `flutter build apk --debug --no-pub --target-platform android-arm64` --
+  succeeded locally; installed on the connected Samsung device
+
 ## Target product architecture proposal
 
 - Added the proposed Flora AI Employability Infrastructure architecture in
