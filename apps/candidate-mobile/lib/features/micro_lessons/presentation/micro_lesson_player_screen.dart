@@ -83,7 +83,16 @@ class _MicroLessonPlayerScreenState extends State<MicroLessonPlayerScreen> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          AspectRatio(aspectRatio: 16 / 9, child: _buildVideoArea()),
+          // Clips are shot vertically (720x1280, 9:16) -- forcing a 16:9
+          // landscape box here squashed the picture instead of just
+          // letterboxing it. The real aspect ratio also happens to be
+          // close to a phone screen's own shape, so using it makes the
+          // player read as a near-full-screen view rather than a small
+          // thumbnail-sized box.
+          AspectRatio(
+            aspectRatio: _controller?.value.aspectRatio ?? 9 / 16,
+            child: _buildVideoArea(),
+          ),
           const SizedBox(height: 16),
           Text(clip.description, style: Theme.of(context).textTheme.bodyLarge),
           const SizedBox(height: 12),
