@@ -2157,6 +2157,99 @@ produced a given piece of evidence.
 - `flutter build apk --debug --no-pub --target-platform android-arm64` --
   succeeded locally; installed on the connected Samsung device
 
+## Career Passport v0.2 -- revocable public share link
+Second slice of Career Passport v0.2. Adds the "export/share link" ask:
+per the user's chosen direction, a revocable link (not a PDF export) that
+anyone can open to view a candidate's evidence with no Flora account,
+matching ADR-0018 section 5's grant shape (candidate, purpose, grant/
+expiry time, revocation state, audited access) rather than a static
+artifact that can't be un-shared.
+
+- **New `career_passport_grants` table** (migration
+  `20260801120000_career_passport_grants.sql`), deliberately shaped to
+  serve both this slice (`purpose = 'public_link'`, `token` set,
+  `employer_id` null) and the next one, employer-specific grants
+  (`purpose = 'employer_review'`, `employer_id` set, `token` null) --
+  see that migration's header comment. A partial unique index enforces at
+  most one active public link per candidate at the data layer, matching
+  the candidate-facing "generate or view the current link, revoke it"
+  model, not a list of concurrent links. RLS lets a candidate manage only
+  their own grants (`candidate_id = auth.uid()`); no client policy exists
+  for reading a link by token -- only the BFF's service-role client can
+  do that, mirroring `employers`/`employer_evidence_access_log`.
+- **New `career_passport_grant_access_log` table**, append-only, logging
+  every share-link resolution attempt (`allowed`/`denied` + reason:
+  `NOT_FOUND`/`REVOKED`/`EXPIRED`) -- ADR-0018 requires every evidence
+  view be audited, not just employer reads.
+- **New BFF module** `apps/api/src/career-passport/`: a single public
+  route, `GET /career-passport/share/:token`, deliberately unauthenticated
+  (that's the point of a share link) and deliberately narrow -- it can
+  only resolve a token to the evidence its own grant scopes, nothing else.
+  `CareerPassportService.resolveShareLink` reuses
+  `deriveEvidenceFreshness` from the employer module (a shared, already-
+  tested pure function) so an employer and a public-link viewer never see
+  a different freshness verdict on the same evidence. Renders a small,
+  static, server-side HTML page (`career-passport-page.ts`, with its own
+  `escapeHtml`) rather than adding a template-engine dependency for two
+  page shapes. Minting and revoking a link stays candidate-authenticated
+  and goes straight to Supabase from the app, mirroring how
+  `career_passport_sharing` consent is already managed directly --
+  deliberately not a new authenticated BFF endpoint, since the existing
+  direct-write pattern already covers it and RLS already enforces
+  ownership.
+- **Flutter**: `CareerPassportRepository` gained
+  `canManageShareLink`/`loadShareLink`/`createShareLink`/`revokeShareLink`
+  and a `ShareLink { token, url, expiresAt }` value type.
+  `WmsCareerPassportRepository` generates the token with `Random.secure()`
+  (32 bytes, base64url) -- no new package. `canManageShareLink` requires
+  both a configured Supabase client and a configured API base URL (the
+  link has to point somewhere); `createShareLink` is idempotent, returning
+  the existing active link instead of erroring against the DB's one-
+  active-link constraint. New "Share link" section in
+  `career_passport_section.dart` (Generate / Copy via
+  `package:flutter/services.dart` `Clipboard` / Revoke), shown only when
+  `canManageShareLink` is true.
+- Link validity is a fixed 30 days from creation, matching ADR-0018's
+  stated default -- not yet configurable, since nothing asked for that.
+
+### Career Passport share link -- local validation
+- `dart format .` / `flutter analyze --no-pub` -- passed on both apps
+  (same pre-existing info-level hints, unrelated, plus one new hint in
+  the same pre-existing style for `_apiBaseUrl` on
+  `WmsCareerPassportRepository`)
+- `apps/api`: `npm run build` / `npm run lint` / `npm test -- --runInBand`
+  -- all passed (27/27 tests, 5 new `CareerPassportService` tests: unknown/
+  revoked/expired/valid tokens and an employer-review grant correctly not
+  resolving as a public link). `npm run test:e2e` compiles and correctly
+  skips (11 skipped, not passed) without live Supabase credentials -- new
+  `career-passport-share-link.e2e-spec.ts` not executed against
+  `JobSkills` from this session, see migration note below
+- `apps/candidate-mobile`: new tests in `wms_career_passport_repository_test.dart`
+  (local-only build cannot manage a share link; an API base URL alone
+  isn't sufficient either) and two new widget tests in
+  `career_passport_section_test.dart` (generate/copy/revoke updates the
+  UI in place). Full Flutter suite -- 129 of 132 passed; the three
+  failures are the same pre-existing baseline flakes as every prior
+  milestone, confirmed unrelated
+- `flutter build apk --debug --no-pub --target-platform android-arm64` --
+  succeeded locally; installed on the connected Samsung device
+- **Migration not yet applied** -- `20260801120000_career_passport_grants.sql`
+  has not been applied to `JobSkills` (or anywhere) as of this commit; this
+  session's Supabase MCP connector still only reaches an unrelated
+  project (`nutridiet`), the same access gap noted for the Employer
+  Evidence Review MVP migration. Until it's applied out-of-band,
+  `canManageShareLink` will be true (Supabase + API URL both configured)
+  but every `createShareLink`/`loadShareLink` call will fail against the
+  live database with an undefined-table error. Flag this before
+  attempting to exercise the feature against a real deployment.
+- Not covered: no widget-level test exercises the actual rendered share
+  page's HTML (that's the `career-passport.service.spec.ts` /
+  `career-passport-share-link.e2e-spec.ts` layer, matching where
+  `EmployerService`'s equivalent logic is tested); no test asserts the
+  DB-level one-active-link unique constraint directly, only that
+  `createShareLink`'s idempotent-return behavior avoids ever hitting it
+  in normal use
+
 ## Target product architecture proposal
 
 - Added the proposed Flora AI Employability Infrastructure architecture in

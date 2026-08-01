@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
@@ -12,6 +13,7 @@ import '../../../core/widgets/app_skeleton.dart';
 import '../../workplace_simulation/domain/simulation_enums.dart';
 import '../../workplace_simulation/domain/simulation_runtime.dart';
 import '../domain/career_passport.dart';
+import '../domain/career_passport_repository.dart';
 import 'career_passport_controller.dart';
 
 const _disclaimer = 'Flora provides simulation evidence, not certification.';
@@ -33,6 +35,12 @@ const _sharingBoundaryCopy =
     'Flora has no employer portal for browsing or searching candidates. '
     'The employer reviews your evidence and decides; Flora does not rank, '
     'shortlist or certify you.';
+
+const _shareLinkIntro =
+    'Generate a link anyone can open to view your Career Passport '
+    'evidence -- no Flora account needed. Revoke it any time to '
+    'immediately stop access; a copy someone already downloaded cannot '
+    'be recalled.';
 
 class CareerPassportSection extends ConsumerWidget {
   const CareerPassportSection({super.key});
@@ -141,6 +149,15 @@ class _CareerPassportBody extends ConsumerWidget {
                 : 'Sharing requires an account connection.',
           ),
         ),
+        if (state.canManageShareLink) ...[
+          const Divider(),
+          const SizedBox(height: AppSpacing.xxs),
+          Text('Share link', style: Theme.of(context).textTheme.titleMedium),
+          const SizedBox(height: AppSpacing.xxs),
+          Text(_shareLinkIntro),
+          const SizedBox(height: AppSpacing.sm),
+          _ShareLinkControl(shareLink: state.shareLink),
+        ],
       ],
     );
   }
@@ -154,6 +171,89 @@ class _CareerPassportBody extends ConsumerWidget {
       context: context,
       message: failure?.message ?? 'Sharing preference saved.',
       tone: failure == null ? AppMessageTone.success : AppMessageTone.error,
+    );
+  }
+}
+
+class _ShareLinkControl extends ConsumerWidget {
+  const _ShareLinkControl({required this.shareLink});
+
+  final ShareLink? shareLink;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final link = shareLink;
+    if (link == null) {
+      return AppButton(
+        label: 'Generate share link',
+        variant: AppButtonVariant.secondary,
+        onPressed: () => _generate(context, ref),
+      );
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SelectableText(link.url, style: Theme.of(context).textTheme.bodyMedium),
+        const SizedBox(height: AppSpacing.xxs),
+        Text(
+          'Expires ${DateFormat.yMMMd().format(link.expiresAt.toLocal())}',
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        Row(
+          children: [
+            Expanded(
+              child: AppButton(
+                label: 'Copy link',
+                variant: AppButtonVariant.secondary,
+                onPressed: () => _copy(context, link.url),
+              ),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: AppButton(
+                label: 'Revoke',
+                variant: AppButtonVariant.secondary,
+                onPressed: () => _revoke(context, ref),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Future<void> _generate(BuildContext context, WidgetRef ref) async {
+    final failure = await ref
+        .read(careerPassportControllerProvider.notifier)
+        .generateShareLink();
+    if (!context.mounted) return;
+    showAppSnackBar(
+      context: context,
+      message: failure?.message ?? 'Share link created.',
+      tone: failure == null ? AppMessageTone.success : AppMessageTone.error,
+    );
+  }
+
+  Future<void> _revoke(BuildContext context, WidgetRef ref) async {
+    final failure = await ref
+        .read(careerPassportControllerProvider.notifier)
+        .revokeShareLink();
+    if (!context.mounted) return;
+    showAppSnackBar(
+      context: context,
+      message: failure?.message ?? 'Share link revoked.',
+      tone: failure == null ? AppMessageTone.success : AppMessageTone.error,
+    );
+  }
+
+  Future<void> _copy(BuildContext context, String url) async {
+    await Clipboard.setData(ClipboardData(text: url));
+    if (!context.mounted) return;
+    showAppSnackBar(
+      context: context,
+      message: 'Link copied.',
+      tone: AppMessageTone.success,
     );
   }
 }

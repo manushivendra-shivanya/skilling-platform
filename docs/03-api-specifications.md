@@ -111,6 +111,24 @@ human-review status; they cannot perform autonomous rejection or shortlisting.
 - `GET /me/interviews`
 - `POST /interviews/{id}/response`
 
+## Career Passport APIs
+- `GET /career-passport/share/{token}` -- the public, unauthenticated
+  surface behind a candidate-generated share link
+  (`career_passport_grants`, `purpose = 'public_link'`). Resolves the
+  token to a read-only HTML page of that candidate's evidence, or a
+  clear "link unavailable" page (404) if the token is unknown, revoked,
+  or past its `expires_at`. No account, session, or API key is required
+  or accepted -- possessing the exact token is the only access control,
+  by design. Every resolution attempt (allowed or denied, with reason)
+  is recorded in `career_passport_grant_access_log`.
+
+  Minting and revoking a link is candidate-authenticated but does not go
+  through this API: the app writes directly to `career_passport_grants`
+  via Supabase (RLS-scoped to `candidate_id = auth.uid()`), the same
+  direct-write pattern already used for `career_passport_sharing`
+  consent. A candidate has at most one active link at a time (enforced
+  by a partial unique index), valid 30 days from creation.
+
 ## Employer APIs
 The list below is the aspirational full employer-portal surface from the
 target architecture proposal -- none of it is implemented yet. Two narrower,

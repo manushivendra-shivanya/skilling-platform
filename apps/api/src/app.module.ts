@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { SupabaseModule } from './supabase/supabase.module';
+import { CareerPassportModule } from './career-passport/career-passport.module';
 import { DevModule } from './dev/dev.module';
 import { EmployerModule } from './employer/employer.module';
 import { JobsModule } from './jobs/jobs.module';
@@ -10,6 +11,7 @@ import { WorkplaceSimulationModule } from './workplace-simulation/workplace-simu
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     SupabaseModule,
+    CareerPassportModule,
     DevModule,
     EmployerModule,
     JobsModule,
