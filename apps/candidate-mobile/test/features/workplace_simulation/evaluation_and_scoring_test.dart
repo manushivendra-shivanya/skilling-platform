@@ -363,6 +363,24 @@ Future<_Run> _successfulRun() async {
     targetId: 'quarantine-record',
     payload: const {'allExceptionsSeparated': true},
   );
+  for (final carton in _cartons(scenario)) {
+    final issue = carton.issues.isEmpty ? null : carton.issues.single.issueType;
+    final releaseDecision = switch (issue) {
+      'packaging_damage' => 'return_to_supplier',
+      'unreadable_barcode' => 'continue_hold',
+      'quantity_shortage' => 'continue_hold',
+      _ => 'not_applicable',
+    };
+    add(
+      'request-quarantine-release',
+      ActionType.selectReleaseDecision,
+      targetId: carton.id,
+      payload: {
+        'releaseDecision': releaseDecision,
+        'justification': 'Recommended based on issue: $issue',
+      },
+    );
+  }
   add(
     'complete-discrepancy-report',
     ActionType.completeForm,

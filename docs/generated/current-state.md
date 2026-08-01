@@ -1901,6 +1901,159 @@ matches what the API actually enforces.
   succeeded locally; **not yet installed** -- no device was connected to
   this machine when this milestone finished
 
+## WMS Barcode Station -- a real dedicated workstation
+First slice of the "WMS remaining gameplay depth" phase. Closes a gap the
+content itself already flagged: `workplace.json` has defined a full
+`barcode-station` workstation (map position, unlock chain requiring
+`inspect-cartons`, `quarantine-zone` in turn requiring `scan-barcodes`)
+since the Receiving department was built, but no mission stage or screen
+ever pointed at it -- `docs/24-receiving-department-content-specification.md`
+explicitly flagged this as an open decision for the runtime team. Chose to
+build it as a real, separately-gated station rather than merge the orphan
+workstation away.
+
+- **Content**: `scan-barcodes` moved out of Inspection Zone's
+  `physical-inspection` stage into a new `barcode-scan` stage
+  (`workstationId: barcode-station`) in `receive_shipment_mission.json`.
+  The task itself, its target cartons and its evaluation rules are
+  unchanged -- only which stage/screen owns it moved, so existing scoring
+  for correctly recording readable/unreadable barcodes is untouched.
+- **Draft model split**: `barcodeScans` moved out of `InspectionDraft` into
+  a new dedicated `BarcodeScanDraft` (mirroring the existing
+  one-draft-per-workstation pattern already used for
+  `DispositionDraft`/`ReceivingCountDraft`/etc.), with its own
+  `SimulationAttempt.barcodeScanDraft` field and its own
+  save/submit commands (`SaveBarcodeScanDraftCommand`/
+  `SubmitBarcodeScanCommand`). This was the load-bearing decision: genuine
+  sequential gating (finish Inspection -> unlock Barcode Station -> finish
+  scanning -> unlock Quarantine) requires two independent submit actions,
+  not one shared draft submitted once for both. `submitInspection` no
+  longer scores or requires scans; a new `submitBarcodeScan` scores them
+  on its own, called from the new screen.
+- **Richer interaction, not just relocation**: `BarcodeScanEntry` gained
+  `scanAttempts`, `resolutionMethod` (`scanned`/`manualEntry`/`flagged`)
+  and an optional `manualCode`. A scan's readable/unreadable outcome is now
+  deterministic from the scenario's own `unreadable_barcode` issue data
+  (a real scanner is a mechanical device, not a judgment call) rather than
+  a free-choice dropdown; what's actually assessed is how the candidate
+  *responds* to a failed scan -- retry (capped at 2 extra attempts, since a
+  physically damaged label doesn't fix itself), manual code entry, or
+  flagging for verification. Scoring itself is unchanged (still keyed on
+  final `barcodeStatus`, matching the existing "unreadable barcodes require
+  hold or escalation" workplace rule) -- the new fields are audit-trail
+  richness for this slice, not new scoring surface.
+- New route `GET /practise/workplace-simulation/:missionId/barcode-station`,
+  new `BarcodeStationScreen`, new `AttemptAuditEventType` values
+  (`barcodeStationOpened`/`Exited`, `barcodeScanSubmissionRequested`,
+  `barcodeScansSaved`/`SaveFailed`, `barcodeScanDraftSaved`) for audit-trail
+  parity with every other WMS screen.
+
+### WMS Barcode Station -- local validation
+- `dart format .` / `flutter analyze --no-pub` -- passed (same
+  pre-existing info-level hints, unrelated)
+- Updated `content_and_scenario_test.dart` (mission now has 8 stages, not
+  7) and `workplace_simulation_controller_test.dart` (the existing
+  full-mission-playthrough test now drives `submitBarcodeScan` as its own
+  step and asserts `barcode-station` reaches `WorkstationStatus.completed`
+  independently of `inspection-zone` and `quarantine-zone`); added a
+  locked-state render check for `BarcodeStationScreen` to
+  `workplace_operational_screens_test.dart`, mirroring the existing
+  Inspection Zone / Quarantine Zone checks
+- Full Flutter suite -- 121 of 124 passed; the three failures are the same
+  pre-existing baseline flakes as every prior milestone, confirmed
+  unrelated
+- `flutter build apk --debug --no-pub --target-platform android-arm64` --
+  succeeded locally; installed on the connected Samsung device
+- Not covered: a widget-level test that actually taps through the new scan
+  dialog's retry/manual-entry/flag branches. The original dropdown-based
+  scan editor this replaces was never widget-tested either (only
+  exercised via direct controller calls in
+  `workplace_simulation_controller_test.dart`, which is what now covers
+  the new flow's scoring-relevant behaviour) -- matching that precedent
+  rather than a gap specific to this change, but noted plainly rather than
+  left implicit.
+
+## WMS Quarantine supervisor-approval release step
+Second slice of "WMS remaining gameplay depth." Quarantine already had a
+complete disposition/reason/confirm-separation flow; the one gap the
+content itself flagged as intentionally deferred was releasing held stock
+back to available inventory, per `workplace.json`'s own escalation-path
+rule: an associate may quarantine or hold stock on their own judgment, but
+release requires supervisor sign-off. Added exactly that step, kept inside
+the existing Quarantine Zone screen rather than a new station.
+
+- **New task `request-quarantine-release`** (stage `exception-handling`,
+  third task alongside `assign-dispositions`/`confirm-quarantine`, same
+  screen). For every carton disposed as `quarantine` or
+  `holdForVerification`, the candidate recommends a `ReleaseDecision`
+  (`releaseToStock`/`continueHold`/`returnToSupplier`/`disposeOnSite`) with
+  a required justification -- modelled as a request for supervisor
+  approval, not a unilateral action. New `QuarantineReleaseDraft`/
+  `QuarantineReleaseEntry` (mirroring `DispositionDraft`'s shape) and
+  `recordReleaseDecision`/`submitQuarantineRelease` commands.
+- **A real architectural snag, not a corner cut**: this task's true target
+  set (which cartons need a release decision) is dynamic -- it depends on
+  the disposition draft, which varies by scenario -- while
+  `MissionProgressService`'s shared repeatable-task completion check
+  requires every one of the task's static `targetResourceIds` to have a
+  recorded action. Rather than changing that shared, widely-used service,
+  `submitQuarantineRelease` auto-records a system-only
+  `ReleaseDecision.notApplicable` action (never a candidate choice, never
+  shown as an option) for cartons that were never quarantined or held, so
+  the mission's progress tracking stays consistent for every task without
+  asking the candidate to "recommend" something for stock that was never
+  on hold. Scored too: 3 new evaluation rules reward correctly recognizing
+  that rejected/escalated/accepted stock needs no release decision at all
+  (mirroring `inspect-cartons`'s existing compliant-carton rule), so
+  `maximumPoints` for this task is 30 (6 cartons x 5), not 15.
+- **Correct-answer basis**: `packaging_damage` -> return to supplier;
+  `unreadable_barcode` / `quantity_shortage` -> continue hold. No scenario
+  currently authors a genuinely release-eligible item -- deliberately: it
+  reinforces the mission's own stated rules ("Damaged goods cannot enter
+  available inventory," "Unverified goods must remain on hold").
+  `release_to_stock`/`dispose_on_site` exist as real, selectable options
+  and are scored as incorrect for every currently-authored issue, not
+  removed -- future scenarios can introduce a genuinely release-eligible
+  case without further runtime changes.
+- New critical error `release-damaged-stock`: recommending `release to
+  stock` for damaged goods is a 20-point, pass-preventing critical error,
+  mirroring `accept-damaged-stock`'s existing severity for the same
+  underlying policy violation at an earlier stage.
+- Receiving Office's unlock requirement moved from `assign-dispositions`
+  to `request-quarantine-release` -- it was already the more accurate gate
+  in intent (the office screen's own copy already said dispositions must
+  be settled first); now the map matches the real flow.
+
+### WMS Quarantine release -- local validation
+- `dart format .` / `flutter analyze --no-pub` -- passed (same
+  pre-existing info-level hints, unrelated, plus one new one in the same
+  pre-existing style at `workplace_simulation_controller.dart:2606`)
+- Updated `evaluation_and_scoring_test.dart`'s synthetic "perfect run"
+  helper to include the new task (a real architectural signal worth
+  noting: without it, `MissionScoringService` computes each category's
+  *available* points from the mission's task definitions regardless of
+  whether an outcome was ever recorded, so a missing task silently drags
+  every numeric score down -- this surfaced as four failing exact-score
+  assertions before the helper was fixed, not primarily as new-behavior
+  bugs)
+- Updated `content_and_scenario_test.dart` (14 tasks now, not 13),
+  `workplace_simulation_controller_test.dart` (playthrough now drives
+  `submitQuarantineRelease`, asserts `quarantine-zone` completes only
+  after it) and `supervisor_dialogue_acknowledgement_test.dart` (its
+  scripted playthrough needed the same new step to keep reaching
+  Receiving Office)
+- Full Flutter suite -- 121 of 124 passed; the three failures are the same
+  pre-existing baseline flakes as every prior milestone, confirmed
+  unrelated
+- `flutter build apk --debug --no-pub --target-platform android-arm64` --
+  succeeded locally; **not yet installed** -- no device was connected to
+  this machine when this milestone finished
+- Not covered: a widget-level test tapping through the new release-decision
+  dialog, matching the same precedent noted for Barcode Station's scan
+  dialog (screen-level dialog interactions in this mission are exercised
+  via controller calls in `workplace_simulation_controller_test.dart`, not
+  widget taps, for every existing screen too)
+
 ## Target product architecture proposal
 
 - Added the proposed Flora AI Employability Infrastructure architecture in

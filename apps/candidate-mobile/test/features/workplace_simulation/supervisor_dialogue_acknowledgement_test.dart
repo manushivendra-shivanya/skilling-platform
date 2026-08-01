@@ -225,4 +225,22 @@ Future<void> _completeInspectionAndQuarantineStages(
   }
   await controller.submitDispositions(const SubmitDispositionsCommand());
   await controller.confirmQuarantine(const ConfirmQuarantineCommand());
+
+  const releaseDecisions = {
+    'carton-001': ReleaseDecision.continueHold,
+    'carton-002': ReleaseDecision.continueHold,
+    'carton-006': ReleaseDecision.returnToSupplier,
+  };
+  for (final entry in releaseDecisions.entries) {
+    await controller.recordReleaseDecision(
+      RecordReleaseDecisionCommand(
+        cartonId: entry.key,
+        decision: entry.value,
+        justification: 'Matches disposition finding',
+      ),
+    );
+  }
+  await controller.submitQuarantineRelease(
+    const SubmitQuarantineReleaseCommand(),
+  );
 }

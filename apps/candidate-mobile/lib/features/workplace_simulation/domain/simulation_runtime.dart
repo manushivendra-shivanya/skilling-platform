@@ -71,6 +71,7 @@ class SimulationAttempt {
     this.receivingCountDraft,
     this.inspectionDraft,
     this.dispositionDraft,
+    this.quarantineReleaseDraft,
     this.discrepancyReportDraft,
     this.submittedAt,
     this.completedAt,
@@ -104,6 +105,7 @@ class SimulationAttempt {
   final ReceivingCountDraft? receivingCountDraft;
   final InspectionDraft? inspectionDraft;
   final DispositionDraft? dispositionDraft;
+  final QuarantineReleaseDraft? quarantineReleaseDraft;
   final DiscrepancyReportDraft? discrepancyReportDraft;
 
   @Deprecated('Use createdAt')
@@ -151,6 +153,7 @@ class SimulationAttempt {
     ReceivingCountDraft? receivingCountDraft,
     InspectionDraft? inspectionDraft,
     DispositionDraft? dispositionDraft,
+    QuarantineReleaseDraft? quarantineReleaseDraft,
     DiscrepancyReportDraft? discrepancyReportDraft,
   }) => SimulationAttempt(
     id: id,
@@ -187,6 +190,8 @@ class SimulationAttempt {
     receivingCountDraft: receivingCountDraft ?? this.receivingCountDraft,
     inspectionDraft: inspectionDraft ?? this.inspectionDraft,
     dispositionDraft: dispositionDraft ?? this.dispositionDraft,
+    quarantineReleaseDraft:
+        quarantineReleaseDraft ?? this.quarantineReleaseDraft,
     discrepancyReportDraft:
         discrepancyReportDraft ?? this.discrepancyReportDraft,
   );
@@ -217,6 +222,7 @@ class SimulationAttempt {
     'receivingCountDraft': receivingCountDraft?.toJson(),
     'inspectionDraft': inspectionDraft?.toJson(),
     'dispositionDraft': dispositionDraft?.toJson(),
+    'quarantineReleaseDraft': quarantineReleaseDraft?.toJson(),
     'discrepancyReportDraft': discrepancyReportDraft?.toJson(),
   };
 
@@ -269,6 +275,9 @@ class SimulationAttempt {
         : null,
     dispositionDraft: json['dispositionDraft'] is JsonMap
         ? DispositionDraft.fromJson(json.object('dispositionDraft'))
+        : null,
+    quarantineReleaseDraft: json['quarantineReleaseDraft'] is JsonMap
+        ? QuarantineReleaseDraft.fromJson(json.object('quarantineReleaseDraft'))
         : null,
     discrepancyReportDraft: json['discrepancyReportDraft'] is JsonMap
         ? DiscrepancyReportDraft.fromJson(json.object('discrepancyReportDraft'))

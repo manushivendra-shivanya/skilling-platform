@@ -99,6 +99,12 @@ enum AttemptAuditEventType {
   dispositionsDraftSaved,
   quarantineConfirmed,
   quarantineConfirmationFailed,
+  releaseDecisionEditorOpened,
+  releaseDecisionEdited,
+  releaseDecisionsSubmissionRequested,
+  releaseDecisionsSaved,
+  releaseDecisionsSaveFailed,
+  releaseDecisionsDraftSaved,
   receivingOfficeOpened,
   receivingOfficeExited,
   discrepancyReportFlagsSaved,
@@ -182,6 +188,7 @@ enum TaskType {
   scanBarcode('scan_barcode'),
   classifyIssue('classify_issue'),
   selectDisposition('select_disposition'),
+  requestApproval('request_approval'),
   moveItem('move_item'),
   completeForm('complete_form'),
   makeDecision('make_decision'),
@@ -245,6 +252,10 @@ enum ActionType {
   dispositionRecorded('disposition_recorded'),
   dispositionUpdated('disposition_updated'),
   dispositionRemoved('disposition_removed'),
+  selectReleaseDecision('select_release_decision'),
+  releaseDecisionRecorded('release_decision_recorded'),
+  releaseDecisionUpdated('release_decision_updated'),
+  releaseDecisionRemoved('release_decision_removed'),
   moveItem('move_item'),
   completeForm('complete_form'),
   makeDecision('make_decision'),
@@ -300,6 +311,32 @@ enum DispositionType {
   final String wireName;
 
   static DispositionType fromWireName(String value) =>
+      values.firstWhere((item) => item.wireName == value);
+}
+
+/// The candidate's recommendation for stock still sitting in quarantine or
+/// on hold, submitted as a supervisor-approval request rather than acted on
+/// unilaterally -- an associate may quarantine or hold stock on their own
+/// judgment, but releasing it back to available inventory is the one
+/// decision this mission's workplace rules reserve for supervisor sign-off.
+enum ReleaseDecision {
+  releaseToStock('release_to_stock'),
+  continueHold('continue_hold'),
+  returnToSupplier('return_to_supplier'),
+  disposeOnSite('dispose_on_site'),
+
+  /// System-recorded only, never a candidate choice -- submitted
+  /// automatically for cartons that were never quarantined or held (e.g.
+  /// accepted, or rejected/escalated through a different path), so the
+  /// mission's progress tracking has a real, scored action for every
+  /// carton without asking the candidate to "recommend" something for
+  /// stock that was never on hold in the first place.
+  notApplicable('not_applicable');
+
+  const ReleaseDecision(this.wireName);
+  final String wireName;
+
+  static ReleaseDecision fromWireName(String value) =>
       values.firstWhere((item) => item.wireName == value);
 }
 

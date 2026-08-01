@@ -496,6 +496,44 @@ class ConfirmQuarantineCommand {
   const ConfirmQuarantineCommand();
 }
 
+class RecordReleaseDecisionCommand {
+  const RecordReleaseDecisionCommand({
+    required this.cartonId,
+    required this.decision,
+    required this.justification,
+  });
+
+  final String cartonId;
+  final ReleaseDecision decision;
+  final String justification;
+}
+
+class UpdateReleaseDecisionCommand {
+  const UpdateReleaseDecisionCommand({
+    required this.entryId,
+    required this.decision,
+    required this.justification,
+  });
+
+  final String entryId;
+  final ReleaseDecision decision;
+  final String justification;
+}
+
+class RemoveReleaseDecisionCommand {
+  const RemoveReleaseDecisionCommand(this.entryId);
+
+  final String entryId;
+}
+
+class SaveQuarantineReleaseDraftCommand {
+  const SaveQuarantineReleaseDraftCommand();
+}
+
+class SubmitQuarantineReleaseCommand {
+  const SubmitQuarantineReleaseCommand();
+}
+
 class SetDiscrepancyReportFlagsCommand {
   const SetDiscrepancyReportFlagsCommand({
     required this.shortageRecorded,
@@ -572,6 +610,50 @@ enum ConfirmQuarantineResult {
   success,
   dispositionsNotSubmitted,
   alreadyConfirmed,
+  invalidAttemptState,
+  persistenceFailure,
+}
+
+enum RecordReleaseDecisionResult {
+  success,
+  justificationRequired,
+  cartonNotFound,
+  cartonNotHeld,
+  duplicateEntry,
+  alreadySubmitted,
+  invalidAttemptState,
+  persistenceFailure,
+}
+
+enum UpdateReleaseDecisionResult {
+  success,
+  justificationRequired,
+  entryNotFound,
+  alreadySubmitted,
+  invalidAttemptState,
+  persistenceFailure,
+}
+
+enum RemoveReleaseDecisionResult {
+  success,
+  entryNotFound,
+  alreadySubmitted,
+  invalidAttemptState,
+  persistenceFailure,
+}
+
+enum SaveQuarantineReleaseDraftResult {
+  success,
+  alreadySubmitted,
+  invalidAttemptState,
+  persistenceFailure,
+}
+
+enum SubmitQuarantineReleaseResult {
+  success,
+  incompleteReleaseDecisions,
+  quarantineNotConfirmed,
+  alreadySubmitted,
   invalidAttemptState,
   persistenceFailure,
 }

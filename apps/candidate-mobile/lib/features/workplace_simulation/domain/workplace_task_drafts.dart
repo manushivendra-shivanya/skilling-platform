@@ -1,5 +1,5 @@
 import 'simulation_content.dart';
-import 'simulation_enums.dart' show DispositionType;
+import 'simulation_enums.dart' show DispositionType, ReleaseDecision;
 
 enum OperationalDraftStatus { draft, submitted }
 
@@ -566,6 +566,120 @@ class DispositionDraft {
     updatedAt: DateTime.parse(json.string('updatedAt')),
     submittedAt: _optionalDate(json.optionalString('submittedAt')),
   );
+}
+
+class QuarantineReleaseEntry {
+  const QuarantineReleaseEntry({
+    required this.id,
+    required this.cartonId,
+    required this.decision,
+    required this.justification,
+    required this.createdAt,
+    required this.updatedAt,
+    required this.revisionNumber,
+  });
+
+  final String id;
+  final String cartonId;
+  final ReleaseDecision decision;
+
+  /// Always required -- unlike a disposition's reason, every release
+  /// recommendation is a supervisor-approval request, so it always needs a
+  /// stated justification, including "release to stock."
+  final String justification;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final int revisionNumber;
+
+  QuarantineReleaseEntry copyWith({
+    ReleaseDecision? decision,
+    String? justification,
+    DateTime? updatedAt,
+    int? revisionNumber,
+  }) => QuarantineReleaseEntry(
+    id: id,
+    cartonId: cartonId,
+    decision: decision ?? this.decision,
+    justification: justification ?? this.justification,
+    createdAt: createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    revisionNumber: revisionNumber ?? this.revisionNumber,
+  );
+
+  JsonMap toJson() => {
+    'id': id,
+    'cartonId': cartonId,
+    'decision': decision.wireName,
+    'justification': justification,
+    'createdAt': createdAt.toUtc().toIso8601String(),
+    'updatedAt': updatedAt.toUtc().toIso8601String(),
+    'revisionNumber': revisionNumber,
+  };
+
+  factory QuarantineReleaseEntry.fromJson(JsonMap json) =>
+      QuarantineReleaseEntry(
+        id: json.string('id'),
+        cartonId: json.string('cartonId'),
+        decision: ReleaseDecision.fromWireName(json.string('decision')),
+        justification: json.optionalString('justification') ?? '',
+        createdAt: DateTime.parse(json.string('createdAt')),
+        updatedAt: DateTime.parse(json.string('updatedAt')),
+        revisionNumber: json.integer('revisionNumber'),
+      );
+}
+
+class QuarantineReleaseDraft {
+  const QuarantineReleaseDraft({
+    required this.attemptId,
+    required this.entries,
+    required this.status,
+    required this.createdAt,
+    required this.updatedAt,
+    this.submittedAt,
+  });
+
+  final String attemptId;
+  final List<QuarantineReleaseEntry> entries;
+  final OperationalDraftStatus status;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final DateTime? submittedAt;
+
+  QuarantineReleaseDraft copyWith({
+    List<QuarantineReleaseEntry>? entries,
+    OperationalDraftStatus? status,
+    DateTime? updatedAt,
+    DateTime? submittedAt,
+  }) => QuarantineReleaseDraft(
+    attemptId: attemptId,
+    entries: entries ?? this.entries,
+    status: status ?? this.status,
+    createdAt: createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    submittedAt: submittedAt ?? this.submittedAt,
+  );
+
+  JsonMap toJson() => {
+    'attemptId': attemptId,
+    'entries': entries.map((item) => item.toJson()).toList(),
+    'status': status.name,
+    'createdAt': createdAt.toUtc().toIso8601String(),
+    'updatedAt': updatedAt.toUtc().toIso8601String(),
+    'submittedAt': submittedAt?.toUtc().toIso8601String(),
+  };
+
+  factory QuarantineReleaseDraft.fromJson(JsonMap json) =>
+      QuarantineReleaseDraft(
+        attemptId: json.string('attemptId'),
+        entries: json
+            .mapList('entries')
+            .map(QuarantineReleaseEntry.fromJson)
+            .toList(growable: false),
+        status: OperationalDraftStatus.values.byName(json.string('status')),
+        createdAt: DateTime.parse(json.string('createdAt')),
+        updatedAt: DateTime.parse(json.string('updatedAt')),
+        submittedAt: _optionalDate(json.optionalString('submittedAt')),
+      );
 }
 
 class DiscrepancyReportDraft {

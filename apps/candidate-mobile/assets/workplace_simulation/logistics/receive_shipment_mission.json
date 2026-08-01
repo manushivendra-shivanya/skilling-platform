@@ -114,8 +114,8 @@
       "sequence": 5,
       "title": "Handle Exceptions",
       "workstationId": "quarantine-zone",
-      "instructions": "Assign safe dispositions and separate problematic goods.",
-      "taskIds": ["assign-dispositions", "confirm-quarantine"],
+      "instructions": "Assign safe dispositions, separate problematic goods, and request supervisor release decisions for anything still on hold.",
+      "taskIds": ["assign-dispositions", "confirm-quarantine", "request-quarantine-release"],
       "completionMode": "all_mandatory_tasks"
     },
     {
@@ -393,6 +393,31 @@
       }]
     },
     {
+      "id": "request-quarantine-release",
+      "stageId": "exception-handling",
+      "taskType": "request_approval",
+      "title": "Request Supervisor Release Decisions",
+      "instructions": "For every carton still quarantined or on hold, recommend a release decision and justify it. Releasing stock to available inventory is a supervisor-approval decision, not one to make alone.",
+      "mandatory": true,
+      "repeatable": true,
+      "availableActions": ["select_release_decision"],
+      "targetResourceIds": ["carton-001", "carton-002", "carton-003", "carton-004", "carton-005", "carton-006"],
+      "competencyMappings": [
+        {"competencyId": "warehouse-compliance", "weight": 0.6},
+        {"competencyId": "receiving-decisions", "weight": 0.4}
+      ],
+      "maximumPoints": 30,
+      "scoreCategoryId": "safety-compliance",
+      "evaluationRules": [
+        {"actionType": "select_release_decision", "requiredPayload": {"releaseDecision": "return_to_supplier"}, "targetHasIssue": "packaging_damage", "outcomeType": "correct", "pointsAwarded": 5, "feedbackCode": "damage_returned", "correctActionLabel": "Recommended returning damaged goods to the supplier"},
+        {"actionType": "select_release_decision", "requiredPayload": {"releaseDecision": "continue_hold"}, "targetHasIssue": "unreadable_barcode", "outcomeType": "correct", "pointsAwarded": 5, "feedbackCode": "barcode_hold_continued", "correctActionLabel": "Kept unreadable-barcode stock on hold", "missedIssueCode": "unreadable_barcode"},
+        {"actionType": "select_release_decision", "requiredPayload": {"releaseDecision": "continue_hold"}, "targetHasIssue": "quantity_shortage", "outcomeType": "correct", "pointsAwarded": 5, "feedbackCode": "shortage_hold_continued", "correctActionLabel": "Kept the shortage record on hold pending reconciliation"},
+        {"actionType": "select_release_decision", "requiredPayload": {"releaseDecision": "not_applicable"}, "targetHasIssue": "incorrect_sku", "outcomeType": "correct", "pointsAwarded": 5, "feedbackCode": "reject_no_release_needed", "correctActionLabel": "Recognized rejected stock needs no release decision"},
+        {"actionType": "select_release_decision", "requiredPayload": {"releaseDecision": "not_applicable"}, "targetHasIssue": "near_expiry", "outcomeType": "correct", "pointsAwarded": 5, "feedbackCode": "escalated_no_release_needed", "correctActionLabel": "Recognized escalated stock needs no release decision"},
+        {"actionType": "select_release_decision", "requiredPayload": {"releaseDecision": "not_applicable"}, "targetMustBeCompliant": true, "outcomeType": "correct", "pointsAwarded": 5, "feedbackCode": "accepted_no_release_needed", "correctActionLabel": "Recognized accepted stock needs no release decision"}
+      ]
+    },
+    {
       "id": "complete-discrepancy-report",
       "stageId": "receiving-decision",
       "taskType": "complete_form",
@@ -655,7 +680,8 @@
     {"id": "record-false-quantity", "title": "Recorded Incorrect Quantity", "description": "The received count was knowingly falsified.", "severity": "critical", "trigger": {"actionType": "count_quantity", "requiredPayload": {"knowinglyIncorrect": true}}, "scorePenalty": 25, "preventsPassing": true, "feedback": "Received quantities must be recorded accurately."},
     {"id": "approve-without-inspection", "title": "Approved Without Inspection", "description": "The shipment was approved before mandatory inspection.", "severity": "critical", "trigger": {"actionType": "make_decision", "requiredPayload": {"decision": "partially_accept"}}, "scorePenalty": 25, "preventsPassing": true, "feedback": "Mandatory inspection must be completed before approval."},
     {"id": "omit-discrepancy-report", "title": "Omitted Discrepancy Report", "description": "Required exceptions were intentionally omitted.", "severity": "critical", "trigger": {"actionType": "complete_form", "requiredPayload": {"intentionallyOmitted": true}}, "scorePenalty": 25, "preventsPassing": true, "feedback": "Discrepancy reports must be complete and truthful."},
-    {"id": "accepted-wrong-supplier-delivery", "title": "Accepted a Wrong-Supplier Delivery", "description": "Stock from an unverified or incorrect supplier entered the receiving process as if it matched the purchase order.", "severity": "critical", "trigger": {"actionType": "confirm_action", "targetHasIssue": "wrong_supplier", "requiredPayload": {"conclusion": "matches_expected_delivery"}}, "scorePenalty": 25, "preventsPassing": true, "feedback": "Delivery identity must be verified against the purchase order and supplier before counting or inspecting stock."}
+    {"id": "accepted-wrong-supplier-delivery", "title": "Accepted a Wrong-Supplier Delivery", "description": "Stock from an unverified or incorrect supplier entered the receiving process as if it matched the purchase order.", "severity": "critical", "trigger": {"actionType": "confirm_action", "targetHasIssue": "wrong_supplier", "requiredPayload": {"conclusion": "matches_expected_delivery"}}, "scorePenalty": 25, "preventsPassing": true, "feedback": "Delivery identity must be verified against the purchase order and supplier before counting or inspecting stock."},
+    {"id": "release-damaged-stock", "title": "Released Damaged Goods to Stock", "description": "Damaged stock was recommended for release into available inventory instead of returned to the supplier.", "severity": "critical", "trigger": {"actionType": "select_release_decision", "targetHasIssue": "packaging_damage", "requiredPayload": {"releaseDecision": "release_to_stock"}}, "scorePenalty": 20, "preventsPassing": true, "feedback": "Damaged goods must never be released into available inventory -- return to supplier or dispose per policy."}
   ],
   "earlyCompletionRules": [
     {
