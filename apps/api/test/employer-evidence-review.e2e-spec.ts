@@ -132,14 +132,18 @@ describeLive('Employer Evidence Review MVP (e2e)', () => {
         policy_version: 'e2e-1',
         granted_at: grantedAt,
       },
+    ]);
+    if (consents.error) throw consents.error;
+
+    const employerGrant = await admin.from('career_passport_grants').insert([
       {
         candidate_id: sharedCandidateId,
-        purpose: 'career_passport_sharing',
-        policy_version: 'e2e-1',
+        purpose: 'employer_review',
+        employer_id: employerAId,
         granted_at: grantedAt,
       },
     ]);
-    if (consents.error) throw consents.error;
+    if (employerGrant.error) throw employerGrant.error;
 
     const evidence = await admin.from('wms_competency_evidence').insert([
       {
@@ -188,6 +192,10 @@ describeLive('Employer Evidence Review MVP (e2e)', () => {
       .in('candidate_id', [sharedCandidateId, unsharedCandidateId, strangerCandidateId]);
     await admin
       .from('consent_grants')
+      .delete()
+      .in('candidate_id', [sharedCandidateId, unsharedCandidateId, strangerCandidateId]);
+    await admin
+      .from('career_passport_grants')
       .delete()
       .in('candidate_id', [sharedCandidateId, unsharedCandidateId, strangerCandidateId]);
     await admin.from('jobs').delete().in('id', [jobAId, jobBId]);

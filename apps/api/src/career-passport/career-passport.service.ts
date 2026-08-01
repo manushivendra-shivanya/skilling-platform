@@ -10,6 +10,11 @@ export type ShareLinkResolution =
   | { status: 'ok'; evidence: EvidenceWithFreshness[] }
   | { status: 'not_found' | 'revoked' | 'expired' };
 
+export interface AppliedEmployer {
+  id: string;
+  name: string;
+}
+
 interface GrantRow {
   id: string;
   candidate_id: string;
@@ -72,6 +77,55 @@ export class CareerPassportService {
       status: 'ok',
       evidence: deriveEvidenceFreshness(evidence, new Date()),
     };
+  }
+
+  /**
+   * The candidate's own list of "employers I could grant Career Passport
+   * access to" -- every employer behind a non-withdrawn application,
+   * deduplicated. A read, not a decision: whether each one currently has
+   * an active grant is derived from `career_passport_grants` directly by
+   * the app (RLS already scopes that to the candidate's own rows), not
+   * returned here, so this stays a single-purpose join the client
+   * couldn't otherwise do -- `employers` has no client-facing policy.
+   */
+  async listAppliedEmployers(candidateId: string): Promise<AppliedEmployer[]> {
+    const { data: applications, error } = await this.supabase.admin
+      .from('job_applications')
+      .select('job_id')
+      .eq('candidate_id', candidateId)
+      .neq('status', 'withdrawn');
+    if (error) {
+      throw new Error(`Failed to load applications: ${error.message}`);
+    }
+    const jobIds = [
+      ...new Set((applications ?? []).map((row: { job_id: string }) => row.job_id)),
+    ];
+    if (jobIds.length === 0) return [];
+
+    const { data: jobs, error: jobsError } = await this.supabase.admin
+      .from('jobs')
+      .select('employer_id')
+      .in('id', jobIds)
+      .not('employer_id', 'is', null);
+    if (jobsError) {
+      throw new Error(`Failed to load applied jobs: ${jobsError.message}`);
+    }
+    const employerIds = [
+      ...new Set(
+        (jobs ?? []).map((row: { employer_id: string }) => row.employer_id),
+      ),
+    ];
+    if (employerIds.length === 0) return [];
+
+    const { data: employers, error: employersError } = await this.supabase.admin
+      .from('employers')
+      .select('id, name')
+      .in('id', employerIds)
+      .order('name');
+    if (employersError) {
+      throw new Error(`Failed to load employers: ${employersError.message}`);
+    }
+    return employers ?? [];
   }
 
   private async logAccess(

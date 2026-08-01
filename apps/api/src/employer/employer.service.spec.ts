@@ -71,6 +71,13 @@ class FakeSupabaseAdmin {
     purpose: string;
     revoked_at: string | null;
   }[] = [];
+  employerGrants: {
+    candidate_id: string;
+    employer_id: string;
+    purpose: string;
+    revoked_at: string | null;
+    expires_at: string | null;
+  }[] = [];
   evidenceRows: { candidate_id: string; issued_at: string; evidence: unknown }[] = [];
   accessLogs: {
     employer_id: string;
@@ -84,6 +91,7 @@ class FakeSupabaseAdmin {
     if (table === 'jobs') return new QueryBuilder([...this.jobs]);
     if (table === 'job_applications') return new QueryBuilder([...this.applications]);
     if (table === 'consent_grants') return new QueryBuilder([...this.consentGrants]);
+    if (table === 'career_passport_grants') return new QueryBuilder([...this.employerGrants]);
     if (table === 'wms_competency_evidence') return new QueryBuilder([...this.evidenceRows]);
     if (table === 'employer_evidence_access_log') {
       return {
@@ -102,11 +110,23 @@ function buildService(admin: FakeSupabaseAdmin): EmployerService {
   return new EmployerService(supabase);
 }
 
-function grantConsent(admin: FakeSupabaseAdmin, candidateId: string) {
-  admin.consentGrants.push(
-    { candidate_id: candidateId, purpose: 'employer_sharing', revoked_at: null },
-    { candidate_id: candidateId, purpose: 'career_passport_sharing', revoked_at: null },
-  );
+function grantConsent(
+  admin: FakeSupabaseAdmin,
+  candidateId: string,
+  employerId: string,
+) {
+  admin.consentGrants.push({
+    candidate_id: candidateId,
+    purpose: 'employer_sharing',
+    revoked_at: null,
+  });
+  admin.employerGrants.push({
+    candidate_id: candidateId,
+    employer_id: employerId,
+    purpose: 'employer_review',
+    revoked_at: null,
+    expires_at: null,
+  });
 }
 
 describe('EmployerService.listApplicants', () => {
@@ -170,7 +190,7 @@ describe('EmployerService.reviewCandidateEvidence', () => {
     admin.applications = [
       { candidate_id: 'candidate-1', job_id: 'job-1', status: 'withdrawn', created_at: 't1' },
     ];
-    grantConsent(admin, 'candidate-1');
+    grantConsent(admin, 'candidate-1', 'employer-1');
     const service = buildService(admin);
 
     await expect(
@@ -206,7 +226,7 @@ describe('EmployerService.reviewCandidateEvidence', () => {
     admin.applications = [
       { candidate_id: 'candidate-1', job_id: 'job-1', status: 'submitted', created_at: 't1' },
     ];
-    grantConsent(admin, 'candidate-1');
+    grantConsent(admin, 'candidate-1', 'employer-1');
     admin.evidenceRows = [
       {
         candidate_id: 'candidate-1',
@@ -244,5 +264,81 @@ describe('EmployerService.reviewCandidateEvidence', () => {
         denial_reason: null,
       },
     ]);
+  });
+
+  it(
+    'a grant to one employer does not grant access to another employer the ' +
+      'candidate also applied to',
+    async () => {
+      const admin = new FakeSupabaseAdmin();
+      admin.jobs = [
+        { id: 'job-1', employer_id: 'employer-1', title: 'Warehouse Associate' },
+        { id: 'job-2', employer_id: 'employer-2', title: 'Inventory Executive' },
+      ];
+      admin.applications = [
+        { candidate_id: 'candidate-1', job_id: 'job-1', status: 'submitted', created_at: 't1' },
+        { candidate_id: 'candidate-1', job_id: 'job-2', status: 'submitted', created_at: 't2' },
+      ];
+      // Only employer-1 gets a grant, even though the candidate applied to both.
+      grantConsent(admin, 'candidate-1', 'employer-1');
+      const service = buildService(admin);
+
+      await expect(
+        service.reviewCandidateEvidence('employer-1', 'candidate-1'),
+      ).resolves.toBeDefined();
+      await expect(
+        service.reviewCandidateEvidence('employer-2', 'candidate-1'),
+      ).rejects.toMatchObject({ code: 'EMPLOYER_ACCESS_DENIED' });
+    },
+  );
+
+  it('denies once a grant is revoked, even with an active application', async () => {
+    const admin = new FakeSupabaseAdmin();
+    admin.jobs = [{ id: 'job-1', employer_id: 'employer-1', title: 'Warehouse Associate' }];
+    admin.applications = [
+      { candidate_id: 'candidate-1', job_id: 'job-1', status: 'submitted', created_at: 't1' },
+    ];
+    admin.consentGrants.push({
+      candidate_id: 'candidate-1',
+      purpose: 'employer_sharing',
+      revoked_at: null,
+    });
+    admin.employerGrants.push({
+      candidate_id: 'candidate-1',
+      employer_id: 'employer-1',
+      purpose: 'employer_review',
+      revoked_at: '2026-08-01T00:00:00Z',
+      expires_at: null,
+    });
+    const service = buildService(admin);
+
+    await expect(
+      service.reviewCandidateEvidence('employer-1', 'candidate-1'),
+    ).rejects.toMatchObject({ code: 'EMPLOYER_ACCESS_DENIED' });
+  });
+
+  it('denies once a grant has expired', async () => {
+    const admin = new FakeSupabaseAdmin();
+    admin.jobs = [{ id: 'job-1', employer_id: 'employer-1', title: 'Warehouse Associate' }];
+    admin.applications = [
+      { candidate_id: 'candidate-1', job_id: 'job-1', status: 'submitted', created_at: 't1' },
+    ];
+    admin.consentGrants.push({
+      candidate_id: 'candidate-1',
+      purpose: 'employer_sharing',
+      revoked_at: null,
+    });
+    admin.employerGrants.push({
+      candidate_id: 'candidate-1',
+      employer_id: 'employer-1',
+      purpose: 'employer_review',
+      revoked_at: null,
+      expires_at: '2020-01-01T00:00:00Z',
+    });
+    const service = buildService(admin);
+
+    await expect(
+      service.reviewCandidateEvidence('employer-1', 'candidate-1'),
+    ).rejects.toMatchObject({ code: 'EMPLOYER_ACCESS_DENIED' });
   });
 });

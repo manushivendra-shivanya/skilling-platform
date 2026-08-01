@@ -8,29 +8,29 @@ import '../domain/career_passport_repository.dart';
 class CareerPassportState {
   const CareerPassportState({
     required this.entries,
-    required this.isShareable,
-    required this.canManageSharing,
     required this.shareLink,
     required this.canManageShareLink,
+    required this.employerAccess,
+    required this.canManageEmployerAccess,
   });
 
   final List<CareerPassportEntry> entries;
-  final bool isShareable;
-  final bool canManageSharing;
   final ShareLink? shareLink;
   final bool canManageShareLink;
+  final List<EmployerAccessEntry> employerAccess;
+  final bool canManageEmployerAccess;
 
   CareerPassportState copyWith({
-    bool? isShareable,
     Object? shareLink = _unset,
+    List<EmployerAccessEntry>? employerAccess,
   }) => CareerPassportState(
     entries: entries,
-    isShareable: isShareable ?? this.isShareable,
-    canManageSharing: canManageSharing,
     shareLink: identical(shareLink, _unset)
         ? this.shareLink
         : shareLink as ShareLink?,
     canManageShareLink: canManageShareLink,
+    employerAccess: employerAccess ?? this.employerAccess,
+    canManageEmployerAccess: canManageEmployerAccess,
   );
 }
 
@@ -61,40 +61,24 @@ class CareerPassportController extends AsyncNotifier<CareerPassportState> {
     final evidence = (await repository.loadEvidence(
       session.candidateId,
     )).when(success: (value) => value, failure: (failure) => throw failure);
-    final shareable = (await repository.isShareable(
-      session.candidateId,
-    )).when(success: (value) => value, failure: (failure) => throw failure);
     final shareLink = repository.canManageShareLink
         ? (await repository.loadShareLink(session.candidateId)).when(
             success: (value) => value,
             failure: (failure) => throw failure,
           )
         : null;
+    final employerAccess = repository.canManageEmployerAccess
+        ? (await repository.loadEmployerAccess(session.candidateId)).when(
+            success: (value) => value,
+            failure: (failure) => throw failure,
+          )
+        : const <EmployerAccessEntry>[];
     return CareerPassportState(
       entries: deriveCareerPassportEntries(evidence, now: DateTime.now()),
-      isShareable: shareable,
-      canManageSharing: repository.canManageSharing,
       shareLink: shareLink,
       canManageShareLink: repository.canManageShareLink,
-    );
-  }
-
-  Future<AppFailure?> toggleShareable() async {
-    final value = state.valueOrNull;
-    final candidateId = _candidateId;
-    if (value == null || candidateId == null || !value.canManageSharing) {
-      return const StorageFailure('Sharing requires an account connection.');
-    }
-    final next = !value.isShareable;
-    final result = await ref
-        .read(careerPassportRepositoryProvider)
-        .setShareable(candidateId, next);
-    return result.when(
-      success: (_) {
-        state = AsyncData(value.copyWith(isShareable: next));
-        return null;
-      },
-      failure: (failure) => failure,
+      employerAccess: employerAccess,
+      canManageEmployerAccess: repository.canManageEmployerAccess,
     );
   }
 
@@ -128,6 +112,43 @@ class CareerPassportController extends AsyncNotifier<CareerPassportState> {
     return result.when(
       success: (_) {
         state = AsyncData(value.copyWith(shareLink: null));
+        return null;
+      },
+      failure: (failure) => failure,
+    );
+  }
+
+  Future<AppFailure?> toggleEmployerAccess(EmployerAccessEntry entry) async {
+    final value = state.valueOrNull;
+    final candidateId = _candidateId;
+    if (value == null ||
+        candidateId == null ||
+        !value.canManageEmployerAccess) {
+      return const StorageFailure(
+        'Employer access requires an account connection.',
+      );
+    }
+    final repository = ref.read(careerPassportRepositoryProvider);
+    final result = entry.granted
+        ? await repository.revokeEmployerAccess(candidateId, entry.employerId)
+        : await repository.grantEmployerAccess(candidateId, entry.employerId);
+    return result.when(
+      success: (_) {
+        state = AsyncData(
+          value.copyWith(
+            employerAccess: [
+              for (final item in value.employerAccess)
+                if (item.employerId == entry.employerId)
+                  EmployerAccessEntry(
+                    employerId: item.employerId,
+                    employerName: item.employerName,
+                    granted: !item.granted,
+                  )
+                else
+                  item,
+            ],
+          ),
+        );
         return null;
       },
       failure: (failure) => failure,

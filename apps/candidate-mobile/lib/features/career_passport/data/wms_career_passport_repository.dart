@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:math';
 
+import 'package:dio/dio.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/errors/app_failure.dart';
@@ -8,11 +9,11 @@ import '../../../core/errors/result.dart';
 import '../../workplace_simulation/application/workplace_simulation_controller.dart';
 import '../../workplace_simulation/domain/simulation_repositories.dart';
 import '../../workplace_simulation/domain/simulation_runtime.dart';
-import '../domain/career_passport.dart';
 import '../domain/career_passport_repository.dart';
 
 const _shareLinkPurpose = 'public_link';
 const _shareLinkValidity = Duration(days: 30);
+const _employerReviewPurpose = 'employer_review';
 
 /// Evidence history across every attempt on each known WMS mission, not
 /// just the current one -- retakes accumulate, they never replace an
@@ -31,20 +32,23 @@ class WmsCareerPassportRepository implements CareerPassportRepository {
     required SimulationAttemptRepository attemptRepository,
     SupabaseClient? supabaseClient,
     String? apiBaseUrl,
+    Dio? dio,
   }) : _attemptRepository = attemptRepository,
        _supabaseClient = supabaseClient,
-       _apiBaseUrl = apiBaseUrl;
+       _apiBaseUrl = apiBaseUrl,
+       _dio = dio ?? Dio();
 
   final SimulationAttemptRepository _attemptRepository;
   final SupabaseClient? _supabaseClient;
   final String? _apiBaseUrl;
-
-  @override
-  bool get canManageSharing => _supabaseClient != null;
+  final Dio _dio;
 
   @override
   bool get canManageShareLink =>
       _supabaseClient != null && _apiBaseUrl != null && _apiBaseUrl.isNotEmpty;
+
+  @override
+  bool get canManageEmployerAccess => canManageShareLink;
 
   @override
   Future<Result<List<EvidenceRecord>>> loadEvidence(String candidateId) {
@@ -101,67 +105,6 @@ class WmsCareerPassportRepository implements CareerPassportRepository {
       return ResultFailure(
         NetworkFailure(
           'Your Career Passport evidence could not be loaded.',
-          cause: error,
-          stackTrace: stackTrace,
-        ),
-      );
-    }
-  }
-
-  @override
-  Future<Result<bool>> isShareable(String candidateId) async {
-    final client = _supabaseClient;
-    if (client == null) return const Success(false);
-    try {
-      final rows = await client
-          .from('consent_grants')
-          .select('id')
-          .eq('candidate_id', candidateId)
-          .eq('purpose', CareerPassportConsentVersions.sharingPurpose)
-          .filter('revoked_at', 'is', null)
-          .limit(1);
-      return Success((rows as List).isNotEmpty);
-    } on PostgrestException catch (error, stackTrace) {
-      return ResultFailure(
-        NetworkFailure(
-          'Your sharing preference could not be loaded.',
-          cause: error,
-          stackTrace: stackTrace,
-        ),
-      );
-    }
-  }
-
-  @override
-  Future<Result<void>> setShareable(String candidateId, bool shareable) async {
-    final client = _supabaseClient;
-    if (client == null) {
-      return const ResultFailure(
-        StorageFailure('Sharing requires an account connection.'),
-      );
-    }
-    try {
-      if (shareable) {
-        await client.from('consent_grants').upsert({
-          'candidate_id': candidateId,
-          'purpose': CareerPassportConsentVersions.sharingPurpose,
-          'policy_version': CareerPassportConsentVersions.sharingVersion,
-          'granted_at': DateTime.now().toUtc().toIso8601String(),
-          'revoked_at': null,
-        }, onConflict: 'candidate_id,purpose,policy_version');
-      } else {
-        await client
-            .from('consent_grants')
-            .update({'revoked_at': DateTime.now().toUtc().toIso8601String()})
-            .eq('candidate_id', candidateId)
-            .eq('purpose', CareerPassportConsentVersions.sharingPurpose)
-            .filter('revoked_at', 'is', null);
-      }
-      return const Success(null);
-    } on PostgrestException catch (error, stackTrace) {
-      return ResultFailure(
-        NetworkFailure(
-          'Your sharing preference could not be saved.',
           cause: error,
           stackTrace: stackTrace,
         ),
@@ -261,6 +204,148 @@ class WmsCareerPassportRepository implements CareerPassportRepository {
       return ResultFailure(
         NetworkFailure(
           'Your share link could not be revoked.',
+          cause: error,
+          stackTrace: stackTrace,
+        ),
+      );
+    }
+  }
+
+  @override
+  Future<Result<List<EmployerAccessEntry>>> loadEmployerAccess(
+    String candidateId,
+  ) async {
+    final client = _supabaseClient;
+    final apiBaseUrl = _apiBaseUrl;
+    if (client == null || apiBaseUrl == null || apiBaseUrl.isEmpty) {
+      return const Success([]);
+    }
+    final accessToken = client.auth.currentSession?.accessToken;
+    if (accessToken == null) {
+      return const ResultFailure(
+        AuthenticationFailure('Sign in again to manage employer access.'),
+      );
+    }
+    try {
+      final response = await _dio.get<Object?>(
+        '$apiBaseUrl/career-passport/applied-employers',
+        options: Options(headers: {'Authorization': 'Bearer $accessToken'}),
+      );
+      final body = response.data;
+      final employers = body is Map ? body['employers'] : null;
+      if (employers is! List) {
+        throw const FormatException('Unexpected applied-employers response');
+      }
+      final grantedIds = await _activeEmployerGrantIds(client, candidateId);
+      return Success([
+        for (final entry in employers.cast<Map<String, Object?>>())
+          EmployerAccessEntry(
+            employerId: entry['id']! as String,
+            employerName: entry['name']! as String,
+            granted: grantedIds.contains(entry['id']),
+          ),
+      ]);
+    } on DioException catch (error, stackTrace) {
+      return ResultFailure(
+        NetworkFailure(
+          'Employer access could not be loaded.',
+          cause: error,
+          stackTrace: stackTrace,
+        ),
+      );
+    } on PostgrestException catch (error, stackTrace) {
+      return ResultFailure(
+        NetworkFailure(
+          'Employer access could not be loaded.',
+          cause: error,
+          stackTrace: stackTrace,
+        ),
+      );
+    }
+  }
+
+  Future<Set<String>> _activeEmployerGrantIds(
+    SupabaseClient client,
+    String candidateId,
+  ) async {
+    final rows = await client
+        .from('career_passport_grants')
+        .select('employer_id, expires_at')
+        .eq('candidate_id', candidateId)
+        .eq('purpose', _employerReviewPurpose)
+        .filter('revoked_at', 'is', null);
+    final now = DateTime.now();
+    return {
+      for (final row in (rows as List).cast<Map<String, Object?>>())
+        if (row['expires_at'] == null ||
+            DateTime.parse(row['expires_at']! as String).isAfter(now))
+          row['employer_id']! as String,
+    };
+  }
+
+  @override
+  Future<Result<void>> grantEmployerAccess(
+    String candidateId,
+    String employerId,
+  ) async {
+    final client = _supabaseClient;
+    if (client == null) {
+      return const ResultFailure(
+        StorageFailure('Employer access requires an account connection.'),
+      );
+    }
+    try {
+      final existing = await client
+          .from('career_passport_grants')
+          .select('id')
+          .eq('candidate_id', candidateId)
+          .eq('employer_id', employerId)
+          .eq('purpose', _employerReviewPurpose)
+          .filter('revoked_at', 'is', null)
+          .limit(1);
+      if ((existing as List).isNotEmpty) return const Success(null);
+      await client.from('career_passport_grants').insert({
+        'candidate_id': candidateId,
+        'employer_id': employerId,
+        'purpose': _employerReviewPurpose,
+        'granted_at': DateTime.now().toUtc().toIso8601String(),
+      });
+      return const Success(null);
+    } on PostgrestException catch (error, stackTrace) {
+      return ResultFailure(
+        NetworkFailure(
+          'Employer access could not be granted.',
+          cause: error,
+          stackTrace: stackTrace,
+        ),
+      );
+    }
+  }
+
+  @override
+  Future<Result<void>> revokeEmployerAccess(
+    String candidateId,
+    String employerId,
+  ) async {
+    final client = _supabaseClient;
+    if (client == null) {
+      return const ResultFailure(
+        StorageFailure('Employer access requires an account connection.'),
+      );
+    }
+    try {
+      await client
+          .from('career_passport_grants')
+          .update({'revoked_at': DateTime.now().toUtc().toIso8601String()})
+          .eq('candidate_id', candidateId)
+          .eq('employer_id', employerId)
+          .eq('purpose', _employerReviewPurpose)
+          .filter('revoked_at', 'is', null);
+      return const Success(null);
+    } on PostgrestException catch (error, stackTrace) {
+      return ResultFailure(
+        NetworkFailure(
+          'Employer access could not be revoked.',
           cause: error,
           stackTrace: stackTrace,
         ),

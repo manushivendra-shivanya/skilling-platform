@@ -57,16 +57,6 @@ List<CareerPassportEntry> deriveCareerPassportEntries(
   return entries;
 }
 
-/// A single consent purpose, distinct from the `employer_sharing` purpose
-/// granted per job application: this one controls whether the candidate's
-/// Career Passport is shareable with employers in general. Kept
-/// purpose-bound per ADR-0018 rather than reusing the application-scoped
-/// grant.
-abstract final class CareerPassportConsentVersions {
-  static const sharingPurpose = 'career_passport_sharing';
-  static const sharingVersion = '2026-08-v1';
-}
-
 String competencyDisplayName(String competencyId) => competencyId
     .split('-')
     .map(

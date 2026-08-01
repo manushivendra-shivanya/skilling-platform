@@ -184,5 +184,6 @@ final careerPassportRepositoryProvider = Provider<CareerPassportRepository>((
         ? Supabase.instance.client
         : null,
     apiBaseUrl: config.hasApiConfiguration ? config.apiBaseUrl : null,
+    dio: Dio(),
   );
 });

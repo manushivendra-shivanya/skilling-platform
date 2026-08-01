@@ -11,11 +11,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-/// Proves the evidence-detail drill-down and the share-link controls work
-/// end to end against `CareerPassportSection`, not just that the
-/// underlying data model/repository logic is correct in isolation (which
-/// `career_passport_test.dart` and `wms_career_passport_repository_test.dart`
-/// already cover).
+/// Proves the evidence-detail drill-down, the share-link controls and the
+/// per-employer access controls work end to end against
+/// `CareerPassportSection`, not just that the underlying data model/
+/// repository logic is correct in isolation (which `career_passport_test.dart`
+/// and `wms_career_passport_repository_test.dart` already cover).
 void main() {
   testWidgets('tapping an evidence entry opens its detail sheet', (
     tester,
@@ -67,6 +67,56 @@ void main() {
       expect(find.text('Copy link'), findsNothing);
     },
   );
+
+  testWidgets(
+    'toggling employer access grants and revokes independently per employer',
+    (tester) async {
+      final repository = _FakeCareerPassportRepository(
+        canManageEmployerAccess: true,
+        employerAccess: const [
+          EmployerAccessEntry(
+            employerId: 'employer-1',
+            employerName: 'Apex Consumer Products',
+            granted: false,
+          ),
+          EmployerAccessEntry(
+            employerId: 'employer-2',
+            employerName: 'Meridian Logistics',
+            granted: false,
+          ),
+        ],
+      );
+      final container = _buildContainer(repository);
+      addTearDown(container.dispose);
+
+      await tester.pumpWidget(_app(container));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Manage employer access'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Apex Consumer Products'), findsOneWidget);
+      expect(find.text('Meridian Logistics'), findsOneWidget);
+      expect(find.text('No access.'), findsNWidgets(2));
+
+      await tester.tap(
+        find.widgetWithText(SwitchListTile, 'Apex Consumer Products'),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Can review your evidence.'), findsOneWidget);
+      expect(find.text('No access.'), findsOneWidget);
+      expect(repository.grantedEmployerIds, {'employer-1'});
+
+      await tester.tap(
+        find.widgetWithText(SwitchListTile, 'Apex Consumer Products'),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('No access.'), findsNWidgets(2));
+      expect(repository.grantedEmployerIds, isEmpty);
+    },
+  );
 }
 
 ProviderContainer _buildContainer(CareerPassportRepository repository) =>
@@ -93,12 +143,19 @@ Widget _app(ProviderContainer container) => UncontrolledProviderScope(
 );
 
 class _FakeCareerPassportRepository implements CareerPassportRepository {
-  _FakeCareerPassportRepository({this.canManageShareLink = false});
+  _FakeCareerPassportRepository({
+    this.canManageShareLink = false,
+    this.canManageEmployerAccess = false,
+    List<EmployerAccessEntry> employerAccess = const [],
+  }) : _employerAccess = employerAccess;
 
   ShareLink? _shareLink;
+  List<EmployerAccessEntry> _employerAccess;
 
-  @override
-  bool get canManageSharing => true;
+  Set<String> get grantedEmployerIds => {
+    for (final entry in _employerAccess)
+      if (entry.granted) entry.employerId,
+  };
 
   @override
   Future<Result<List<EvidenceRecord>>> loadEvidence(String candidateId) async =>
@@ -119,10 +176,6 @@ class _FakeCareerPassportRepository implements CareerPassportRepository {
           verificationStatus: EvidenceVerificationStatus.systemObserved,
         ),
       ]);
-
-  @override
-  Future<Result<bool>> isShareable(String candidateId) async =>
-      const Success(false);
 
   @override
   final bool canManageShareLink;
@@ -153,6 +206,42 @@ class _FakeCareerPassportRepository implements CareerPassportRepository {
   }
 
   @override
-  Future<Result<void>> setShareable(String candidateId, bool shareable) async =>
-      const Success(null);
+  final bool canManageEmployerAccess;
+
+  @override
+  Future<Result<List<EmployerAccessEntry>>> loadEmployerAccess(
+    String candidateId,
+  ) async => Success(_employerAccess);
+
+  @override
+  Future<Result<void>> grantEmployerAccess(
+    String candidateId,
+    String employerId,
+  ) async {
+    _setGranted(employerId, true);
+    return const Success(null);
+  }
+
+  @override
+  Future<Result<void>> revokeEmployerAccess(
+    String candidateId,
+    String employerId,
+  ) async {
+    _setGranted(employerId, false);
+    return const Success(null);
+  }
+
+  void _setGranted(String employerId, bool granted) {
+    _employerAccess = [
+      for (final entry in _employerAccess)
+        if (entry.employerId == employerId)
+          EmployerAccessEntry(
+            employerId: entry.employerId,
+            employerName: entry.employerName,
+            granted: granted,
+          )
+        else
+          entry,
+    ];
+  }
 }

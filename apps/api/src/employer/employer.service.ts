@@ -5,7 +5,7 @@ import { WmsEvidencePayload } from '../workplace-simulation/workplace-simulation
 import { deriveEvidenceFreshness, EvidenceWithFreshness } from './employer-evidence';
 
 const EMPLOYER_SHARING_PURPOSE = 'employer_sharing';
-const CAREER_PASSPORT_SHARING_PURPOSE = 'career_passport_sharing';
+const EMPLOYER_REVIEW_GRANT_PURPOSE = 'employer_review';
 
 export const CAREER_PASSPORT_DISCLAIMER =
   'Flora provides simulation evidence, not certification.';
@@ -28,12 +28,18 @@ export interface EmployerEvidenceView {
 }
 
 /**
- * Enforces the access rule for the Employer Evidence Review MVP: an
- * employer may only see a candidate's evidence if that candidate applied
- * (and has not withdrawn) to one of this employer's jobs, AND both
- * `employer_sharing` and `career_passport_sharing` consent are currently
- * active. There is no browsing, no global "shareable" pool, and no ranking
- * -- every read is scoped to a specific application and audited.
+ * Enforces the access rule for Employer Evidence Review: an employer may
+ * only see a candidate's evidence if that candidate applied (and has not
+ * withdrawn) to one of this employer's jobs, AND both `employer_sharing`
+ * consent (the general, application-time consent to be visible to
+ * employers at all) and an active, employer-specific
+ * `career_passport_grants` row (`purpose = 'employer_review'`, scoped to
+ * this exact employer) are currently active. The single global
+ * `career_passport_sharing` toggle this replaced granted every applied-to
+ * employer the same access at once; a per-employer grant lets the
+ * candidate decide employer by employer. There is no browsing, no global
+ * "shareable" pool, and no ranking -- every read is scoped to a specific
+ * application and audited.
  */
 @Injectable()
 export class EmployerService {
@@ -92,10 +98,7 @@ export class EmployerService {
 
     const shared =
       (await this.hasActiveConsent(candidateId, EMPLOYER_SHARING_PURPOSE)) &&
-      (await this.hasActiveConsent(
-        candidateId,
-        CAREER_PASSPORT_SHARING_PURPOSE,
-      ));
+      (await this.hasActiveEmployerGrant(employerId, candidateId));
     if (!shared) {
       await this.logAccess(
         employerId,
@@ -171,6 +174,26 @@ export class EmployerService {
       throw new Error(`Failed to check application: ${error.message}`);
     }
     return data ? { jobId: data.job_id } : null;
+  }
+
+  private async hasActiveEmployerGrant(
+    employerId: string,
+    candidateId: string,
+  ): Promise<boolean> {
+    const { data, error } = await this.supabase.admin
+      .from('career_passport_grants')
+      .select('id, expires_at')
+      .eq('candidate_id', candidateId)
+      .eq('employer_id', employerId)
+      .eq('purpose', EMPLOYER_REVIEW_GRANT_PURPOSE)
+      .is('revoked_at', null)
+      .maybeSingle();
+    if (error) {
+      throw new Error(`Failed to check employer grant: ${error.message}`);
+    }
+    if (!data) return false;
+    const expiresAt = data.expires_at as string | null;
+    return !expiresAt || Date.parse(expiresAt) >= Date.now();
   }
 
   private async hasActiveConsent(
