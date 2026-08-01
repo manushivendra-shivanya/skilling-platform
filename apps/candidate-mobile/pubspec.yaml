@@ -25,6 +25,7 @@ dependencies:
   path_provider: ^2.1.5
   record: ^7.1.1
   intl: ^0.20.2
+  webview_flutter: ^4.14.1
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -38,3 +39,6 @@ flutter:
   uses-material-design: true
   assets:
     - assets/workplace_simulation/logistics/
+    - assets/wms_3d/
+    - assets/wms_3d/models/
+    - assets/wms_3d/textures/

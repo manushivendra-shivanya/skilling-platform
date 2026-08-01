@@ -1,0 +1,649 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Flora WMS 3D POC v2 — Babylon.js (free engine, zero-cost geometry)</title>
+<style>
+  html, body { margin: 0; padding: 0; overflow: hidden; height: 100%; background: #111; }
+  #renderCanvas { width: 100%; height: 100%; touch-action: none; display: block; }
+  #hud {
+    position: absolute; top: 8px; left: 8px; z-index: 10;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    color: #eee; background: rgba(0,0,0,0.55); padding: 10px 14px; border-radius: 8px;
+    font-size: 13px; line-height: 1.5; max-width: 320px;
+  }
+  #hud b { color: #7dd3fc; }
+  #status { position: absolute; bottom: 8px; left: 8px; z-index: 10; color: #9ca3af; font-family: monospace; font-size: 11px; }
+  #inspectResult {
+    position:absolute; top:8px; right:8px; z-index:10; font-family:monospace;
+    color:#d1fae5; background:rgba(0,0,0,0.65); padding:10px 14px; border-radius:8px;
+    font-size:12px; max-width:260px; display:none;
+  }
+  #modeBar { position: absolute; top: 8px; left: 50%; transform: translateX(-50%); z-index: 10; display: flex; gap: 6px; }
+  #modeBar button {
+    font-family: -apple-system, sans-serif; font-size: 12px; padding: 6px 12px; border-radius: 6px;
+    border: 1px solid #444; background: rgba(20,20,24,0.8); color: #eee; cursor: pointer;
+  }
+  #modeBar button.active { background: #2563eb; border-color: #2563eb; }
+</style>
+</head>
+<body>
+<div id="hud">
+  <div><b>Flora WMS — 3D proof of concept v2</b></div>
+  <div>Engine: Babylon.js (free). Zero-cost procedural geometry -- no downloaded models, still nothing bought.</div>
+  <div>Drag to orbit · scroll/pinch to zoom · click a carton to inspect it</div>
+</div>
+<div id="modeBar">
+  <button id="modeWalkthrough" class="active">Walkthrough</button>
+  <button id="modeTask">Task view (Inspection Zone)</button>
+  <button id="modeReset">Reset view</button>
+</div>
+<div id="status">loading...</div>
+<div id="inspectResult"></div>
+<canvas id="renderCanvas"></canvas>
+
+<script src="https://cdn.babylonjs.com/babylon.js"></script>
+<script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
+<script src="https://cdn.babylonjs.com/materialsLibrary/babylonjs.materials.min.js"></script>
+<script>
+const canvas = document.getElementById("renderCanvas");
+const status = document.getElementById("status");
+const resultEl = document.getElementById("inspectResult");
+const engine = new BABYLON.Engine(canvas, true, { stencil: true });
+
+function createScene() {
+  const scene = new BABYLON.Scene(engine);
+  scene.clearColor = new BABYLON.Color4(0.05, 0.06, 0.08, 1);
+  scene.fogMode = BABYLON.Scene.FOGMODE_LINEAR;
+  scene.fogColor = scene.clearColor;
+  scene.fogStart = 26;
+  scene.fogEnd = 50;
+
+  // Framed on the new G+6 tall racking itself (target sits inside the
+  // rack zone, not the open floor) -- a fully zoomed-out top-down shot put
+  // the whole floor in frame but rendered the racking as sub-pixel-thin
+  // dark lines that were invisible against the dark floor at that
+  // distance. This keeps the camera close enough that the blue steel,
+  // bracing, and stocked pallets actually read, at a safe Z well inside
+  // the building (back wall is at z=-16).
+  const DEFAULT_ALPHA = Math.PI / 4;
+  const DEFAULT_BETA = Math.PI / 2.9;
+  const DEFAULT_RADIUS = 22;
+  const DEFAULT_TARGET = new BABYLON.Vector3(-3, 2.5, -8);
+
+  const camera = new BABYLON.ArcRotateCamera(
+    "camera", DEFAULT_ALPHA, DEFAULT_BETA, DEFAULT_RADIUS, DEFAULT_TARGET.clone(), scene
+  );
+  camera.attachControl(canvas, true);
+  camera.lowerRadiusLimit = 5;
+  camera.upperRadiusLimit = 42;
+  camera.wheelPrecision = 35;
+  // Vertical orbit is capped well short of horizontal (Math.PI/2) at every
+  // radius the camera can reach, so it can never dip under the floor plane
+  // no matter how far the user drags -- see the "beneath the surface" bug
+  // this fixes: camera.y = target.y + radius*cos(beta), and cos(1.5) stays
+  // positive, so camera.y > 0 is guaranteed even at the widest radius.
+  camera.lowerBetaLimit = 0.15;
+  camera.upperBetaLimit = 1.5;
+  // Panning let the target drift arbitrarily far from the scene on a
+  // two-finger drag ("moving endlessly in all directions") -- disabled
+  // entirely rather than just limited, since there's nothing useful to pan
+  // to outside the warehouse footprint in this POC.
+  camera.panningSensibility = 0;
+  camera.inertia = 0.75;
+
+  const hemi = new BABYLON.HemisphericLight("hemi", new BABYLON.Vector3(0, 1, 0), scene);
+  hemi.intensity = 0.55;
+  const dir = new BABYLON.DirectionalLight("dir", new BABYLON.Vector3(-0.4, -1, 0.5), scene);
+  dir.intensity = 0.7;
+  dir.position = new BABYLON.Vector3(10, 20, -10);
+  const shadowGen = new BABYLON.ShadowGenerator(2048, dir);
+  shadowGen.usePoissonSampling = true;
+  shadowGen.blurScale = 2;
+
+  // ---------- Procedural textures (canvas-drawn, zero external files or
+  // network fetches -- more reliable on a mobile WebView with patchy
+  // connectivity than pulling real CC0 images from a third-party host,
+  // while still giving materials real surface detail instead of flat
+  // colour) ----------
+  function dynamicTexture(name, size, draw) {
+    const tex = new BABYLON.DynamicTexture(name, { width: size, height: size }, scene, true);
+    draw(tex.getContext(), size);
+    tex.update();
+    tex.wrapU = BABYLON.Texture.WRAP_ADDRESSMODE;
+    tex.wrapV = BABYLON.Texture.WRAP_ADDRESSMODE;
+    return tex;
+  }
+
+  function cardboardTexture(name, baseRgb, ridgeAlpha) {
+    return dynamicTexture(name, 256, (ctx, s) => {
+      ctx.fillStyle = baseRgb;
+      ctx.fillRect(0, 0, s, s);
+      ctx.strokeStyle = `rgba(0,0,0,${ridgeAlpha})`;
+      ctx.lineWidth = 1;
+      for (let y = 3; y < s; y += 6) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(s, y);
+        ctx.stroke();
+      }
+      for (let i = 0; i < 1400; i++) {
+        ctx.fillStyle = `rgba(0,0,0,${Math.random() * 0.08})`;
+        ctx.fillRect(Math.random() * s, Math.random() * s, 2, 2);
+      }
+    });
+  }
+
+  function woodTexture() {
+    return dynamicTexture("woodTex", 256, (ctx, s) => {
+      ctx.fillStyle = "#8a5f34";
+      ctx.fillRect(0, 0, s, s);
+      for (let i = 0; i < 40; i++) {
+        const y = Math.random() * s;
+        ctx.strokeStyle = `rgba(60,35,15,${0.15 + Math.random() * 0.2})`;
+        ctx.lineWidth = 1 + Math.random() * 2;
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.bezierCurveTo(s / 3, y + (Math.random() - 0.5) * 12, (2 * s) / 3, y + (Math.random() - 0.5) * 12, s, y);
+        ctx.stroke();
+      }
+    });
+  }
+
+  function concreteTexture() {
+    return dynamicTexture("concreteTex", 256, (ctx, s) => {
+      ctx.fillStyle = "#4a4d52";
+      ctx.fillRect(0, 0, s, s);
+      for (let i = 0; i < 3000; i++) {
+        const v = Math.random() * 30;
+        ctx.fillStyle = `rgba(${v + 60},${v + 62},${v + 66},0.5)`;
+        ctx.fillRect(Math.random() * s, Math.random() * s, 1.5, 1.5);
+      }
+    });
+  }
+
+  function brushedMetalTexture() {
+    return dynamicTexture("steelTex", 256, (ctx, s) => {
+      ctx.fillStyle = "#8a8f96";
+      ctx.fillRect(0, 0, s, s);
+      for (let x = 0; x < s; x += 2) {
+        ctx.strokeStyle = `rgba(255,255,255,${Math.random() * 0.06})`;
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, s);
+        ctx.stroke();
+      }
+    });
+  }
+
+  // ---------- Materials: PBR (roughness/metalness respond to real
+  // lighting) instead of flat StandardMaterial, textured where surface
+  // detail actually reads at this scale. ----------
+  const mat = {};
+  const pbr = (name, opts = {}) => {
+    const m = new BABYLON.PBRMaterial(name, scene);
+    m.albedoColor = opts.albedo ?? new BABYLON.Color3(0.6, 0.6, 0.6);
+    m.metallic = opts.metallic ?? 0.0;
+    m.roughness = opts.roughness ?? 0.8;
+    if (opts.texture) {
+      m.albedoTexture = opts.texture;
+      m.albedoColor = BABYLON.Color3.White();
+    }
+    if (opts.emissive) m.emissiveColor = opts.emissive;
+    return m;
+  };
+
+  mat.steel = pbr("steel", { texture: brushedMetalTexture(), metallic: 0.75, roughness: 0.35 });
+  mat.wallPanel = pbr("wallPanel", { albedo: new BABYLON.Color3(0.16, 0.18, 0.22), roughness: 0.9 });
+  mat.concrete = pbr("concrete", { texture: concreteTexture(), roughness: 0.95 });
+  mat.corrugated = pbr("corrugated", { texture: cardboardTexture("cardboard1", "#b8905c", 0.18), roughness: 0.85 });
+  mat.corrugatedDark = pbr("corrugatedDark", { texture: cardboardTexture("cardboard2", "#946f42", 0.22), roughness: 0.88 });
+  mat.tape = pbr("tape", { albedo: new BABYLON.Color3(0.85, 0.75, 0.4), roughness: 0.4, metallic: 0.1 });
+  mat.damaged = pbr("damaged", { texture: cardboardTexture("cardboardDamaged", "#a5482f", 0.25), roughness: 0.9 });
+  // Real photographed wood diffuse+normal (from the supplied Unity asset
+  // package) instead of the hand-drawn canvas wood texture -- a genuine
+  // photo texture reads far better up close than a procedural bezier-line
+  // approximation of wood grain.
+  mat.pallet = pbr("pallet", {
+    texture: new BABYLON.Texture("textures/pallet_diffuse.jpg", scene),
+    roughness: 0.8,
+  });
+  mat.pallet.bumpTexture = new BABYLON.Texture("textures/pallet_normal.png", scene);
+  mat.hazard = pbr("hazard", { albedo: new BABYLON.Color3(0.95, 0.75, 0.1), roughness: 0.5 });
+  mat.hazardDark = pbr("hazardDark", { albedo: new BABYLON.Color3(0.1, 0.1, 0.1), roughness: 0.6 });
+  mat.glow = pbr("glow", { albedo: new BABYLON.Color3(0.9, 0.85, 0.6), emissive: new BABYLON.Color3(0.45, 0.42, 0.28), roughness: 0.6 });
+  // Real rolling-shutter normal map (same Unity package) on the dock door
+  // stripes -- ribbed detail a flat colour box could never sell.
+  mat.doorStripe = pbr("doorStripe", { albedo: new BABYLON.Color3(0.85, 0.15, 0.15), roughness: 0.6 });
+  mat.doorStripe.bumpTexture = new BABYLON.Texture("textures/door_normal.png", scene);
+  mat.scanner = pbr("scanner", { albedo: new BABYLON.Color3(0.1, 0.1, 0.12), metallic: 0.3, roughness: 0.4 });
+  // Painted-steel industrial blue for the tall selective pallet racking --
+  // semi-gloss so it picks up highlights from the directional light the way
+  // real powder-coated steel does, rather than reading flat.
+  mat.rackBlue = pbr("rackBlue", { albedo: new BABYLON.Color3(0.04, 0.22, 0.58), metallic: 0.5, roughness: 0.35 });
+
+  // Real industrial concrete-wall normal map applied as a bump over the
+  // existing wall colour -- adds panel/texture detail without needing a
+  // matching diffuse map.
+  mat.wallPanel.bumpTexture = new BABYLON.Texture("textures/wall_normal.png", scene);
+  mat.wallPanel.bumpTexture.uScale = 4;
+  mat.wallPanel.bumpTexture.vScale = 2;
+
+  const cast = (m) => shadowGen.addShadowCaster(m);
+  const box = (name, w, h, d, x, y, z, m) => {
+    const b = BABYLON.MeshBuilder.CreateBox(name, { width: w, height: h, depth: d }, scene);
+    b.position.set(x, y, z);
+    b.material = m;
+    b.receiveShadows = true;
+    cast(b);
+    return b;
+  };
+
+  // ---------- Floor ----------
+  const floor = BABYLON.MeshBuilder.CreateGround("floor", { width: 40, height: 38 }, scene);
+  const floorMat = new BABYLON.GridMaterial("floorMat", scene);
+  floorMat.majorUnitFrequency = 5;
+  floorMat.minorUnitVisibility = 0.25;
+  floorMat.gridRatio = 1;
+  floorMat.mainColor = new BABYLON.Color3(0.22, 0.23, 0.26);
+  floorMat.lineColor = new BABYLON.Color3(0.42, 0.46, 0.5);
+  floor.material = floorMat;
+  floor.receiveShadows = true;
+
+  // Quarantine-zone floor marking -- a real WMS concept (Quarantine Zone
+  // workstation), drawn as a thin hazard-striped outline on the ground.
+  function hazardOutline(cx, cz, w, d) {
+    const t = 0.12, h = 0.02;
+    box("qz-n", w, h, t, cx, 0.011, cz - d / 2, mat.hazard);
+    box("qz-s", w, h, t, cx, 0.011, cz + d / 2, mat.hazard);
+    box("qz-e", t, h, d, cx + w / 2, 0.011, cz, mat.hazard);
+    box("qz-w", t, h, d, cx - w / 2, 0.011, cz, mat.hazard);
+  }
+  hazardOutline(6, 6, 5, 4);
+  const qzLabel = BABYLON.MeshBuilder.CreatePlane("qzLabel", { width: 2.4, height: 0.6 }, scene);
+  qzLabel.position.set(6, 0.02, 6);
+  qzLabel.rotation.x = Math.PI / 2;
+  const qzLabelMat = new BABYLON.StandardMaterial("qzLabelMat", scene);
+  qzLabelMat.emissiveColor = new BABYLON.Color3(0.9, 0.75, 0.1);
+  qzLabelMat.alpha = 0.9;
+  qzLabel.material = qzLabelMat;
+
+  // ---------- Back wall + dock door ----------
+  // Height raised from the original 8m to clear the new G+6 tall racking
+  // (~7.5m to the top beam) with headroom to spare.
+  const wallZ = -16;
+  const WALL_H = 9.6;
+  box("backWall", 40, WALL_H, 0.3, 0, WALL_H / 2, wallZ, mat.wallPanel);
+  for (let i = -18; i <= 18; i += 4) box("wallRib", 0.15, WALL_H, 0.35, i, WALL_H / 2, wallZ, mat.steel);
+  // Roll-up dock door with alternating stripes -- purely procedural
+  // geometry, but now with the real rolling-shutter normal map for ribbed
+  // surface detail.
+  const doorX = -8;
+  for (let i = 0; i < 6; i++) {
+    box("doorStripe" + i, 3.2, 0.55, 0.12, doorX, 0.6 + i * 0.6, wallZ + 0.2, i % 2 === 0 ? mat.doorStripe : mat.steel);
+  }
+  box("doorFrame-l", 0.2, 4, 0.4, doorX - 1.7, 2, wallZ + 0.2, mat.steel);
+  box("doorFrame-r", 0.2, 4, 0.4, doorX + 1.7, 2, wallZ + 0.2, mat.steel);
+  box("doorFrame-t", 3.6, 0.2, 0.4, doorX, 4, wallZ + 0.2, mat.steel);
+
+  // ---------- Real modelled props (converted from the purchased/free
+  // itch.io warehouse asset pack: FBX -> glTF via Facebook's FBX2glTF,
+  // since Babylon has no native FBX loader) ----------
+  // Every import is async; the scene renders immediately and each model
+  // pops in as it loads rather than blocking scene creation on them.
+  // Imported PBR materials get cloned (never mutated in place) before
+  // tinting -- multiple instances of the same glb share one material by
+  // default, so recoloring it directly would recolor every instance in
+  // the scene, not just this one.
+  function importModel(file, x, y, z, opts = {}) {
+    const root = new BABYLON.TransformNode(file + "-root", scene);
+    root.position.set(x, y, z);
+    if (opts.rotationY) root.rotation.y = opts.rotationY;
+    BABYLON.SceneLoader.ImportMeshAsync("", "models/", file, scene).then((result) => {
+      result.meshes.forEach((mesh) => {
+        if (mesh.parent === null) mesh.parent = root;
+        mesh.receiveShadows = true;
+        if (mesh.getTotalVertices() > 0) shadowGen.addShadowCaster(mesh);
+        if (opts.tint && mesh.material) {
+          const cloned = mesh.material.clone(mesh.material.name + "-" + file + "-" + x + "-" + z);
+          if (cloned.albedoColor) {
+            cloned.albedoColor = opts.tint;
+            cloned.roughness = 0.45;
+            cloned.metallic = 0.0;
+          }
+          mesh.material = cloned;
+        }
+        // Lamp.glb's own material ships with emissiveFactor [1,1,1] --
+        // a flat, fully-saturated white that renders as a blown-out
+        // white blob without bloom to soften it (bloom was removed
+        // earlier for washing everything else out). Toned down per
+        // instance so it reads as a lit fixture, not a glitch.
+        if (file === "Lamp.glb" && mesh.material && mesh.material.emissiveColor) {
+          mesh.material.emissiveColor = new BABYLON.Color3(0.55, 0.5, 0.35);
+        }
+      });
+      if (opts.scale) root.scaling.setAll(opts.scale);
+    }).catch((error) => console.error(`Failed to load ${file}:`, error));
+    return root;
+  }
+
+  // PBR albedoColor multiplies the underlying texture rather than
+  // replacing it, so a modest tint against a dark source texture reads as
+  // muddy brown-red instead of a clean plastic red -- pushed brighter and
+  // more saturated to compensate, plus a slight roughness/metallic
+  // adjustment for a "moulded plastic" look rather than the original
+  // asset's more matte industrial finish.
+  const RED_CRATE_TINT = new BABYLON.Color3(1.0, 0.14, 0.1);
+
+  // ---------- Warehouse fully stocked with red crates ----------
+  // Every red crate below is the same two real models (Plastic_Container,
+  // Sterofoam_Box) re-tinted per instance -- see importModel's tint
+  // handling. Red is deliberately reserved for the warehouse's own
+  // reusable storage bins, distinct from the brown cardboard shipment
+  // cartons (the actual interactive WMS objects) -- a real visual
+  // distinction, not just variety for its own sake.
+  function redCrate(x, y, z, opts = {}) {
+    const file = opts.file ?? (Math.random() < 0.5 ? "Plastic_Container.glb" : "Sterofoam_Box.glb");
+    importModel(file, x, y, z, { tint: RED_CRATE_TINT, scale: opts.scale ?? 0.55, rotationY: opts.rotationY });
+  }
+
+  // Logical rack "slots" -- shelf height numbers below come from
+  // Rack.glb's own measured bounding box (~1.77m tall, two usable shelf
+  // levels), not the old hand-built box rack's arbitrary spacing.
+  const rackA = { x: -6, z: 0 };
+  const rackB = { x: 6, z: -3 };
+  importModel("Rack.glb", rackA.x, 0, rackA.z);
+  importModel("Rack.glb", rackB.x, 0, rackB.z);
+  importModel("Shelf_Corner_Brackets.glb", rackA.x + 1.6, 0.9, rackA.z + 1.1, { scale: 1.2 });
+  importModel("Shelves.glb", -10, 0, 4, { scale: 1.4 });
+  importModel("Shelves.glb", -10, 0, 6.5, { scale: 1.4 });
+
+  // On rack A's two shelf levels, filling gaps the inspection cartons don't.
+  redCrate(rackA.x - 1.1, 0.55 + 0.05, rackA.z + 0.6);
+  redCrate(rackA.x + 1.1, 1.15 + 0.05, rackA.z - 0.5);
+  redCrate(rackA.x - 0.9, 1.15 + 0.05, rackA.z + 0.4);
+  // Rack B.
+  redCrate(rackB.x - 1.2, 0.55 + 0.05, rackB.z + 0.6);
+  redCrate(rackB.x + 1.2, 1.15 + 0.05, rackB.z);
+  redCrate(rackB.x - 0.8, 1.15 + 0.05, rackB.z - 0.6);
+
+  // ---------- Multi-row background racking: tall G+6 selective pallet
+  // racking ----------
+  // The two racks above (rackA/rackB, from Rack.glb) are the interactive
+  // ones -- real carton IDs the WMS controller would score -- and stay a
+  // small two-shelf unit since that's what the loaded model actually is.
+  // Everything below is pure set dressing: full aisles of "ground plus 6"
+  // tall selective racking (7 beam levels, ~7.5m to the top), matching real
+  // industrial racking photos rather than the itch.io pack's small shelf
+  // unit repeated. Built from three template box meshes (post/beam/brace)
+  // reused via createInstance, so a whole aisle costs three draw calls
+  // instead of hundreds -- Rack.glb repeated this densely would have been
+  // both the wrong scale and far heavier to load.
+  const RACK_LEVELS = 7; // ground + 6
+  const RACK_LEVEL_HEIGHT = 1.1;
+  const RACK_BASE_CLEARANCE = 1.15; // first beam sits above a full ground pallet load
+  const rackLevelYs = Array.from({ length: RACK_LEVELS }, (_, j) => RACK_BASE_CLEARANCE + j * RACK_LEVEL_HEIGHT);
+  const RACK_TOTAL_H = rackLevelYs[RACK_LEVELS - 1] + 0.5;
+  const RACK_POST_T = 0.1;
+  const RACK_DEPTH = 1.1;
+
+  const rackPostTemplate = BABYLON.MeshBuilder.CreateBox("rackPostTemplate", { width: RACK_POST_T, height: RACK_TOTAL_H, depth: RACK_POST_T }, scene);
+  rackPostTemplate.material = mat.rackBlue;
+  rackPostTemplate.isVisible = false;
+  shadowGen.addShadowCaster(rackPostTemplate);
+
+  const rackBeamTemplate = BABYLON.MeshBuilder.CreateBox("rackBeamTemplate", { width: 1, height: 0.12, depth: 0.1 }, scene);
+  rackBeamTemplate.material = mat.rackBlue;
+  rackBeamTemplate.isVisible = false;
+  shadowGen.addShadowCaster(rackBeamTemplate);
+
+  const rackBraceTemplate = BABYLON.MeshBuilder.CreateBox("rackBraceTemplate", { width: 0.05, height: 1, depth: 0.05 }, scene);
+  rackBraceTemplate.material = mat.rackBlue;
+  rackBraceTemplate.isVisible = false;
+  shadowGen.addShadowCaster(rackBraceTemplate);
+
+  let rackInstCounter = 0;
+  function rackPost(x, z) {
+    const inst = rackPostTemplate.createInstance("rackPost" + rackInstCounter++);
+    inst.position.set(x, RACK_TOTAL_H / 2, z);
+    inst.receiveShadows = true;
+    return inst;
+  }
+  function rackBeam(xCenter, y, z, length) {
+    const inst = rackBeamTemplate.createInstance("rackBeam" + rackInstCounter++);
+    inst.scaling.x = length;
+    inst.position.set(xCenter, y, z);
+    inst.receiveShadows = true;
+    return inst;
+  }
+  function rackBrace(x, z1, y1, z2, y2) {
+    const dz = z2 - z1, dy = y2 - y1;
+    const len = Math.sqrt(dz * dz + dy * dy);
+    const inst = rackBraceTemplate.createInstance("rackBrace" + rackInstCounter++);
+    inst.scaling.y = len;
+    inst.position.set(x, (y1 + y2) / 2, (z1 + z2) / 2);
+    inst.rotation.x = Math.atan2(dz, dy);
+    inst.receiveShadows = true;
+    return inst;
+  }
+
+  // Lower shelf gets a real pallet plus 1-2 crates most of the time; upper
+  // levels are stocked less often, mirroring how a real working warehouse
+  // is never perfectly full top to bottom.
+  function tallRackRow(startX, z0, bays, pitch) {
+    const zBack = z0 + RACK_DEPTH;
+    for (let i = 0; i <= bays; i++) {
+      rackPost(startX + i * pitch, z0);
+      rackPost(startX + i * pitch, zBack);
+    }
+    for (let j = 0; j < RACK_LEVELS; j++) {
+      const y = rackLevelYs[j];
+      for (let i = 0; i < bays; i++) {
+        const xCenter = startX + i * pitch + pitch / 2;
+        rackBeam(xCenter, y, z0, pitch - RACK_POST_T);
+        rackBeam(xCenter, y, zBack, pitch - RACK_POST_T);
+      }
+    }
+    // Diagonal cross-bracing zig-zagging up the back face, full height --
+    // the detail that reads as real industrial racking rather than open
+    // box shelving in reference photos.
+    for (let i = 0; i < bays; i++) {
+      const xa = startX + i * pitch + RACK_POST_T;
+      const xb = startX + (i + 1) * pitch - RACK_POST_T;
+      for (let j = 0; j < RACK_LEVELS - 1; j++) {
+        rackBrace(j % 2 === 0 ? xa : xb, z0, rackLevelYs[j], zBack, rackLevelYs[j + 1]);
+      }
+    }
+    for (let i = 0; i < bays; i++) {
+      const x = startX + i * pitch + pitch / 2;
+      const zc = z0 + RACK_DEPTH / 2;
+      for (let j = 0; j < 3; j++) {
+        if (j > 0 && Math.random() < 0.35) continue;
+        const y = j === 0 ? 0 : rackLevelYs[j - 1] + 0.05;
+        importModel("Old_Pallet.glb", x, y, zc, { scale: 0.65 });
+        redCrate(x - 0.3, y + 0.3, zc, { scale: 0.5 });
+        if (Math.random() < 0.6) redCrate(x + 0.25, y + 0.3, zc - 0.15, { scale: 0.5 });
+      }
+      // Occasional single crate stocked higher up, for variety.
+      if (Math.random() < 0.3) {
+        const j = 3 + Math.floor(Math.random() * (RACK_LEVELS - 4));
+        redCrate(x, rackLevelYs[j - 1] + 0.33, zc, { scale: 0.5 });
+      }
+    }
+  }
+  tallRackRow(-9, -6.5, 5, 2.1);
+  tallRackRow(-9, -9, 5, 2.1);
+  tallRackRow(-9, -11.5, 5, 2.1);
+  tallRackRow(2, -6.5, 4, 2.1);
+  tallRackRow(2, -9, 4, 2.1);
+  tallRackRow(2, -11.5, 4, 2.1);
+
+  // Real ceiling light fixtures (converted from the supplied Unity asset
+  // package's lamp.fbx) run down each aisle gap, replacing the earlier flat
+  // emissive boxes.
+  // Lamp.glb's raw mesh is ~11.7 units along its long axis (a Unity-scene
+  // export, not sized in meters) -- at scale 1.3 that rendered as a 15m
+  // beam spanning the whole ceiling and blocking the default camera view.
+  // 0.12 brings it down to a plausible ~1.4m fixture. Height and Z
+  // positions moved (7.6 -> 9.0, and off the rack-row Z's) to clear the
+  // new G+6 racking (~7.5m to the top beam) and hang over open aisle gaps.
+  [-8, -3, 2, 7].forEach((x) => {
+    [-13, -7.75, -1, 5].forEach((z) => importModel("Lamp.glb", x, 9.0, z, { scale: 0.12 }));
+  });
+  // Extra shelving units.
+  redCrate(-10, 0.6 + 0.05, 4);
+  redCrate(-10, 0.6 + 0.05, 6.5);
+  redCrate(-10.3, 1.2 + 0.05, 4.3);
+
+  // Floor-level crate stacks along the aisle, like real overflow storage
+  // waiting to be put away.
+  const floorStacks = [
+    [-3, 2], [-2.3, 2], [-1, -4], [-0.3, -4], [2, -8], [2.7, -8],
+    [9, 2], [9, 3.5], [9.7, 2.8],
+  ];
+  floorStacks.forEach(([x, z], i) => redCrate(x, 0.27, z, { rotationY: i * 0.7 }));
+
+  // Tape dispenser prop on the inspection bench (bench itself is defined
+  // further down as a procedural box -- position matches it).
+  importModel("Tape_Dispenser.glb", -1.6, 0.9, 4.3, { scale: 0.6 });
+  // A red plastic basket by the barcode scanner, for scale variety against
+  // the taller containers.
+  importModel("Plastic_Basket.glb", -0.3, 0, 5.2, { tint: RED_CRATE_TINT, scale: 0.6 });
+
+  // ---------- Carton builder: base + lighter flap band + tape line ----------
+  function carton(id, x, y, z, opts = {}) {
+    const size = opts.size ?? 0.85;
+    const issue = opts.issue ?? null;
+    const baseMat = issue ? mat.damaged : mat.corrugated;
+    const root = new BABYLON.TransformNode(id, scene);
+    root.position.set(x, y, z);
+
+    const body = BABYLON.MeshBuilder.CreateBox(id + "-body", { width: size, height: size * 0.85, depth: size }, scene);
+    body.material = baseMat;
+    body.parent = root;
+    body.receiveShadows = true;
+    cast(body);
+
+    const flap = BABYLON.MeshBuilder.CreateBox(id + "-flap", { width: size * 1.01, height: size * 0.14, depth: size * 1.01 }, scene);
+    flap.position.y = size * 0.42 + size * 0.07;
+    flap.material = mat.corrugatedDark;
+    flap.parent = root;
+
+    const tapeStrip = BABYLON.MeshBuilder.CreateBox(id + "-tape", { width: size * 0.16, height: size * 0.86, depth: size * 1.02 }, scene);
+    tapeStrip.material = mat.tape;
+    tapeStrip.parent = root;
+
+    if (opts.dent) {
+      const dent = BABYLON.MeshBuilder.CreateBox(id + "-dent", { width: size * 0.3, height: size * 0.3, depth: 0.06 }, scene);
+      dent.position.set(size * 0.3, -size * 0.1, size / 2 + 0.02);
+      dent.rotation.z = 0.3;
+      dent.material = mat.corrugatedDark;
+      dent.parent = root;
+    }
+
+    body.actionManager = new BABYLON.ActionManager(scene);
+    body.actionManager.registerAction(
+      new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnPickTrigger, () => onCartonPicked(id, body, issue))
+    );
+    body.metadata = { cartonId: id, issue };
+    return { root, body };
+  }
+
+  const highlightLayer = new BABYLON.HighlightLayer("hl", scene);
+  function onCartonPicked(id, mesh, issue) {
+    highlightLayer.removeAllMeshes();
+    highlightLayer.addMesh(mesh, issue ? BABYLON.Color3.Red() : BABYLON.Color3.Green());
+    resultEl.style.display = "block";
+    resultEl.innerHTML = issue
+      ? `<b>${id}</b><br>inspect_item -&gt; record_issue<br>issueType: <b>${issue}</b><br><span style="color:#fca5a5">Correct: quarantine, don't accept</span>`
+      : `<b>${id}</b><br>inspect_item -&gt; finding: compliant<br><span style="color:#86efac">No issue found</span>`;
+  }
+
+  // Shelf heights measured off Rack.glb's own bounding box (~1.77m tall,
+  // two real shelf levels), not an arbitrary guess.
+  carton("carton-001", rackA.x - 0.2, 0.55 + 0.42, rackA.z - 0.05);
+  carton("carton-002", rackA.x + 0.3, 1.15 + 0.42, rackA.z);
+  carton("carton-003", rackB.x, 0.55 + 0.42, rackB.z, { issue: "packaging_damage", dent: true });
+  carton("carton-004", 5.2, 0.55 + 0.42, rackB.z - 0.05, { issue: null });
+
+  // ---------- Real pallet + cartons on it, near the quarantine zone ----------
+  importModel("Old_Pallet.glb", 6, 0, 6, { scale: 0.65 });
+  // Pallet top surface height comes from Old_Pallet.glb's measured
+  // bounding box (0.39m tall) x the 0.65 scale applied above.
+  carton("carton-005", 5.6, 0.39 * 0.65 + 0.42, 5.8, { issue: "packaging_damage" });
+  carton("carton-006", 6.5, 0.39 * 0.65 + 0.42, 6.2, { issue: null });
+
+  // Traffic cones marking the quarantine-zone boundary -- a small, real
+  // touch the hand-built hazard-stripe outline alone couldn't give.
+  importModel("Traffic_Cones.glb", 3.5, 0, 4.2, { scale: 0.9 });
+  importModel("Traffic_Cones.glb", 8.5, 0, 8, { scale: 0.9, rotationY: Math.PI / 3 });
+
+  // ---------- Barcode scanner prop on the inspection bench ----------
+  const bench = box("bench", 2.4, 0.9, 1, -1, 0.45, 4.5, mat.steel);
+  const scannerBase = box("scannerBase", 0.3, 0.5, 0.3, -1, 0.9 + 0.25, 4.5, mat.scanner);
+  const scannerHead = BABYLON.MeshBuilder.CreateCylinder("scannerHead", { diameter: 0.22, height: 0.35, tessellation: 12 }, scene);
+  scannerHead.rotation.x = Math.PI / 5;
+  scannerHead.position.set(-1, 0.9 + 0.55, 4.65);
+  scannerHead.material = mat.scanner;
+
+  // ---------- Forklift stand-in ----------
+  const forkBody = box("forkBody", 1.3, 1, 2.1, 3, 0.5, -8, mat.hazard);
+  const forkCab = box("forkCab", 1, 1.1, 0.9, 3, 1.25, -8.5, mat.steel);
+  const forkTines = box("forkTines", 1.4, 0.1, 1.2, 3, 0.15, -6.8, mat.steel);
+
+  // ---------- Rendering pipeline ----------
+  // A first pass here added a default IBL environment plus bloom and SSAO
+  // (see git history / current-state.md) -- it made every PBR surface look
+  // like washed-out blue-grey plastic, blew the ceiling lights into white
+  // blobs, and needed several rounds of tuning that still didn't land.
+  // With real modelled geometry and real baked textures doing the actual
+  // work of "looking real" now, that whole stack turned out unnecessary --
+  // just anti-aliasing plus a light contrast lift.
+  const pipeline = new BABYLON.DefaultRenderingPipeline("defaultPipeline", true, scene, [camera]);
+  pipeline.fxaaEnabled = true;
+  pipeline.imageProcessing.contrast = 1.05;
+  pipeline.imageProcessing.exposure = 1.0;
+
+  return {
+    scene, camera,
+    defaults: { DEFAULT_ALPHA, DEFAULT_BETA, DEFAULT_RADIUS, DEFAULT_TARGET },
+  };
+}
+
+const { scene, camera, defaults } = createScene();
+engine.runRenderLoop(() => scene.render());
+window.addEventListener("resize", () => engine.resize());
+
+function setActiveButton(id) {
+  document.querySelectorAll("#modeBar button").forEach((b) => b.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+}
+
+document.getElementById("modeWalkthrough").onclick = () => {
+  setActiveButton("modeWalkthrough");
+  camera.setTarget(defaults.DEFAULT_TARGET.clone());
+  camera.radius = defaults.DEFAULT_RADIUS;
+};
+document.getElementById("modeTask").onclick = () => {
+  setActiveButton("modeTask");
+  camera.setTarget(new BABYLON.Vector3(6, 1.2, -1));
+  camera.radius = 10;
+  camera.alpha = -Math.PI / 2.2;
+  camera.beta = Math.PI / 2.6;
+};
+// "Central view" fix: a always-available, one-tap way back to a known-good
+// framing, since orbit + zoom alone can leave the camera somewhere
+// disorienting even with the beta/pan limits in place.
+document.getElementById("modeReset").onclick = () => {
+  setActiveButton("modeWalkthrough");
+  camera.alpha = defaults.DEFAULT_ALPHA;
+  camera.beta = defaults.DEFAULT_BETA;
+  camera.radius = defaults.DEFAULT_RADIUS;
+  camera.setTarget(defaults.DEFAULT_TARGET.clone());
+};
+
+status.textContent = "Babylon.js " + BABYLON.Engine.Version +
+  " — v4 (real modelled assets + PBR), $0 + $0 (free tier of a purchased pack)";
+</script>
+</body>
+</html>
