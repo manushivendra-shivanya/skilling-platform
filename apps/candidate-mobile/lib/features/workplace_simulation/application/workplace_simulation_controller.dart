@@ -1131,8 +1131,9 @@ class WorkplaceSimulationController
     SaveDocumentReviewDraftCommand command,
   ) async {
     final active = _activeAttempt();
-    if (active == null)
+    if (active == null) {
       return SaveDocumentReviewDraftResult.invalidAttemptState;
+    }
     final (current, attempt) = active;
     final draft = attempt.documentReviewDraft ?? _newDocumentDraft(attempt);
     if (draft.status == drafts.OperationalDraftStatus.submitted) {
@@ -1262,8 +1263,9 @@ class WorkplaceSimulationController
     ConfirmShipmentIdentityCommand command,
   ) async {
     final active = _activeAttempt();
-    if (active == null)
+    if (active == null) {
       return ConfirmShipmentIdentityResult.invalidAttemptState;
+    }
     final (current, attempt) = active;
     final draft = attempt.receivingCountDraft ?? _newReceivingDraft(attempt);
     if (draft.status == drafts.OperationalDraftStatus.submitted) {
@@ -1514,8 +1516,9 @@ class WorkplaceSimulationController
     SaveReceivingCountDraftCommand command,
   ) async {
     final active = _activeAttempt();
-    if (active == null)
+    if (active == null) {
       return SaveReceivingCountDraftResult.invalidAttemptState;
+    }
     final (current, attempt) = active;
     final draft = attempt.receivingCountDraft ?? _newReceivingDraft(attempt);
     if (draft.status == drafts.OperationalDraftStatus.submitted) {
@@ -2602,8 +2605,9 @@ class WorkplaceSimulationController
     SubmitQuarantineReleaseCommand command,
   ) async {
     final active = _activeAttemptWithScenario();
-    if (active == null)
+    if (active == null) {
       return SubmitQuarantineReleaseResult.invalidAttemptState;
+    }
     final (current, attempt, scenario) = active;
     if (!attempt.completedTaskIds.contains('confirm-quarantine')) {
       return SubmitQuarantineReleaseResult.quarantineNotConfirmed;
