@@ -50,6 +50,7 @@ class LocalSimulationAttemptRepository implements SimulationAttemptRepository {
     );
     await _store.write(counterKey, '$nextNumber');
     await _writeAttempt(attempt);
+    await _appendToHistory(candidateId, missionId, attempt.id);
     return attempt;
   }
 
@@ -221,6 +222,20 @@ class LocalSimulationAttemptRepository implements SimulationAttemptRepository {
   }
 
   @override
+  Future<List<SimulationResult>> listResults(
+    String candidateId,
+    String missionId,
+  ) async {
+    final attemptIds = await _historyAttemptIds(candidateId, missionId);
+    final results = <SimulationResult>[];
+    for (final attemptId in attemptIds.reversed) {
+      final result = await getResult(candidateId, attemptId);
+      if (result != null) results.add(result);
+    }
+    return results;
+  }
+
+  @override
   Future<void> clearActiveAttempt(String candidateId, String missionId) async {
     final attempt = await getActiveAttempt(candidateId, missionId);
     if (attempt != null) _activeCache.remove(attempt.id);
@@ -249,6 +264,32 @@ class LocalSimulationAttemptRepository implements SimulationAttemptRepository {
 
   String _resultKey(String candidateId, String attemptId) =>
       'candidate.wms.result.v1.${_safe(candidateId)}.${_safe(attemptId)}';
+
+  Future<void> _appendToHistory(
+    String candidateId,
+    String missionId,
+    String attemptId,
+  ) async {
+    final ids = await _historyAttemptIds(candidateId, missionId);
+    await _store.write(
+      _historyKey(candidateId, missionId),
+      jsonEncode([...ids, attemptId]),
+    );
+  }
+
+  Future<List<String>> _historyAttemptIds(
+    String candidateId,
+    String missionId,
+  ) async {
+    final encoded = await _store.read(_historyKey(candidateId, missionId));
+    if (encoded == null) return const [];
+    final decoded = jsonDecode(encoded);
+    if (decoded is! List) return const [];
+    return decoded.whereType<String>().toList(growable: false);
+  }
+
+  String _historyKey(String candidateId, String missionId) =>
+      'candidate.wms.history.v1.${_safe(candidateId)}.${_safe(missionId)}';
 
   String _safe(String value) => value.replaceAll(RegExp('[^a-zA-Z0-9_-]'), '_');
 }
@@ -316,6 +357,12 @@ class InMemorySimulationAttemptRepository
   @override
   Future<SimulationResult?> getResult(String candidateId, String attemptId) =>
       _delegate.getResult(candidateId, attemptId);
+
+  @override
+  Future<List<SimulationResult>> listResults(
+    String candidateId,
+    String missionId,
+  ) => _delegate.listResults(candidateId, missionId);
 
   @override
   Future<void> saveAttempt(SimulationAttempt attempt) =>

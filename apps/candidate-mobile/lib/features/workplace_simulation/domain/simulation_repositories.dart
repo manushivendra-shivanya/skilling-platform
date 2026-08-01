@@ -54,6 +54,14 @@ abstract interface class SimulationAttemptRepository {
 
   Future<SimulationResult?> getResult(String candidateId, String attemptId);
 
+  /// Every result ever saved for this candidate on this mission, newest
+  /// first -- the full local attempt history, not just the current attempt.
+  /// A retake's result is appended, never replaces an earlier one.
+  Future<List<SimulationResult>> listResults(
+    String candidateId,
+    String missionId,
+  );
+
   Future<void> clearActiveAttempt(String candidateId, String missionId);
 
   /// Number of writes for this candidate still queued for remote sync.
