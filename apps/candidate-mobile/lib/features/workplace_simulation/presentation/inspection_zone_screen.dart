@@ -18,13 +18,13 @@ class InspectionZoneScreen extends ConsumerStatefulWidget {
   const InspectionZoneScreen({
     required this.missionId,
     required this.onBack,
-    required this.onOpenQuarantineZone,
+    required this.onOpenBarcodeStation,
     super.key,
   });
 
   final String missionId;
   final VoidCallback onBack;
-  final VoidCallback onOpenQuarantineZone;
+  final VoidCallback onOpenBarcodeStation;
 
   @override
   ConsumerState<InspectionZoneScreen> createState() =>
@@ -121,7 +121,7 @@ class _InspectionZoneScreenState extends ConsumerState<InspectionZoneScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Inspect and scan every carton',
+                        'Inspect every carton',
                         style: Theme.of(context).textTheme.headlineSmall,
                       ),
                       const SizedBox(height: AppSpacing.xs),
@@ -213,87 +213,6 @@ class _InspectionZoneScreenState extends ConsumerState<InspectionZoneScreen> {
                           'Inspection progress: '
                           '${draft?.cartonInspections.length ?? 0} of '
                           '${cartons.length} cartons inspected',
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
-                      ),
-                      const SizedBox(height: AppSpacing.lg),
-                      Text(
-                        'Barcode scanning',
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-                      for (final carton in cartons) ...[
-                        Builder(
-                          builder: (context) {
-                            BarcodeScanEntry? entry;
-                            for (final item
-                                in draft?.barcodeScans ??
-                                    const <BarcodeScanEntry>[]) {
-                              if (item.cartonId == carton.id) entry = item;
-                            }
-                            return AppCard(
-                              semanticLabel:
-                                  '${carton.title}, ${carton.content['sku']}',
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          carton.title,
-                                          style: Theme.of(
-                                            context,
-                                          ).textTheme.titleMedium,
-                                        ),
-                                        Text('${carton.content['sku']}'),
-                                        if (entry == null)
-                                          const Text('Not scanned')
-                                        else ...[
-                                          Text(_statusLabel(entry.status)),
-                                          Text(
-                                            'Revision ${entry.revisionNumber}',
-                                            style: Theme.of(
-                                              context,
-                                            ).textTheme.labelSmall,
-                                          ),
-                                        ],
-                                      ],
-                                    ),
-                                  ),
-                                  if (entry != null)
-                                    IconButton(
-                                      tooltip: 'Remove ${carton.title} scan',
-                                      onPressed: _saving
-                                          ? null
-                                          : () => _removeScan(entry!),
-                                      icon: const Icon(Icons.delete_outline),
-                                    ),
-                                  OutlinedButton(
-                                    onPressed: _saving
-                                        ? null
-                                        : () => _editScan(carton.id, entry),
-                                    child: Text(
-                                      entry == null ? 'Scan' : 'Edit',
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            );
-                          },
-                        ),
-                        const SizedBox(height: AppSpacing.md),
-                      ],
-                      Semantics(
-                        liveRegion: true,
-                        label:
-                            '${draft?.barcodeScans.length ?? 0} of '
-                            '${cartons.length} cartons scanned',
-                        child: Text(
-                          'Scan progress: ${draft?.barcodeScans.length ?? 0} '
-                          'of ${cartons.length} cartons scanned',
                           style: Theme.of(context).textTheme.titleMedium,
                         ),
                       ),
@@ -448,82 +367,6 @@ class _InspectionZoneScreenState extends ConsumerState<InspectionZoneScreen> {
     }
   }
 
-  Future<void> _editScan(String cartonId, BarcodeScanEntry? entry) async {
-    final input = await _showScanEditor(entry);
-    if (input == null) return;
-    if (entry == null) {
-      final result = await ref
-          .read(
-            workplaceSimulationControllerProvider(widget.missionId).notifier,
-          )
-          .recordBarcodeScan(
-            RecordBarcodeScanCommand(cartonId: cartonId, status: input),
-          );
-      if (mounted && result != RecordBarcodeScanResult.success) {
-        _showMessage('The scan could not be recorded.');
-      }
-    } else {
-      final result = await ref
-          .read(
-            workplaceSimulationControllerProvider(widget.missionId).notifier,
-          )
-          .updateBarcodeScan(
-            UpdateBarcodeScanCommand(entryId: entry.id, status: input),
-          );
-      if (mounted && result != UpdateBarcodeScanResult.success) {
-        _showMessage('The scan could not be updated.');
-      }
-    }
-  }
-
-  Future<BarcodeStatus?> _showScanEditor(BarcodeScanEntry? entry) async {
-    var status = entry?.status ?? BarcodeStatus.readable;
-    return showDialog<BarcodeStatus>(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          title: Text(entry == null ? 'Scan barcode' : 'Edit scan'),
-          content: DropdownButtonFormField<BarcodeStatus>(
-            initialValue: status,
-            decoration: const InputDecoration(
-              labelText: 'Barcode status',
-              border: OutlineInputBorder(),
-            ),
-            items: [
-              for (final value in BarcodeStatus.values)
-                DropdownMenuItem(
-                  value: value,
-                  child: Text(_statusLabel(value)),
-                ),
-            ],
-            onChanged: (value) {
-              if (value != null) setDialogState(() => status = value);
-            },
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.pop(context, status),
-              child: const Text('Save scan'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Future<void> _removeScan(BarcodeScanEntry entry) async {
-    final result = await ref
-        .read(workplaceSimulationControllerProvider(widget.missionId).notifier)
-        .removeBarcodeScan(RemoveBarcodeScanCommand(entry.id));
-    if (mounted && result != RemoveBarcodeScanResult.success) {
-      _showMessage('The scan could not be removed.');
-    }
-  }
-
   Future<void> _saveDraft() async {
     setState(() => _saving = true);
     final result = await ref
@@ -547,12 +390,10 @@ class _InspectionZoneScreenState extends ConsumerState<InspectionZoneScreen> {
     setState(() => _saving = false);
     switch (result) {
       case SubmitInspectionResult.success:
-        _showMessage('Inspection submitted. Quarantine Zone unlocked.');
-        widget.onOpenQuarantineZone();
+        _showMessage('Inspection submitted. Barcode Station unlocked.');
+        widget.onOpenBarcodeStation();
       case SubmitInspectionResult.incompleteInspection:
         _showMessage('Inspect every carton before submitting.');
-      case SubmitInspectionResult.incompleteScans:
-        _showMessage('Scan every barcode before submitting.');
       default:
         _showMessage('The inspection could not be submitted.');
     }
@@ -604,9 +445,4 @@ String _findingLabel(CartonFinding finding) => switch (finding) {
   CartonFinding.incorrectSku => 'Incorrect SKU',
   CartonFinding.quantityShortage => 'Quantity shortage',
   CartonFinding.unreadableBarcode => 'Unreadable barcode',
-};
-
-String _statusLabel(BarcodeStatus status) => switch (status) {
-  BarcodeStatus.readable => 'Readable',
-  BarcodeStatus.unreadable => 'Unreadable',
 };

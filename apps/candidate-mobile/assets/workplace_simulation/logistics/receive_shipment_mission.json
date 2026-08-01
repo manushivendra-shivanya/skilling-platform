@@ -63,6 +63,7 @@
     "document-verification",
     "receiving-count",
     "physical-inspection",
+    "barcode-scan",
     "exception-handling",
     "receiving-decision",
     "shift-report"
@@ -105,13 +106,23 @@
       "title": "Inspect Delivered Stock",
       "workstationId": "inspection-zone",
       "instructions": "Count and inspect every carton without revealing hidden issues.",
-      "taskIds": ["inspect-cartons", "scan-barcodes"],
+      "taskIds": ["inspect-cartons"],
+      "completionMode": "all_mandatory_tasks"
+    },
+    {
+      "id": "barcode-scan",
+      "missionId": "receive-incoming-shipment-01",
+      "sequence": 5,
+      "title": "Scan Every Carton",
+      "workstationId": "barcode-station",
+      "instructions": "Scan every carton. Resolve unreadable scans before moving on.",
+      "taskIds": ["scan-barcodes"],
       "completionMode": "all_mandatory_tasks"
     },
     {
       "id": "exception-handling",
       "missionId": "receive-incoming-shipment-01",
-      "sequence": 5,
+      "sequence": 6,
       "title": "Handle Exceptions",
       "workstationId": "quarantine-zone",
       "instructions": "Assign safe dispositions, separate problematic goods, and request supervisor release decisions for anything still on hold.",
@@ -121,7 +132,7 @@
     {
       "id": "receiving-decision",
       "missionId": "receive-incoming-shipment-01",
-      "sequence": 6,
+      "sequence": 7,
       "title": "Make the Receiving Decision",
       "workstationId": "receiving-office",
       "instructions": "Complete the discrepancy report before deciding.",
@@ -131,7 +142,7 @@
     {
       "id": "shift-report",
       "missionId": "receive-incoming-shipment-01",
-      "sequence": 7,
+      "sequence": 8,
       "title": "Complete Shift Report",
       "workstationId": "receiving-office",
       "instructions": "Notify the receiving supervisor with the audit trail.",
@@ -326,7 +337,7 @@
     },
     {
       "id": "scan-barcodes",
-      "stageId": "physical-inspection",
+      "stageId": "barcode-scan",
       "taskType": "scan_barcode",
       "title": "Scan Every Barcode",
       "instructions": "Record readable and unreadable barcode states.",

@@ -829,6 +829,9 @@ class WorkplaceSimulationController
   drafts.InspectionDraft? get inspectionDraft =>
       state.valueOrNull?.attempt?.inspectionDraft;
 
+  drafts.BarcodeScanDraft? get barcodeScanDraft =>
+      state.valueOrNull?.attempt?.barcodeScanDraft;
+
   drafts.DispositionDraft? get dispositionDraft =>
       state.valueOrNull?.attempt?.dispositionDraft;
 
@@ -1784,33 +1787,35 @@ class WorkplaceSimulationController
     if (!task.targetResourceIds.contains(command.cartonId)) {
       return RecordBarcodeScanResult.cartonNotFound;
     }
-    final draft = attempt.inspectionDraft ?? _newInspectionDraft(attempt);
+    final draft = attempt.barcodeScanDraft ?? _newBarcodeScanDraft(attempt);
     if (draft.status == drafts.OperationalDraftStatus.submitted) {
       return RecordBarcodeScanResult.alreadySubmitted;
     }
-    if (draft.barcodeScans.any((item) => item.cartonId == command.cartonId)) {
+    if (draft.entries.any((item) => item.cartonId == command.cartonId)) {
       return RecordBarcodeScanResult.duplicateEntry;
     }
     return _tryPersist(
       () async {
         final now = DateTime.now();
         final entry = drafts.BarcodeScanEntry(
-          id: '${attempt.id}-scan-${draft.barcodeScans.length + 1}',
+          id: '${attempt.id}-scan-${draft.entries.length + 1}',
           cartonId: command.cartonId,
           status: command.status,
           createdAt: now,
           updatedAt: now,
           revisionNumber: 1,
+          resolutionMethod: command.resolutionMethod,
+          manualCode: command.manualCode,
         );
         var updated = attempt.copyWith(
-          inspectionDraft: draft.copyWith(
-            barcodeScans: [...draft.barcodeScans, entry],
+          barcodeScanDraft: draft.copyWith(
+            entries: [...draft.entries, entry],
             updatedAt: now,
           ),
         );
         updated = _appendDraftAction(
           updated,
-          stageId: 'physical-inspection',
+          stageId: 'barcode-scan',
           taskId: 'scan-barcodes',
           actionType: ActionType.barcodeScanRecorded,
           targetId: entry.cartonId,
@@ -1829,34 +1834,34 @@ class WorkplaceSimulationController
     final active = _activeAttempt();
     if (active == null) return UpdateBarcodeScanResult.invalidAttemptState;
     final (current, attempt) = active;
-    final draft = attempt.inspectionDraft;
+    final draft = attempt.barcodeScanDraft;
     if (draft == null) return UpdateBarcodeScanResult.entryNotFound;
     if (draft.status == drafts.OperationalDraftStatus.submitted) {
       return UpdateBarcodeScanResult.alreadySubmitted;
     }
-    final index = draft.barcodeScans.indexWhere(
+    final index = draft.entries.indexWhere(
       (item) => item.id == command.entryId,
     );
     if (index < 0) return UpdateBarcodeScanResult.entryNotFound;
     return _tryPersist(
       () async {
         final now = DateTime.now();
-        final previous = draft.barcodeScans[index];
+        final previous = draft.entries[index];
         final entry = previous.copyWith(
           status: command.status,
           updatedAt: now,
           revisionNumber: previous.revisionNumber + 1,
+          scanAttempts: command.scanAttempts ?? previous.scanAttempts,
+          resolutionMethod: command.resolutionMethod,
+          manualCode: command.manualCode,
         );
-        final entries = [...draft.barcodeScans]..[index] = entry;
+        final entries = [...draft.entries]..[index] = entry;
         var updated = attempt.copyWith(
-          inspectionDraft: draft.copyWith(
-            barcodeScans: entries,
-            updatedAt: now,
-          ),
+          barcodeScanDraft: draft.copyWith(entries: entries, updatedAt: now),
         );
         updated = _appendDraftAction(
           updated,
-          stageId: 'physical-inspection',
+          stageId: 'barcode-scan',
           taskId: 'scan-barcodes',
           actionType: ActionType.barcodeScanUpdated,
           targetId: entry.cartonId,
@@ -1875,13 +1880,13 @@ class WorkplaceSimulationController
     final active = _activeAttempt();
     if (active == null) return RemoveBarcodeScanResult.invalidAttemptState;
     final (current, attempt) = active;
-    final draft = attempt.inspectionDraft;
+    final draft = attempt.barcodeScanDraft;
     if (draft == null) return RemoveBarcodeScanResult.entryNotFound;
     if (draft.status == drafts.OperationalDraftStatus.submitted) {
       return RemoveBarcodeScanResult.alreadySubmitted;
     }
     drafts.BarcodeScanEntry? entry;
-    for (final item in draft.barcodeScans) {
+    for (final item in draft.entries) {
       if (item.id == command.entryId) entry = item;
     }
     if (entry == null) return RemoveBarcodeScanResult.entryNotFound;
@@ -1889,8 +1894,8 @@ class WorkplaceSimulationController
       () async {
         final now = DateTime.now();
         var updated = attempt.copyWith(
-          inspectionDraft: draft.copyWith(
-            barcodeScans: draft.barcodeScans
+          barcodeScanDraft: draft.copyWith(
+            entries: draft.entries
                 .where((item) => item.id != command.entryId)
                 .toList(growable: false),
             updatedAt: now,
@@ -1898,7 +1903,7 @@ class WorkplaceSimulationController
         );
         updated = _appendDraftAction(
           updated,
-          stageId: 'physical-inspection',
+          stageId: 'barcode-scan',
           taskId: 'scan-barcodes',
           actionType: ActionType.barcodeScanRemoved,
           targetId: entry!.cartonId,
@@ -1911,6 +1916,95 @@ class WorkplaceSimulationController
       },
       onSuccess: () => RemoveBarcodeScanResult.success,
       onFailure: () => RemoveBarcodeScanResult.persistenceFailure,
+    );
+  }
+
+  Future<SaveBarcodeScanDraftResult> saveBarcodeScanDraft(
+    SaveBarcodeScanDraftCommand command,
+  ) async {
+    final active = _activeAttempt();
+    if (active == null) return SaveBarcodeScanDraftResult.invalidAttemptState;
+    final (current, attempt) = active;
+    final draft = attempt.barcodeScanDraft ?? _newBarcodeScanDraft(attempt);
+    if (draft.status == drafts.OperationalDraftStatus.submitted) {
+      return SaveBarcodeScanDraftResult.alreadySubmitted;
+    }
+    return _tryPersist(
+      () async {
+        final updated = _withAudit(
+          attempt.copyWith(barcodeScanDraft: draft),
+          AttemptAuditEventType.barcodeScanDraftSaved,
+          screenId: 'barcode-station',
+          payload: {'scanCount': draft.entries.length},
+        );
+        await _commit(current, updated);
+      },
+      onSuccess: () => SaveBarcodeScanDraftResult.success,
+      onFailure: () => SaveBarcodeScanDraftResult.persistenceFailure,
+    );
+  }
+
+  Future<SubmitBarcodeScanResult> submitBarcodeScan(
+    SubmitBarcodeScanCommand command,
+  ) async {
+    final active = _activeAttemptWithScenario();
+    if (active == null) return SubmitBarcodeScanResult.invalidAttemptState;
+    final (current, attempt, scenario) = active;
+    final draft = attempt.barcodeScanDraft;
+    if (draft == null) return SubmitBarcodeScanResult.incompleteScans;
+    if (draft.status == drafts.OperationalDraftStatus.submitted) {
+      return SubmitBarcodeScanResult.alreadySubmitted;
+    }
+    final scanTargets = current.mission.task('scan-barcodes').targetResourceIds;
+    if (draft.entries.length != scanTargets.length ||
+        !scanTargets.every(
+          (id) => draft.entries.any((entry) => entry.cartonId == id),
+        )) {
+      return SubmitBarcodeScanResult.incompleteScans;
+    }
+    return _tryPersist(
+      () async {
+        var working = _withAudit(
+          attempt,
+          AttemptAuditEventType.barcodeScanSubmissionRequested,
+          screenId: 'barcode-station',
+          payload: {'scanCount': draft.entries.length},
+        );
+        var outcomes = [...current.outcomes];
+        for (final entry in draft.entries) {
+          (working, outcomes) = _applyAction(
+            current,
+            working,
+            outcomes,
+            _newAction(
+              working,
+              stageId: 'barcode-scan',
+              taskId: 'scan-barcodes',
+              actionType: ActionType.scanBarcode,
+              targetId: entry.cartonId,
+              payload: {'barcodeStatus': entry.status.name},
+            ),
+            scenario,
+          );
+        }
+        final now = DateTime.now();
+        working = working.copyWith(
+          barcodeScanDraft: draft.copyWith(
+            status: drafts.OperationalDraftStatus.submitted,
+            updatedAt: now,
+            submittedAt: now,
+          ),
+        );
+        working = _withAudit(
+          working,
+          AttemptAuditEventType.barcodeScansSaved,
+          screenId: 'barcode-station',
+          payload: {'scanCount': draft.entries.length},
+        );
+        await _commit(current, working, outcomes: outcomes);
+      },
+      onSuccess: () => SubmitBarcodeScanResult.success,
+      onFailure: () => SubmitBarcodeScanResult.persistenceFailure,
     );
   }
 
@@ -1930,10 +2024,7 @@ class WorkplaceSimulationController
           attempt.copyWith(inspectionDraft: draft),
           AttemptAuditEventType.inspectionDraftSaved,
           screenId: 'inspection-zone',
-          payload: {
-            'inspectionCount': draft.cartonInspections.length,
-            'scanCount': draft.barcodeScans.length,
-          },
+          payload: {'inspectionCount': draft.cartonInspections.length},
         );
         await _commit(current, updated);
       },
@@ -1962,23 +2053,13 @@ class WorkplaceSimulationController
         )) {
       return SubmitInspectionResult.incompleteInspection;
     }
-    final scanTargets = current.mission.task('scan-barcodes').targetResourceIds;
-    if (draft.barcodeScans.length != scanTargets.length ||
-        !scanTargets.every(
-          (id) => draft.barcodeScans.any((entry) => entry.cartonId == id),
-        )) {
-      return SubmitInspectionResult.incompleteScans;
-    }
     return _tryPersist(
       () async {
         var working = _withAudit(
           attempt,
           AttemptAuditEventType.inspectionSubmissionRequested,
           screenId: 'inspection-zone',
-          payload: {
-            'inspectionCount': draft.cartonInspections.length,
-            'scanCount': draft.barcodeScans.length,
-          },
+          payload: {'inspectionCount': draft.cartonInspections.length},
         );
         var outcomes = [...current.outcomes];
         for (final entry in draft.cartonInspections) {
@@ -2007,22 +2088,6 @@ class WorkplaceSimulationController
             );
           }
         }
-        for (final entry in draft.barcodeScans) {
-          (working, outcomes) = _applyAction(
-            current,
-            working,
-            outcomes,
-            _newAction(
-              working,
-              stageId: 'physical-inspection',
-              taskId: 'scan-barcodes',
-              actionType: ActionType.scanBarcode,
-              targetId: entry.cartonId,
-              payload: {'barcodeStatus': entry.status.name},
-            ),
-            scenario,
-          );
-        }
         final now = DateTime.now();
         working = working.copyWith(
           inspectionDraft: draft.copyWith(
@@ -2035,10 +2100,7 @@ class WorkplaceSimulationController
           working,
           AttemptAuditEventType.inspectionSaved,
           screenId: 'inspection-zone',
-          payload: {
-            'inspectionCount': draft.cartonInspections.length,
-            'scanCount': draft.barcodeScans.length,
-          },
+          payload: {'inspectionCount': draft.cartonInspections.length},
         );
         await _commit(current, working, outcomes: outcomes);
       },
@@ -3264,7 +3326,17 @@ class WorkplaceSimulationController
     return drafts.InspectionDraft(
       attemptId: attempt.id,
       cartonInspections: const [],
-      barcodeScans: const [],
+      status: drafts.OperationalDraftStatus.draft,
+      createdAt: now,
+      updatedAt: now,
+    );
+  }
+
+  drafts.BarcodeScanDraft _newBarcodeScanDraft(SimulationAttempt attempt) {
+    final now = DateTime.now();
+    return drafts.BarcodeScanDraft(
+      attemptId: attempt.id,
+      entries: const [],
       status: drafts.OperationalDraftStatus.draft,
       createdAt: now,
       updatedAt: now,
@@ -3376,6 +3448,9 @@ class WorkplaceSimulationController
     'entryId': entry.id,
     'status': entry.status.name,
     'revisionNumber': entry.revisionNumber,
+    'scanAttempts': entry.scanAttempts,
+    'resolutionMethod': entry.resolutionMethod.name,
+    if (entry.manualCode != null) 'manualCode': entry.manualCode,
   };
 
   WorkstationViewModel _workstationViewModel(

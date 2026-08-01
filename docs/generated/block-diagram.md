@@ -24,7 +24,8 @@ flowchart TD
     WMSOVERVIEW --> WMSDOC[Document Desk]
     WMSDOC --> WMSDOCK[Receiving Dock]
     WMSDOCK --> WMSINSPECT[Inspection Zone]
-    WMSINSPECT --> WMSQUARANTINE[Quarantine Zone]
+    WMSINSPECT --> WMSBARCODE[Barcode Station]
+    WMSBARCODE --> WMSQUARANTINE[Quarantine Zone]
     WMSQUARANTINE --> WMSOFFICE[Receiving Office]
     WMSOFFICE --> WMSFEEDBACK[Performance Feedback]
 
@@ -105,6 +106,7 @@ flowchart TD
     WMSDOC --> WMSCTRL
     WMSDOCK --> WMSCTRL
     WMSINSPECT --> WMSCTRL
+    WMSBARCODE --> WMSCTRL
     WMSQUARANTINE --> WMSCTRL
     WMSOFFICE --> WMSCTRL
     WMSCTRL --> WMSFEEDBACK
