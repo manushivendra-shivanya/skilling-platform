@@ -66,15 +66,31 @@ function createScene() {
   // distance. This keeps the camera close enough that the blue steel,
   // bracing, and stocked pallets actually read, at a safe Z well inside
   // the building (back wall is at z=-16).
+  // Re-tuned for the real device: a phone in portrait is a much narrower
+  // (taller) aspect ratio than the browser window this was first tuned in.
+  // Combined with horizontal-fixed FOV (see camera.fovMode below), a
+  // steeper beta wastes the extra vertical space on empty ceiling/floor
+  // instead of rack content -- this beta/radius/target combo was the best
+  // fill of the three tested directly against a 412x915 portrait viewport.
   const DEFAULT_ALPHA = Math.PI / 4;
-  const DEFAULT_BETA = Math.PI / 2.9;
-  const DEFAULT_RADIUS = 22;
-  const DEFAULT_TARGET = new BABYLON.Vector3(-3, 2.5, -8);
+  const DEFAULT_BETA = Math.PI / 2.5;
+  const DEFAULT_RADIUS = 24;
+  const DEFAULT_TARGET = new BABYLON.Vector3(-3, 2, -8);
 
   const camera = new BABYLON.ArcRotateCamera(
     "camera", DEFAULT_ALPHA, DEFAULT_BETA, DEFAULT_RADIUS, DEFAULT_TARGET.clone(), scene
   );
   camera.attachControl(canvas, true);
+  // Babylon's default (vertical-fixed FOV) keeps the *vertical* framing
+  // constant and shrinks the *horizontal* field of view as the viewport
+  // gets narrower -- fine on the roughly-square/landscape browser window
+  // this was tuned in, but on an actual phone in portrait (much narrower
+  // aspect ratio) it reads as zoomed-in and cropped sideways instead of
+  // "best fit". Horizontal-fixed keeps the framing that was actually
+  // tuned (how much of the rack row's width is in view) constant across
+  // any aspect ratio, and portrait screens just get *more* vertical
+  // headroom for free -- which is what you want for tall racking anyway.
+  camera.fovMode = BABYLON.Camera.FOVMODE_HORIZONTAL_FIXED;
   camera.lowerRadiusLimit = 5;
   camera.upperRadiusLimit = 42;
   camera.wheelPrecision = 35;
