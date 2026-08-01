@@ -136,6 +136,11 @@ void main() {
     expect(repository.draft.hasCurrentRequiredConsents, isTrue);
     await tester.tap(find.text('Go to home'));
     await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(
+      find.text('Today’s mission'),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
     expect(find.text('Today’s mission'), findsOneWidget);
   });
 

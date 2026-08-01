@@ -102,6 +102,13 @@ void main() {
     await tester.binding.handlePopRoute();
     await tester.pumpAndSettle();
 
+    await tester.scrollUntilVisible(
+      find.text('Today’s mission'),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pumpAndSettle();
+
     expect(find.text('Today’s mission'), findsOneWidget);
   });
 

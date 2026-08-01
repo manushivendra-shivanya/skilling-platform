@@ -147,12 +147,42 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.textContaining('not scored assessments'), findsOneWidget);
-    await tester.ensureVisible(find.text('Start demonstration'));
+    // scrollUntilVisible stops as soon as the finder matches a *built*
+    // element -- which can happen while it's still in the sliver cache
+    // extent, just outside the actual viewport, before it's truly
+    // paintable/tappable.
+    await tester.scrollUntilVisible(
+      find.text('Start demonstration'),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    // WidgetController.ensureVisible scrolls the *minimum* distance needed,
+    // which for an item just below the fold parks it flush against the
+    // bottom of the viewport -- exactly where the floating "AI Coach"
+    // button sits. That's a real overlap a real user scrolling to this
+    // point would hit too, not just a test artifact: verified by comparing
+    // the button's tap center against the FAB's rect directly, which
+    // landed inside it. Centering the scroll instead keeps tappable
+    // content clear of the FAB's fixed footprint.
+    await Scrollable.ensureVisible(
+      tester.element(find.text('Start demonstration')),
+      alignment: 0.5,
+    );
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Start demonstration'));
     await tester.pumpAndSettle();
-    await tester.ensureVisible(
+    await tester.scrollUntilVisible(
       find.text('Recount, preserve records, and escalate the mismatch'),
+      200,
+      scrollable: find.byType(Scrollable).first,
     );
+    await Scrollable.ensureVisible(
+      tester.element(
+        find.text('Recount, preserve records, and escalate the mismatch'),
+      ),
+      alignment: 0.5,
+    );
+    await tester.pumpAndSettle();
     await tester.tap(
       find.text('Recount, preserve records, and escalate the mismatch'),
     );
