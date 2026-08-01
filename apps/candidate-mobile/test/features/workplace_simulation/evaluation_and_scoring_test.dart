@@ -220,6 +220,84 @@ void main() {
     expect(result.status, MissionStatus.criticalFailure);
     expect(result.overallScore, 80);
   });
+
+  test('accepting a temperature-breached carton is a critical error', () async {
+    final repository = AssetSimulationContentRepository();
+    final mission = await repository.getMission('receive-incoming-shipment-01');
+    final scenario = const ScenarioGenerator().generate(
+      mission,
+      48127,
+      scenarioId: 'cold-chain-breach-shipment',
+    );
+    final breached = scenario.resources.firstWhere(
+      (item) =>
+          item.issues.any((issue) => issue.issueType == 'temperature_breach'),
+    );
+    final unsafeAction = LearnerAction(
+      id: 'unsafe-accept-breach',
+      attemptId: 'attempt-1',
+      missionId: mission.id,
+      stageId: 'exception-handling',
+      taskId: 'assign-dispositions',
+      actionType: ActionType.selectDisposition,
+      targetId: breached.id,
+      payload: const {'disposition': 'accept'},
+      sequenceNumber: 1,
+      simulationTimeSeconds: 60,
+      createdAt: DateTime.utc(2026, 7, 28, 10),
+    );
+
+    final errors = const CriticalErrorService().detect(
+      mission: mission,
+      scenario: scenario,
+      actions: [unsafeAction],
+      mandatoryInspectionCompleted: true,
+    );
+
+    expect(
+      errors.map((item) => item.ruleId),
+      contains('accept-temperature-breach'),
+    );
+  });
+
+  test('accepting a tampered carton is a critical error', () async {
+    final repository = AssetSimulationContentRepository();
+    final mission = await repository.getMission('receive-incoming-shipment-01');
+    final scenario = const ScenarioGenerator().generate(
+      mission,
+      48127,
+      scenarioId: 'tampered-packaging-shipment',
+    );
+    final tampered = scenario.resources.firstWhere(
+      (item) =>
+          item.issues.any((issue) => issue.issueType == 'tamper_evidence'),
+    );
+    final unsafeAction = LearnerAction(
+      id: 'unsafe-accept-tampered',
+      attemptId: 'attempt-1',
+      missionId: mission.id,
+      stageId: 'exception-handling',
+      taskId: 'assign-dispositions',
+      actionType: ActionType.selectDisposition,
+      targetId: tampered.id,
+      payload: const {'disposition': 'accept'},
+      sequenceNumber: 1,
+      simulationTimeSeconds: 60,
+      createdAt: DateTime.utc(2026, 7, 28, 10),
+    );
+
+    final errors = const CriticalErrorService().detect(
+      mission: mission,
+      scenario: scenario,
+      actions: [unsafeAction],
+      mandatoryInspectionCompleted: true,
+    );
+
+    expect(
+      errors.map((item) => item.ruleId),
+      contains('accept-tampered-goods'),
+    );
+  });
 }
 
 Future<_Run> _successfulRun() async {

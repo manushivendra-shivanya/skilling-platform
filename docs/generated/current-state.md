@@ -2054,6 +2054,71 @@ the existing Quarantine Zone screen rather than a new station.
   via controller calls in `workplace_simulation_controller_test.dart`, not
   widget taps, for every existing screen too)
 
+## WMS new receiving scenarios and issue types
+Third and final slice of "WMS remaining gameplay depth," after Barcode
+Station and the Quarantine release step. Adds two new issue types beyond
+the original five (`packaging_damage`, `unreadable_barcode`,
+`incorrect_sku`, `near_expiry`, `quantity_shortage`), each with its own
+dedicated scenario in the catalog, per `docs/24-receiving-department-
+content-specification.md` section 3.4.
+
+- **`temperature_breach`** (`cold-chain-breach-shipment` scenario): a
+  carton's recorded temperature log shows an out-of-range excursion in
+  transit, with nothing visibly wrong about the carton itself. Correct
+  disposition is `quarantine` (mirroring `packaging_damage`'s severity
+  treatment); correct release decision is `continue_hold`, pending lab
+  verification -- it is never simply released once the packaging looks
+  fine.
+- **`tamper_evidence`** (`tampered-packaging-shipment` scenario): a
+  carton's safety seal is broken and resealed -- a security/counterfeit
+  indicator, not cosmetic packaging damage. Correct disposition is
+  `reject_return` (mirroring `incorrect_sku`'s treatment, since
+  authenticity can't be verified); correct release decision is
+  `not_applicable`, matching every other rejected-stock issue type.
+- Both issue types are wired through every stage that already scores an
+  issue end to end -- `scenario_generator.dart`'s `_applyIssue` (sets
+  `temperatureStatus`/`sealStatus` on the carton's content), `inspect-
+  cartons`, `assign-dispositions`, `request-quarantine-release` -- plus a
+  dedicated critical error each (`accept-temperature-breach`,
+  `accept-tampered-goods`) for accepting it into inventory outright,
+  mirroring `accept-damaged-stock`/`accept-incorrect-sku`'s existing
+  severity.
+- New `micro-lesson-temperature-breach` and `micro-lesson-tamper-evidence`
+  entries added to `remediation.json` so a missed finding recommends the
+  matching micro-lesson, same as the original five issue types.
+- Not a change to the default seed-48127 scenario or its existing 5-issue
+  structure -- both new issue types only ever appear in their own named
+  scenario, each isolated to exactly one carton (mirroring `multi-
+  exception-shipment`'s and `clerical-only-discrepancy`'s pattern of a
+  scenario owning its own independent `variationRules` set), so no
+  existing test or scoring assertion tied to the default scenario needed
+  to change.
+
+### WMS new scenarios -- local validation
+- `dart format .` / `flutter analyze --no-pub` -- passed (same
+  pre-existing info-level hints, unrelated)
+- Added 2 tests to `content_and_scenario_test.dart` (each new named
+  scenario assigns its issue to exactly one carton and sets the expected
+  content field) and 2 tests to `evaluation_and_scoring_test.dart`
+  (`CriticalErrorService` fires `accept-temperature-breach`/
+  `accept-tampered-goods` when the respective carton is accepted) --
+  content-and-service-level coverage matching the depth already used for
+  the other critical error rules, not a full controller playthrough,
+  since these are additive rule matches on an already-proven mechanism
+  (`select_disposition` + `targetHasIssue` + `requiredPayload`), not new
+  wiring
+- Full Flutter suite -- 125 of 128 passed; the three failures are the
+  same pre-existing baseline flakes as every prior milestone, confirmed
+  unrelated
+- `flutter build apk --debug --no-pub --target-platform android-arm64` --
+  succeeded locally; **not yet installed** -- no device was connected to
+  this machine when this milestone finished
+- Not covered: a widget-level or controller-level full playthrough of
+  either new scenario end to end (only the generator-level and critical-
+  error-level mechanics are directly tested); the existing controller
+  test suite's default-scenario playthroughs do not exercise either new
+  issue type, since neither is part of the default seed-48127 rule set
+
 ## Target product architecture proposal
 
 - Added the proposed Flora AI Employability Infrastructure architecture in

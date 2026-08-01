@@ -326,6 +326,31 @@ something added to `receive_shipment_mission.json` in this pass.
 }
 ```
 
+### 3.4 Shipped extension — new issue types beyond the original five
+
+The scenario catalog proposed in 3.3 has since shipped for real (see
+`receive_shipment_mission.json`'s `scenarios` array), which removed the
+"engine can only reshuffle placement" limitation named in 3.1 — a named
+scenario now supplies its own independent `variationRules` set. Two new
+issue types were added on top of the original five (`packaging_damage`,
+`unreadable_barcode`, `incorrect_sku`, `near_expiry`, `quantity_shortage`),
+each with its own dedicated single-issue scenario rather than folded into
+the default seed-48127 rule set:
+
+| Issue | Scenario id | Correct disposition | Correct release decision |
+|---|---|---|---|
+| `temperature_breach` | `cold-chain-breach-shipment` | `quarantine` (looks fine, but the temperature log doesn't) | `continue_hold`, pending lab verification |
+| `tamper_evidence` | `tampered-packaging-shipment` | `reject_return` (authenticity/safety unverifiable) | `not_applicable` — rejected stock needs no release decision |
+
+Both are wired through every stage that scores an issue type end to end:
+`inspect-cartons` (recording the finding), `assign-dispositions` (routing
+it correctly), `request-quarantine-release` (the supervisor-approval step),
+and a dedicated `criticalErrorRules` entry each
+(`accept-temperature-breach`, `accept-tampered-goods`) for accepting it
+into inventory outright. `micro-lesson-temperature-breach` and
+`micro-lesson-tamper-evidence` were added to `remediation.json` so a missed
+finding recommends the matching micro-lesson, same as the original five.
+
 ## 4. NPC roles and dialogue
 
 ### 4.1 Current state — this is a real gap, not just thin content

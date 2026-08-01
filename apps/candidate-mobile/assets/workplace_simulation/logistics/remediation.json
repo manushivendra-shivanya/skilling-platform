@@ -50,5 +50,31 @@
       "Route items to overflow storage correctly",
       "Report capacity exceptions rather than working around them"
     ]
+  },
+  {
+    "id": "micro-lesson-temperature-breach",
+    "title": "Handling Cold-Chain Temperature Breaches",
+    "contentType": "micro_lesson",
+    "estimatedDurationMinutes": 4,
+    "competencyId": "goods-inspection",
+    "triggerConditions": [{"type": "missed_issue", "issueType": "temperature_breach"}],
+    "learningObjectives": [
+      "Recognise a recorded cold-chain temperature excursion",
+      "Understand why visible condition does not clear a temperature breach",
+      "Quarantine breached stock pending verification instead of accepting it"
+    ]
+  },
+  {
+    "id": "micro-lesson-tamper-evidence",
+    "title": "Recognising Tamper Evidence",
+    "contentType": "micro_lesson",
+    "estimatedDurationMinutes": 4,
+    "competencyId": "goods-inspection",
+    "triggerConditions": [{"type": "missed_issue", "issueType": "tamper_evidence"}],
+    "learningObjectives": [
+      "Identify a broken or resealed safety seal",
+      "Distinguish tamper evidence from ordinary packaging damage",
+      "Reject stock whose authenticity or safety cannot be verified"
+    ]
   }
 ]

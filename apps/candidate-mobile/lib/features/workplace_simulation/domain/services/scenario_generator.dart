@@ -88,6 +88,10 @@ class ScenarioGenerator {
       case 'wrong_supplier':
         next['expectedSupplier'] = content['supplier'];
         next['supplier'] = 'Northline Wholesale Traders';
+      case 'temperature_breach':
+        next['temperatureStatus'] = 'breached';
+      case 'tamper_evidence':
+        next['sealStatus'] = 'broken';
       default:
         break;
     }
