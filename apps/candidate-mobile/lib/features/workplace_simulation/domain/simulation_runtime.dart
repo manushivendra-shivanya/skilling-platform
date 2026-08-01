@@ -70,6 +70,7 @@ class SimulationAttempt {
     this.documentReviewDraft,
     this.receivingCountDraft,
     this.inspectionDraft,
+    this.barcodeScanDraft,
     this.dispositionDraft,
     this.quarantineReleaseDraft,
     this.discrepancyReportDraft,
@@ -104,6 +105,7 @@ class SimulationAttempt {
   final DocumentReviewDraft? documentReviewDraft;
   final ReceivingCountDraft? receivingCountDraft;
   final InspectionDraft? inspectionDraft;
+  final BarcodeScanDraft? barcodeScanDraft;
   final DispositionDraft? dispositionDraft;
   final QuarantineReleaseDraft? quarantineReleaseDraft;
   final DiscrepancyReportDraft? discrepancyReportDraft;
@@ -152,6 +154,7 @@ class SimulationAttempt {
     DocumentReviewDraft? documentReviewDraft,
     ReceivingCountDraft? receivingCountDraft,
     InspectionDraft? inspectionDraft,
+    BarcodeScanDraft? barcodeScanDraft,
     DispositionDraft? dispositionDraft,
     QuarantineReleaseDraft? quarantineReleaseDraft,
     DiscrepancyReportDraft? discrepancyReportDraft,
@@ -189,6 +192,7 @@ class SimulationAttempt {
     documentReviewDraft: documentReviewDraft ?? this.documentReviewDraft,
     receivingCountDraft: receivingCountDraft ?? this.receivingCountDraft,
     inspectionDraft: inspectionDraft ?? this.inspectionDraft,
+    barcodeScanDraft: barcodeScanDraft ?? this.barcodeScanDraft,
     dispositionDraft: dispositionDraft ?? this.dispositionDraft,
     quarantineReleaseDraft:
         quarantineReleaseDraft ?? this.quarantineReleaseDraft,
@@ -221,6 +225,7 @@ class SimulationAttempt {
     'documentReviewDraft': documentReviewDraft?.toJson(),
     'receivingCountDraft': receivingCountDraft?.toJson(),
     'inspectionDraft': inspectionDraft?.toJson(),
+    'barcodeScanDraft': barcodeScanDraft?.toJson(),
     'dispositionDraft': dispositionDraft?.toJson(),
     'quarantineReleaseDraft': quarantineReleaseDraft?.toJson(),
     'discrepancyReportDraft': discrepancyReportDraft?.toJson(),
@@ -272,6 +277,9 @@ class SimulationAttempt {
         : null,
     inspectionDraft: json['inspectionDraft'] is JsonMap
         ? InspectionDraft.fromJson(json.object('inspectionDraft'))
+        : null,
+    barcodeScanDraft: json['barcodeScanDraft'] is JsonMap
+        ? BarcodeScanDraft.fromJson(json.object('barcodeScanDraft'))
         : null,
     dispositionDraft: json['dispositionDraft'] is JsonMap
         ? DispositionDraft.fromJson(json.object('dispositionDraft'))

@@ -347,6 +347,14 @@ class CartonInspectionEntry {
 
 enum BarcodeStatus { readable, unreadable }
 
+/// How an unreadable scan was ultimately resolved. [scanned] is the default
+/// for a readable barcode -- no resolution was needed. Purely informational
+/// for now: it does not change scoring, which still keys on [BarcodeStatus]
+/// alone (the physical barcode was unreadable regardless of how the learner
+/// worked around it), but it is captured so a future scoring pass can reward
+/// choosing escalation over silently overriding a failed scan.
+enum BarcodeResolutionMethod { scanned, manualEntry, flagged }
+
 class BarcodeScanEntry {
   const BarcodeScanEntry({
     required this.id,
@@ -355,6 +363,9 @@ class BarcodeScanEntry {
     required this.createdAt,
     required this.updatedAt,
     required this.revisionNumber,
+    this.scanAttempts = 1,
+    this.resolutionMethod = BarcodeResolutionMethod.scanned,
+    this.manualCode,
   });
 
   final String id;
@@ -364,10 +375,23 @@ class BarcodeScanEntry {
   final DateTime updatedAt;
   final int revisionNumber;
 
+  /// Number of scan attempts before this entry was recorded (retries on an
+  /// unreadable barcode do not change the physical outcome, but the learner
+  /// choosing to retry rather than immediately escalate is part of the
+  /// audit trail).
+  final int scanAttempts;
+  final BarcodeResolutionMethod resolutionMethod;
+
+  /// Only set when [resolutionMethod] is [BarcodeResolutionMethod.manualEntry].
+  final String? manualCode;
+
   BarcodeScanEntry copyWith({
     BarcodeStatus? status,
     DateTime? updatedAt,
     int? revisionNumber,
+    int? scanAttempts,
+    BarcodeResolutionMethod? resolutionMethod,
+    String? manualCode,
   }) => BarcodeScanEntry(
     id: id,
     cartonId: cartonId,
@@ -375,6 +399,9 @@ class BarcodeScanEntry {
     createdAt: createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
     revisionNumber: revisionNumber ?? this.revisionNumber,
+    scanAttempts: scanAttempts ?? this.scanAttempts,
+    resolutionMethod: resolutionMethod ?? this.resolutionMethod,
+    manualCode: manualCode ?? this.manualCode,
   );
 
   JsonMap toJson() => {
@@ -384,6 +411,9 @@ class BarcodeScanEntry {
     'createdAt': createdAt.toUtc().toIso8601String(),
     'updatedAt': updatedAt.toUtc().toIso8601String(),
     'revisionNumber': revisionNumber,
+    'scanAttempts': scanAttempts,
+    'resolutionMethod': resolutionMethod.name,
+    'manualCode': manualCode,
   };
 
   factory BarcodeScanEntry.fromJson(JsonMap json) => BarcodeScanEntry(
@@ -393,6 +423,64 @@ class BarcodeScanEntry {
     createdAt: DateTime.parse(json.string('createdAt')),
     updatedAt: DateTime.parse(json.string('updatedAt')),
     revisionNumber: json.integer('revisionNumber'),
+    scanAttempts: json['scanAttempts'] is int ? json['scanAttempts'] as int : 1,
+    resolutionMethod: BarcodeResolutionMethod.values.byName(
+      json.optionalString('resolutionMethod') ?? 'scanned',
+    ),
+    manualCode: json.optionalString('manualCode'),
+  );
+}
+
+class BarcodeScanDraft {
+  const BarcodeScanDraft({
+    required this.attemptId,
+    required this.entries,
+    required this.status,
+    required this.createdAt,
+    required this.updatedAt,
+    this.submittedAt,
+  });
+
+  final String attemptId;
+  final List<BarcodeScanEntry> entries;
+  final OperationalDraftStatus status;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final DateTime? submittedAt;
+
+  BarcodeScanDraft copyWith({
+    List<BarcodeScanEntry>? entries,
+    OperationalDraftStatus? status,
+    DateTime? updatedAt,
+    DateTime? submittedAt,
+  }) => BarcodeScanDraft(
+    attemptId: attemptId,
+    entries: entries ?? this.entries,
+    status: status ?? this.status,
+    createdAt: createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    submittedAt: submittedAt ?? this.submittedAt,
+  );
+
+  JsonMap toJson() => {
+    'attemptId': attemptId,
+    'entries': entries.map((item) => item.toJson()).toList(),
+    'status': status.name,
+    'createdAt': createdAt.toUtc().toIso8601String(),
+    'updatedAt': updatedAt.toUtc().toIso8601String(),
+    'submittedAt': submittedAt?.toUtc().toIso8601String(),
+  };
+
+  factory BarcodeScanDraft.fromJson(JsonMap json) => BarcodeScanDraft(
+    attemptId: json.string('attemptId'),
+    entries: json
+        .mapList('entries')
+        .map(BarcodeScanEntry.fromJson)
+        .toList(growable: false),
+    status: OperationalDraftStatus.values.byName(json.string('status')),
+    createdAt: DateTime.parse(json.string('createdAt')),
+    updatedAt: DateTime.parse(json.string('updatedAt')),
+    submittedAt: _optionalDate(json.optionalString('submittedAt')),
   );
 }
 
@@ -400,7 +488,6 @@ class InspectionDraft {
   const InspectionDraft({
     required this.attemptId,
     required this.cartonInspections,
-    required this.barcodeScans,
     required this.status,
     required this.createdAt,
     required this.updatedAt,
@@ -409,7 +496,6 @@ class InspectionDraft {
 
   final String attemptId;
   final List<CartonInspectionEntry> cartonInspections;
-  final List<BarcodeScanEntry> barcodeScans;
   final OperationalDraftStatus status;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -417,14 +503,12 @@ class InspectionDraft {
 
   InspectionDraft copyWith({
     List<CartonInspectionEntry>? cartonInspections,
-    List<BarcodeScanEntry>? barcodeScans,
     OperationalDraftStatus? status,
     DateTime? updatedAt,
     DateTime? submittedAt,
   }) => InspectionDraft(
     attemptId: attemptId,
     cartonInspections: cartonInspections ?? this.cartonInspections,
-    barcodeScans: barcodeScans ?? this.barcodeScans,
     status: status ?? this.status,
     createdAt: createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
@@ -436,7 +520,6 @@ class InspectionDraft {
     'cartonInspections': cartonInspections
         .map((item) => item.toJson())
         .toList(),
-    'barcodeScans': barcodeScans.map((item) => item.toJson()).toList(),
     'status': status.name,
     'createdAt': createdAt.toUtc().toIso8601String(),
     'updatedAt': updatedAt.toUtc().toIso8601String(),
@@ -448,10 +531,6 @@ class InspectionDraft {
     cartonInspections: json
         .mapList('cartonInspections')
         .map(CartonInspectionEntry.fromJson)
-        .toList(growable: false),
-    barcodeScans: json
-        .mapList('barcodeScans')
-        .map(BarcodeScanEntry.fromJson)
         .toList(growable: false),
     status: OperationalDraftStatus.values.byName(json.string('status')),
     createdAt: DateTime.parse(json.string('createdAt')),

@@ -52,7 +52,17 @@ house" row (Receiving Dock, Inspection Zone, Quarantine Zone) and the y≈0.74
 reads as: physical dock work up top, paperwork/decision work below, moving
 left (arrival) to right (resolution).
 
-**Note on Screen 06 (implemented separately):** the Inspection Zone screen
+**Resolved (WMS Barcode Station milestone):** Barcode Station is now its own
+screen and mission stage (`barcode-scan`), unlocking after `inspect-cartons`
+alone, exactly matching the `unlockRequirements` above. `scan-barcodes` moved
+out of the `physical-inspection` stage into `barcode-scan`. See
+`docs/generated/current-state.md`'s "WMS Barcode Station" entry for the full
+change; the original note below is kept for history.
+
+<details>
+<summary>Original note (Screen 06, implemented separately)</summary>
+
+the Inspection Zone screen
 build discovered that `inspect-cartons` and `scan-barcodes` are both part of
 the single `physical-inspection` stage and are presented together on one
 screen, even though Barcode Station is modelled as its own workstation here.
@@ -62,6 +72,8 @@ alone, matching its `unlockRequirements` above), or the workstation
 definition should be merged into Inspection Zone. Flagging for the runtime
 team rather than resolving unilaterally, since it's a screen-boundary
 decision.
+
+</details>
 
 ### 1.2 Proposed enrichment — richer `description` fields
 
@@ -539,5 +551,6 @@ re-derive this from scratch:
   Section 4 person resources and Section 3.3 scenario catalog for real.
 - [ ] Second department content (Put Away) — deferred per this session's
   scoping decision to deepen Receiving first.
-- [ ] Confirm and reconcile the Barcode Station workstation-vs-screen
-  question noted in Section 1.1 with whoever owns Screen 06/07 next.
+- [x] Confirm and reconcile the Barcode Station workstation-vs-screen
+  question noted in Section 1.1 -- resolved: it's its own screen. See the
+  WMS Barcode Station milestone in `docs/generated/current-state.md`.
