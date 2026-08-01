@@ -359,17 +359,30 @@ class RecordBarcodeScanCommand {
   const RecordBarcodeScanCommand({
     required this.cartonId,
     required this.status,
+    this.resolutionMethod = BarcodeResolutionMethod.scanned,
+    this.manualCode,
   });
 
   final String cartonId;
   final BarcodeStatus status;
+  final BarcodeResolutionMethod resolutionMethod;
+  final String? manualCode;
 }
 
 class UpdateBarcodeScanCommand {
-  const UpdateBarcodeScanCommand({required this.entryId, required this.status});
+  const UpdateBarcodeScanCommand({
+    required this.entryId,
+    required this.status,
+    this.scanAttempts,
+    this.resolutionMethod,
+    this.manualCode,
+  });
 
   final String entryId;
   final BarcodeStatus status;
+  final int? scanAttempts;
+  final BarcodeResolutionMethod? resolutionMethod;
+  final String? manualCode;
 }
 
 class RemoveBarcodeScanCommand {
@@ -384,6 +397,14 @@ class SaveInspectionDraftCommand {
 
 class SubmitInspectionCommand {
   const SubmitInspectionCommand();
+}
+
+class SaveBarcodeScanDraftCommand {
+  const SaveBarcodeScanDraftCommand();
+}
+
+class SubmitBarcodeScanCommand {
+  const SubmitBarcodeScanCommand();
 }
 
 enum RecordCartonInspectionResult {
@@ -448,6 +469,20 @@ enum SaveInspectionDraftResult {
 enum SubmitInspectionResult {
   success,
   incompleteInspection,
+  alreadySubmitted,
+  invalidAttemptState,
+  persistenceFailure,
+}
+
+enum SaveBarcodeScanDraftResult {
+  success,
+  alreadySubmitted,
+  invalidAttemptState,
+  persistenceFailure,
+}
+
+enum SubmitBarcodeScanResult {
+  success,
   incompleteScans,
   alreadySubmitted,
   invalidAttemptState,

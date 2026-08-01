@@ -1901,6 +1901,78 @@ matches what the API actually enforces.
   succeeded locally; **not yet installed** -- no device was connected to
   this machine when this milestone finished
 
+## WMS Barcode Station -- a real dedicated workstation
+First slice of the "WMS remaining gameplay depth" phase. Closes a gap the
+content itself already flagged: `workplace.json` has defined a full
+`barcode-station` workstation (map position, unlock chain requiring
+`inspect-cartons`, `quarantine-zone` in turn requiring `scan-barcodes`)
+since the Receiving department was built, but no mission stage or screen
+ever pointed at it -- `docs/24-receiving-department-content-specification.md`
+explicitly flagged this as an open decision for the runtime team. Chose to
+build it as a real, separately-gated station rather than merge the orphan
+workstation away.
+
+- **Content**: `scan-barcodes` moved out of Inspection Zone's
+  `physical-inspection` stage into a new `barcode-scan` stage
+  (`workstationId: barcode-station`) in `receive_shipment_mission.json`.
+  The task itself, its target cartons and its evaluation rules are
+  unchanged -- only which stage/screen owns it moved, so existing scoring
+  for correctly recording readable/unreadable barcodes is untouched.
+- **Draft model split**: `barcodeScans` moved out of `InspectionDraft` into
+  a new dedicated `BarcodeScanDraft` (mirroring the existing
+  one-draft-per-workstation pattern already used for
+  `DispositionDraft`/`ReceivingCountDraft`/etc.), with its own
+  `SimulationAttempt.barcodeScanDraft` field and its own
+  save/submit commands (`SaveBarcodeScanDraftCommand`/
+  `SubmitBarcodeScanCommand`). This was the load-bearing decision: genuine
+  sequential gating (finish Inspection -> unlock Barcode Station -> finish
+  scanning -> unlock Quarantine) requires two independent submit actions,
+  not one shared draft submitted once for both. `submitInspection` no
+  longer scores or requires scans; a new `submitBarcodeScan` scores them
+  on its own, called from the new screen.
+- **Richer interaction, not just relocation**: `BarcodeScanEntry` gained
+  `scanAttempts`, `resolutionMethod` (`scanned`/`manualEntry`/`flagged`)
+  and an optional `manualCode`. A scan's readable/unreadable outcome is now
+  deterministic from the scenario's own `unreadable_barcode` issue data
+  (a real scanner is a mechanical device, not a judgment call) rather than
+  a free-choice dropdown; what's actually assessed is how the candidate
+  *responds* to a failed scan -- retry (capped at 2 extra attempts, since a
+  physically damaged label doesn't fix itself), manual code entry, or
+  flagging for verification. Scoring itself is unchanged (still keyed on
+  final `barcodeStatus`, matching the existing "unreadable barcodes require
+  hold or escalation" workplace rule) -- the new fields are audit-trail
+  richness for this slice, not new scoring surface.
+- New route `GET /practise/workplace-simulation/:missionId/barcode-station`,
+  new `BarcodeStationScreen`, new `AttemptAuditEventType` values
+  (`barcodeStationOpened`/`Exited`, `barcodeScanSubmissionRequested`,
+  `barcodeScansSaved`/`SaveFailed`, `barcodeScanDraftSaved`) for audit-trail
+  parity with every other WMS screen.
+
+### WMS Barcode Station -- local validation
+- `dart format .` / `flutter analyze --no-pub` -- passed (same
+  pre-existing info-level hints, unrelated)
+- Updated `content_and_scenario_test.dart` (mission now has 8 stages, not
+  7) and `workplace_simulation_controller_test.dart` (the existing
+  full-mission-playthrough test now drives `submitBarcodeScan` as its own
+  step and asserts `barcode-station` reaches `WorkstationStatus.completed`
+  independently of `inspection-zone` and `quarantine-zone`); added a
+  locked-state render check for `BarcodeStationScreen` to
+  `workplace_operational_screens_test.dart`, mirroring the existing
+  Inspection Zone / Quarantine Zone checks
+- Full Flutter suite -- 121 of 124 passed; the three failures are the same
+  pre-existing baseline flakes as every prior milestone, confirmed
+  unrelated
+- `flutter build apk --debug --no-pub --target-platform android-arm64` --
+  succeeded locally; installed on the connected Samsung device
+- Not covered: a widget-level test that actually taps through the new scan
+  dialog's retry/manual-entry/flag branches. The original dropdown-based
+  scan editor this replaces was never widget-tested either (only
+  exercised via direct controller calls in
+  `workplace_simulation_controller_test.dart`, which is what now covers
+  the new flow's scoring-relevant behaviour) -- matching that precedent
+  rather than a gap specific to this change, but noted plainly rather than
+  left implicit.
+
 ## Target product architecture proposal
 
 - Added the proposed Flora AI Employability Infrastructure architecture in

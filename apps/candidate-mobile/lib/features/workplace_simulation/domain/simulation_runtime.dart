@@ -70,6 +70,7 @@ class SimulationAttempt {
     this.documentReviewDraft,
     this.receivingCountDraft,
     this.inspectionDraft,
+    this.barcodeScanDraft,
     this.dispositionDraft,
     this.discrepancyReportDraft,
     this.submittedAt,
@@ -103,6 +104,7 @@ class SimulationAttempt {
   final DocumentReviewDraft? documentReviewDraft;
   final ReceivingCountDraft? receivingCountDraft;
   final InspectionDraft? inspectionDraft;
+  final BarcodeScanDraft? barcodeScanDraft;
   final DispositionDraft? dispositionDraft;
   final DiscrepancyReportDraft? discrepancyReportDraft;
 
@@ -150,6 +152,7 @@ class SimulationAttempt {
     DocumentReviewDraft? documentReviewDraft,
     ReceivingCountDraft? receivingCountDraft,
     InspectionDraft? inspectionDraft,
+    BarcodeScanDraft? barcodeScanDraft,
     DispositionDraft? dispositionDraft,
     DiscrepancyReportDraft? discrepancyReportDraft,
   }) => SimulationAttempt(
@@ -186,6 +189,7 @@ class SimulationAttempt {
     documentReviewDraft: documentReviewDraft ?? this.documentReviewDraft,
     receivingCountDraft: receivingCountDraft ?? this.receivingCountDraft,
     inspectionDraft: inspectionDraft ?? this.inspectionDraft,
+    barcodeScanDraft: barcodeScanDraft ?? this.barcodeScanDraft,
     dispositionDraft: dispositionDraft ?? this.dispositionDraft,
     discrepancyReportDraft:
         discrepancyReportDraft ?? this.discrepancyReportDraft,
@@ -216,6 +220,7 @@ class SimulationAttempt {
     'documentReviewDraft': documentReviewDraft?.toJson(),
     'receivingCountDraft': receivingCountDraft?.toJson(),
     'inspectionDraft': inspectionDraft?.toJson(),
+    'barcodeScanDraft': barcodeScanDraft?.toJson(),
     'dispositionDraft': dispositionDraft?.toJson(),
     'discrepancyReportDraft': discrepancyReportDraft?.toJson(),
   };
@@ -266,6 +271,9 @@ class SimulationAttempt {
         : null,
     inspectionDraft: json['inspectionDraft'] is JsonMap
         ? InspectionDraft.fromJson(json.object('inspectionDraft'))
+        : null,
+    barcodeScanDraft: json['barcodeScanDraft'] is JsonMap
+        ? BarcodeScanDraft.fromJson(json.object('barcodeScanDraft'))
         : null,
     dispositionDraft: json['dispositionDraft'] is JsonMap
         ? DispositionDraft.fromJson(json.object('dispositionDraft'))

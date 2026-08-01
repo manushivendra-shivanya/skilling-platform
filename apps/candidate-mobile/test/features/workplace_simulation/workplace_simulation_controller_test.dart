@@ -550,6 +550,24 @@ void main() {
         await controller.submitInspection(const SubmitInspectionCommand()),
         SubmitInspectionResult.alreadySubmitted,
       );
+      expect(
+        await controller.saveBarcodeScanDraft(
+          const SaveBarcodeScanDraftCommand(),
+        ),
+        SaveBarcodeScanDraftResult.success,
+      );
+      expect(
+        await controller.submitBarcodeScan(const SubmitBarcodeScanCommand()),
+        SubmitBarcodeScanResult.success,
+      );
+      expect(
+        controller.workstationStatus('barcode-station'),
+        WorkstationStatus.completed,
+      );
+      expect(
+        await controller.submitBarcodeScan(const SubmitBarcodeScanCommand()),
+        SubmitBarcodeScanResult.alreadySubmitted,
+      );
 
       // Seed 48127's deterministic issue assignment (verified by replaying
       // the scenario generator): carton-001 unreadable_barcode,
