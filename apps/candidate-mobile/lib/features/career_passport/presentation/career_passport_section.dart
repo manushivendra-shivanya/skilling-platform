@@ -18,23 +18,17 @@ import 'career_passport_controller.dart';
 
 const _disclaimer = 'Flora provides simulation evidence, not certification.';
 
-// What the toggle actually does, split by its current state so the
-// wording is a statement of fact ("On." / "Off.") rather than a vague
-// description of the feature in general.
-const _sharingOnSubtitle =
-    'On. Employers you\'ve applied to can review your Career Passport '
-    'evidence for that application -- never employers you haven\'t applied '
-    'to, and never for automatic ranking or certification. Turn this off '
-    'any time to immediately stop new access.';
-const _sharingOffSubtitle =
-    'Off. Employers cannot see your Career Passport evidence, even for '
-    'jobs you\'ve applied to.';
-
 const _sharingBoundaryCopy =
     'Sharing only ever applies to employers whose job you applied to -- '
     'Flora has no employer portal for browsing or searching candidates. '
     'The employer reviews your evidence and decides; Flora does not rank, '
     'shortlist or certify you.';
+
+const _employerAccessIntro =
+    'Decide employer by employer who can review your Career Passport '
+    'evidence -- only employers whose job you applied to appear here, and '
+    'none of them can see anything until you turn their access on. Turn it '
+    'off any time to immediately stop new access.';
 
 const _shareLinkIntro =
     'Generate a link anyone can open to view your Career Passport '
@@ -135,20 +129,25 @@ class _CareerPassportBody extends ConsumerWidget {
             ),
           ),
         ],
-        const SizedBox(height: AppSpacing.md),
-        SwitchListTile(
-          contentPadding: EdgeInsets.zero,
-          value: state.isShareable,
-          onChanged: state.canManageSharing
-              ? (value) => _toggleShareable(context, ref)
-              : null,
-          title: const Text('Shared with employers where you applied'),
-          subtitle: Text(
-            state.canManageSharing
-                ? (state.isShareable ? _sharingOnSubtitle : _sharingOffSubtitle)
-                : 'Sharing requires an account connection.',
+        if (state.canManageEmployerAccess) ...[
+          const SizedBox(height: AppSpacing.md),
+          Text(
+            'Employer access',
+            style: Theme.of(context).textTheme.titleMedium,
           ),
-        ),
+          const SizedBox(height: AppSpacing.xxs),
+          Text(_employerAccessIntro),
+          const SizedBox(height: AppSpacing.sm),
+          AppButton(
+            label: 'Manage employer access',
+            variant: AppButtonVariant.secondary,
+            onPressed: () => showAppBottomSheet<void>(
+              context: context,
+              title: 'Employer access',
+              child: const _EmployerAccessDetails(),
+            ),
+          ),
+        ],
         if (state.canManageShareLink) ...[
           const Divider(),
           const SizedBox(height: AppSpacing.xxs),
@@ -161,15 +160,68 @@ class _CareerPassportBody extends ConsumerWidget {
       ],
     );
   }
+}
 
-  Future<void> _toggleShareable(BuildContext context, WidgetRef ref) async {
+class _EmployerAccessDetails extends ConsumerWidget {
+  const _EmployerAccessDetails();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Watched directly (rather than taking entries as a constructor
+    // parameter) because this widget lives in a bottom-sheet route, not
+    // inline in CareerPassportSection's own build -- a parameter would be
+    // a frozen snapshot from when the sheet opened and wouldn't reflect a
+    // toggle made while it's still on screen.
+    final entries =
+        ref
+            .watch(careerPassportControllerProvider)
+            .valueOrNull
+            ?.employerAccess ??
+        const <EmployerAccessEntry>[];
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(_employerAccessIntro),
+        const SizedBox(height: AppSpacing.md),
+        if (entries.isEmpty)
+          const Text(
+            'You have not applied to any jobs yet -- employers appear here '
+            'once you apply.',
+          )
+        else
+          for (final entry in entries)
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              value: entry.granted,
+              onChanged: (_) => _toggle(context, ref, entry),
+              title: Text(entry.employerName),
+              subtitle: Text(
+                entry.granted ? 'Can review your evidence.' : 'No access.',
+              ),
+            ),
+        const SizedBox(height: AppSpacing.sm),
+        Text(
+          _sharingBoundaryCopy,
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        const AppBottomSheetCloseButton(),
+      ],
+    );
+  }
+
+  Future<void> _toggle(
+    BuildContext context,
+    WidgetRef ref,
+    EmployerAccessEntry entry,
+  ) async {
     final failure = await ref
         .read(careerPassportControllerProvider.notifier)
-        .toggleShareable();
+        .toggleEmployerAccess(entry);
     if (!context.mounted) return;
     showAppSnackBar(
       context: context,
-      message: failure?.message ?? 'Sharing preference saved.',
+      message: failure?.message ?? 'Employer access updated.',
       tone: failure == null ? AppMessageTone.success : AppMessageTone.error,
     );
   }

@@ -2250,6 +2250,88 @@ artifact that can't be un-shared.
   `createShareLink`'s idempotent-return behavior avoids ever hitting it
   in normal use
 
+## Career Passport v0.2 -- employer-specific grants
+Third and final slice of Career Passport v0.2, closing out "historical
+evidence details, export/share link, employer-specific grants." Per the
+user's chosen direction (a per-employer list on Profile, not a per-
+application decision at apply time), the single global
+`career_passport_sharing` toggle every prior milestone used is retired
+and replaced with independent, per-employer grants -- reusing the
+`career_passport_grants` table the share-link milestone deliberately
+shaped to serve this purpose too (`purpose = 'employer_review'`,
+`employer_id` set instead of `token`).
+
+- **`EmployerService.reviewCandidateEvidence`** (`apps/api/src/employer/employer.service.ts`)
+  now checks `employer_sharing` consent (unchanged -- the general,
+  application-time consent to be visible to employers at all, granted by
+  the Jobs feature, not touched by this slice) AND an active,
+  employer-scoped grant, instead of the old global
+  `career_passport_sharing` purpose. A grant to employer A no longer
+  implies anything for employer B, even for the same candidate with
+  applications to both. `hasActiveEmployerGrant` also respects the
+  grant's `expires_at`, though the candidate-facing UI doesn't set one
+  today (employer grants persist until explicitly revoked) --
+  future-proofed for parity with the share link's expiry, not used yet.
+- **New `GET /career-passport/applied-employers`** (candidate-
+  authenticated via the existing `CandidateAuthGuard`, same as the Job
+  APIs): every employer behind a non-withdrawn application, deduplicated.
+  Exists only because `public.employers` has no client-facing Supabase
+  policy -- the same reason `apps/candidate-mobile` already goes through
+  the BFF for job listings rather than reading `jobs` directly. Whether
+  each employer currently has an active grant is *not* computed here --
+  the app reads its own `career_passport_grants` rows directly (RLS
+  already scopes that), then cross-references locally, so this stays a
+  single-purpose join rather than duplicating grant logic in two places.
+- **Flutter**: `CareerPassportRepository` lost `isShareable`/
+  `canManageSharing`/`setShareable` entirely (dead once the toggle they
+  backed was removed) and gained `canManageEmployerAccess`/
+  `loadEmployerAccess`/`grantEmployerAccess`/`revokeEmployerAccess` and an
+  `EmployerAccessEntry { employerId, employerName, granted }` value type.
+  `WmsCareerPassportRepository` gained a `Dio` dependency (mirroring
+  `ApiJobsRepository`'s pattern) for the authenticated
+  `applied-employers` call; granting/revoking a specific employer's
+  access goes straight to Supabase once the app has that employer's id,
+  the same direct-write pattern the share link already established.
+  Replaced the Profile card's `SwitchListTile` with a "Manage employer
+  access" button opening a bottom sheet listing every applied-to
+  employer, each with its own switch.
+- **A real bug caught by the widget test, not by inspection**: the first
+  version of the employer-access bottom sheet took its entries as a
+  constructor parameter (mirroring `_ShareLinkControl`'s working pattern).
+  It didn't update after a toggle -- unlike `_ShareLinkControl`, which is
+  built inline in `CareerPassportSection`'s own reactive tree and so gets
+  fresh data on every rebuild, this widget lives inside a
+  `showAppBottomSheet` route, a separate part of the widget tree that
+  isn't rebuilt when the parent rebuilds elsewhere. Fixed by having the
+  bottom-sheet widget call `ref.watch` on the controller directly instead
+  of trusting a snapshot passed in when the sheet opened.
+
+### Career Passport employer grants -- local validation
+- `dart format .` / `flutter analyze --no-pub` -- passed on both apps
+  (same pre-existing info-level hints, unrelated)
+- `apps/api`: `npm run build` / `npm run lint` / `npm test -- --runInBand`
+  -- all passed (34/34 tests, 7 new: 4 `listAppliedEmployers` tests plus
+  3 new `EmployerService.reviewCandidateEvidence` tests -- per-employer
+  scoping, denies once revoked, denies once expired). `npm run test:e2e`
+  compiles and correctly skips (11 skipped) without live credentials;
+  `employer-evidence-review.e2e-spec.ts` updated to seed a per-employer
+  grant instead of the old global consent row
+- `apps/candidate-mobile`: full suite -- 130 of 133 passed; the three
+  failures are the same pre-existing baseline flakes as every prior
+  milestone, confirmed unrelated
+- `flutter build apk --debug --no-pub --target-platform android-arm64` --
+  succeeded locally; **not installed** -- no device was connected to this
+  machine when this milestone finished
+- Depends on the same not-yet-applied `20260801120000_career_passport_grants.sql`
+  migration as the share-link milestone -- until it's applied, both
+  `loadEmployerAccess` and `EmployerService`'s per-employer grant check
+  will fail against a live deployment the same way `createShareLink`
+  would
+- Not covered: no e2e test exercises `GET /career-passport/applied-employers`
+  itself (only `career-passport.service.spec.ts`'s mocked
+  `listAppliedEmployers` tests) -- a gap worth closing alongside applying
+  the migration, not before
+
 ## Target product architecture proposal
 
 - Added the proposed Flora AI Employability Infrastructure architecture in

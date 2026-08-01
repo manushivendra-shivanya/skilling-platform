@@ -17,23 +17,27 @@ class ShareLink {
   final DateTime expiresAt;
 }
 
-/// Reads a candidate's governed evidence and manages whether it is
-/// shareable with employers. Never ranks, scores or certifies -- it only
-/// surfaces evidence Flora already generated and records a human-owned
-/// visibility choice.
+/// One employer the candidate has applied to, and whether they currently
+/// have an active, employer-specific grant to review this candidate's
+/// Career Passport evidence -- the per-employer replacement for the old
+/// single global "shared with employers" toggle.
+class EmployerAccessEntry {
+  const EmployerAccessEntry({
+    required this.employerId,
+    required this.employerName,
+    required this.granted,
+  });
+
+  final String employerId;
+  final String employerName;
+  final bool granted;
+}
+
+/// Reads a candidate's governed evidence and manages who can see it. Never
+/// ranks, scores or certifies -- it only surfaces evidence Flora already
+/// generated and records human-owned visibility choices.
 abstract interface class CareerPassportRepository {
   Future<Result<List<EvidenceRecord>>> loadEvidence(String candidateId);
-
-  /// False (private) when no consent has been granted, or when this
-  /// candidate has no account connection to grant one at all.
-  Future<Result<bool>> isShareable(String candidateId);
-
-  /// Whether [setShareable] can ever succeed for this candidate. False for
-  /// a local-only (unconfigured) build, where there is nowhere to record a
-  /// sharing grant.
-  bool get canManageSharing;
-
-  Future<Result<void>> setShareable(String candidateId, bool shareable);
 
   /// Whether [createShareLink]/[revokeShareLink] can ever succeed. False
   /// for a local-only build (no account) or one with no configured API
@@ -50,4 +54,25 @@ abstract interface class CareerPassportRepository {
   Future<Result<ShareLink>> createShareLink(String candidateId);
 
   Future<Result<void>> revokeShareLink(String candidateId);
+
+  /// Whether employer-access grants can ever be managed for this
+  /// candidate. False for a local-only build or one with no configured API
+  /// base URL (listing applied-to employers requires the BFF).
+  bool get canManageEmployerAccess;
+
+  /// Every employer behind a non-withdrawn application, each labelled with
+  /// whether they currently have an active review grant.
+  Future<Result<List<EmployerAccessEntry>>> loadEmployerAccess(
+    String candidateId,
+  );
+
+  Future<Result<void>> grantEmployerAccess(
+    String candidateId,
+    String employerId,
+  );
+
+  Future<Result<void>> revokeEmployerAccess(
+    String candidateId,
+    String employerId,
+  );
 }

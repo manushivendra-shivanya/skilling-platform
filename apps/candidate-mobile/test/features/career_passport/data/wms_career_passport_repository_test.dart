@@ -99,7 +99,7 @@ void main() {
     },
   );
 
-  test('local-only repository cannot manage sharing', () async {
+  test('local-only repository cannot manage employer access', () async {
     final store = InMemorySecureKeyValueStore();
     final attempts = LocalSimulationAttemptRepository(
       store,
@@ -107,18 +107,22 @@ void main() {
     );
     final repository = WmsCareerPassportRepository(attemptRepository: attempts);
 
-    expect(repository.canManageSharing, isFalse);
-    final isShareable = await repository.isShareable(candidateId);
-    isShareable.when(
-      success: (value) => expect(value, isFalse),
+    expect(repository.canManageEmployerAccess, isFalse);
+    final loaded = await repository.loadEmployerAccess(candidateId);
+    loaded.when(
+      success: (value) => expect(value, isEmpty),
       failure: (failure) => fail('expected success, got $failure'),
     );
-    final setResult = await repository.setShareable(candidateId, true);
-    expect(setResult, isA<Object>());
-    setResult.when(
+    final granted = await repository.grantEmployerAccess(
+      candidateId,
+      'employer-1',
+    );
+    granted.when(
       success: (_) => fail('expected failure without a Supabase client'),
-      failure: (failure) =>
-          expect(failure.message, 'Sharing requires an account connection.'),
+      failure: (failure) => expect(
+        failure.message,
+        'Employer access requires an account connection.',
+      ),
     );
   });
 

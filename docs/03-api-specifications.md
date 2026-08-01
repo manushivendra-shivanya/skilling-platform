@@ -125,9 +125,21 @@ human-review status; they cannot perform autonomous rejection or shortlisting.
   Minting and revoking a link is candidate-authenticated but does not go
   through this API: the app writes directly to `career_passport_grants`
   via Supabase (RLS-scoped to `candidate_id = auth.uid()`), the same
-  direct-write pattern already used for `career_passport_sharing`
-  consent. A candidate has at most one active link at a time (enforced
-  by a partial unique index), valid 30 days from creation.
+  direct-write pattern already used for consent grants. A candidate has
+  at most one active link at a time (enforced by a partial unique index),
+  valid 30 days from creation.
+
+- `GET /career-passport/applied-employers` -- candidate-authenticated
+  (`CandidateAuthGuard`, same as the Job APIs). Every employer behind one
+  of the candidate's non-withdrawn job applications, deduplicated
+  (`{id, name}`). Exists only because `public.employers` has no
+  client-facing Supabase policy, so this one join the client can't do
+  directly. Whether each employer currently has an active review grant is
+  *not* returned here -- the app derives that itself from
+  `career_passport_grants` (RLS already scopes reads to the candidate's
+  own rows). Granting/revoking a specific employer's access likewise goes
+  straight to Supabase, not through this API, once the app has an
+  employer id in hand.
 
 ## Employer APIs
 The list below is the aspirational full employer-portal surface from the
@@ -141,15 +153,18 @@ Evidence Review MVP (see `docs/generated/current-state.md`):
 - `GET /employer/applicants/{candidateId}/evidence` -- read-only Career
   Passport evidence for one candidate, gated on candidateId having an
   active (non-withdrawn) application to one of the requesting employer's
-  jobs, plus active `employer_sharing` and `career_passport_sharing`
-  consent. Every call is recorded in `employer_evidence_access_log`,
-  allowed or denied. The response always carries the disclaimer
-  ("Flora provides simulation evidence, not certification.") and the
-  decision-boundary copy ("Employer reviews evidence and decides.")
-  alongside the evidence, each item labelled with its provenance
-  (`verificationStatus`) and freshness (`active`/`superseded`/`stale`).
-  Evidence is returned newest-first; nothing is ranked, scored, or
-  auto-shortlisted.
+  jobs, plus active `employer_sharing` consent AND an active,
+  employer-specific `career_passport_grants` row
+  (`purpose = 'employer_review'`, scoped to this exact employer --
+  replaced an earlier single global `career_passport_sharing` toggle that
+  granted every applied-to employer the same access at once). Every call
+  is recorded in `employer_evidence_access_log`, allowed or denied. The
+  response always carries the disclaimer ("Flora provides simulation
+  evidence, not certification.") and the decision-boundary copy
+  ("Employer reviews evidence and decides.") alongside the evidence, each
+  item labelled with its provenance (`verificationStatus`) and freshness
+  (`active`/`superseded`/`stale`). Evidence is returned newest-first;
+  nothing is ranked, scored, or auto-shortlisted.
 
 Both routes are guarded by `EmployerAuthGuard`: a per-employer API key
 (hashed, seeded directly into `public.employers` -- no employer login flow,

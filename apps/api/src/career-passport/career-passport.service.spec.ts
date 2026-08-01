@@ -20,6 +20,24 @@ class QueryBuilder<T extends Row> {
     return this;
   }
 
+  neq(key: keyof T, value: unknown) {
+    this.rows = this.rows.filter((row) => row[key] !== value);
+    return this;
+  }
+
+  in(key: keyof T, values: unknown[]) {
+    this.rows = this.rows.filter((row) => values.includes(row[key]));
+    return this;
+  }
+
+  not(key: keyof T, operator: 'is', value: null) {
+    if (operator !== 'is' || value !== null) {
+      throw new Error('Fake QueryBuilder.not only supports not(key, "is", null)');
+    }
+    this.rows = this.rows.filter((row) => row[key] !== null);
+    return this;
+  }
+
   order(key: keyof T, opts?: { ascending?: boolean }) {
     const ascending = opts?.ascending ?? true;
     this.rows = [...this.rows].sort((a, b) => {
@@ -50,6 +68,9 @@ class FakeSupabaseAdmin {
     expires_at: string | null;
   }[] = [];
   evidenceRows: { candidate_id: string; issued_at: string; evidence: unknown }[] = [];
+  applications: { candidate_id: string; job_id: string; status: string }[] = [];
+  jobs: { id: string; employer_id: string | null }[] = [];
+  employers: { id: string; name: string }[] = [];
   accessLogs: {
     grant_id: string | null;
     outcome: string;
@@ -59,6 +80,9 @@ class FakeSupabaseAdmin {
   from(table: string) {
     if (table === 'career_passport_grants') return new QueryBuilder([...this.grants]);
     if (table === 'wms_competency_evidence') return new QueryBuilder([...this.evidenceRows]);
+    if (table === 'job_applications') return new QueryBuilder([...this.applications]);
+    if (table === 'jobs') return new QueryBuilder([...this.jobs]);
+    if (table === 'employers') return new QueryBuilder([...this.employers]);
     if (table === 'career_passport_grant_access_log') {
       return {
         insert: async (row: (typeof this.accessLogs)[number]) => {
@@ -192,5 +216,62 @@ describe('CareerPassportService.resolveShareLink', () => {
     const service = buildService(admin);
 
     expect(await service.resolveShareLink('token-1')).toEqual({ status: 'not_found' });
+  });
+});
+
+describe('CareerPassportService.listAppliedEmployers', () => {
+  it('returns nothing for a candidate with no applications', async () => {
+    const admin = new FakeSupabaseAdmin();
+    const service = buildService(admin);
+
+    expect(await service.listAppliedEmployers('candidate-1')).toEqual([]);
+  });
+
+  it('excludes a withdrawn application', async () => {
+    const admin = new FakeSupabaseAdmin();
+    admin.applications = [
+      { candidate_id: 'candidate-1', job_id: 'job-1', status: 'withdrawn' },
+    ];
+    admin.jobs = [{ id: 'job-1', employer_id: 'employer-1' }];
+    admin.employers = [{ id: 'employer-1', name: 'Apex Consumer Products' }];
+    const service = buildService(admin);
+
+    expect(await service.listAppliedEmployers('candidate-1')).toEqual([]);
+  });
+
+  it('deduplicates employers across multiple applications and sorts by name', async () => {
+    const admin = new FakeSupabaseAdmin();
+    admin.applications = [
+      { candidate_id: 'candidate-1', job_id: 'job-1', status: 'submitted' },
+      { candidate_id: 'candidate-1', job_id: 'job-2', status: 'submitted' },
+      { candidate_id: 'candidate-1', job_id: 'job-3', status: 'submitted' },
+    ];
+    admin.jobs = [
+      { id: 'job-1', employer_id: 'employer-2' },
+      { id: 'job-2', employer_id: 'employer-1' },
+      // Same employer as job-1, different job -- must not appear twice.
+      { id: 'job-3', employer_id: 'employer-2' },
+    ];
+    admin.employers = [
+      { id: 'employer-1', name: 'Apex Consumer Products' },
+      { id: 'employer-2', name: 'Meridian Logistics' },
+    ];
+    const service = buildService(admin);
+
+    expect(await service.listAppliedEmployers('candidate-1')).toEqual([
+      { id: 'employer-1', name: 'Apex Consumer Products' },
+      { id: 'employer-2', name: 'Meridian Logistics' },
+    ]);
+  });
+
+  it('ignores jobs with no employer_id', async () => {
+    const admin = new FakeSupabaseAdmin();
+    admin.applications = [
+      { candidate_id: 'candidate-1', job_id: 'job-1', status: 'submitted' },
+    ];
+    admin.jobs = [{ id: 'job-1', employer_id: null }];
+    const service = buildService(admin);
+
+    expect(await service.listAppliedEmployers('candidate-1')).toEqual([]);
   });
 });

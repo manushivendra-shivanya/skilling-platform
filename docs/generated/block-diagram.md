@@ -52,7 +52,8 @@ flowchart TD
 
     ME --> CAREERPASSPORT[Career Passport Section]
     CAREERPASSPORT --> WMSOFFLINE
-    CAREERPASSPORT -->|Evidence history, sharing consent and share-link grants| JOBSKILLS
+    CAREERPASSPORT -->|Evidence history, share-link and employer grants| JOBSKILLS
+    CAREERPASSPORT -->|Lists applied-to employers| CAREERPASSPORTAPI
     CAREERPASSPORT -.->|Generates a link served by| CAREERPASSPORTAPI
 
     DIAG --> DIAGENGINE[Versioned Deterministic Diagnostic Engine]
@@ -122,7 +123,7 @@ flowchart TD
     API --> EMPLOYERAPI[Employer Evidence Review API]
     EMPLOYERAPI --> EMPLOYERGUARD[Employer API Key Guard]
     EMPLOYERAPI --> EMPLOYERAUDIT[Evidence Access Audit Log]
-    API --> CAREERPASSPORTAPI[Career Passport Public Share Link API]
+    API --> CAREERPASSPORTAPI[Career Passport API - Share Link and Applied Employers]
     CAREERPASSPORTAPI --> CAREERPASSPORTAUDIT[Share Link Access Audit Log]
     API --> DEVHARNESS[Internal Dev QC Harness - non-production only]
     DEVHARNESS -. Manual QC calls .-> EMPLOYERAPI
