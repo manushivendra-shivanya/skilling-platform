@@ -162,6 +162,58 @@ void main() {
     },
   );
 
+  test('the cold-chain-breach-shipment scenario assigns a temperature breach '
+      'to exactly one carton', () async {
+    final mission = await repository.getMission('receive-incoming-shipment-01');
+    const generator = ScenarioGenerator();
+
+    final scenario = generator.generate(
+      mission,
+      48127,
+      scenarioId: 'cold-chain-breach-shipment',
+    );
+
+    final breached = scenario.resources.where(
+      (item) =>
+          item.issues.any((issue) => issue.issueType == 'temperature_breach'),
+    );
+    expect(breached, hasLength(1));
+    expect(breached.single.content['temperatureStatus'], 'breached');
+    expect(
+      scenario.resources
+          .where((item) => item.id != breached.single.id)
+          .expand((item) => item.issues),
+      isEmpty,
+      reason: 'only the breached carton carries an issue in this scenario',
+    );
+  });
+
+  test('the tampered-packaging-shipment scenario assigns tamper evidence to '
+      'exactly one carton', () async {
+    final mission = await repository.getMission('receive-incoming-shipment-01');
+    const generator = ScenarioGenerator();
+
+    final scenario = generator.generate(
+      mission,
+      48127,
+      scenarioId: 'tampered-packaging-shipment',
+    );
+
+    final tampered = scenario.resources.where(
+      (item) =>
+          item.issues.any((issue) => issue.issueType == 'tamper_evidence'),
+    );
+    expect(tampered, hasLength(1));
+    expect(tampered.single.content['sealStatus'], 'broken');
+    expect(
+      scenario.resources
+          .where((item) => item.id != tampered.single.id)
+          .expand((item) => item.issues),
+      isEmpty,
+      reason: 'only the tampered carton carries an issue in this scenario',
+    );
+  });
+
   test('selecting an unknown scenario id fails clearly', () async {
     final mission = await repository.getMission('receive-incoming-shipment-01');
 

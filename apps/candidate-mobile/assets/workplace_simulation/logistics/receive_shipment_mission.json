@@ -321,6 +321,8 @@
         {"actionType": "record_issue", "requiredPayload": {"issueType": "incorrect_sku"}, "targetHasIssue": "incorrect_sku", "outcomeType": "correct", "pointsAwarded": 4, "feedbackCode": "incorrect_sku_identified", "correctActionLabel": "Identified the unauthorised SKU", "missedIssueCode": "incorrect_sku"},
         {"actionType": "record_issue", "requiredPayload": {"issueType": "quantity_shortage"}, "targetHasIssue": "quantity_shortage", "outcomeType": "correct", "pointsAwarded": 4, "feedbackCode": "carton_shortage_identified", "correctActionLabel": "Confirmed the physical shortage", "missedIssueCode": "quantity_shortage"},
         {"actionType": "record_issue", "requiredPayload": {"issueType": "unreadable_barcode"}, "targetHasIssue": "unreadable_barcode", "outcomeType": "correct", "pointsAwarded": 4, "feedbackCode": "barcode_issue_observed", "correctActionLabel": "Observed the unreadable barcode", "missedIssueCode": "unreadable_barcode"},
+        {"actionType": "record_issue", "requiredPayload": {"issueType": "temperature_breach"}, "targetHasIssue": "temperature_breach", "outcomeType": "correct", "pointsAwarded": 4, "feedbackCode": "temperature_breach_identified", "correctActionLabel": "Identified the cold-chain temperature breach", "missedIssueCode": "temperature_breach"},
+        {"actionType": "record_issue", "requiredPayload": {"issueType": "tamper_evidence"}, "targetHasIssue": "tamper_evidence", "outcomeType": "correct", "pointsAwarded": 4, "feedbackCode": "tamper_evidence_identified", "correctActionLabel": "Identified the broken safety seal", "missedIssueCode": "tamper_evidence"},
         {"actionType": "inspect_item", "requiredPayload": {"finding": "compliant"}, "targetMustBeCompliant": true, "outcomeType": "correct", "pointsAwarded": 4, "feedbackCode": "compliant_carton_confirmed", "correctActionLabel": "Confirmed compliant stock"}
       ]
     },
@@ -367,6 +369,8 @@
         {"actionType": "select_disposition", "requiredPayload": {"disposition": "reject_return"}, "targetHasIssue": "incorrect_sku", "outcomeType": "correct", "pointsAwarded": 4, "feedbackCode": "incorrect_sku_rejected", "correctActionLabel": "Rejected the unauthorised SKU"},
         {"actionType": "select_disposition", "requiredPayload": {"disposition": "escalate"}, "targetHasIssue": "near_expiry", "outcomeType": "correct", "pointsAwarded": 4, "feedbackCode": "expiry_escalated", "correctActionLabel": "Escalated near-expiry stock for policy review", "missedIssueCode": "near_expiry"},
         {"actionType": "select_disposition", "requiredPayload": {"disposition": "hold_for_verification"}, "targetHasIssue": "quantity_shortage", "outcomeType": "correct", "pointsAwarded": 4, "feedbackCode": "shortage_held", "correctActionLabel": "Held the shortage record for reconciliation"},
+        {"actionType": "select_disposition", "requiredPayload": {"disposition": "quarantine"}, "targetHasIssue": "temperature_breach", "outcomeType": "correct", "pointsAwarded": 4, "feedbackCode": "temperature_breach_quarantined", "correctActionLabel": "Quarantined the temperature-breached stock", "missedIssueCode": "temperature_breach"},
+        {"actionType": "select_disposition", "requiredPayload": {"disposition": "reject_return"}, "targetHasIssue": "tamper_evidence", "outcomeType": "correct", "pointsAwarded": 4, "feedbackCode": "tampered_stock_rejected", "correctActionLabel": "Rejected the tampered stock", "missedIssueCode": "tamper_evidence"},
         {"actionType": "select_disposition", "requiredPayload": {"disposition": "accept"}, "targetMustBeCompliant": true, "outcomeType": "correct", "pointsAwarded": 4, "feedbackCode": "compliant_stock_accepted", "correctActionLabel": "Accepted compliant stock"}
       ]
     },
@@ -414,7 +418,9 @@
         {"actionType": "select_release_decision", "requiredPayload": {"releaseDecision": "continue_hold"}, "targetHasIssue": "quantity_shortage", "outcomeType": "correct", "pointsAwarded": 5, "feedbackCode": "shortage_hold_continued", "correctActionLabel": "Kept the shortage record on hold pending reconciliation"},
         {"actionType": "select_release_decision", "requiredPayload": {"releaseDecision": "not_applicable"}, "targetHasIssue": "incorrect_sku", "outcomeType": "correct", "pointsAwarded": 5, "feedbackCode": "reject_no_release_needed", "correctActionLabel": "Recognized rejected stock needs no release decision"},
         {"actionType": "select_release_decision", "requiredPayload": {"releaseDecision": "not_applicable"}, "targetHasIssue": "near_expiry", "outcomeType": "correct", "pointsAwarded": 5, "feedbackCode": "escalated_no_release_needed", "correctActionLabel": "Recognized escalated stock needs no release decision"},
-        {"actionType": "select_release_decision", "requiredPayload": {"releaseDecision": "not_applicable"}, "targetMustBeCompliant": true, "outcomeType": "correct", "pointsAwarded": 5, "feedbackCode": "accepted_no_release_needed", "correctActionLabel": "Recognized accepted stock needs no release decision"}
+        {"actionType": "select_release_decision", "requiredPayload": {"releaseDecision": "not_applicable"}, "targetMustBeCompliant": true, "outcomeType": "correct", "pointsAwarded": 5, "feedbackCode": "accepted_no_release_needed", "correctActionLabel": "Recognized accepted stock needs no release decision"},
+        {"actionType": "select_release_decision", "requiredPayload": {"releaseDecision": "continue_hold"}, "targetHasIssue": "temperature_breach", "outcomeType": "correct", "pointsAwarded": 5, "feedbackCode": "temperature_breach_hold_continued", "correctActionLabel": "Kept temperature-breached stock on hold pending lab verification", "missedIssueCode": "temperature_breach"},
+        {"actionType": "select_release_decision", "requiredPayload": {"releaseDecision": "not_applicable"}, "targetHasIssue": "tamper_evidence", "outcomeType": "correct", "pointsAwarded": 5, "feedbackCode": "tampered_no_release_needed", "correctActionLabel": "Recognized rejected tampered stock needs no release decision"}
       ]
     },
     {
@@ -658,6 +664,34 @@
       "name": "Paperwork mismatch, physically correct",
       "variationRules": [],
       "pedagogicalIntent": "Every carton scans, inspects and counts clean, exactly like perfect-delivery — this entry exists as its own trackable scenario id rather than new generated content, so instructors and analytics can distinguish runs assigned for this specific framing: PO/delivery-note quantities disagree with each other, but the physical count matches the delivery note exactly. Tests whether the learner distinguishes a clerical discrepancy (still must be recorded) from a physical receiving problem (nothing to quarantine or reject)."
+    },
+    {
+      "id": "cold-chain-breach-shipment",
+      "name": "Cold-chain temperature breach",
+      "variationRules": [
+        {
+          "type": "assign_issue",
+          "issue": "temperature_breach",
+          "severity": "critical",
+          "eligibleTargets": ["carton-001", "carton-002", "carton-003", "carton-004", "carton-005", "carton-006"],
+          "count": 1
+        }
+      ],
+      "pedagogicalIntent": "One carton recorded an out-of-range temperature excursion in transit — nothing about it looks visibly wrong. Tests whether the learner treats a cold-chain temperature breach with the same seriousness as visible damage: quarantine pending lab verification, never accept on the assumption that 'it looks fine.'"
+    },
+    {
+      "id": "tampered-packaging-shipment",
+      "name": "Tampered packaging",
+      "variationRules": [
+        {
+          "type": "assign_issue",
+          "issue": "tamper_evidence",
+          "severity": "critical",
+          "eligibleTargets": ["carton-001", "carton-002", "carton-003", "carton-004", "carton-005", "carton-006"],
+          "count": 1
+        }
+      ],
+      "pedagogicalIntent": "One carton's safety seal is broken and resealed — a security and counterfeit-risk indicator, not a cosmetic packaging defect. Tests whether the learner distinguishes tamper evidence (reject, cannot verify authenticity or safety) from ordinary packaging damage (quarantine, contents still verifiable)."
     }
   ],
   "scoringRule": {
@@ -681,7 +715,9 @@
     {"id": "approve-without-inspection", "title": "Approved Without Inspection", "description": "The shipment was approved before mandatory inspection.", "severity": "critical", "trigger": {"actionType": "make_decision", "requiredPayload": {"decision": "partially_accept"}}, "scorePenalty": 25, "preventsPassing": true, "feedback": "Mandatory inspection must be completed before approval."},
     {"id": "omit-discrepancy-report", "title": "Omitted Discrepancy Report", "description": "Required exceptions were intentionally omitted.", "severity": "critical", "trigger": {"actionType": "complete_form", "requiredPayload": {"intentionallyOmitted": true}}, "scorePenalty": 25, "preventsPassing": true, "feedback": "Discrepancy reports must be complete and truthful."},
     {"id": "accepted-wrong-supplier-delivery", "title": "Accepted a Wrong-Supplier Delivery", "description": "Stock from an unverified or incorrect supplier entered the receiving process as if it matched the purchase order.", "severity": "critical", "trigger": {"actionType": "confirm_action", "targetHasIssue": "wrong_supplier", "requiredPayload": {"conclusion": "matches_expected_delivery"}}, "scorePenalty": 25, "preventsPassing": true, "feedback": "Delivery identity must be verified against the purchase order and supplier before counting or inspecting stock."},
-    {"id": "release-damaged-stock", "title": "Released Damaged Goods to Stock", "description": "Damaged stock was recommended for release into available inventory instead of returned to the supplier.", "severity": "critical", "trigger": {"actionType": "select_release_decision", "targetHasIssue": "packaging_damage", "requiredPayload": {"releaseDecision": "release_to_stock"}}, "scorePenalty": 20, "preventsPassing": true, "feedback": "Damaged goods must never be released into available inventory -- return to supplier or dispose per policy."}
+    {"id": "release-damaged-stock", "title": "Released Damaged Goods to Stock", "description": "Damaged stock was recommended for release into available inventory instead of returned to the supplier.", "severity": "critical", "trigger": {"actionType": "select_release_decision", "targetHasIssue": "packaging_damage", "requiredPayload": {"releaseDecision": "release_to_stock"}}, "scorePenalty": 20, "preventsPassing": true, "feedback": "Damaged goods must never be released into available inventory -- return to supplier or dispose per policy."},
+    {"id": "accept-temperature-breach", "title": "Accepted Temperature-Breached Goods", "description": "Cold-chain stock with a recorded temperature breach entered normal inventory.", "severity": "critical", "trigger": {"actionType": "select_disposition", "targetHasIssue": "temperature_breach", "selectedDisposition": "accept"}, "scorePenalty": 20, "preventsPassing": true, "feedback": "Temperature-breached stock must be quarantined pending verification, never accepted."},
+    {"id": "accept-tampered-goods", "title": "Accepted Tampered Goods", "description": "Stock with evidence of a broken or resealed safety seal entered normal inventory.", "severity": "critical", "trigger": {"actionType": "select_disposition", "targetHasIssue": "tamper_evidence", "selectedDisposition": "accept"}, "scorePenalty": 20, "preventsPassing": true, "feedback": "Stock with tamper evidence must be rejected -- authenticity and safety cannot be verified."}
   ],
   "earlyCompletionRules": [
     {
