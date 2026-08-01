@@ -17,6 +17,9 @@ import '../../features/home/presentation/home_dashboard_screen.dart';
 import '../../features/jobs/presentation/jobs_screen.dart';
 import '../../features/intelligence/presentation/diagnostic_screen.dart';
 import '../../features/learning/presentation/learning_screen.dart';
+import '../../features/micro_lessons/domain/micro_lesson_clip.dart';
+import '../../features/micro_lessons/presentation/micro_lesson_catalogue_screen.dart';
+import '../../features/micro_lessons/presentation/micro_lesson_player_screen.dart';
 import '../../features/navigation/presentation/global_placeholder_screen.dart';
 import '../../features/navigation/presentation/main_navigation_shell.dart';
 import '../../features/onboarding/domain/candidate_onboarding_repository.dart';
@@ -151,6 +154,9 @@ const designSystemGalleryRoutePath = '/dev/design-system';
 const designSystemGalleryRouteName = 'design-system-gallery';
 const wms3dPreviewRoutePath = '/dev/wms-3d-preview';
 const wms3dPreviewRouteName = 'wms-3d-preview';
+const microLessonCatalogueRoutePath = '/dev/micro-lessons';
+const microLessonCatalogueRouteName = 'micro-lesson-catalogue';
+const microLessonPlayerRouteName = 'micro-lesson-player';
 
 String workplaceSimulationPath(String missionId) =>
     '$workplaceSimulationHubRoutePath/$missionId';
@@ -254,6 +260,9 @@ GoRouter createAppRouter({
               : null,
           onOpenWms3dPreview: showDevelopmentTools
               ? () => context.push(wms3dPreviewRoutePath)
+              : null,
+          onOpenMicroLessons: showDevelopmentTools
+              ? () => context.push(microLessonCatalogueRoutePath)
               : null,
         ),
       ),
@@ -604,6 +613,28 @@ GoRouter createAppRouter({
           name: wms3dPreviewRouteName,
           builder: (context, state) =>
               Workplace3dPreviewScreen(onBack: () => context.pop()),
+        ),
+      if (showDevelopmentTools)
+        GoRoute(
+          path: microLessonCatalogueRoutePath,
+          name: microLessonCatalogueRouteName,
+          builder: (context, state) => MicroLessonCatalogueScreen(
+            onBack: () => context.pop(),
+            onOpenClip: (clip) => context.push(
+              '$microLessonCatalogueRoutePath/player',
+              extra: clip,
+            ),
+          ),
+          routes: [
+            GoRoute(
+              path: 'player',
+              name: microLessonPlayerRouteName,
+              builder: (context, state) => MicroLessonPlayerScreen(
+                clip: state.extra! as MicroLessonClip,
+                onBack: () => context.pop(),
+              ),
+            ),
+          ],
         ),
     ],
     errorBuilder: (context, state) => AppRouteErrorScreen(
