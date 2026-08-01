@@ -121,6 +121,47 @@ void main() {
           expect(failure.message, 'Sharing requires an account connection.'),
     );
   });
+
+  test('local-only repository cannot manage a share link', () async {
+    final store = InMemorySecureKeyValueStore();
+    final attempts = LocalSimulationAttemptRepository(
+      store,
+      clock: () => fixedTime,
+    );
+    final repository = WmsCareerPassportRepository(attemptRepository: attempts);
+
+    expect(repository.canManageShareLink, isFalse);
+    final loaded = await repository.loadShareLink(candidateId);
+    loaded.when(
+      success: (value) => expect(value, isNull),
+      failure: (failure) => fail('expected success, got $failure'),
+    );
+    final created = await repository.createShareLink(candidateId);
+    created.when(
+      success: (_) => fail('expected failure without a Supabase client'),
+      failure: (failure) =>
+          expect(failure.message, 'Share links require an account connection.'),
+    );
+  });
+
+  test('a share link still requires a configured API base URL even with '
+      'Supabase configured', () async {
+    final store = InMemorySecureKeyValueStore();
+    final attempts = LocalSimulationAttemptRepository(
+      store,
+      clock: () => fixedTime,
+    );
+    // No supabaseClient is passed here either -- this repository has no
+    // way to fake a SupabaseClient (a real client from supabase_flutter),
+    // so this only proves apiBaseUrl alone isn't sufficient, mirroring
+    // canManageShareLink's actual condition (both must be present).
+    final repository = WmsCareerPassportRepository(
+      attemptRepository: attempts,
+      apiBaseUrl: 'https://api.example.com/v1',
+    );
+
+    expect(repository.canManageShareLink, isFalse);
+  });
 }
 
 SimulationResult _result(SimulationAttempt attempt, {required int score}) {

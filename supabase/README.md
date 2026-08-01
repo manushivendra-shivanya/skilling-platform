@@ -28,6 +28,17 @@ issued to either, since employers never talk to Supabase directly, only
 through `EmployerAuthGuard` in `apps/api`. Their `RLS Enabled No Policy`
 advisor notice is expected for this reason, not a gap to close.
 
+`public.career_passport_grants` and `public.career_passport_grant_access_log`
+(`20260801120000_career_passport_grants.sql`) back the Career Passport
+public share link. Unlike the employer tables, `career_passport_grants`
+does grant `authenticated` policies -- a candidate can read/insert/update
+only their own rows (`candidate_id = auth.uid()`), since minting and
+revoking a link is a direct candidate write, not a BFF write. Anonymous
+resolution of a link by token, and the access log, remain BFF/service-role
+only. The same table is shaped to serve a later per-employer grant purpose
+(`purpose = 'employer_review'`) without a second migration -- see the
+migration's header comment.
+
 Production promotion requires security/performance advisor review and a
 staging smoke test.
 
@@ -47,3 +58,14 @@ apply anything here. If you're setting up a fresh `JobSkills`-equivalent
 project from these migration files, this one and its dependents
 (`employer_id` on `jobs`) require the `phase_three_job_applications`
 migration to have run first.
+
+`20260801120000_career_passport_grants.sql` has the same access gap and,
+as of the commit that added it, has **not yet been applied anywhere** --
+neither to `JobSkills` nor confirmed live. It depends on
+`20260801100000_employer_evidence_review_mvp.sql` having already run
+(`career_passport_grants.employer_id` references `public.employers`).
+Until it's applied, the Career Passport share-link feature is present in
+both `apps/api` and the Flutter app but will fail against a real deployment
+with an undefined-table error -- see
+`docs/generated/current-state.md`'s "Career Passport v0.2 -- revocable
+public share link" entry.
