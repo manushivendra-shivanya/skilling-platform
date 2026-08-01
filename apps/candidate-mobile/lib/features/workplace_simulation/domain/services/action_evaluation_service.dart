@@ -74,6 +74,9 @@ class ActionEvaluationService {
     ActionType.dispositionRecorded,
     ActionType.dispositionUpdated,
     ActionType.dispositionRemoved,
+    ActionType.releaseDecisionRecorded,
+    ActionType.releaseDecisionUpdated,
+    ActionType.releaseDecisionRemoved,
   }.contains(type);
 
   bool _matches(

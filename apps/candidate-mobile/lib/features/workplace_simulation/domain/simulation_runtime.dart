@@ -72,6 +72,7 @@ class SimulationAttempt {
     this.inspectionDraft,
     this.barcodeScanDraft,
     this.dispositionDraft,
+    this.quarantineReleaseDraft,
     this.discrepancyReportDraft,
     this.submittedAt,
     this.completedAt,
@@ -106,6 +107,7 @@ class SimulationAttempt {
   final InspectionDraft? inspectionDraft;
   final BarcodeScanDraft? barcodeScanDraft;
   final DispositionDraft? dispositionDraft;
+  final QuarantineReleaseDraft? quarantineReleaseDraft;
   final DiscrepancyReportDraft? discrepancyReportDraft;
 
   @Deprecated('Use createdAt')
@@ -154,6 +156,7 @@ class SimulationAttempt {
     InspectionDraft? inspectionDraft,
     BarcodeScanDraft? barcodeScanDraft,
     DispositionDraft? dispositionDraft,
+    QuarantineReleaseDraft? quarantineReleaseDraft,
     DiscrepancyReportDraft? discrepancyReportDraft,
   }) => SimulationAttempt(
     id: id,
@@ -191,6 +194,8 @@ class SimulationAttempt {
     inspectionDraft: inspectionDraft ?? this.inspectionDraft,
     barcodeScanDraft: barcodeScanDraft ?? this.barcodeScanDraft,
     dispositionDraft: dispositionDraft ?? this.dispositionDraft,
+    quarantineReleaseDraft:
+        quarantineReleaseDraft ?? this.quarantineReleaseDraft,
     discrepancyReportDraft:
         discrepancyReportDraft ?? this.discrepancyReportDraft,
   );
@@ -222,6 +227,7 @@ class SimulationAttempt {
     'inspectionDraft': inspectionDraft?.toJson(),
     'barcodeScanDraft': barcodeScanDraft?.toJson(),
     'dispositionDraft': dispositionDraft?.toJson(),
+    'quarantineReleaseDraft': quarantineReleaseDraft?.toJson(),
     'discrepancyReportDraft': discrepancyReportDraft?.toJson(),
   };
 
@@ -277,6 +283,9 @@ class SimulationAttempt {
         : null,
     dispositionDraft: json['dispositionDraft'] is JsonMap
         ? DispositionDraft.fromJson(json.object('dispositionDraft'))
+        : null,
+    quarantineReleaseDraft: json['quarantineReleaseDraft'] is JsonMap
+        ? QuarantineReleaseDraft.fromJson(json.object('quarantineReleaseDraft'))
         : null,
     discrepancyReportDraft: json['discrepancyReportDraft'] is JsonMap
         ? DiscrepancyReportDraft.fromJson(json.object('discrepancyReportDraft'))

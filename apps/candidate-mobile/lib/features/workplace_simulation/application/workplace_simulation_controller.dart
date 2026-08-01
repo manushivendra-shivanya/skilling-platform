@@ -835,6 +835,9 @@ class WorkplaceSimulationController
   drafts.DispositionDraft? get dispositionDraft =>
       state.valueOrNull?.attempt?.dispositionDraft;
 
+  drafts.QuarantineReleaseDraft? get quarantineReleaseDraft =>
+      state.valueOrNull?.attempt?.quarantineReleaseDraft;
+
   drafts.DiscrepancyReportDraft? get discrepancyReportDraft =>
       state.valueOrNull?.attempt?.discrepancyReportDraft;
 
@@ -2402,6 +2405,308 @@ class WorkplaceSimulationController
     );
   }
 
+  /// Cartons whose disposition is `quarantine` or `holdForVerification` --
+  /// the only ones a release decision can be requested for. Unlike other
+  /// tasks, `request-quarantine-release`'s real target set is this dynamic,
+  /// scenario-dependent subset, not the task's static `targetResourceIds`
+  /// (which lists every carton purely so content validation can confirm
+  /// they're real resources).
+  Set<String> _heldCartonIds(SimulationAttempt attempt) =>
+      attempt.dispositionDraft?.entries
+          .where(
+            (entry) =>
+                entry.disposition == DispositionType.quarantine ||
+                entry.disposition == DispositionType.holdForVerification,
+          )
+          .map((entry) => entry.cartonId)
+          .toSet() ??
+      const {};
+
+  Future<RecordReleaseDecisionResult> recordReleaseDecision(
+    RecordReleaseDecisionCommand command,
+  ) async {
+    final active = _activeAttempt();
+    if (active == null) return RecordReleaseDecisionResult.invalidAttemptState;
+    final (current, attempt) = active;
+    if (!_heldCartonIds(attempt).contains(command.cartonId)) {
+      return RecordReleaseDecisionResult.cartonNotHeld;
+    }
+    if (command.justification.trim().isEmpty) {
+      return RecordReleaseDecisionResult.justificationRequired;
+    }
+    final draft =
+        attempt.quarantineReleaseDraft ?? _newQuarantineReleaseDraft(attempt);
+    if (draft.status == drafts.OperationalDraftStatus.submitted) {
+      return RecordReleaseDecisionResult.alreadySubmitted;
+    }
+    if (draft.entries.any((item) => item.cartonId == command.cartonId)) {
+      return RecordReleaseDecisionResult.duplicateEntry;
+    }
+    return _tryPersist(
+      () async {
+        final now = DateTime.now();
+        final entry = drafts.QuarantineReleaseEntry(
+          id: '${attempt.id}-release-${draft.entries.length + 1}',
+          cartonId: command.cartonId,
+          decision: command.decision,
+          justification: command.justification.trim(),
+          createdAt: now,
+          updatedAt: now,
+          revisionNumber: 1,
+        );
+        var updated = attempt.copyWith(
+          quarantineReleaseDraft: draft.copyWith(
+            entries: [...draft.entries, entry],
+            updatedAt: now,
+          ),
+        );
+        updated = _appendDraftAction(
+          updated,
+          stageId: 'exception-handling',
+          taskId: 'request-quarantine-release',
+          actionType: ActionType.releaseDecisionRecorded,
+          targetId: entry.cartonId,
+          payload: _releaseDecisionPayload(entry),
+        );
+        await _commit(current, updated);
+      },
+      onSuccess: () => RecordReleaseDecisionResult.success,
+      onFailure: () => RecordReleaseDecisionResult.persistenceFailure,
+    );
+  }
+
+  Future<UpdateReleaseDecisionResult> updateReleaseDecision(
+    UpdateReleaseDecisionCommand command,
+  ) async {
+    final active = _activeAttempt();
+    if (active == null) return UpdateReleaseDecisionResult.invalidAttemptState;
+    final (current, attempt) = active;
+    if (command.justification.trim().isEmpty) {
+      return UpdateReleaseDecisionResult.justificationRequired;
+    }
+    final draft = attempt.quarantineReleaseDraft;
+    if (draft == null) return UpdateReleaseDecisionResult.entryNotFound;
+    if (draft.status == drafts.OperationalDraftStatus.submitted) {
+      return UpdateReleaseDecisionResult.alreadySubmitted;
+    }
+    final index = draft.entries.indexWhere(
+      (item) => item.id == command.entryId,
+    );
+    if (index < 0) return UpdateReleaseDecisionResult.entryNotFound;
+    return _tryPersist(
+      () async {
+        final now = DateTime.now();
+        final previous = draft.entries[index];
+        final entry = previous.copyWith(
+          decision: command.decision,
+          justification: command.justification.trim(),
+          updatedAt: now,
+          revisionNumber: previous.revisionNumber + 1,
+        );
+        final entries = [...draft.entries]..[index] = entry;
+        var updated = attempt.copyWith(
+          quarantineReleaseDraft: draft.copyWith(
+            entries: entries,
+            updatedAt: now,
+          ),
+        );
+        updated = _appendDraftAction(
+          updated,
+          stageId: 'exception-handling',
+          taskId: 'request-quarantine-release',
+          actionType: ActionType.releaseDecisionUpdated,
+          targetId: entry.cartonId,
+          payload: _releaseDecisionPayload(entry),
+        );
+        await _commit(current, updated);
+      },
+      onSuccess: () => UpdateReleaseDecisionResult.success,
+      onFailure: () => UpdateReleaseDecisionResult.persistenceFailure,
+    );
+  }
+
+  Future<RemoveReleaseDecisionResult> removeReleaseDecision(
+    RemoveReleaseDecisionCommand command,
+  ) async {
+    final active = _activeAttempt();
+    if (active == null) return RemoveReleaseDecisionResult.invalidAttemptState;
+    final (current, attempt) = active;
+    final draft = attempt.quarantineReleaseDraft;
+    if (draft == null) return RemoveReleaseDecisionResult.entryNotFound;
+    if (draft.status == drafts.OperationalDraftStatus.submitted) {
+      return RemoveReleaseDecisionResult.alreadySubmitted;
+    }
+    drafts.QuarantineReleaseEntry? entry;
+    for (final item in draft.entries) {
+      if (item.id == command.entryId) entry = item;
+    }
+    if (entry == null) return RemoveReleaseDecisionResult.entryNotFound;
+    return _tryPersist(
+      () async {
+        final now = DateTime.now();
+        var updated = attempt.copyWith(
+          quarantineReleaseDraft: draft.copyWith(
+            entries: draft.entries
+                .where((item) => item.id != command.entryId)
+                .toList(growable: false),
+            updatedAt: now,
+          ),
+        );
+        updated = _appendDraftAction(
+          updated,
+          stageId: 'exception-handling',
+          taskId: 'request-quarantine-release',
+          actionType: ActionType.releaseDecisionRemoved,
+          targetId: entry!.cartonId,
+          payload: {
+            'entryId': entry.id,
+            'revisionNumber': entry.revisionNumber + 1,
+          },
+        );
+        await _commit(current, updated);
+      },
+      onSuccess: () => RemoveReleaseDecisionResult.success,
+      onFailure: () => RemoveReleaseDecisionResult.persistenceFailure,
+    );
+  }
+
+  Future<SaveQuarantineReleaseDraftResult> saveQuarantineReleaseDraft(
+    SaveQuarantineReleaseDraftCommand command,
+  ) async {
+    final active = _activeAttempt();
+    if (active == null) {
+      return SaveQuarantineReleaseDraftResult.invalidAttemptState;
+    }
+    final (current, attempt) = active;
+    final draft =
+        attempt.quarantineReleaseDraft ?? _newQuarantineReleaseDraft(attempt);
+    if (draft.status == drafts.OperationalDraftStatus.submitted) {
+      return SaveQuarantineReleaseDraftResult.alreadySubmitted;
+    }
+    return _tryPersist(
+      () async {
+        final updated = _withAudit(
+          attempt.copyWith(quarantineReleaseDraft: draft),
+          AttemptAuditEventType.releaseDecisionsDraftSaved,
+          screenId: 'quarantine-zone',
+          payload: {'entryCount': draft.entries.length},
+        );
+        await _commit(current, updated);
+      },
+      onSuccess: () => SaveQuarantineReleaseDraftResult.success,
+      onFailure: () => SaveQuarantineReleaseDraftResult.persistenceFailure,
+    );
+  }
+
+  Future<SubmitQuarantineReleaseResult> submitQuarantineRelease(
+    SubmitQuarantineReleaseCommand command,
+  ) async {
+    final active = _activeAttemptWithScenario();
+    if (active == null)
+      return SubmitQuarantineReleaseResult.invalidAttemptState;
+    final (current, attempt, scenario) = active;
+    if (!attempt.completedTaskIds.contains('confirm-quarantine')) {
+      return SubmitQuarantineReleaseResult.quarantineNotConfirmed;
+    }
+    // No new draft is forced into existence when nothing is held -- an
+    // attempt with zero quarantined/held cartons has nothing to recommend,
+    // and the completeness check below is trivially satisfied (0 == 0).
+    final draft =
+        attempt.quarantineReleaseDraft ?? _newQuarantineReleaseDraft(attempt);
+    if (draft.status == drafts.OperationalDraftStatus.submitted) {
+      return SubmitQuarantineReleaseResult.alreadySubmitted;
+    }
+    final heldCartonIds = _heldCartonIds(attempt);
+    if (draft.entries.length != heldCartonIds.length ||
+        !heldCartonIds.every(
+          (id) => draft.entries.any((entry) => entry.cartonId == id),
+        )) {
+      return SubmitQuarantineReleaseResult.incompleteReleaseDecisions;
+    }
+    return _tryPersist(
+      () async {
+        var working = _withAudit(
+          attempt,
+          AttemptAuditEventType.releaseDecisionsSubmissionRequested,
+          screenId: 'quarantine-zone',
+          payload: {'entryCount': draft.entries.length},
+        );
+        var outcomes = [...current.outcomes];
+        for (final entry in draft.entries) {
+          (working, outcomes) = _applyAction(
+            current,
+            working,
+            outcomes,
+            _newAction(
+              working,
+              stageId: 'exception-handling',
+              taskId: 'request-quarantine-release',
+              actionType: ActionType.selectReleaseDecision,
+              targetId: entry.cartonId,
+              payload: {
+                'releaseDecision': entry.decision.wireName,
+                'justification': entry.justification,
+              },
+            ),
+            scenario,
+          );
+        }
+        // Cartons that were never quarantined or held still need a scored
+        // action recorded against every task.targetResourceIds entry --
+        // MissionProgressService's repeatable-task completion check counts
+        // distinct actioned targets against the task's full static target
+        // list, not the dynamic held subset the candidate actually chose
+        // from. Recorded automatically, never surfaced to or editable by
+        // the candidate; see ReleaseDecision.notApplicable's doc comment.
+        final allTargets = current.mission
+            .task('request-quarantine-release')
+            .targetResourceIds;
+        for (final cartonId in allTargets) {
+          if (heldCartonIds.contains(cartonId)) continue;
+          (working, outcomes) = _applyAction(
+            current,
+            working,
+            outcomes,
+            _newAction(
+              working,
+              stageId: 'exception-handling',
+              taskId: 'request-quarantine-release',
+              actionType: ActionType.selectReleaseDecision,
+              targetId: cartonId,
+              payload: {
+                'releaseDecision': ReleaseDecision.notApplicable.wireName,
+                'justification':
+                    'Not quarantined or held -- no release decision needed.',
+              },
+            ),
+            scenario,
+          );
+        }
+        final now = DateTime.now();
+        working = working.copyWith(
+          quarantineReleaseDraft: draft.copyWith(
+            status: drafts.OperationalDraftStatus.submitted,
+            updatedAt: now,
+            submittedAt: now,
+          ),
+        );
+        working = _withAudit(
+          working,
+          AttemptAuditEventType.releaseDecisionsSaved,
+          screenId: 'quarantine-zone',
+          payload: {'entryCount': draft.entries.length},
+        );
+        await _commit(current, working, outcomes: outcomes);
+      },
+      onSuccess: () => SubmitQuarantineReleaseResult.success,
+      onFailure: () => SubmitQuarantineReleaseResult.persistenceFailure,
+      onCaught: () => _recordWorkplaceEvent(
+        AttemptAuditEventType.releaseDecisionsSaveFailed,
+        screenId: 'quarantine-zone',
+      ),
+    );
+  }
+
   Future<SetDiscrepancyReportFlagsResult> setDiscrepancyReportFlags(
     SetDiscrepancyReportFlagsCommand command,
   ) async {
@@ -3049,6 +3354,19 @@ class WorkplaceSimulationController
     );
   }
 
+  drafts.QuarantineReleaseDraft _newQuarantineReleaseDraft(
+    SimulationAttempt attempt,
+  ) {
+    final now = DateTime.now();
+    return drafts.QuarantineReleaseDraft(
+      attemptId: attempt.id,
+      entries: const [],
+      status: drafts.OperationalDraftStatus.draft,
+      createdAt: now,
+      updatedAt: now,
+    );
+  }
+
   drafts.DiscrepancyReportDraft _newDiscrepancyReportDraft(
     SimulationAttempt attempt,
   ) {
@@ -3065,6 +3383,13 @@ class WorkplaceSimulationController
     'entryId': entry.id,
     'disposition': entry.disposition.wireName,
     'reason': entry.reason,
+    'revisionNumber': entry.revisionNumber,
+  };
+
+  JsonMap _releaseDecisionPayload(drafts.QuarantineReleaseEntry entry) => {
+    'entryId': entry.id,
+    'decision': entry.decision.wireName,
+    'justification': entry.justification,
     'revisionNumber': entry.revisionNumber,
   };
 

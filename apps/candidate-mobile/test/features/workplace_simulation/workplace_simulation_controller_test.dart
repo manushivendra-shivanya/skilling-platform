@@ -604,6 +604,30 @@ void main() {
         await controller.confirmQuarantine(const ConfirmQuarantineCommand()),
         ConfirmQuarantineResult.success,
       );
+
+      const correctReleaseDecisions = {
+        'carton-001': ReleaseDecision.continueHold,
+        'carton-002': ReleaseDecision.continueHold,
+        'carton-006': ReleaseDecision.returnToSupplier,
+      };
+      for (final entry in correctReleaseDecisions.entries) {
+        expect(
+          await controller.recordReleaseDecision(
+            RecordReleaseDecisionCommand(
+              cartonId: entry.key,
+              decision: entry.value,
+              justification: 'Matches disposition finding',
+            ),
+          ),
+          RecordReleaseDecisionResult.success,
+        );
+      }
+      expect(
+        await controller.submitQuarantineRelease(
+          const SubmitQuarantineReleaseCommand(),
+        ),
+        SubmitQuarantineReleaseResult.success,
+      );
       expect(
         controller.workstationStatus('quarantine-zone'),
         WorkstationStatus.completed,
