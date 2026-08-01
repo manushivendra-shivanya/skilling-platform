@@ -137,6 +137,19 @@ Both routes are guarded by `EmployerAuthGuard`: a per-employer API key
 (hashed, seeded directly into `public.employers` -- no employer login flow,
 no employer portal UI) sent as `Authorization: Bearer <key>`.
 
+Covered by a real, live-database end-to-end suite --
+`apps/api/test/employer-evidence-review.e2e-spec.ts`, run with
+`npm run test:e2e` -- rather than only mocked unit tests: own-applicants
+scoping, the full application+consent access rule, audit logging on both
+allowed and denied outcomes, and cross-employer isolation. It seeds and
+tears down its own fixtures and only runs when `SUPABASE_URL`/
+`SUPABASE_SERVICE_ROLE_KEY` are set.
+
+`GET /dev/employer-review` is a separate, internal-only manual QC page for
+these two routes (API key input, applicant list, evidence cards, the
+required disclaimer and decision-boundary copy) -- not part of this API
+surface, not the employer portal, and 404s whenever `NODE_ENV=production`.
+
 The full future surface:
 - `POST /employer/requisitions`
 - `GET /employer/requisitions`

@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Employer Evidence Review -- internal QC harness</title>
+<style>
+  :root { color-scheme: light dark; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 24px;
+    line-height: 1.5;
+  }
+  .banner {
+    background: #fef3c7;
+    color: #78350f;
+    border: 1px solid #f59e0b;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-bottom: 24px;
+    font-size: 14px;
+  }
+  fieldset { border: 1px solid #d1d5db; border-radius: 8px; margin-bottom: 24px; }
+  legend { font-weight: 600; padding: 0 6px; }
+  label { display: block; font-size: 13px; font-weight: 600; margin-top: 12px; }
+  input[type="text"], input[type="password"] {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 8px;
+    margin-top: 4px;
+    border: 1px solid #9ca3af;
+    border-radius: 6px;
+    font-size: 14px;
+  }
+  button {
+    margin-top: 14px;
+    padding: 8px 16px;
+    border-radius: 6px;
+    border: 1px solid #1f2937;
+    background: #111827;
+    color: white;
+    cursor: pointer;
+    font-size: 14px;
+  }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+  button.secondary { background: white; color: #111827; }
+  .status { font-size: 13px; margin-top: 10px; }
+  .status.error { color: #b91c1c; }
+  .status.ok { color: #166534; }
+  table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 14px; }
+  th, td { text-align: left; padding: 8px; border-bottom: 1px solid #e5e7eb; }
+  .governance-copy {
+    border: 2px solid #1d4ed8;
+    background: #eff6ff;
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin: 16px 0;
+  }
+  .governance-copy p { margin: 4px 0; font-weight: 600; }
+  .evidence-card {
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    padding: 12px 14px;
+    margin-bottom: 10px;
+  }
+  .chip {
+    display: inline-block;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 999px;
+    margin-right: 6px;
+    background: #e5e7eb;
+    color: #111827;
+  }
+  .chip.active { background: #dcfce7; color: #166534; }
+  .chip.stale { background: #fef3c7; color: #78350f; }
+  .chip.superseded { background: #e5e7eb; color: #374151; }
+  pre {
+    background: #111827;
+    color: #e5e7eb;
+    padding: 12px;
+    border-radius: 8px;
+    overflow-x: auto;
+    font-size: 12px;
+  }
+  details { margin-top: 10px; }
+</style>
+</head>
+<body>
+  <div class="banner">
+    <strong>Internal QC harness -- not the employer portal.</strong>
+    This page exists to manually verify the Employer Evidence Review MVP API
+    against real data. It is only served outside production
+    (<code>NODE_ENV=production</code> disables this route entirely). Nothing
+    typed here is stored anywhere except this browser tab's memory.
+  </div>
+
+  <fieldset>
+    <legend>Employer identity</legend>
+    <label for="apiBase">API base (relative to this page by default)</label>
+    <input id="apiBase" type="text" value="/v1" />
+    <label for="apiKey">Employer API key</label>
+    <input id="apiKey" type="password" placeholder="Bearer token value only" />
+    <button id="loadApplicants">Load applicants</button>
+    <div id="applicantsStatus" class="status"></div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Applicants</legend>
+    <table id="applicantsTable" style="display:none">
+      <thead>
+        <tr><th>Candidate</th><th>Job</th><th>Status</th><th>Applied</th><th></th></tr>
+      </thead>
+      <tbody id="applicantsBody"></tbody>
+    </table>
+    <div id="applicantsEmpty" class="status">No applicants loaded yet.</div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Career Passport evidence review</legend>
+    <div id="evidenceStatus" class="status"></div>
+    <div id="evidenceOutput"></div>
+  </fieldset>
+
+<script>
+(function () {
+  const applicantsStatus = document.getElementById('applicantsStatus');
+  const applicantsTable = document.getElementById('applicantsTable');
+  const applicantsBody = document.getElementById('applicantsBody');
+  const applicantsEmpty = document.getElementById('applicantsEmpty');
+  const evidenceStatus = document.getElementById('evidenceStatus');
+  const evidenceOutput = document.getElementById('evidenceOutput');
+
+  function apiBase() {
+    return document.getElementById('apiBase').value.replace(/\/$/, '');
+  }
+  function apiKey() {
+    return document.getElementById('apiKey').value.trim();
+  }
+
+  function setStatus(el, message, tone) {
+    el.textContent = message;
+    el.className = 'status' + (tone ? ' ' + tone : '');
+  }
+
+  async function callApi(path) {
+    const response = await fetch(apiBase() + path, {
+      headers: { Authorization: 'Bearer ' + apiKey() },
+    });
+    const body = await response.json().catch(function () { return null; });
+    if (!response.ok) {
+      const message = (body && body.error && body.error.message) || response.statusText;
+      const code = (body && body.error && body.error.code) || response.status;
+      throw new Error(code + ': ' + message);
+    }
+    return body;
+  }
+
+  function escapeHtml(value) {
+    return String(value)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+  }
+
+  document.getElementById('loadApplicants').addEventListener('click', async function () {
+    if (!apiKey()) {
+      setStatus(applicantsStatus, 'Enter an employer API key first.', 'error');
+      return;
+    }
+    setStatus(applicantsStatus, 'Loading...', '');
+    try {
+      const data = await callApi('/employer/applicants');
+      const applicants = data.applicants || [];
+      applicantsBody.innerHTML = '';
+      if (applicants.length === 0) {
+        applicantsTable.style.display = 'none';
+        applicantsEmpty.style.display = 'block';
+        applicantsEmpty.textContent = 'This employer has no applicants yet.';
+      } else {
+        applicantsTable.style.display = 'table';
+        applicantsEmpty.style.display = 'none';
+        applicants.forEach(function (applicant) {
+          const row = document.createElement('tr');
+          row.innerHTML =
+            '<td>' + escapeHtml(applicant.candidateId) + '</td>' +
+            '<td>' + escapeHtml(applicant.jobTitle) + '</td>' +
+            '<td>' + escapeHtml(applicant.applicationStatus) + '</td>' +
+            '<td>' + escapeHtml(applicant.appliedAt) + '</td>' +
+            '<td><button class="secondary" data-candidate="' +
+              escapeHtml(applicant.candidateId) + '">View evidence</button></td>';
+          applicantsBody.appendChild(row);
+        });
+        applicantsBody.querySelectorAll('button[data-candidate]').forEach(function (button) {
+          button.addEventListener('click', function () {
+            loadEvidence(button.getAttribute('data-candidate'));
+          });
+        });
+      }
+      setStatus(applicantsStatus, applicants.length + ' applicant(s) loaded.', 'ok');
+    } catch (error) {
+      setStatus(applicantsStatus, error.message, 'error');
+    }
+  });
+
+  async function loadEvidence(candidateId) {
+    setStatus(evidenceStatus, 'Loading evidence for ' + candidateId + '...', '');
+    evidenceOutput.innerHTML = '';
+    try {
+      const data = await callApi('/employer/applicants/' + encodeURIComponent(candidateId) + '/evidence');
+      setStatus(evidenceStatus, 'Access allowed for ' + candidateId + '.', 'ok');
+      renderEvidence(data);
+    } catch (error) {
+      setStatus(evidenceStatus, error.message, 'error');
+    }
+  }
+
+  function renderEvidence(data) {
+    const governance = document.createElement('div');
+    governance.className = 'governance-copy';
+    governance.innerHTML =
+      '<p>' + escapeHtml(data.disclaimer) + '</p>' +
+      '<p>' + escapeHtml(data.decisionBoundary) + '</p>';
+    evidenceOutput.appendChild(governance);
+
+    const cards = document.createElement('div');
+    (data.evidence || []).forEach(function (item) {
+      const card = document.createElement('div');
+      card.className = 'evidence-card';
+      card.innerHTML =
+        '<strong>' + escapeHtml(item.competencyId) + '</strong> -- ' +
+        escapeHtml(item.title) + '<br/>' +
+        '<span class="chip">' + escapeHtml(item.verificationStatus) + '</span>' +
+        '<span class="chip ' + escapeHtml(item.freshness) + '">' + escapeHtml(item.freshness) + '</span>' +
+        '<span class="chip">' + escapeHtml(item.score) + '%</span>' +
+        '<div>' + escapeHtml(item.description) + '</div>' +
+        '<div style="font-size:12px;color:#6b7280;">Issued ' + escapeHtml(item.issuedAt) + '</div>';
+      cards.appendChild(card);
+    });
+    if ((data.evidence || []).length === 0) {
+      const empty = document.createElement('div');
+      empty.className = 'status';
+      empty.textContent = 'This candidate has no evidence yet.';
+      cards.appendChild(empty);
+    }
+    evidenceOutput.appendChild(cards);
+
+    const raw = document.createElement('details');
+    const summary = document.createElement('summary');
+    summary.textContent = 'Raw JSON response';
+    const pre = document.createElement('pre');
+    pre.textContent = JSON.stringify(data, null, 2);
+    raw.appendChild(summary);
+    raw.appendChild(pre);
+    evidenceOutput.appendChild(raw);
+  }
+})();
+</script>
+</body>
+</html>

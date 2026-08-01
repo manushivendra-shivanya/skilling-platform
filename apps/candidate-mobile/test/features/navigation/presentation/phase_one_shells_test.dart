@@ -207,17 +207,19 @@ void main() {
     await tester.tap(find.text('Me'));
     await tester.pumpAndSettle();
     await tester.scrollUntilVisible(
-      find.text('Employer profile visibility'),
+      find.text('Employer sharing'),
       300,
       scrollable: find.byType(Scrollable).last,
     );
-    expect(find.text('Employer profile visibility'), findsOneWidget);
+    expect(find.text('Employer sharing'), findsOneWidget);
 
     await tester.scrollUntilVisible(
       find.text('Edit personal details'),
       -300,
       scrollable: find.byType(Scrollable).last,
     );
+    await tester.ensureVisible(find.text('Edit personal details'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Edit personal details'));
     await tester.pumpAndSettle();
     await tester.enterText(
@@ -235,6 +237,8 @@ void main() {
       300,
       scrollable: find.byType(Scrollable).last,
     );
+    await tester.ensureVisible(find.text('Log out'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Log out'));
     await tester.pumpAndSettle();
     expect(find.text('Choose your language'), findsOneWidget);
