@@ -31,6 +31,7 @@ import '../../features/voice/presentation/voice_interview_screen.dart';
 import '../../features/workplace_simulation/presentation/simulation_entry_screen.dart';
 import '../../features/workplace_simulation/presentation/supervisor_briefing_screen.dart';
 import '../../features/workplace_simulation/presentation/document_desk_screen.dart';
+import '../../features/workplace_simulation/presentation/barcode_station_screen.dart';
 import '../../features/workplace_simulation/presentation/inspection_zone_screen.dart';
 import '../../features/workplace_simulation/presentation/performance_feedback_screen.dart';
 import '../../features/workplace_simulation/presentation/quarantine_zone_screen.dart';
@@ -109,6 +110,11 @@ const workplaceInspectionZoneRoutePath =
 const workplaceInspectionZoneRouteName = 'workplace-simulation-inspection-zone';
 const workplaceInspectionZoneRoutePattern =
     '/practise/workplace-simulation/:missionId/inspection-zone';
+const workplaceBarcodeStationRoutePath =
+    '/practise/workplace-simulation/receive-incoming-shipment-01/barcode-station';
+const workplaceBarcodeStationRouteName = 'workplace-simulation-barcode-station';
+const workplaceBarcodeStationRoutePattern =
+    '/practise/workplace-simulation/:missionId/barcode-station';
 const workplaceQuarantineZoneRoutePath =
     '/practise/workplace-simulation/receive-incoming-shipment-01/quarantine-zone';
 const workplaceQuarantineZoneRouteName = 'workplace-simulation-quarantine-zone';
@@ -155,6 +161,8 @@ String workplaceReceivingDockPath(String missionId) =>
     '${workplaceSimulationPath(missionId)}/receiving-dock';
 String workplaceInspectionZonePath(String missionId) =>
     '${workplaceSimulationPath(missionId)}/inspection-zone';
+String workplaceBarcodeStationPath(String missionId) =>
+    '${workplaceSimulationPath(missionId)}/barcode-station';
 String workplaceQuarantineZonePath(String missionId) =>
     '${workplaceSimulationPath(missionId)}/quarantine-zone';
 String workplaceReceivingOfficePath(String missionId) =>
@@ -178,6 +186,7 @@ String workstationPath(String workstationId, String missionId) =>
       'document-desk' => workplaceDocumentDeskPath(missionId),
       'receiving-dock' => workplaceReceivingDockPath(missionId),
       'inspection-zone' => workplaceInspectionZonePath(missionId),
+      'barcode-station' => workplaceBarcodeStationPath(missionId),
       'quarantine-zone' => workplaceQuarantineZonePath(missionId),
       'receiving-office' => workplaceReceivingOfficePath(missionId),
       'staging-area' => workplaceStagingAreaPath(missionId),
@@ -462,6 +471,20 @@ GoRouter createAppRouter({
           return InspectionZoneScreen(
             missionId: missionId,
             onBack: () => context.go(workplaceOverviewPath(missionId)),
+            onOpenBarcodeStation: () =>
+                context.go(workplaceBarcodeStationPath(missionId)),
+          );
+        },
+      ),
+      GoRoute(
+        parentNavigatorKey: rootNavigatorKey,
+        path: workplaceBarcodeStationRoutePattern,
+        name: workplaceBarcodeStationRouteName,
+        builder: (context, state) {
+          final missionId = state.pathParameters['missionId']!;
+          return BarcodeStationScreen(
+            missionId: missionId,
+            onBack: () => context.go(workplaceOverviewPath(missionId)),
             onOpenQuarantineZone: () =>
                 context.go(workplaceQuarantineZonePath(missionId)),
           );
@@ -634,6 +657,7 @@ const _mainAndGlobalRoutePaths = {
   workplaceDocumentDeskRoutePath,
   workplaceReceivingDockRoutePath,
   workplaceInspectionZoneRoutePath,
+  workplaceBarcodeStationRoutePath,
   workplaceQuarantineZoneRoutePath,
   workplaceReceivingOfficeRoutePath,
   workplacePerformanceFeedbackRoutePath,

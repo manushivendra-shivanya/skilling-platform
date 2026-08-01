@@ -38,7 +38,7 @@ void main() {
             home: InspectionZoneScreen(
               missionId: WorkplaceSimulationController.missionId,
               onBack: () {},
-              onOpenQuarantineZone: () {},
+              onOpenBarcodeStation: () {},
             ),
           ),
         ),

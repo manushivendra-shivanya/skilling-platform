@@ -4,6 +4,7 @@ import 'package:candidate_mobile/core/repositories/candidate_session_repository.
 import 'package:candidate_mobile/features/workplace_simulation/application/workplace_simulation_controller.dart';
 import 'package:candidate_mobile/features/workplace_simulation/data/asset_simulation_content_repository.dart';
 import 'package:candidate_mobile/features/workplace_simulation/data/local_simulation_attempt_repository.dart';
+import 'package:candidate_mobile/features/workplace_simulation/presentation/barcode_station_screen.dart';
 import 'package:candidate_mobile/features/workplace_simulation/presentation/inspection_zone_screen.dart';
 import 'package:candidate_mobile/features/workplace_simulation/presentation/performance_feedback_screen.dart';
 import 'package:candidate_mobile/features/workplace_simulation/presentation/quarantine_zone_screen.dart';
@@ -70,7 +71,7 @@ void main() {
             home: InspectionZoneScreen(
               missionId: WorkplaceSimulationController.missionId,
               onBack: () {},
-              onOpenQuarantineZone: () {},
+              onOpenBarcodeStation: () {},
             ),
           ),
         ),
@@ -78,6 +79,22 @@ void main() {
       await tester.pump(const Duration(milliseconds: 300));
       expect(find.text('Inspection Zone is locked'), findsOneWidget);
       expect(find.text('Inspection workflow coming next.'), findsNothing);
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(
+            theme: buildAppTheme(),
+            home: BarcodeStationScreen(
+              missionId: WorkplaceSimulationController.missionId,
+              onBack: () {},
+              onOpenQuarantineZone: () {},
+            ),
+          ),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(find.text('Barcode Station is locked'), findsOneWidget);
 
       await tester.pumpWidget(
         UncontrolledProviderScope(
