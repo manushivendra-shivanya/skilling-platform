@@ -28,6 +28,10 @@ export class AppError extends HttpException {
     return new AppError('CONSENT_REQUIRED', message, HttpStatus.FORBIDDEN);
   }
 
+  static forbidden(code: string, message: string) {
+    return new AppError(code, message, HttpStatus.FORBIDDEN);
+  }
+
   static validation(message: string, details: Record<string, unknown> = {}) {
     return new AppError(
       'VALIDATION_ERROR',
