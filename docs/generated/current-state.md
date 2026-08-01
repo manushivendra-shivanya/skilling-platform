@@ -1793,31 +1793,32 @@ login, no UI). No Flutter change was needed or made -- this is entirely
 - No Flutter changes in this slice, so no APK build/install was needed or
   performed
 
-### Outstanding: migration not yet applied anywhere
-`supabase/migrations/20260801100000_employer_evidence_review_mvp.sql` is
-written, reviewed and included in this slice's PR, but **has not been
-applied to any database**. The Supabase MCP connector available in this
-session only has access to a project called `nutridiet`
-(`rspyrkcdzariizvqookp`) -- not the `JobSkills` project
-(`qoairksjpwkhwqxeollj`) that WMS, Jobs and Career Passport actually run
-on, so applying it here would have hit the wrong project entirely. Per
-direct instruction, this is deferred as a follow-up task rather than
-guessed at:
+### Migration applied to JobSkills (2026-08-01)
+`supabase/migrations/20260801100000_employer_evidence_review_mvp.sql` was
+initially left unapplied: the Supabase MCP connector available in the
+authoring session only had access to an unrelated project (`nutridiet`,
+`rspyrkcdzariizvqookp`), not `JobSkills` (`qoairksjpwkhwqxeollj`) that WMS,
+Jobs and Career Passport actually run on, so applying it there would have
+hit the wrong project entirely. It was applied out-of-band instead, and
+confirmed live:
 
-- **Apply** `supabase/migrations/20260801100000_employer_evidence_review_mvp.sql`
-  to the `JobSkills` project (`qoairksjpwkhwqxeollj`), via the Supabase CLI,
-  dashboard SQL editor, or an MCP connector actually scoped to that
-  project.
-- The migration is additive-only: creates `public.employers` and
-  `public.employer_evidence_access_log`, adds a nullable
-  `jobs.employer_id` column, and seeds/backfills the three existing seeded
-  employers with development-only API keys (hashes only -- raw keys are
-  in the migration's own comments, clearly marked as dev/seed credentials,
-  not production secrets).
-- Until this runs, `EmployerAuthGuard` will reject every request (no
-  `employers` rows to match against) and the two new routes are dead code
-  in production, even though `apps/api` builds and its own test suite
-  passes without a live database.
+- Migration history on `JobSkills` shows both
+  `20260801044049_employer_evidence_review_mvp` and a follow-up
+  `20260801044629_employer_evidence_review_mvp_advisor_remediation`
+  (revoked stray anon/authenticated grants on the two new employer-only
+  tables; added a missing FK index on
+  `employer_evidence_access_log.job_id`).
+- Verified live: `public.employers` (3 seeded rows), `public.jobs.employer_id`
+  backfilled on all 3 existing seeded jobs, `public.employer_evidence_access_log`
+  created, RLS enabled on both new tables with zero client-facing grants
+  (intentional -- both are BFF/service-role only).
+- Remaining Supabase advisor notices (RLS-enabled-no-policy on the two
+  employer tables; other pre-existing unused-index warnings) are expected
+  for this slice's design, not new issues.
+- Not independently re-verified by the authoring session itself (its own
+  Supabase MCP connector still only reaches `nutridiet`) -- taken on a
+  direct report from whoever applied it. `EmployerAuthGuard` and the two
+  employer routes should now work end-to-end against `JobSkills`.
 
 ## Target product architecture proposal
 
