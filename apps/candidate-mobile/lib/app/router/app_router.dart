@@ -17,11 +17,9 @@ import '../../features/home/presentation/home_dashboard_screen.dart';
 import '../../features/jobs/presentation/jobs_screen.dart';
 import '../../features/intelligence/presentation/diagnostic_screen.dart';
 import '../../features/learning/presentation/learning_screen.dart';
-import '../../features/micro_lessons/domain/micro_lesson_clip.dart';
-import '../../features/micro_lessons/presentation/micro_lesson_catalogue_screen.dart';
-import '../../features/micro_lessons/presentation/micro_lesson_player_screen.dart';
 import '../../features/navigation/presentation/global_placeholder_screen.dart';
 import '../../features/navigation/presentation/main_navigation_shell.dart';
+import '../../features/onboarding/domain/candidate_onboarding_draft.dart';
 import '../../features/onboarding/domain/candidate_onboarding_repository.dart';
 import '../../features/onboarding/presentation/candidate_onboarding_screen.dart';
 import '../../features/onboarding/presentation/language_selection_screen.dart';
@@ -154,9 +152,6 @@ const designSystemGalleryRoutePath = '/dev/design-system';
 const designSystemGalleryRouteName = 'design-system-gallery';
 const wms3dPreviewRoutePath = '/dev/wms-3d-preview';
 const wms3dPreviewRouteName = 'wms-3d-preview';
-const microLessonCatalogueRoutePath = '/dev/micro-lessons';
-const microLessonCatalogueRouteName = 'micro-lesson-catalogue';
-const microLessonPlayerRouteName = 'micro-lesson-player';
 
 String workplaceSimulationPath(String missionId) =>
     '$workplaceSimulationHubRoutePath/$missionId';
@@ -261,8 +256,12 @@ GoRouter createAppRouter({
           onOpenWms3dPreview: showDevelopmentTools
               ? () => context.push(wms3dPreviewRoutePath)
               : null,
-          onOpenMicroLessons: showDevelopmentTools
-              ? () => context.push(microLessonCatalogueRoutePath)
+          onSkipToHome: showDevelopmentTools
+              ? () => _skipToHomeForDev(
+                  context: context,
+                  candidateSessionRepository: candidateSessionRepository,
+                  candidateOnboardingRepository: candidateOnboardingRepository,
+                )
               : null,
         ),
       ),
@@ -614,33 +613,59 @@ GoRouter createAppRouter({
           builder: (context, state) =>
               Workplace3dPreviewScreen(onBack: () => context.pop()),
         ),
-      if (showDevelopmentTools)
-        GoRoute(
-          path: microLessonCatalogueRoutePath,
-          name: microLessonCatalogueRouteName,
-          builder: (context, state) => MicroLessonCatalogueScreen(
-            onBack: () => context.pop(),
-            onOpenClip: (clip) => context.push(
-              '$microLessonCatalogueRoutePath/player',
-              extra: clip,
-            ),
-          ),
-          routes: [
-            GoRoute(
-              path: 'player',
-              name: microLessonPlayerRouteName,
-              builder: (context, state) => MicroLessonPlayerScreen(
-                clip: state.extra! as MicroLessonClip,
-                onBack: () => context.pop(),
-              ),
-            ),
-          ],
-        ),
     ],
     errorBuilder: (context, state) => AppRouteErrorScreen(
       onReturnHome: () => context.go(appStartupRoutePath),
     ),
   );
+}
+
+/// Dev-tools-only shortcut: saves a fake authenticated session and a
+/// completed onboarding draft directly, then lets the normal redirect
+/// logic carry the router to Home. Exists purely so testing screens past
+/// onboarding (e.g. the Learn tab) doesn't require re-typing the whole
+/// candidate profile form on every fresh install.
+Future<void> _skipToHomeForDev({
+  required BuildContext context,
+  required CandidateSessionRepository candidateSessionRepository,
+  required CandidateOnboardingRepository candidateOnboardingRepository,
+}) async {
+  const session = CandidateSession(
+    candidateId: 'dev-skip-candidate',
+    isAuthenticated: true,
+  );
+  await candidateSessionRepository.saveSession(session);
+  final acceptedAt = DateTime.now().toUtc();
+  await candidateOnboardingRepository.saveDraft(
+    session.candidateId,
+    CandidateOnboardingDraft(
+      currentStep: 10,
+      goal: CandidateGoal.findJob,
+      fullName: 'Dev Skip Candidate',
+      city: 'Lucknow',
+      state: 'Uttar Pradesh',
+      pinCode: '226001',
+      education: EducationLevel.twelfthPass,
+      experience: ExperienceLevel.fresher,
+      preferredRoles: const {LogisticsRole.warehouseAssociate},
+      consents: {
+        OnboardingConsentVersions.termsPurpose: ConsentAcceptance(
+          purpose: OnboardingConsentVersions.termsPurpose,
+          version: OnboardingConsentVersions.termsVersion,
+          acceptedAt: acceptedAt,
+        ),
+        OnboardingConsentVersions.privacyPurpose: ConsentAcceptance(
+          purpose: OnboardingConsentVersions.privacyPurpose,
+          version: OnboardingConsentVersions.privacyVersion,
+          acceptedAt: acceptedAt,
+        ),
+      },
+      isCompleted: true,
+    ),
+  );
+  if (context.mounted) {
+    context.go(authenticatedRoutePath);
+  }
 }
 
 Future<String?> _redirectForCandidateState({

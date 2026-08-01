@@ -61,17 +61,39 @@ enum ExperienceLevel {
   }
 }
 
-enum LogisticsRole {
-  warehouseAssociate('warehouse_associate', 'Warehouse Operations Associate'),
-  inventoryExecutive('inventory_executive', 'Inventory Executive'),
-  dispatchExecutive('dispatch_executive', 'Dispatch Executive'),
-  hubSupervisor('hub_supervisor', 'Hub Supervisor'),
-  shiftSupervisor('shift_supervisor', 'Shift Supervisor');
+/// Entry-role seniority tier. Only two tiers exist today (the front-line
+/// "Associate"/"Executive" titles vs. the "Supervisor" titles) -- more
+/// levels (L2, L3, ...) get added here as the role taxonomy grows, without
+/// touching the [LogisticsRole] ids or labels candidates already see.
+enum RoleLevel {
+  l1('L1'),
+  supervisor('Supervisor');
 
-  const LogisticsRole(this.id, this.label);
+  const RoleLevel(this.label);
+
+  final String label;
+}
+
+enum LogisticsRole {
+  warehouseAssociate(
+    'warehouse_associate',
+    'Warehouse Operations Associate',
+    RoleLevel.l1,
+  ),
+  inventoryExecutive(
+    'inventory_executive',
+    'Inventory Executive',
+    RoleLevel.l1,
+  ),
+  dispatchExecutive('dispatch_executive', 'Dispatch Executive', RoleLevel.l1),
+  hubSupervisor('hub_supervisor', 'Hub Supervisor', RoleLevel.supervisor),
+  shiftSupervisor('shift_supervisor', 'Shift Supervisor', RoleLevel.supervisor);
+
+  const LogisticsRole(this.id, this.label, this.level);
 
   final String id;
   final String label;
+  final RoleLevel level;
 
   static LogisticsRole? fromId(Object? id) {
     for (final value in values) {

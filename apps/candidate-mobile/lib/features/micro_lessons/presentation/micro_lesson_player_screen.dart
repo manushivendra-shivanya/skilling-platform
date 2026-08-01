@@ -1,19 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 
+import '../../../app/theme/app_colors.dart';
+import '../../../app/theme/app_spacing.dart';
+import '../../../core/widgets/app_card.dart';
 import '../domain/micro_lesson_clip.dart';
+import 'not_employer_evidence_banner.dart';
 
-/// Minimal playback shell for a single [MicroLessonClip] (dev-tools only,
-/// task following the micro-lesson content foundation): proves a clip can
-/// actually be watched end to end. Deliberately does not show the
-/// assessment question or record any evidence -- that wiring needs the
-/// scoring/Career Passport mapping decision Codex flagged as a separate,
-/// explicitly-approved step.
+/// Clip detail + local practice screen for a single [MicroLessonClip]
+/// (micro-lessons v0.1): playback, the lesson content, and an instant
+/// right/wrong practice question -- all local to this screen. Deliberately
+/// does not call [MicroLessonClip.scoringRules] or
+/// [MicroLessonClip.auditEvents], and writes nothing to any repository:
+/// Career Passport evidence wiring is an explicitly separate, later slice
+/// (v0.2), gated on this UI being validated first.
 ///
 /// Handles both loading strategies a [MicroLessonClip.videoUrl] can carry:
-/// an `asset://` URI (today's bundled starter clips) or a plain `http(s)://`
-/// URI (the eventual Supabase-Storage-hosted catalogue), so this doesn't
-/// need rework when clips move off the app bundle.
+/// an `asset://` URI (today's bundled starter clips, offline-capable) or a
+/// plain `http(s)://` URI (the eventual Supabase-Storage-hosted
+/// catalogue), so this doesn't need rework when clips move off the app
+/// bundle.
 class MicroLessonPlayerScreen extends StatefulWidget {
   const MicroLessonPlayerScreen({
     required this.clip,
@@ -32,6 +38,7 @@ class MicroLessonPlayerScreen extends StatefulWidget {
 class _MicroLessonPlayerScreenState extends State<MicroLessonPlayerScreen> {
   VideoPlayerController? _controller;
   String? _loadError;
+  String? _selectedAnswerId;
 
   @override
   void initState() {
@@ -71,6 +78,7 @@ class _MicroLessonPlayerScreenState extends State<MicroLessonPlayerScreen> {
   @override
   Widget build(BuildContext context) {
     final clip = widget.clip;
+    final titleStyle = Theme.of(context).textTheme.titleSmall;
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
@@ -81,7 +89,7 @@ class _MicroLessonPlayerScreenState extends State<MicroLessonPlayerScreen> {
         title: Text(clip.title),
       ),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppSpacing.md),
         children: [
           // Clips are shot vertically (720x1280, 9:16) -- forcing a 16:9
           // landscape box here squashed the picture instead of just
@@ -93,17 +101,37 @@ class _MicroLessonPlayerScreenState extends State<MicroLessonPlayerScreen> {
             aspectRatio: _controller?.value.aspectRatio ?? 9 / 16,
             child: _buildVideoArea(),
           ),
-          const SizedBox(height: 16),
-          Text(clip.description, style: Theme.of(context).textTheme.bodyLarge),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.xs),
+          _AssetStateLabel(clip: clip, hasError: _loadError != null),
+          const SizedBox(height: AppSpacing.md),
           Text(
-            'What to look for',
-            style: Theme.of(context).textTheme.titleSmall,
+            '${clip.role} • ${clip.processArea}',
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: AppColors.inkMuted),
           ),
+          const SizedBox(height: AppSpacing.xs),
+          Text(clip.description, style: Theme.of(context).textTheme.bodyLarge),
+          const SizedBox(height: AppSpacing.md),
+          Text('What to look for', style: titleStyle),
           Text(clip.expectedObservation),
-          const SizedBox(height: 12),
-          Text('Transcript', style: Theme.of(context).textTheme.titleSmall),
+          const SizedBox(height: AppSpacing.sm),
+          Text('What to decide', style: titleStyle),
+          Text(clip.expectedDecision),
+          const SizedBox(height: AppSpacing.sm),
+          Text('Lesson', style: titleStyle),
+          Text(clip.lessonContent),
+          const SizedBox(height: AppSpacing.sm),
+          Text('Transcript', style: titleStyle),
           Text(clip.transcript),
+          const SizedBox(height: AppSpacing.xl),
+          const NotEmployerEvidenceBanner(),
+          const SizedBox(height: AppSpacing.md),
+          _PracticeQuestion(
+            clip: clip,
+            selectedAnswerId: _selectedAnswerId,
+            onSelect: (id) => setState(() => _selectedAnswerId = id),
+          ),
         ],
       ),
     );
@@ -111,7 +139,7 @@ class _MicroLessonPlayerScreenState extends State<MicroLessonPlayerScreen> {
 
   Widget _buildVideoArea() {
     final controller = _controller;
-    if (widget.clip.videoUrl == null) {
+    if (!widget.clip.hasVideoAsset) {
       // No clip produced yet for this catalogue entry -- a real state, not
       // an error, so it gets a plain placeholder rather than an error banner.
       return const ColoredBox(
@@ -146,6 +174,121 @@ class _MicroLessonPlayerScreenState extends State<MicroLessonPlayerScreen> {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Small state label under the video area: video missing, playback error,
+/// or (for a clip that does have a bundled clip) that it's a local,
+/// offline-capable asset rather than a remote stream.
+class _AssetStateLabel extends StatelessWidget {
+  const _AssetStateLabel({required this.clip, required this.hasError});
+
+  final MicroLessonClip clip;
+  final bool hasError;
+
+  @override
+  Widget build(BuildContext context) {
+    final (icon, label, color) = switch (true) {
+      _ when hasError => (
+        Icons.error_outline,
+        'Playback failed',
+        AppColors.error,
+      ),
+      _ when !clip.hasVideoAsset => (
+        Icons.hourglass_empty,
+        'Video not yet produced for this clip',
+        AppColors.inkMuted,
+      ),
+      _ when clip.videoUrl!.startsWith('asset://') => (
+        Icons.download_done,
+        'Bundled with the app • works offline',
+        AppColors.success,
+      ),
+      _ => (Icons.cloud_outlined, 'Streamed', AppColors.info),
+    };
+    return Row(
+      children: [
+        Icon(icon, size: 16, color: color),
+        const SizedBox(width: AppSpacing.xs),
+        Text(
+          label,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(color: color),
+        ),
+      ],
+    );
+  }
+}
+
+class _PracticeQuestion extends StatelessWidget {
+  const _PracticeQuestion({
+    required this.clip,
+    required this.selectedAnswerId,
+    required this.onSelect,
+  });
+
+  final MicroLessonClip clip;
+  final String? selectedAnswerId;
+  final ValueChanged<String> onSelect;
+
+  @override
+  Widget build(BuildContext context) {
+    final selected = selectedAnswerId == null
+        ? null
+        : clip.answerOptions.firstWhere((o) => o.id == selectedAnswerId);
+    final isCorrect = selected?.id == clip.correctAnswerId;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          clip.assessmentQuestion,
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        for (final option in clip.answerOptions) ...[
+          AppCard(
+            onTap: () => onSelect(option.id),
+            semanticLabel:
+                '${option.label}. ${selectedAnswerId == option.id ? 'Selected' : 'Not selected'}',
+            backgroundColor: selectedAnswerId == option.id
+                ? AppColors.brandSoft
+                : AppColors.surface,
+            child: Row(
+              children: [
+                Expanded(child: Text(option.label)),
+                Icon(
+                  selectedAnswerId == option.id
+                      ? Icons.check_circle
+                      : Icons.radio_button_unchecked,
+                  color: selectedAnswerId == option.id
+                      ? AppColors.brand
+                      : AppColors.outline,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: AppSpacing.xs),
+        ],
+        if (selected != null) ...[
+          const SizedBox(height: AppSpacing.sm),
+          AppCard(
+            backgroundColor: isCorrect
+                ? AppColors.successSoft
+                : AppColors.errorSoft,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(
+                  isCorrect ? Icons.check_circle : Icons.cancel,
+                  color: isCorrect ? AppColors.success : AppColors.error,
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(child: Text(selected.feedback)),
+              ],
+            ),
+          ),
+        ],
+      ],
     );
   }
 }

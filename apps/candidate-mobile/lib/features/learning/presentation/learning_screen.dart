@@ -12,6 +12,7 @@ import '../../../core/widgets/app_progress.dart';
 import '../../../core/widgets/app_skeleton.dart';
 import '../../../core/widgets/app_state_view.dart';
 import '../../../core/widgets/app_status_banner.dart';
+import '../../micro_lessons/presentation/warehouse_clips_section.dart';
 import '../domain/learning_repository.dart';
 import 'learning_controller.dart';
 
@@ -109,6 +110,10 @@ class _LearningContent extends ConsumerWidget {
           ),
           const SizedBox(height: AppSpacing.md),
         ],
+        const SizedBox(height: AppSpacing.xl),
+        const Divider(),
+        const SizedBox(height: AppSpacing.xl),
+        const WarehouseClipsSection(),
       ],
     );
   }
