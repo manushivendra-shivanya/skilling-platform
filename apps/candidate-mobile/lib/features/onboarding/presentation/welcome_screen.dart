@@ -10,14 +10,14 @@ class WelcomeScreen extends StatelessWidget {
     required this.onContinue,
     this.onOpenComponentGallery,
     this.onOpenWms3dPreview,
-    this.onOpenMicroLessons,
+    this.onSkipToHome,
     super.key,
   });
 
   final VoidCallback onContinue;
   final VoidCallback? onOpenComponentGallery;
   final VoidCallback? onOpenWms3dPreview;
-  final VoidCallback? onOpenMicroLessons;
+  final VoidCallback? onSkipToHome;
 
   @override
   Widget build(BuildContext context) {
@@ -33,6 +33,15 @@ class WelcomeScreen extends StatelessWidget {
               child: IntrinsicHeight(
                 child: Column(
                   children: [
+                    if (onSkipToHome != null)
+                      Align(
+                        alignment: Alignment.topRight,
+                        child: AppButton(
+                          label: 'Skip to home (dev)',
+                          variant: AppButtonVariant.text,
+                          onPressed: onSkipToHome,
+                        ),
+                      ),
                     const Spacer(),
                     Semantics(
                       header: true,
@@ -90,14 +99,6 @@ class WelcomeScreen extends StatelessWidget {
                         label: 'WMS 3D preview (dev)',
                         variant: AppButtonVariant.text,
                         onPressed: onOpenWms3dPreview,
-                      ),
-                    ],
-                    if (onOpenMicroLessons != null) ...[
-                      const SizedBox(height: AppSpacing.xs),
-                      AppButton(
-                        label: 'Micro-lessons (dev)',
-                        variant: AppButtonVariant.text,
-                        onPressed: onOpenMicroLessons,
                       ),
                     ],
                   ],
