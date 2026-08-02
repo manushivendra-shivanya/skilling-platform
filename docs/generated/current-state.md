@@ -2457,14 +2457,24 @@ shaped to serve this purpose too (`purpose = 'employer_review'`,
     naming/compression errors). Deliberately **not** registered in
     `pubspec.yaml` / not bundled into the app: bundling both variants
     would defeat the point of a low-bandwidth option.
-- Remote CDN/storage: not implemented yet. The plan is to upload masters
-  (and low-bandwidth variants) to Supabase Storage as the catalogue grows
-  past what's reasonable to ship in the app binary, switch `videoUrl` from
-  `asset://` to `https://` for those clips, and serve the low-bandwidth
-  variant on a detected poor connection -- `MicroLessonPlayerScreen`
-  already branches on the `asset://` vs `http(s)://` URL scheme so this
-  needs no rework when it happens, just a real upload step and a
-  connectivity check.
+- Remote CDN/storage: **Cloudflare R2, deliberately not Supabase
+  Storage** -- Supabase's free-tier storage/egress limits would get
+  crossed once clips are actually being streamed at any volume; R2 gives
+  10GB storage free and, more importantly, zero egress/bandwidth fees
+  ever, regardless of how many candidates stream a clip.
+  `scripts/upload_micro_lesson_videos_to_r2.py` (needs `boto3` +
+  R2-specific API credentials, see the script's docstring for where to
+  generate them -- a plain Cloudflare API token cannot authenticate
+  S3-compatible requests) uploads the low-bandwidth variants R2's S3-
+  compatible endpoint. It does **not** auto-rewrite
+  `warehouse_clips.json` -- moving a specific clip's `videoUrl` from
+  `asset://` to the uploaded `https://` URL is left as a deliberate,
+  per-clip decision, since `MicroLessonPlayerScreen` already branches on
+  the URL scheme and needs no code changes either way. Still not run
+  against real infrastructure yet (needs a bucket + R2 API token created
+  in the Cloudflare dashboard, then a custom domain attached for a
+  reliable public URL -- Cloudflare discourages relying on the default
+  `*.r2.dev` bucket URL for production traffic).
 
 ## Target product architecture proposal
 
