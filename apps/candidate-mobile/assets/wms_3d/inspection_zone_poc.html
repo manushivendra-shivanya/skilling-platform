@@ -573,7 +573,30 @@ function createScene() {
     resultEl.innerHTML = issue
       ? `<b>${id}</b><br>inspect_item -&gt; record_issue<br>issueType: <b>${issue}</b><br><span style="color:#fca5a5">Correct: quarantine, don't accept</span>`
       : `<b>${id}</b><br>inspect_item -&gt; finding: compliant<br><span style="color:#86efac">No issue found</span>`;
+
+    // Bridge to the Flutter host: FloraNative is a JavaScriptChannel
+    // registered by Workplace3dPreviewScreen, absent when this scene is
+    // opened in a plain desktop browser -- guard so both keep working.
+    if (window.FloraNative) {
+      window.FloraNative.postMessage(JSON.stringify({ cartonId: id, issue: issue || null }));
+    }
   }
+
+  // Called by Flutter once the click above has round-tripped through
+  // WorkplaceSimulationController, so the scene can show what actually
+  // happened to the learner rather than just the local 3D-only guess.
+  window.onFloraAck = function (payload) {
+    const data = typeof payload === "string" ? JSON.parse(payload) : payload;
+    const line = document.createElement("div");
+    line.style.marginTop = "6px";
+    line.style.paddingTop = "6px";
+    line.style.borderTop = "1px solid rgba(255,255,255,0.25)";
+    line.style.color = data.success ? "#86efac" : "#fca5a5";
+    line.textContent = data.success
+      ? `Synced to Career Passport: ${data.cartonId} (${data.result})`
+      : `Sync failed: ${data.cartonId} (${data.result})`;
+    resultEl.appendChild(line);
+  };
 
   // Shelf heights measured off Rack.glb's own bounding box (~1.77m tall,
   // two real shelf levels), not an arbitrary guess.
