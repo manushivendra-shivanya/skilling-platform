@@ -6,6 +6,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/errors/app_failure.dart';
 import '../../../core/errors/result.dart';
+import '../../micro_lessons/domain/micro_lesson_assessment_repository.dart';
+import '../../micro_lessons/domain/micro_lesson_evidence_generation_service.dart';
 import '../../workplace_simulation/application/workplace_simulation_controller.dart';
 import '../../workplace_simulation/domain/simulation_repositories.dart';
 import '../../workplace_simulation/domain/simulation_runtime.dart';
@@ -30,18 +32,23 @@ const _knownMissionIds = [
 class WmsCareerPassportRepository implements CareerPassportRepository {
   WmsCareerPassportRepository({
     required SimulationAttemptRepository attemptRepository,
+    MicroLessonAssessmentRepository? microLessonAssessmentRepository,
     SupabaseClient? supabaseClient,
     String? apiBaseUrl,
     Dio? dio,
   }) : _attemptRepository = attemptRepository,
+       _microLessonAssessmentRepository = microLessonAssessmentRepository,
        _supabaseClient = supabaseClient,
        _apiBaseUrl = apiBaseUrl,
        _dio = dio ?? Dio();
 
   final SimulationAttemptRepository _attemptRepository;
+  final MicroLessonAssessmentRepository? _microLessonAssessmentRepository;
   final SupabaseClient? _supabaseClient;
   final String? _apiBaseUrl;
   final Dio _dio;
+  static const _microLessonEvidenceService =
+      MicroLessonEvidenceGenerationService();
 
   @override
   bool get canManageShareLink =>
@@ -51,11 +58,18 @@ class WmsCareerPassportRepository implements CareerPassportRepository {
   bool get canManageEmployerAccess => canManageShareLink;
 
   @override
-  Future<Result<List<EvidenceRecord>>> loadEvidence(String candidateId) {
+  Future<Result<List<EvidenceRecord>>> loadEvidence(String candidateId) async {
     final client = _supabaseClient;
-    return client == null
-        ? _loadFromLocalHistory(candidateId)
-        : _loadFromSupabase(client, candidateId);
+    final wmsResult = client == null
+        ? await _loadFromLocalHistory(candidateId)
+        : await _loadFromSupabase(client, candidateId);
+    return switch (wmsResult) {
+      ResultFailure<List<EvidenceRecord>> failure => failure,
+      Success<List<EvidenceRecord>>(value: final wmsEvidence) => Success([
+        ...wmsEvidence,
+        ...await _loadMicroLessonEvidence(candidateId),
+      ]),
+    };
   }
 
   Future<Result<List<EvidenceRecord>>> _loadFromLocalHistory(
@@ -82,6 +96,28 @@ class WmsCareerPassportRepository implements CareerPassportRepository {
         ),
       );
     }
+  }
+
+  /// Micro-lesson assessment evidence is device-local only today (no
+  /// remote sync yet), so it's merged in here unconditionally rather than
+  /// being tucked inside [_loadFromLocalHistory] -- otherwise it would
+  /// silently disappear from the Career Passport whenever Supabase is
+  /// configured and [_loadFromSupabase] is the active WMS evidence path.
+  /// Failing quietly (empty list) rather than failing the whole Career
+  /// Passport load: this source is supplementary, not load-bearing.
+  Future<List<EvidenceRecord>> _loadMicroLessonEvidence(
+    String candidateId,
+  ) async {
+    final repository = _microLessonAssessmentRepository;
+    if (repository == null) return const [];
+    final result = await repository.listAttempts(candidateId);
+    return result.when(
+      success: (attempts) => [
+        for (final attempt in attempts)
+          ..._microLessonEvidenceService.generate(attempt),
+      ],
+      failure: (_) => const [],
+    );
   }
 
   Future<Result<List<EvidenceRecord>>> _loadFromSupabase(

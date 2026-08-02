@@ -13,6 +13,8 @@ import 'package:candidate_mobile/features/jobs/domain/jobs_repository.dart';
 import 'package:candidate_mobile/features/intelligence/data/secure_candidate_intelligence_repository.dart';
 import 'package:candidate_mobile/features/intelligence/domain/candidate_intelligence_repository.dart';
 import 'package:candidate_mobile/features/learning/domain/learning_repository.dart';
+import 'package:candidate_mobile/features/micro_lessons/data/secure_micro_lesson_assessment_repository.dart';
+import 'package:candidate_mobile/features/micro_lessons/domain/micro_lesson_assessment_repository.dart';
 import 'package:candidate_mobile/features/micro_lessons/domain/micro_lesson_clip_repository.dart';
 import 'package:candidate_mobile/features/onboarding/data/secure_candidate_onboarding_repository.dart';
 import 'package:candidate_mobile/features/onboarding/domain/candidate_onboarding_repository.dart';
@@ -37,6 +39,7 @@ extension CandidateAppPump on WidgetTester {
     HomeDashboardRepository? homeDashboardRepository,
     LearningRepository? learningRepository,
     MicroLessonClipRepository? microLessonClipRepository,
+    MicroLessonAssessmentRepository? microLessonAssessmentRepository,
     JobsRepository? jobsRepository,
     CandidateIntelligenceRepository? candidateIntelligenceRepository,
     VoiceInterviewRepository? voiceInterviewRepository,
@@ -80,6 +83,16 @@ extension CandidateAppPump on WidgetTester {
             microLessonClipRepositoryProvider.overrideWithValue(
               microLessonClipRepository,
             ),
+          // Always overridden (not just when explicitly passed) --
+          // otherwise this falls through to the real secure-storage-backed
+          // provider, which hangs on the platform channel in the widget
+          // test sandbox (no mock registered) instead of failing fast.
+          microLessonAssessmentRepositoryProvider.overrideWithValue(
+            microLessonAssessmentRepository ??
+                SecureMicroLessonAssessmentRepository(
+                  InMemorySecureKeyValueStore(),
+                ),
+          ),
           jobsRepositoryProvider.overrideWithValue(
             jobsRepository ??
                 LocalMockJobsRepository(InMemorySecureKeyValueStore()),

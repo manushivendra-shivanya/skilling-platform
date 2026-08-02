@@ -16,7 +16,10 @@ import '../domain/career_passport.dart';
 import '../domain/career_passport_repository.dart';
 import 'career_passport_controller.dart';
 
-const _disclaimer = 'Flora provides simulation evidence, not certification.';
+// Was "simulation evidence" -- broadened now that micro-lesson
+// assessments are a second evidence source alongside workplace
+// simulations.
+const _disclaimer = 'Flora provides evidence, not certification.';
 
 const _sharingBoundaryCopy =
     'Sharing only ever applies to employers whose job you applied to -- '
@@ -441,9 +444,30 @@ class _CareerPassportEntryDetails extends StatelessWidget {
         const SizedBox(height: AppSpacing.xxs),
         Text(evidence.description),
         const SizedBox(height: AppSpacing.md),
-        _DetailRow(label: 'Mission', value: evidence.missionId),
-        _DetailRow(label: 'Mission version', value: evidence.missionVersion),
-        _DetailRow(label: 'Scenario seed', value: '${evidence.scenarioSeed}'),
+        // Micro-lesson evidence repurposes missionId as the source clip id
+        // and has no real scenario -- labelling and showing only what
+        // actually applies to each evidence type reads more honestly than
+        // showing "Scenario seed: 0" for a clip that never had one.
+        switch (evidence.evidenceType) {
+          EvidenceType.simulationObservation => Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _DetailRow(label: 'Mission', value: evidence.missionId),
+              _DetailRow(
+                label: 'Mission version',
+                value: evidence.missionVersion,
+              ),
+              _DetailRow(
+                label: 'Scenario seed',
+                value: '${evidence.scenarioSeed}',
+              ),
+            ],
+          ),
+          EvidenceType.microLessonAssessment => _DetailRow(
+            label: 'Clip',
+            value: evidence.missionId,
+          ),
+        },
         _DetailRow(label: 'Attempt', value: evidence.attemptId),
         _DetailRow(
           label: 'Evidence type',
@@ -464,6 +488,7 @@ class _CareerPassportEntryDetails extends StatelessWidget {
   String _evidenceTypeLabel(EvidenceType evidenceType) =>
       switch (evidenceType) {
         EvidenceType.simulationObservation => 'Simulation observation',
+        EvidenceType.microLessonAssessment => 'Micro-lesson assessment',
       };
 }
 

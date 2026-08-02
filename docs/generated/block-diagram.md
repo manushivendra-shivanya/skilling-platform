@@ -64,6 +64,9 @@ flowchart TD
     MICROCLIPS --> CLIPREPO[Asset-backed Local Clip Repository]
     CLIPREPO --> CLIPJSON[Warehouse Clip JSON and Future Media URLs]
     MICROCLIPS --> CLIPVALIDATION[Clip Contract and Validation]
+    MICROCLIPS --> MICROASSESS[Assessment Attempt: Record, Score, Audit Events]
+    MICROASSESS --> MICROEVIDENCE[Micro-lesson Evidence Generation]
+    MICROEVIDENCE --> CAREERPASSPORT
     PRACTISE --> SIMEVENTS[Ordered Simulation Event Batch]
     SIMEVENTS --> SCORE[Deterministic Scoring]
     SCORE --> EVIDENCE[Competency Evidence]
