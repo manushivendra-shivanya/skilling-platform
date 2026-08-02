@@ -349,7 +349,8 @@ enum ReleaseDecision {
 enum CriticalErrorSeverity { minor, major, critical }
 
 enum EvidenceType {
-  simulationObservation('simulation_observation');
+  simulationObservation('simulation_observation'),
+  microLessonAssessment('micro_lesson_assessment');
 
   const EvidenceType(this.wireName);
   final String wireName;

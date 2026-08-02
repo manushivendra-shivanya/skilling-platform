@@ -41,6 +41,7 @@ flutter:
   assets:
     - assets/micro_lessons/
     - assets/micro_lessons/videos/
+    - assets/micro_lessons/thumbnails/
     - assets/workplace_simulation/logistics/
     - assets/wms_3d/
     - assets/wms_3d/models/

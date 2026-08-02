@@ -1,5 +1,7 @@
 import 'package:candidate_mobile/core/storage/secure_key_value_store.dart';
 import 'package:candidate_mobile/features/career_passport/data/wms_career_passport_repository.dart';
+import 'package:candidate_mobile/features/micro_lessons/data/secure_micro_lesson_assessment_repository.dart';
+import 'package:candidate_mobile/features/micro_lessons/domain/micro_lesson_clip.dart';
 import 'package:candidate_mobile/features/workplace_simulation/application/workplace_simulation_controller.dart';
 import 'package:candidate_mobile/features/workplace_simulation/data/local_simulation_attempt_repository.dart';
 import 'package:candidate_mobile/features/workplace_simulation/domain/simulation_enums.dart';
@@ -98,6 +100,86 @@ void main() {
       );
     },
   );
+
+  test(
+    'merges micro-lesson assessment evidence alongside WMS simulation evidence',
+    () async {
+      final store = InMemorySecureKeyValueStore();
+      final attempts = LocalSimulationAttemptRepository(
+        store,
+        clock: () => fixedTime,
+      );
+      final microLessons = SecureMicroLessonAssessmentRepository(store);
+      final repository = WmsCareerPassportRepository(
+        attemptRepository: attempts,
+        microLessonAssessmentRepository: microLessons,
+      );
+
+      final wmsAttempt = await attempts.createAttempt(
+        candidateId: candidateId,
+        missionId: WorkplaceSimulationController.missionId,
+        missionVersion: '1.0.0',
+        scenarioSeed: 1,
+      );
+      await attempts.saveAttempt(
+        wmsAttempt.copyWith(state: MissionState.completed),
+      );
+      await attempts.saveResult(candidateId, _result(wmsAttempt, score: 80));
+
+      await microLessons.recordAttempt(
+        candidateId: candidateId,
+        clip: _microLessonClip(),
+        selectedAnswerId: 'record',
+      );
+
+      final result = await repository.loadEvidence(candidateId);
+
+      result.when(
+        success: (evidence) {
+          expect(evidence, hasLength(2));
+          expect(
+            evidence.map((e) => e.evidenceType),
+            containsAll([
+              EvidenceType.simulationObservation,
+              EvidenceType.microLessonAssessment,
+            ]),
+          );
+        },
+        failure: (failure) => fail('expected success, got $failure'),
+      );
+    },
+  );
+
+  test('a micro-lesson evidence load failure does not fail the whole Career '
+      'Passport -- it is supplementary, not load-bearing', () async {
+    final store = InMemorySecureKeyValueStore();
+    final attempts = LocalSimulationAttemptRepository(
+      store,
+      clock: () => fixedTime,
+    );
+    final repository = WmsCareerPassportRepository(
+      attemptRepository: attempts,
+      microLessonAssessmentRepository: null,
+    );
+
+    final wmsAttempt = await attempts.createAttempt(
+      candidateId: candidateId,
+      missionId: WorkplaceSimulationController.missionId,
+      missionVersion: '1.0.0',
+      scenarioSeed: 1,
+    );
+    await attempts.saveAttempt(
+      wmsAttempt.copyWith(state: MissionState.completed),
+    );
+    await attempts.saveResult(candidateId, _result(wmsAttempt, score: 80));
+
+    final result = await repository.loadEvidence(candidateId);
+
+    result.when(
+      success: (evidence) => expect(evidence, hasLength(1)),
+      failure: (failure) => fail('expected success, got $failure'),
+    );
+  });
 
   test('local-only repository cannot manage employer access', () async {
     final store = InMemorySecureKeyValueStore();
@@ -207,5 +289,38 @@ SimulationResult _result(SimulationAttempt attempt, {required int score}) {
     ],
     recommendedRemediationIds: const [],
     completedAt: DateTime.utc(2026, 8, 1, 9, 20),
+  );
+}
+
+MicroLessonClip _microLessonClip() {
+  return MicroLessonClip(
+    id: 'clip-1',
+    title: 'Frozen receiving check',
+    domain: MicroLessonDomain.receiving,
+    role: 'Warehouse Operations Associate',
+    processArea: 'Receiving Dock',
+    temperatureZone: TemperatureZone.frozen,
+    durationSeconds: 10,
+    videoUrl: null,
+    thumbnailUrl: null,
+    transcript: 'Transcript',
+    description: 'Description',
+    expectedObservation: 'Observation',
+    expectedDecision: 'Decision',
+    competencyTags: const ['cold_chain_receiving_check'],
+    lessonContent: 'Lesson',
+    assessmentQuestion: 'Question?',
+    answerOptions: const [
+      ClipAnswerOption(id: 'record', label: 'Record it', feedback: 'Good'),
+      ClipAnswerOption(id: 'accept', label: 'Accept it', feedback: 'Unsafe'),
+    ],
+    correctAnswerId: 'record',
+    scoringRules: const ClipScoringRules(
+      maxPoints: 10,
+      correctAnswerPoints: 10,
+      evidenceSource: 'systemObserved',
+      technicalFailuresScoreable: false,
+    ),
+    auditEvents: const [],
   );
 }

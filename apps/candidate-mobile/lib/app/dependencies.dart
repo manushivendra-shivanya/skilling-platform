@@ -25,6 +25,8 @@ import '../features/jobs/domain/jobs_repository.dart';
 import '../features/learning/data/mock_learning_repository.dart';
 import '../features/learning/domain/learning_repository.dart';
 import '../features/micro_lessons/data/asset_micro_lesson_clip_repository.dart';
+import '../features/micro_lessons/data/secure_micro_lesson_assessment_repository.dart';
+import '../features/micro_lessons/domain/micro_lesson_assessment_repository.dart';
 import '../features/micro_lessons/domain/micro_lesson_clip_repository.dart';
 import '../features/onboarding/data/local_onboarding_entry_repository.dart';
 import '../features/onboarding/data/secure_candidate_onboarding_repository.dart';
@@ -114,6 +116,13 @@ final microLessonClipRepositoryProvider = Provider<MicroLessonClipRepository>(
   (ref) => const AssetMicroLessonClipRepository(),
 );
 
+final microLessonAssessmentRepositoryProvider =
+    Provider<MicroLessonAssessmentRepository>(
+      (ref) => SecureMicroLessonAssessmentRepository(
+        ref.watch(secureKeyValueStoreProvider),
+      ),
+    );
+
 final jobsRepositoryProvider = Provider<JobsRepository>((ref) {
   final config = ref.watch(appConfigProvider);
   if (config.hasSupabaseConfiguration && config.hasApiConfiguration) {
@@ -186,6 +195,9 @@ final careerPassportRepositoryProvider = Provider<CareerPassportRepository>((
   final config = ref.watch(appConfigProvider);
   return WmsCareerPassportRepository(
     attemptRepository: ref.watch(simulationAttemptRepositoryProvider),
+    microLessonAssessmentRepository: ref.watch(
+      microLessonAssessmentRepositoryProvider,
+    ),
     supabaseClient: config.hasSupabaseConfiguration
         ? Supabase.instance.client
         : null,

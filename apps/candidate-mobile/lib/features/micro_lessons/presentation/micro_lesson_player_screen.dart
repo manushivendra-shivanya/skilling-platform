@@ -1,26 +1,36 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:video_player/video_player.dart';
 
+import '../../../app/dependencies.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_spacing.dart';
+import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_card.dart';
+import '../domain/micro_lesson_assessment_attempt.dart';
+import '../domain/micro_lesson_assessment_repository.dart';
 import '../domain/micro_lesson_clip.dart';
 import 'not_employer_evidence_banner.dart';
 
-/// Clip detail + local practice screen for a single [MicroLessonClip]
-/// (micro-lessons v0.1): playback, the lesson content, and an instant
-/// right/wrong practice question -- all local to this screen. Deliberately
-/// does not call [MicroLessonClip.scoringRules] or
-/// [MicroLessonClip.auditEvents], and writes nothing to any repository:
-/// Career Passport evidence wiring is an explicitly separate, later slice
-/// (v0.2), gated on this UI being validated first.
+/// Clip detail + practice/assessment screen for a single [MicroLessonClip]
+/// (micro-lessons v0.2). Two distinct interactions below the video:
+/// - Tapping any answer option gives instant local feedback -- free,
+///   unlimited, never recorded (see [NotEmployerEvidenceBanner]).
+/// - "Submit for Career Passport evidence" records the *currently
+///   selected* answer as a real, scored assessment attempt via
+///   [MicroLessonAssessmentRepository], up to [maxAssessmentAttemptsPerClip]
+///   times. Recording generates real evidence (see
+///   `micro_lesson_evidence_generation_service.dart`) that flows into the
+///   Career Passport -- it is still not employer evidence per se; it only
+///   becomes visible to an employer if the candidate later shares it,
+///   exactly like every other Career Passport entry.
 ///
 /// Handles both loading strategies a [MicroLessonClip.videoUrl] can carry:
 /// an `asset://` URI (today's bundled starter clips, offline-capable) or a
 /// plain `http(s)://` URI (the eventual Supabase-Storage-hosted
 /// catalogue), so this doesn't need rework when clips move off the app
 /// bundle.
-class MicroLessonPlayerScreen extends StatefulWidget {
+class MicroLessonPlayerScreen extends ConsumerStatefulWidget {
   const MicroLessonPlayerScreen({
     required this.clip,
     required this.onBack,
@@ -31,19 +41,27 @@ class MicroLessonPlayerScreen extends StatefulWidget {
   final VoidCallback onBack;
 
   @override
-  State<MicroLessonPlayerScreen> createState() =>
+  ConsumerState<MicroLessonPlayerScreen> createState() =>
       _MicroLessonPlayerScreenState();
 }
 
-class _MicroLessonPlayerScreenState extends State<MicroLessonPlayerScreen> {
+class _MicroLessonPlayerScreenState
+    extends ConsumerState<MicroLessonPlayerScreen> {
   VideoPlayerController? _controller;
   String? _loadError;
   String? _selectedAnswerId;
+
+  // null while the existing attempt count is still loading.
+  int? _attemptsUsed;
+  MicroLessonAssessmentAttempt? _lastSubmittedAttempt;
+  String? _submissionError;
+  bool _isSubmitting = false;
 
   @override
   void initState() {
     super.initState();
     _initController();
+    _loadAttemptsUsed();
   }
 
   Future<void> _initController() async {
@@ -67,6 +85,72 @@ class _MicroLessonPlayerScreenState extends State<MicroLessonPlayerScreen> {
       await controller.dispose();
       if (mounted) setState(() => _loadError = '$error');
     }
+  }
+
+  Future<void> _loadAttemptsUsed() async {
+    final candidateId = await _readCandidateId();
+    if (candidateId == null) {
+      if (mounted) setState(() => _attemptsUsed = 0);
+      return;
+    }
+    final result = await ref
+        .read(microLessonAssessmentRepositoryProvider)
+        .listAttempts(candidateId);
+    final used = result.when(
+      success: (attempts) =>
+          attempts.where((attempt) => attempt.clipId == widget.clip.id).length,
+      failure: (_) => 0,
+    );
+    if (mounted) setState(() => _attemptsUsed = used);
+  }
+
+  Future<String?> _readCandidateId() async {
+    final result = await ref
+        .read(candidateSessionRepositoryProvider)
+        .readSession();
+    final session = result.when(
+      success: (value) => value,
+      failure: (_) => null,
+    );
+    return session?.isAuthenticated == true ? session!.candidateId : null;
+  }
+
+  Future<void> _submitAssessment() async {
+    final answerId = _selectedAnswerId;
+    if (answerId == null || _isSubmitting) return;
+    setState(() {
+      _isSubmitting = true;
+      _submissionError = null;
+    });
+    final candidateId = await _readCandidateId();
+    if (candidateId == null) {
+      if (mounted) {
+        setState(() {
+          _isSubmitting = false;
+          _submissionError = 'Sign in again to record this attempt.';
+        });
+      }
+      return;
+    }
+    final result = await ref
+        .read(microLessonAssessmentRepositoryProvider)
+        .recordAttempt(
+          candidateId: candidateId,
+          clip: widget.clip,
+          selectedAnswerId: answerId,
+        );
+    if (!mounted) return;
+    result.when(
+      success: (attempt) => setState(() {
+        _isSubmitting = false;
+        _lastSubmittedAttempt = attempt;
+        _attemptsUsed = (_attemptsUsed ?? 0) + 1;
+      }),
+      failure: (failure) => setState(() {
+        _isSubmitting = false;
+        _submissionError = failure.message;
+      }),
+    );
   }
 
   @override
@@ -131,6 +215,17 @@ class _MicroLessonPlayerScreenState extends State<MicroLessonPlayerScreen> {
             clip: clip,
             selectedAnswerId: _selectedAnswerId,
             onSelect: (id) => setState(() => _selectedAnswerId = id),
+          ),
+          const SizedBox(height: AppSpacing.xl),
+          const Divider(),
+          const SizedBox(height: AppSpacing.md),
+          _AssessmentSubmission(
+            selectedAnswerId: _selectedAnswerId,
+            attemptsUsed: _attemptsUsed,
+            lastSubmittedAttempt: _lastSubmittedAttempt,
+            submissionError: _submissionError,
+            isSubmitting: _isSubmitting,
+            onSubmit: _submitAssessment,
           ),
         ],
       ),
@@ -286,6 +381,107 @@ class _PracticeQuestion extends StatelessWidget {
                 Expanded(child: Text(selected.feedback)),
               ],
             ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+/// The v0.2 addition: submits the currently selected answer as a real,
+/// recorded assessment attempt (distinct from [_PracticeQuestion]'s free
+/// instant feedback above, which never records anything).
+class _AssessmentSubmission extends StatelessWidget {
+  const _AssessmentSubmission({
+    required this.selectedAnswerId,
+    required this.attemptsUsed,
+    required this.lastSubmittedAttempt,
+    required this.submissionError,
+    required this.isSubmitting,
+    required this.onSubmit,
+  });
+
+  final String? selectedAnswerId;
+  final int? attemptsUsed;
+  final MicroLessonAssessmentAttempt? lastSubmittedAttempt;
+  final String? submissionError;
+  final bool isSubmitting;
+  final VoidCallback onSubmit;
+
+  @override
+  Widget build(BuildContext context) {
+    final used = attemptsUsed;
+    final titleStyle = Theme.of(context).textTheme.titleMedium;
+    if (used == null) {
+      return Row(
+        children: [
+          Text('Assessment', style: titleStyle),
+          const SizedBox(width: AppSpacing.sm),
+          const SizedBox(
+            width: 14,
+            height: 14,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+        ],
+      );
+    }
+    final remaining = maxAssessmentAttemptsPerClip - used;
+    final lastAttempt = lastSubmittedAttempt;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text('Assessment', style: titleStyle),
+        const SizedBox(height: AppSpacing.xs),
+        Text(
+          'Submitting counts toward your Career Passport evidence for this '
+          'clip -- ${remaining.clamp(0, maxAssessmentAttemptsPerClip)} of '
+          '$maxAssessmentAttemptsPerClip attempts remaining.',
+        ),
+        if (lastAttempt != null) ...[
+          const SizedBox(height: AppSpacing.sm),
+          AppCard(
+            backgroundColor: lastAttempt.isCorrect
+                ? AppColors.successSoft
+                : AppColors.errorSoft,
+            child: Row(
+              children: [
+                Icon(
+                  lastAttempt.isCorrect ? Icons.check_circle : Icons.cancel,
+                  color: lastAttempt.isCorrect
+                      ? AppColors.success
+                      : AppColors.error,
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: Text(
+                    lastAttempt.isCorrect
+                        ? 'Recorded -- correct answer.'
+                        : 'Recorded -- incorrect answer.',
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+        const SizedBox(height: AppSpacing.sm),
+        if (remaining > 0)
+          AppButton(
+            label: isSubmitting
+                ? 'Submitting...'
+                : lastAttempt == null
+                ? 'Submit for Career Passport evidence'
+                : 'Submit another attempt',
+            onPressed: (selectedAnswerId == null || isSubmitting)
+                ? null
+                : onSubmit,
+          )
+        else
+          const Text('No attempts remaining for this clip.'),
+        if (submissionError != null) ...[
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            submissionError!,
+            style: const TextStyle(color: AppColors.error),
           ),
         ],
       ],

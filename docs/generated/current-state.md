@@ -2384,12 +2384,87 @@ shaped to serve this purpose too (`purpose = 'employer_review'`,
   clip definitions, rejecting invalid clip JSON before UI use and grouping
   clips by domain/competency through the controller.
 
-### Next micro-lesson implementation
-Wire the `micro_lessons` catalogue into the Learning or Practice tab with a
-temporary low-bandwidth player shell: show placeholder/thumbnail states when a
-video URL is not yet supplied, then support Learn, Practice and Assessment
-modes without recording scoreable evidence until the assessment controller and
-Career Passport evidence mapping are explicitly approved.
+### Micro-lessons v0.1: real Learn-tab UI
+- Promoted the catalogue out of dev-tools: a "Warehouse process clips"
+  section is now embedded directly in the real Learn tab, clips grouped by
+  domain (Receiving, Inspection, Put-away, Dispatch, Supervisor/returns).
+- Clip detail screen: video (or a plain "not yet produced" placeholder),
+  role, process area, expected observation/decision, lesson content,
+  transcript, and a free-practice assessment question with instant local
+  right/wrong feedback -- selecting any answer here is unlimited and never
+  recorded, labelled "Practice feedback only -- not employer evidence yet."
+- Loading/empty/error states covered; an asset-state label distinguishes
+  bundled-offline clips from a future streamed source.
+
+### Micro-lessons v0.2: real assessment submission + Career Passport evidence
+- Added a second, distinct action below the free-practice question:
+  "Submit for Career Passport evidence" records the *currently selected*
+  answer as a real `MicroLessonAssessmentAttempt` via
+  `SecureMicroLessonAssessmentRepository` (on-device secure storage,
+  keyed per candidate), capped at 3 recorded attempts per clip -- every
+  attempt up to the cap is recorded and generates evidence, right or
+  wrong, not just successes.
+- Each recorded attempt snapshots the clip's declared audit events
+  (`ClipAuditEventDefinition` -> `RecordedAuditEvent`), stamped with the
+  selected answer, correctness, and attempt number.
+- `MicroLessonEvidenceGenerationService` converts a completed attempt into
+  one `systemObserved` `EvidenceRecord` per competency tag on the clip
+  (mirroring `EvidenceGenerationService`'s existing per-competency
+  pattern for workplace simulations), scored 100/0 for a single-question
+  assessment.
+- `WmsCareerPassportRepository` now merges this evidence into
+  `loadEvidence` alongside WMS simulation evidence -- unconditionally,
+  not just on the local-history path, since micro-lesson evidence is
+  device-local only today and would otherwise silently disappear from
+  the Career Passport whenever Supabase is configured. A micro-lesson
+  load failure degrades to an empty list rather than failing the whole
+  Career Passport load: it's supplementary evidence, not load-bearing.
+  Existing freshness rules (`deriveCareerPassportEntries`) apply
+  unchanged -- the newest attempt per competency is "active", older ones
+  "superseded".
+- The standing Career Passport disclaimer was broadened from "Flora
+  provides simulation evidence, not certification" to "Flora provides
+  evidence, not certification" now that a second evidence source exists.
+  It is still not employer evidence per se -- it only becomes visible to
+  an employer if the candidate later shares it, exactly like every other
+  Career Passport entry.
+- Found and fixed a real navigation bug while testing this: the clip
+  detail screen was being pushed onto the Learn tab's own nested
+  navigator (`StatefulShellRoute` gives each tab its own), so the main
+  shell's persistent "AI Coach" FAB stayed floating on top of it,
+  intercepting taps near the bottom of the page. Fixed by pushing on the
+  root navigator instead.
+
+### Video asset pipeline
+- `apps/candidate-mobile/scripts/micro_lesson_video_pipeline.py`
+  (requires `ffmpeg`/`ffprobe` on PATH) validates every clip under
+  `assets/micro_lessons/videos/` and generates a thumbnail + a
+  low-bandwidth transcode for each:
+  - Naming rule: snake_case, `.mp4` extension.
+  - Compression check: duration must be 10s (+/- 0.5s); warns (does not
+    fail) on any bundled clip over 3MB, since these ship inside the app
+    binary and affect every candidate's download size, not just viewers
+    of that one clip.
+  - Thumbnail: one frame at t=1s, written to
+    `assets/micro_lessons/thumbnails/` as `<clip-stem>.jpg` -- these ARE
+    bundled (registered in `pubspec.yaml`) and now shown in the clip list
+    UI in place of the generic icon.
+  - Low-bandwidth variant: ~480px wide (matching the clips' 9:16
+    orientation), ~600kbps video + 64kbps audio, written to
+    `assets/micro_lessons/videos_lowbandwidth/` -- roughly a 70% size
+    reduction, confirmed by running the pipeline against all 3 existing
+    bundled clips (2.4-2.6MB masters -> 760-840KB variants, 0
+    naming/compression errors). Deliberately **not** registered in
+    `pubspec.yaml` / not bundled into the app: bundling both variants
+    would defeat the point of a low-bandwidth option.
+- Remote CDN/storage: not implemented yet. The plan is to upload masters
+  (and low-bandwidth variants) to Supabase Storage as the catalogue grows
+  past what's reasonable to ship in the app binary, switch `videoUrl` from
+  `asset://` to `https://` for those clips, and serve the low-bandwidth
+  variant on a detected poor connection -- `MicroLessonPlayerScreen`
+  already branches on the `asset://` vs `http(s)://` URL scheme so this
+  needs no rework when it happens, just a real upload step and a
+  connectivity check.
 
 ## Target product architecture proposal
 

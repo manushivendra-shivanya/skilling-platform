@@ -1,6 +1,8 @@
 import 'package:candidate_mobile/core/errors/app_failure.dart';
 import 'package:candidate_mobile/core/errors/result.dart';
 import 'package:candidate_mobile/core/repositories/candidate_session_repository.dart';
+import 'package:candidate_mobile/core/storage/secure_key_value_store.dart';
+import 'package:candidate_mobile/features/micro_lessons/data/secure_micro_lesson_assessment_repository.dart';
 import 'package:candidate_mobile/features/micro_lessons/domain/micro_lesson_clip.dart';
 import 'package:candidate_mobile/features/micro_lessons/domain/micro_lesson_clip_repository.dart';
 import 'package:candidate_mobile/features/onboarding/data/secure_candidate_onboarding_repository.dart';
@@ -121,6 +123,66 @@ void main() {
       findsOneWidget,
     );
   });
+
+  testWidgets(
+    'submits an assessment attempt, records it, and counts down remaining attempts',
+    (tester) async {
+      await tester.binding.setSurfaceSize(const Size(800, 2400));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      final assessments = SecureMicroLessonAssessmentRepository(
+        InMemorySecureKeyValueStore(),
+      );
+      await tester.pumpCandidateApp(
+        candidateSessionRepository: sessions,
+        candidateOnboardingRepository: onboarding,
+        microLessonClipRepository: _FakeMicroLessonClipRepository(
+          Success([_receivingClip()]),
+        ),
+        microLessonAssessmentRepository: assessments,
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Learn'));
+      await tester.pumpAndSettle();
+      await tester.scrollUntilVisible(
+        find.text('Frozen receiving check'),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.ensureVisible(find.text('Frozen receiving check'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Frozen receiving check'));
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('3 of 3 attempts remaining'), findsOneWidget);
+
+      await tester.tap(find.text('Record the temperature reading'));
+      await tester.pumpAndSettle();
+      await tester.scrollUntilVisible(
+        find.text('Submit for Career Passport evidence'),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.ensureVisible(
+        find.text('Submit for Career Passport evidence'),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Submit for Career Passport evidence'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Recorded -- correct answer.'), findsOneWidget);
+      expect(find.textContaining('2 of 3 attempts remaining'), findsOneWidget);
+
+      final attempts = await assessments.listAttempts('dev-candidate-3210');
+      attempts.when(
+        success: (value) {
+          expect(value, hasLength(1));
+          expect(value.single.isCorrect, isTrue);
+          expect(value.single.competencyTags, ['cold_chain_receiving_check']);
+        },
+        failure: (failure) => fail('expected success, got $failure'),
+      );
+    },
+  );
 
   testWidgets('shows an empty state when the catalogue has no clips', (
     tester,
