@@ -20,4 +20,24 @@ void main() {
     expect(secretKey.hasSupabaseConfiguration, isFalse);
     expect(const AppConfig.development().hasSupabaseConfiguration, isFalse);
   });
+
+  test('micro-lesson CDN is enabled only with an absolute URL', () {
+    const configured = AppConfig(
+      environment: AppEnvironment.staging,
+      enableLogging: true,
+      microLessonCdnBaseUrl: 'https://cdn.example.com',
+    );
+    const invalid = AppConfig(
+      environment: AppEnvironment.staging,
+      enableLogging: true,
+      microLessonCdnBaseUrl: 'cdn.example.com',
+    );
+
+    expect(configured.hasMicroLessonCdnConfiguration, isTrue);
+    expect(invalid.hasMicroLessonCdnConfiguration, isFalse);
+    expect(
+      const AppConfig.development().hasMicroLessonCdnConfiguration,
+      isFalse,
+    );
+  });
 }

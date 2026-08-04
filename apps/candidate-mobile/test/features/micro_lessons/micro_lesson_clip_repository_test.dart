@@ -34,15 +34,45 @@ void main() {
 
     result.when(
       success: (clips) {
-        expect(clips, hasLength(greaterThanOrEqualTo(7)));
+        expect(clips, hasLength(17));
         expect(clips.every((clip) => clip.durationSeconds == 10), isTrue);
         expect(
           clips.map((clip) => clip.id).toSet(),
           containsAll([
             'clip_receiving_frozen_001',
             'clip_receiving_supplier_001',
+            'clip_receiving_fnv_count_001',
+            'clip_receiving_fnv_001',
+            'clip_inspection_fnv_001',
+            'clip_putaway_dairy_001',
             'clip_putaway_ambient_001',
+            'clip_processing_moq_001',
+            'clip_processing_fnv_packing_001',
+            'clip_picking_frozen_001',
+            'clip_picking_ambient_001',
+            'clip_dispatch_merge_001',
+            'clip_dispatch_staging_001',
+            'clip_dispatch_loading_001',
+            'clip_delivery_handover_001',
+            'clip_returns_driver_settlement_001',
+            'clip_returns_quarantine_001',
           ]),
+        );
+        expect(clips.first.module, MicroLessonModule.inward);
+        expect(clips.first.sequenceNumber, 1);
+        expect(clips.last.module, MicroLessonModule.dispatch);
+        expect(clips.last.sequenceNumber, 8);
+        expect(
+          clips.where((clip) => clip.module == MicroLessonModule.inward),
+          hasLength(7),
+        );
+        expect(
+          clips.where((clip) => clip.module == MicroLessonModule.processing),
+          hasLength(2),
+        );
+        expect(
+          clips.where((clip) => clip.module == MicroLessonModule.dispatch),
+          hasLength(8),
         );
         expect(
           clips
@@ -50,18 +80,59 @@ void main() {
               .length,
           greaterThanOrEqualTo(2),
         );
+        expect(clips.where((clip) => clip.hasVideoAsset), hasLength(16));
         expect(
-          clips.where((clip) => clip.hasVideoAsset).map((clip) => clip.id),
-          containsAll([
-            'clip_receiving_frozen_001',
-            'clip_receiving_supplier_001',
-            'clip_inspection_fnv_001',
-          ]),
+          clips.where((clip) => !clip.hasVideoAsset).single.id,
+          'clip_returns_quarantine_001',
+        );
+        expect(
+          clips
+              .where((clip) => clip.hasVideoAsset)
+              .every((clip) => clip.cloudflareVideoPath != null),
+          isTrue,
         );
       },
       failure: (failure) => fail(failure.message),
     );
   });
+
+  test(
+    'resolves Cloudflare CDN video URLs with local asset fallback',
+    () async {
+      const repository = AssetMicroLessonClipRepository(
+        cdnBaseUrl: 'https://cdn.example.com/training/',
+      );
+
+      final result = await repository.loadClips();
+
+      result.when(
+        success: (clips) {
+          final clip = clips.firstWhere(
+            (clip) => clip.id == 'clip_receiving_supplier_001',
+          );
+          expect(
+            clip.videoUrl,
+            'https://cdn.example.com/training/'
+            'micro-lessons/warehouse/v1/inward/01-clip_receiving_supplier_001/'
+            'receiving_wrong_supplier_stop.mp4',
+          );
+          expect(
+            clip.fallbackVideoUrl,
+            'asset://assets/micro_lessons/videos/'
+            'receiving_wrong_supplier_stop.mp4',
+          );
+          expect(clip.hasRemoteVideo, isTrue);
+
+          final placeholder = clips.firstWhere(
+            (clip) => clip.id == 'clip_returns_quarantine_001',
+          );
+          expect(placeholder.videoUrl, isNull);
+          expect(placeholder.cloudflareVideoPath, isNull);
+        },
+        failure: (failure) => fail(failure.message),
+      );
+    },
+  );
 
   test(
     'validates all shipped clips as ten-second assessment-ready content',
@@ -100,6 +171,8 @@ void main() {
     {
       "id": "bad",
       "title": "Bad clip",
+      "module": "inward",
+      "sequenceNumber": 1,
       "domain": "receiving",
       "role": "Receiving Associate",
       "processArea": "Receiving Dock",

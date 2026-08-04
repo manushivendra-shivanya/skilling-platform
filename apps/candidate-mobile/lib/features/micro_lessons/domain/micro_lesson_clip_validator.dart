@@ -24,6 +24,9 @@ List<MicroLessonClipValidationError> validateMicroLessonClip(
   if (clip.title.trim().isEmpty) {
     add('title is required');
   }
+  if (clip.sequenceNumber <= 0) {
+    add('sequenceNumber must be positive');
+  }
   if (clip.durationSeconds != 10) {
     add('durationSeconds must be exactly 10 for this micro-clip format');
   }
@@ -64,9 +67,19 @@ List<MicroLessonClipValidationError> validateMicroLessonClipCatalogue(
 ) {
   final errors = <MicroLessonClipValidationError>[];
   final ids = <String>{};
+  final sequenceKeys = <String>{};
   for (final clip in clips) {
     if (!ids.add(clip.id)) {
       errors.add(MicroLessonClipValidationError(clip.id, 'duplicate clip id'));
+    }
+    final sequenceKey = '${clip.module.name}:${clip.sequenceNumber}';
+    if (!sequenceKeys.add(sequenceKey)) {
+      errors.add(
+        MicroLessonClipValidationError(
+          clip.id,
+          'duplicate sequenceNumber within ${clip.module.name}',
+        ),
+      );
     }
     errors.addAll(validateMicroLessonClip(clip));
   }

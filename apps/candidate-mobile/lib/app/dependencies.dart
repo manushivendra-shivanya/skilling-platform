@@ -113,7 +113,9 @@ final learningRepositoryProvider = Provider<LearningRepository>(
 );
 
 final microLessonClipRepositoryProvider = Provider<MicroLessonClipRepository>(
-  (ref) => const AssetMicroLessonClipRepository(),
+  (ref) => AssetMicroLessonClipRepository(
+    cdnBaseUrl: ref.watch(appConfigProvider).microLessonCdnBaseUrl,
+  ),
 );
 
 final microLessonAssessmentRepositoryProvider =

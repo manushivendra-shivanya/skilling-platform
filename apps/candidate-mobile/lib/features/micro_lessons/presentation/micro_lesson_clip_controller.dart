@@ -12,6 +12,12 @@ class MicroLessonClipState {
     return clips.where((clip) => clip.domain == domain).toList(growable: false);
   }
 
+  List<MicroLessonClip> clipsForModule(MicroLessonModule module) {
+    final moduleClips = clips.where((clip) => clip.module == module).toList();
+    moduleClips.sort((a, b) => a.sequenceNumber.compareTo(b.sequenceNumber));
+    return List.unmodifiable(moduleClips);
+  }
+
   List<MicroLessonClip> clipsForCompetency(String competencyTag) {
     return clips
         .where((clip) => clip.competencyTags.contains(competencyTag))
@@ -31,10 +37,32 @@ class MicroLessonClipController extends AsyncNotifier<MicroLessonClipState> {
         .read(microLessonClipRepositoryProvider)
         .loadClips();
     return result.when(
-      success: (clips) => MicroLessonClipState(clips: clips),
+      success: (clips) {
+        final orderedClips = clips.toList()
+          ..sort(_compareClipsByOperationalSequence);
+        return MicroLessonClipState(clips: List.unmodifiable(orderedClips));
+      },
       failure: (failure) => throw failure,
     );
   }
 
   void retry() => ref.invalidateSelf();
+}
+
+int _compareClipsByOperationalSequence(MicroLessonClip a, MicroLessonClip b) {
+  final moduleComparison = _moduleSortOrder(
+    a.module,
+  ).compareTo(_moduleSortOrder(b.module));
+  if (moduleComparison != 0) {
+    return moduleComparison;
+  }
+  return a.sequenceNumber.compareTo(b.sequenceNumber);
+}
+
+int _moduleSortOrder(MicroLessonModule module) {
+  return switch (module) {
+    MicroLessonModule.inward => 0,
+    MicroLessonModule.processing => 1,
+    MicroLessonModule.dispatch => 2,
+  };
 }
