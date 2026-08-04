@@ -1578,7 +1578,7 @@
       "id": "clip_dispatch_perishable_loading_001",
       "title": "Loading perishable stock into a refrigerated vehicle",
       "module": "dispatch",
-      "sequenceNumber": 8,
+      "sequenceNumber": 9,
       "domain": "dispatch",
       "role": "Warehouse Operations Associate",
       "processArea": "Chilled Dispatch Dock",
@@ -1631,7 +1631,7 @@
           }
         }
       ],
-      "cloudflareVideoPath": "micro-lessons/warehouse/v1/dispatch/08-clip_dispatch_perishable_loading_001/dispatch_perishable_dock_loading.mp4",
+      "cloudflareVideoPath": "micro-lessons/warehouse/v1/dispatch/09-clip_dispatch_perishable_loading_001/dispatch_perishable_dock_loading.mp4",
       "fallbackVideoUrl": null,
       "modes": [
         "lesson",
@@ -1643,7 +1643,7 @@
       "id": "clip_dispatch_manifest_verification_001",
       "title": "Verifying the load manifest before departure",
       "module": "dispatch",
-      "sequenceNumber": 9,
+      "sequenceNumber": 11,
       "domain": "dispatch",
       "role": "Shift Supervisor",
       "processArea": "Dispatch Dock",
@@ -1696,7 +1696,7 @@
           }
         }
       ],
-      "cloudflareVideoPath": "micro-lessons/warehouse/v1/dispatch/09-clip_dispatch_manifest_verification_001/dispatch_manifest_verification.mp4",
+      "cloudflareVideoPath": "micro-lessons/warehouse/v1/dispatch/11-clip_dispatch_manifest_verification_001/dispatch_manifest_verification.mp4",
       "fallbackVideoUrl": null,
       "modes": [
         "lesson",
@@ -1708,7 +1708,7 @@
       "id": "clip_delivery_handover_001",
       "title": "Restaurant delivery handover",
       "module": "dispatch",
-      "sequenceNumber": 11,
+      "sequenceNumber": 14,
       "domain": "delivery",
       "role": "Delivery Associate",
       "processArea": "Customer Delivery Point",
@@ -1767,14 +1767,14 @@
           }
         }
       ],
-      "cloudflareVideoPath": "micro-lessons/warehouse/v1/dispatch/11-clip_delivery_handover_001/delivery_restaurant_handover_scan.mp4",
+      "cloudflareVideoPath": "micro-lessons/warehouse/v1/dispatch/14-clip_delivery_handover_001/delivery_restaurant_handover_scan.mp4",
       "fallbackVideoUrl": null
     },
     {
       "id": "clip_returns_driver_settlement_001",
       "title": "Driver empty-crate and cash settlement",
       "module": "dispatch",
-      "sequenceNumber": 12,
+      "sequenceNumber": 19,
       "domain": "supervisor",
       "role": "Route Settlement Associate",
       "processArea": "Returns and Settlement Counter",
@@ -1833,14 +1833,14 @@
           }
         }
       ],
-      "cloudflareVideoPath": "micro-lessons/warehouse/v1/dispatch/12-clip_returns_driver_settlement_001/returns_driver_empty_crates_cash_submission.mp4",
+      "cloudflareVideoPath": "micro-lessons/warehouse/v1/dispatch/19-clip_returns_driver_settlement_001/returns_driver_empty_crates_cash_submission.mp4",
       "fallbackVideoUrl": null
     },
     {
       "id": "clip_returns_quarantine_001",
       "title": "Returned goods quarantine",
       "module": "dispatch",
-      "sequenceNumber": 13,
+      "sequenceNumber": 20,
       "domain": "supervisor",
       "role": "Hub Supervisor",
       "processArea": "Returns and Quarantine",
@@ -2036,7 +2036,7 @@
       "id": "clip_dispatch_missing_item_check_001",
       "title": "Handling a missing item found during sortation",
       "module": "dispatch",
-      "sequenceNumber": 10,
+      "sequenceNumber": 13,
       "domain": "dispatch",
       "role": "Warehouse Operations Associate",
       "processArea": "Sortation Line",
@@ -2067,7 +2067,462 @@
       "videoUrl": null,
       "thumbnailUrl": "asset://assets/micro_lessons/thumbnails/dispatch_missing_item_check.jpg",
       "fallbackVideoUrl": null,
-      "cloudflareVideoPath": "micro-lessons/warehouse/v1/dispatch/10-clip_dispatch_missing_item_check_001/dispatch_missing_item_check.mp4",
+      "cloudflareVideoPath": "micro-lessons/warehouse/v1/dispatch/13-clip_dispatch_missing_item_check_001/dispatch_missing_item_check.mp4",
+      "durationSeconds": 10,
+      "scoringRules": {
+        "maxPoints": 10,
+        "correctAnswerPoints": 10,
+        "evidenceSource": "systemObserved",
+        "technicalFailuresScoreable": false
+      },
+      "auditEvents": [
+        {
+          "eventType": "clipStarted",
+          "when": "onPlaybackStart",
+          "payload": {
+            "mode": "assessment"
+          }
+        },
+        {
+          "eventType": "clipAnswerSubmitted",
+          "when": "onAnswerSubmit",
+          "payload": {
+            "scoreable": true
+          }
+        }
+      ],
+      "modes": [
+        "lesson",
+        "practice",
+        "assessment"
+      ]
+    },
+    {
+      "id": "clip_dispatch_frozen_dock_check_001",
+      "title": "Checking dock and vehicle temperature before frozen loading",
+      "module": "dispatch",
+      "sequenceNumber": 8,
+      "domain": "dispatch",
+      "role": "Warehouse Operations Associate",
+      "processArea": "Frozen Dispatch Dock",
+      "temperatureZone": "frozen",
+      "transcript": "Two associates at a frozen dock bay check a probe thermometer reading on the reefer vehicle before any crates are loaded.",
+      "description": "A refrigerated vehicle is backed into a frozen dock bay. The learner must decide when the vehicle's temperature should be verified relative to loading.",
+      "expectedObservation": "Associates check the vehicle's internal temperature with a probe thermometer before any crates are loaded.",
+      "expectedDecision": "Confirm the vehicle has reached the correct frozen temperature before loading begins, not after.",
+      "competencyTags": [
+        "cold_chain_dock_discipline",
+        "pre_loading_temperature_check"
+      ],
+      "lessonContent": "Loading frozen stock into a vehicle that hasn't reached temperature defeats the purpose of the cold chain before the trip even starts. The check has to happen before the first crate goes in, not once loading is already underway.",
+      "assessmentQuestion": "When should the vehicle's temperature be checked before loading frozen stock?",
+      "answerOptions": [
+        {
+          "id": "before_loading",
+          "label": "Before any crates are loaded",
+          "feedback": "Correct -- loading into a vehicle that hasn't reached temperature defeats the cold chain before the trip starts."
+        },
+        {
+          "id": "during_loading",
+          "label": "Partway through loading, once a few crates are in",
+          "feedback": "By then some stock has already gone into a vehicle that wasn't ready -- check before loading starts."
+        }
+      ],
+      "correctAnswer": "before_loading",
+      "videoUrl": null,
+      "thumbnailUrl": "asset://assets/micro_lessons/thumbnails/dispatch_frozen_dock_check.jpg",
+      "fallbackVideoUrl": null,
+      "cloudflareVideoPath": "micro-lessons/warehouse/v1/dispatch/08-clip_dispatch_frozen_dock_check_001/dispatch_frozen_dock_check.mp4",
+      "durationSeconds": 10,
+      "scoringRules": {
+        "maxPoints": 10,
+        "correctAnswerPoints": 10,
+        "evidenceSource": "systemObserved",
+        "technicalFailuresScoreable": false
+      },
+      "auditEvents": [
+        {
+          "eventType": "clipStarted",
+          "when": "onPlaybackStart",
+          "payload": {
+            "mode": "assessment"
+          }
+        },
+        {
+          "eventType": "clipAnswerSubmitted",
+          "when": "onAnswerSubmit",
+          "payload": {
+            "scoreable": true
+          }
+        }
+      ],
+      "modes": [
+        "lesson",
+        "practice",
+        "assessment"
+      ]
+    },
+    {
+      "id": "clip_dispatch_seal_verification_001",
+      "title": "Sealing a refrigerated vehicle after loading",
+      "module": "dispatch",
+      "sequenceNumber": 10,
+      "domain": "dispatch",
+      "role": "Warehouse Operations Associate",
+      "processArea": "Chilled Dispatch Dock",
+      "temperatureZone": "chilled",
+      "transcript": "After loading a refrigerated vehicle, an associate scans a tamper-evident seal on a handheld device, confirmed by a \"seal secured\" message.",
+      "description": "A refrigerated vehicle has just finished loading. The learner must decide when the vehicle's security seal should be applied and confirmed.",
+      "expectedObservation": "The associate applies and scans a tamper-evident seal on the vehicle immediately after loading is complete, confirmed on the handheld device.",
+      "expectedDecision": "Apply and confirm the security seal right after loading finishes, before the vehicle leaves the dock.",
+      "competencyTags": [
+        "dispatch_security_seal_verification",
+        "tamper_evident_loading"
+      ],
+      "lessonContent": "A loaded vehicle without a confirmed seal has no proof its contents weren't tampered with between the dock and the customer. Sealing and confirming it on the device right after loading closes that gap before the vehicle ever moves.",
+      "assessmentQuestion": "When should a vehicle's security seal be applied and confirmed?",
+      "answerOptions": [
+        {
+          "id": "right_after_loading",
+          "label": "Right after loading finishes, before the vehicle leaves",
+          "feedback": "Correct -- closes the tamper-evidence gap before the vehicle moves."
+        },
+        {
+          "id": "whenever",
+          "label": "Whenever convenient before the next trip",
+          "feedback": "This leaves the vehicle unsealed and unverified in the meantime -- seal it right after loading."
+        }
+      ],
+      "correctAnswer": "right_after_loading",
+      "videoUrl": null,
+      "thumbnailUrl": "asset://assets/micro_lessons/thumbnails/dispatch_seal_verification.jpg",
+      "fallbackVideoUrl": null,
+      "cloudflareVideoPath": "micro-lessons/warehouse/v1/dispatch/10-clip_dispatch_seal_verification_001/dispatch_seal_verification.mp4",
+      "durationSeconds": 10,
+      "scoringRules": {
+        "maxPoints": 10,
+        "correctAnswerPoints": 10,
+        "evidenceSource": "systemObserved",
+        "technicalFailuresScoreable": false
+      },
+      "auditEvents": [
+        {
+          "eventType": "clipStarted",
+          "when": "onPlaybackStart",
+          "payload": {
+            "mode": "assessment"
+          }
+        },
+        {
+          "eventType": "clipAnswerSubmitted",
+          "when": "onAnswerSubmit",
+          "payload": {
+            "scoreable": true
+          }
+        }
+      ],
+      "modes": [
+        "lesson",
+        "practice",
+        "assessment"
+      ]
+    },
+    {
+      "id": "clip_dispatch_route_assignment_001",
+      "title": "Confirming driver route assignments before departure",
+      "module": "dispatch",
+      "sequenceNumber": 12,
+      "domain": "supervisor",
+      "role": "Shift Supervisor",
+      "processArea": "Dispatch Staging Area",
+      "temperatureZone": "ambient",
+      "transcript": "A supervisor briefs a group of drivers on their route assignments against a whiteboard and a tablet, next to a line of staged delivery vehicles.",
+      "description": "Drivers gather near their staged vehicles before departure. The learner must decide when each driver's route assignment should be confirmed.",
+      "expectedObservation": "The supervisor confirms each driver's route assignment against the board and tablet before the driver takes their vehicle out.",
+      "expectedDecision": "Confirm each driver's route assignment before departure, rather than letting drivers leave without a final check against the assignment board.",
+      "competencyTags": [
+        "dispatch_route_assignment",
+        "pre_departure_briefing"
+      ],
+      "lessonContent": "A driver who departs on the wrong route wastes the trip and delays every stop on both routes. A quick confirmation against the assignment board before the vehicle leaves catches a mix-up while it's still cheap to fix.",
+      "assessmentQuestion": "When should a driver's route assignment be confirmed?",
+      "answerOptions": [
+        {
+          "id": "before_departure",
+          "label": "Before the driver departs with the vehicle",
+          "feedback": "Correct -- catches a mix-up while it's still easy to fix."
+        },
+        {
+          "id": "after_departure",
+          "label": "After departure, if a stop seems wrong",
+          "feedback": "By then the driver is already on the wrong route -- confirm before departure instead."
+        }
+      ],
+      "correctAnswer": "before_departure",
+      "videoUrl": null,
+      "thumbnailUrl": "asset://assets/micro_lessons/thumbnails/dispatch_route_assignment_briefing.jpg",
+      "fallbackVideoUrl": null,
+      "cloudflareVideoPath": "micro-lessons/warehouse/v1/dispatch/12-clip_dispatch_route_assignment_001/dispatch_route_assignment_briefing.mp4",
+      "durationSeconds": 10,
+      "scoringRules": {
+        "maxPoints": 10,
+        "correctAnswerPoints": 10,
+        "evidenceSource": "systemObserved",
+        "technicalFailuresScoreable": false
+      },
+      "auditEvents": [
+        {
+          "eventType": "clipStarted",
+          "when": "onPlaybackStart",
+          "payload": {
+            "mode": "assessment"
+          }
+        },
+        {
+          "eventType": "clipAnswerSubmitted",
+          "when": "onAnswerSubmit",
+          "payload": {
+            "scoreable": true
+          }
+        }
+      ],
+      "modes": [
+        "lesson",
+        "practice",
+        "assessment"
+      ]
+    },
+    {
+      "id": "clip_delivery_temperature_check_001",
+      "title": "Verifying product temperature at restaurant handover",
+      "module": "dispatch",
+      "sequenceNumber": 15,
+      "domain": "delivery",
+      "role": "Delivery Associate",
+      "processArea": "Restaurant Delivery Point",
+      "temperatureZone": "chilled",
+      "transcript": "At a restaurant delivery point, an associate probes a milk pouch with a thermometer before handing the crate over to kitchen staff.",
+      "description": "A delivery associate has arrived at a restaurant with chilled stock. The learner must decide when product temperature should be verified relative to handover.",
+      "expectedObservation": "The delivery associate checks the product temperature with a probe thermometer at the point of handover, before the restaurant accepts the delivery.",
+      "expectedDecision": "Verify the product temperature at the handover point before completing the delivery, not skip straight to handover.",
+      "competencyTags": [
+        "last_mile_cold_chain_verification",
+        "delivery_handover_discipline"
+      ],
+      "lessonContent": "The cold chain isn't complete until the product is confirmed to still be at the right temperature when it reaches the customer. A quick probe check at handover catches a cold-chain breach before it becomes the restaurant's problem.",
+      "assessmentQuestion": "When should product temperature be verified during a chilled delivery?",
+      "answerOptions": [
+        {
+          "id": "at_handover",
+          "label": "At the point of handover, before the restaurant accepts it",
+          "feedback": "Correct -- confirms the cold chain held all the way to the customer."
+        },
+        {
+          "id": "skip_check",
+          "label": "Skip it -- the vehicle was refrigerated, so it should be fine",
+          "feedback": "A refrigerated vehicle doesn't guarantee the product itself held temperature -- always verify at handover."
+        }
+      ],
+      "correctAnswer": "at_handover",
+      "videoUrl": null,
+      "thumbnailUrl": "asset://assets/micro_lessons/thumbnails/delivery_temperature_verification.jpg",
+      "fallbackVideoUrl": null,
+      "cloudflareVideoPath": "micro-lessons/warehouse/v1/dispatch/15-clip_delivery_temperature_check_001/delivery_temperature_verification.mp4",
+      "durationSeconds": 10,
+      "scoringRules": {
+        "maxPoints": 10,
+        "correctAnswerPoints": 10,
+        "evidenceSource": "systemObserved",
+        "technicalFailuresScoreable": false
+      },
+      "auditEvents": [
+        {
+          "eventType": "clipStarted",
+          "when": "onPlaybackStart",
+          "payload": {
+            "mode": "assessment"
+          }
+        },
+        {
+          "eventType": "clipAnswerSubmitted",
+          "when": "onAnswerSubmit",
+          "payload": {
+            "scoreable": true
+          }
+        }
+      ],
+      "modes": [
+        "lesson",
+        "practice",
+        "assessment"
+      ]
+    },
+    {
+      "id": "clip_delivery_shortage_dispute_001",
+      "title": "Resolving a shortage dispute at delivery",
+      "module": "dispatch",
+      "sequenceNumber": 16,
+      "domain": "delivery",
+      "role": "Delivery Associate",
+      "processArea": "Restaurant Delivery Point",
+      "temperatureZone": "ambient",
+      "transcript": "A restaurant staff member points at a crate, questioning the delivered quantity. Both the delivery associate and the staff member check their own handheld devices.",
+      "description": "A restaurant raises a shortage claim as a delivery is being unloaded. The learner must decide how the delivery associate should respond.",
+      "expectedObservation": "Both the delivery associate and the restaurant staff check their own device records against what was physically delivered.",
+      "expectedDecision": "Verify the shortage against the system record on the handheld device before agreeing to any adjustment, rather than taking the claim at face value or dismissing it outright.",
+      "competencyTags": [
+        "delivery_dispute_resolution",
+        "shortage_verification"
+      ],
+      "lessonContent": "A shortage claim at the door can be genuine or a miscount on either side. Checking the device record against what's physically there settles it accurately instead of the delivery associate having to just accept or reject the customer's word.",
+      "assessmentQuestion": "How should a delivery associate respond to a shortage claim at handover?",
+      "answerOptions": [
+        {
+          "id": "verify_device",
+          "label": "Check the device record against what was actually delivered",
+          "feedback": "Correct -- settles the dispute with the actual record instead of guesswork."
+        },
+        {
+          "id": "accept_claim",
+          "label": "Accept the customer's claim without checking",
+          "feedback": "This risks incorrect adjustments -- always verify against the device record first."
+        }
+      ],
+      "correctAnswer": "verify_device",
+      "videoUrl": null,
+      "thumbnailUrl": "asset://assets/micro_lessons/thumbnails/delivery_shortage_dispute.jpg",
+      "fallbackVideoUrl": null,
+      "cloudflareVideoPath": "micro-lessons/warehouse/v1/dispatch/16-clip_delivery_shortage_dispute_001/delivery_shortage_dispute.mp4",
+      "durationSeconds": 10,
+      "scoringRules": {
+        "maxPoints": 10,
+        "correctAnswerPoints": 10,
+        "evidenceSource": "systemObserved",
+        "technicalFailuresScoreable": false
+      },
+      "auditEvents": [
+        {
+          "eventType": "clipStarted",
+          "when": "onPlaybackStart",
+          "payload": {
+            "mode": "assessment"
+          }
+        },
+        {
+          "eventType": "clipAnswerSubmitted",
+          "when": "onAnswerSubmit",
+          "payload": {
+            "scoreable": true
+          }
+        }
+      ],
+      "modes": [
+        "lesson",
+        "practice",
+        "assessment"
+      ]
+    },
+    {
+      "id": "clip_returns_dock_intake_001",
+      "title": "Reconciling returned crates during dock intake",
+      "module": "dispatch",
+      "sequenceNumber": 17,
+      "domain": "supervisor",
+      "role": "Warehouse Operations Associate",
+      "processArea": "Returns Dock",
+      "temperatureZone": "ambient",
+      "transcript": "Associates unload a returns truck, stacking crates by type, while a handheld on a stand nearby shows a route status screen.",
+      "description": "A returns vehicle is being unloaded at the dock. The learner must decide when the returned crate count should be reconciled against the system record.",
+      "expectedObservation": "Associates check the returned crate count against the route's system record as crates are unloaded, not just stack them and move on.",
+      "expectedDecision": "Reconcile the returned crate count against the system record as part of unloading, before the return route is marked closed.",
+      "competencyTags": [
+        "returns_reconciliation",
+        "route_closure_accuracy"
+      ],
+      "lessonContent": "A route can only be closed out accurately once what actually came back matches what the system expects. Counting and reconciling crates while unloading catches a mismatch immediately, instead of discovering it after the route's already been closed.",
+      "assessmentQuestion": "When should returned crates be reconciled against the system record?",
+      "answerOptions": [
+        {
+          "id": "during_unloading",
+          "label": "While unloading, before the route is marked closed",
+          "feedback": "Correct -- catches a mismatch before the route is signed off as complete."
+        },
+        {
+          "id": "after_closure",
+          "label": "After the route is already closed, if something seems off",
+          "feedback": "This means the route was closed on unverified numbers -- reconcile during unloading instead."
+        }
+      ],
+      "correctAnswer": "during_unloading",
+      "videoUrl": null,
+      "thumbnailUrl": "asset://assets/micro_lessons/thumbnails/returns_dock_intake.jpg",
+      "fallbackVideoUrl": null,
+      "cloudflareVideoPath": "micro-lessons/warehouse/v1/dispatch/17-clip_returns_dock_intake_001/returns_dock_intake.mp4",
+      "durationSeconds": 10,
+      "scoringRules": {
+        "maxPoints": 10,
+        "correctAnswerPoints": 10,
+        "evidenceSource": "systemObserved",
+        "technicalFailuresScoreable": false
+      },
+      "auditEvents": [
+        {
+          "eventType": "clipStarted",
+          "when": "onPlaybackStart",
+          "payload": {
+            "mode": "assessment"
+          }
+        },
+        {
+          "eventType": "clipAnswerSubmitted",
+          "when": "onAnswerSubmit",
+          "payload": {
+            "scoreable": true
+          }
+        }
+      ],
+      "modes": [
+        "lesson",
+        "practice",
+        "assessment"
+      ]
+    },
+    {
+      "id": "clip_supervisor_settlement_exception_001",
+      "title": "Resolving a flagged settlement exception before route closure",
+      "module": "dispatch",
+      "sequenceNumber": 18,
+      "domain": "supervisor",
+      "role": "Shift Supervisor",
+      "processArea": "Settlement Desk",
+      "temperatureZone": "ambient",
+      "transcript": "A driver's handheld shows an exception flagged on the settlement screen. A supervisor points it out and works through it with the driver directly.",
+      "description": "A driver's settlement has an unresolved exception flagged on the device. The learner must decide what the supervisor should do about it.",
+      "expectedObservation": "The supervisor identifies the exception flagged on the driver's settlement screen and resolves it with the driver directly, rather than letting it sit in the pending queue.",
+      "expectedDecision": "Resolve a flagged settlement exception with the driver before the route is closed out, not leave it in the pending queue for later.",
+      "competencyTags": [
+        "settlement_exception_handling",
+        "route_closure_discipline"
+      ],
+      "lessonContent": "An exception left in the pending queue means a route that should be closed stays open, and the underlying discrepancy doesn't get answered. Working it through with the driver on the spot closes both the exception and the route cleanly.",
+      "assessmentQuestion": "What should happen when a driver's settlement shows a flagged exception?",
+      "answerOptions": [
+        {
+          "id": "resolve_with_driver",
+          "label": "Resolve it with the driver before closing the route",
+          "feedback": "Correct -- closes both the exception and the route cleanly."
+        },
+        {
+          "id": "leave_pending",
+          "label": "Leave it in the pending queue for later",
+          "feedback": "This leaves the route open and the discrepancy unanswered -- resolve it with the driver on the spot."
+        }
+      ],
+      "correctAnswer": "resolve_with_driver",
+      "videoUrl": null,
+      "thumbnailUrl": "asset://assets/micro_lessons/thumbnails/supervisor_settlement_exception.jpg",
+      "fallbackVideoUrl": null,
+      "cloudflareVideoPath": "micro-lessons/warehouse/v1/dispatch/18-clip_supervisor_settlement_exception_001/supervisor_settlement_exception.mp4",
       "durationSeconds": 10,
       "scoringRules": {
         "maxPoints": 10,
