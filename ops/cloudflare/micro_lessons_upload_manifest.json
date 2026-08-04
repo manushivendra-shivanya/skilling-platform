@@ -183,20 +183,20 @@
     {
       "clipId": "clip_delivery_handover_001",
       "module": "dispatch",
-      "sequenceNumber": 11,
+      "sequenceNumber": 14,
       "title": "Restaurant delivery handover",
       "localAssetPath": "apps/candidate-mobile/assets/micro_lessons/videos/delivery_restaurant_handover_scan.mp4",
-      "cloudflareObjectKey": "micro-lessons/warehouse/v1/dispatch/11-clip_delivery_handover_001/delivery_restaurant_handover_scan.mp4",
+      "cloudflareObjectKey": "micro-lessons/warehouse/v1/dispatch/14-clip_delivery_handover_001/delivery_restaurant_handover_scan.mp4",
       "contentType": "video/mp4",
       "cacheControl": "public, max-age=31536000, immutable"
     },
     {
       "clipId": "clip_returns_driver_settlement_001",
       "module": "dispatch",
-      "sequenceNumber": 12,
+      "sequenceNumber": 19,
       "title": "Driver empty-crate and cash settlement",
       "localAssetPath": "apps/candidate-mobile/assets/micro_lessons/videos/returns_driver_empty_crates_cash_submission.mp4",
-      "cloudflareObjectKey": "micro-lessons/warehouse/v1/dispatch/12-clip_returns_driver_settlement_001/returns_driver_empty_crates_cash_submission.mp4",
+      "cloudflareObjectKey": "micro-lessons/warehouse/v1/dispatch/19-clip_returns_driver_settlement_001/returns_driver_empty_crates_cash_submission.mp4",
       "contentType": "video/mp4",
       "cacheControl": "public, max-age=31536000, immutable"
     }

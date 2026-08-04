@@ -2615,6 +2615,45 @@ shaped to serve this purpose too (`purpose = 'employer_review'`,
   Catalogue is now 32 clips: 20 bundled, 11 CDN-only, 1 still-pending
   placeholder (`clip_returns_quarantine_001`, still the only truly empty
   slot).
+- **7 more new clips added, filling out the second half of dispatch with
+  scenarios the module didn't have before: pre-loading cold-chain checks,
+  post-loading security, route assignment, last-mile verification, and
+  returns/settlement handling.** Positioned logically, not appended,
+  requiring 6 existing dispatch clips to shift (5 with an R2 key change,
+  1 -- the still-empty `clip_returns_quarantine_001` placeholder -- just
+  a sequence-number bump with no object to move):
+  `clip_dispatch_frozen_dock_check_001` (verify the vehicle has reached
+  temperature before any crate is loaded, not partway through) slots
+  before perishable loading; `clip_dispatch_seal_verification_001`
+  (apply and confirm the tamper-evident seal right after loading, before
+  the vehicle leaves) slots after it; `clip_dispatch_route_assignment_001`
+  (confirm a driver's route assignment before departure, not after) sits
+  before the existing manifest-verification and missing-item-check
+  clips; `clip_delivery_temperature_check_001` (verify product
+  temperature at the handover point, not skip straight to handover) and
+  `clip_delivery_shortage_dispute_001` (settle a shortage claim against
+  the device record, not the customer's word alone) are the first two
+  `delivery`-domain clips beyond the existing restaurant handover;
+  `clip_returns_dock_intake_001` (reconcile returned crates against the
+  system record while unloading, before the route is marked closed) and
+  `clip_supervisor_settlement_exception_001` (resolve a flagged
+  settlement exception with the driver on the spot, not leave it in the
+  pending queue) round out returns handling before the existing driver
+  cash settlement clip. All 7 are CDN-only. Same upload-new-verify-
+  delete-old protocol: 12 R2 uploads total (3 done as R2-side
+  download-then-reupload copies for already-CDN-only clips whose local
+  master no longer exists locally, 9 as direct uploads), each verified
+  reachable with `curl -I`, before the 5 stale old-path objects were
+  deleted (confirmed 404).
+  Catalogue is now 39 clips: 20 bundled, 18 CDN-only, 1 still-pending
+  placeholder (`clip_returns_quarantine_001`, still the only truly empty
+  slot). Of 10 candidate videos supplied for this batch, 3 were skipped
+  as redundant with already-shipped scenarios: two "supervisor managing
+  dispatch" clips (one a sortation-floor overview, one an office
+  dashboard/control-room scene) added no decision point beyond the
+  existing merge/staging/bag-quality clips, and a driver cash-settlement
+  scene duplicated `clip_returns_driver_settlement_001`'s scenario
+  closely enough not to be worth a second slot.
 
 ## Target product architecture proposal
 

@@ -34,7 +34,7 @@ void main() {
 
     result.when(
       success: (clips) {
-        expect(clips, hasLength(32));
+        expect(clips, hasLength(39));
         expect(clips.every((clip) => clip.durationSeconds == 10), isTrue);
         expect(
           clips.map((clip) => clip.id).toSet(),
@@ -64,11 +64,18 @@ void main() {
             'clip_picking_fragile_item_stacking_001',
             'clip_dispatch_merge_001',
             'clip_dispatch_staging_001',
+            'clip_dispatch_frozen_dock_check_001',
             'clip_dispatch_loading_001',
             'clip_dispatch_perishable_loading_001',
+            'clip_dispatch_seal_verification_001',
             'clip_dispatch_manifest_verification_001',
+            'clip_dispatch_route_assignment_001',
             'clip_dispatch_missing_item_check_001',
             'clip_delivery_handover_001',
+            'clip_delivery_temperature_check_001',
+            'clip_delivery_shortage_dispute_001',
+            'clip_returns_dock_intake_001',
+            'clip_supervisor_settlement_exception_001',
             'clip_returns_driver_settlement_001',
             'clip_returns_quarantine_001',
           ]),
@@ -111,7 +118,7 @@ void main() {
                 .where((clip) => clip.module == MicroLessonModule.dispatch)
                 .toList()
               ..sort((a, b) => a.sequenceNumber.compareTo(b.sequenceNumber));
-        expect(dispatch, hasLength(13));
+        expect(dispatch, hasLength(20));
         expect(
           dispatch
               .take(4)
@@ -129,7 +136,7 @@ void main() {
           clips.where((clip) => clip.domain == MicroLessonDomain.safety),
           hasLength(1),
         );
-        // Eleven clips are CDN-only (no bundled local asset): hasVideoAsset
+        // Eighteen clips are CDN-only (no bundled local asset): hasVideoAsset
         // is false for them under the default, un-configured repository,
         // same as the still-pending returns_quarantine placeholder -- they
         // only resolve once a real cdnBaseUrl is configured, covered by
@@ -147,9 +154,16 @@ void main() {
             'clip_supervisor_bag_quality_check_001',
             'clip_picking_forklift_aisle_awareness_001',
             'clip_picking_fragile_item_stacking_001',
+            'clip_dispatch_frozen_dock_check_001',
             'clip_dispatch_perishable_loading_001',
+            'clip_dispatch_seal_verification_001',
             'clip_dispatch_manifest_verification_001',
+            'clip_dispatch_route_assignment_001',
             'clip_dispatch_missing_item_check_001',
+            'clip_delivery_temperature_check_001',
+            'clip_delivery_shortage_dispute_001',
+            'clip_returns_dock_intake_001',
+            'clip_supervisor_settlement_exception_001',
           ]),
         );
         expect(
