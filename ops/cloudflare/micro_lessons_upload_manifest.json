@@ -159,6 +159,46 @@
       "cloudflareObjectKey": "micro-lessons/warehouse/v1/dispatch/07-clip_returns_driver_settlement_001/returns_driver_empty_crates_cash_submission.mp4",
       "contentType": "video/mp4",
       "cacheControl": "public, max-age=31536000, immutable"
+    },
+    {
+      "clipId": "clip_receiving_bread_001",
+      "module": "inward",
+      "sequenceNumber": 8,
+      "title": "Bakery crate barcode scan",
+      "localAssetPath": "apps/candidate-mobile/assets/micro_lessons/videos/receiving_bread_crate_barcode_scan.mp4",
+      "cloudflareObjectKey": "micro-lessons/warehouse/v1/inward/08-clip_receiving_bread_001/receiving_bread_crate_barcode_scan.mp4",
+      "contentType": "video/mp4",
+      "cacheControl": "public, max-age=31536000, immutable"
+    },
+    {
+      "clipId": "clip_inspection_egg_001",
+      "module": "inward",
+      "sequenceNumber": 9,
+      "title": "Egg tray damage check",
+      "localAssetPath": "apps/candidate-mobile/assets/micro_lessons/videos/inspection_egg_tray_damage_check.mp4",
+      "cloudflareObjectKey": "micro-lessons/warehouse/v1/inward/09-clip_inspection_egg_001/inspection_egg_tray_damage_check.mp4",
+      "contentType": "video/mp4",
+      "cacheControl": "public, max-age=31536000, immutable"
+    },
+    {
+      "clipId": "clip_putaway_dairy_002",
+      "module": "inward",
+      "sequenceNumber": 10,
+      "title": "Storing dairy crates in cold storage",
+      "localAssetPath": "apps/candidate-mobile/assets/micro_lessons/videos/putaway_dairy_cold_storage_stacking.mp4",
+      "cloudflareObjectKey": "micro-lessons/warehouse/v1/inward/10-clip_putaway_dairy_002/putaway_dairy_cold_storage_stacking.mp4",
+      "contentType": "video/mp4",
+      "cacheControl": "public, max-age=31536000, immutable"
+    },
+    {
+      "clipId": "clip_processing_pallet_build_001",
+      "module": "processing",
+      "sequenceNumber": 3,
+      "title": "Building a mixed-item ambient pallet",
+      "localAssetPath": "apps/candidate-mobile/assets/micro_lessons/videos/processing_pallet_ambient_staple_build.mp4",
+      "cloudflareObjectKey": "micro-lessons/warehouse/v1/processing/03-clip_processing_pallet_build_001/processing_pallet_ambient_staple_build.mp4",
+      "contentType": "video/mp4",
+      "cacheControl": "public, max-age=31536000, immutable"
     }
   ]
 }

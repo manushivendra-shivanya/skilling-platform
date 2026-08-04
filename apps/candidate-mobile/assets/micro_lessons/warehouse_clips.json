@@ -1121,6 +1121,266 @@
       ],
       "cloudflareVideoPath": null,
       "fallbackVideoUrl": null
+    },
+    {
+      "id": "clip_receiving_bread_001",
+      "title": "Bakery crate barcode scan",
+      "module": "inward",
+      "sequenceNumber": 8,
+      "domain": "receiving",
+      "role": "Receiving Associate",
+      "processArea": "Receiving Dock",
+      "temperatureZone": "ambient",
+      "durationSeconds": 10,
+      "videoUrl": "asset://assets/micro_lessons/videos/receiving_bread_crate_barcode_scan.mp4",
+      "thumbnailUrl": "asset://assets/micro_lessons/thumbnails/receiving_bread_crate_barcode_scan.jpg",
+      "transcript": "The associate moves barcoded bread crates along the receiving conveyor, scanning each one before it continues down the line.",
+      "description": "Barcoded bakery crates arrive on the receiving conveyor. The learner must scan each crate individually rather than assuming visually identical crates match.",
+      "expectedObservation": "Each crate carries its own barcode label that must be scanned before it moves further down the line.",
+      "expectedDecision": "Scan every crate individually, even when several crates look identical.",
+      "competencyTags": [
+        "receiving_scan_discipline",
+        "bakery_handling"
+      ],
+      "lessonContent": "Skipping scans on visually identical crates is a common shortcut that lets mismatched or expired stock through undetected. Every crate gets its own scan, no exceptions.",
+      "assessmentQuestion": "Should the associate scan every crate, even if they look identical?",
+      "answerOptions": [
+        {
+          "id": "scan_each",
+          "label": "Yes, scan each crate individually",
+          "feedback": "Correct -- visually identical crates can still differ in batch or expiry."
+        },
+        {
+          "id": "scan_one",
+          "label": "No, one scan covers the batch",
+          "feedback": "This risks letting mismatched or expired stock through unchecked."
+        }
+      ],
+      "correctAnswer": "scan_each",
+      "scoringRules": {
+        "maxPoints": 10,
+        "correctAnswerPoints": 10,
+        "evidenceSource": "systemObserved",
+        "technicalFailuresScoreable": false
+      },
+      "auditEvents": [
+        {
+          "eventType": "clipStarted",
+          "when": "onPlaybackStart",
+          "payload": {
+            "mode": "assessment"
+          }
+        },
+        {
+          "eventType": "clipAnswerSubmitted",
+          "when": "onAnswerSubmit",
+          "payload": {
+            "scoreable": true
+          }
+        }
+      ],
+      "cloudflareVideoPath": "micro-lessons/warehouse/v1/inward/08-clip_receiving_bread_001/receiving_bread_crate_barcode_scan.mp4",
+      "fallbackVideoUrl": null,
+      "modes": [
+        "lesson",
+        "practice",
+        "assessment"
+      ]
+    },
+    {
+      "id": "clip_inspection_egg_001",
+      "title": "Egg tray damage check",
+      "module": "inward",
+      "sequenceNumber": 9,
+      "domain": "inspection",
+      "role": "Quality Associate",
+      "processArea": "Receiving Inspection",
+      "temperatureZone": "chilled",
+      "durationSeconds": 10,
+      "videoUrl": "asset://assets/micro_lessons/videos/inspection_egg_tray_damage_check.mp4",
+      "thumbnailUrl": "asset://assets/micro_lessons/thumbnails/inspection_egg_tray_damage_check.jpg",
+      "transcript": "A quality associate checks incoming egg trays for cracked or broken eggs before the crate is accepted.",
+      "description": "Incoming egg trays are checked at receiving inspection. The learner must decide what to do when a tray has visibly cracked eggs.",
+      "expectedObservation": "One or more eggs in the tray are visibly cracked or broken.",
+      "expectedDecision": "Remove and segregate the damaged tray rather than accepting the full crate as-is.",
+      "competencyTags": [
+        "quality_segregation",
+        "egg_damage_check"
+      ],
+      "lessonContent": "Cracked eggs are a food-safety risk and can also mark other product in the same crate. Damaged trays must be segregated at receiving, not passed downstream.",
+      "assessmentQuestion": "What should the associate do when a tray has cracked eggs?",
+      "answerOptions": [
+        {
+          "id": "segregate",
+          "label": "Segregate the damaged tray",
+          "feedback": "Correct -- prevents a food-safety risk from moving downstream."
+        },
+        {
+          "id": "accept_all",
+          "label": "Accept the full crate as normal",
+          "feedback": "Cracked eggs are a real safety and cross-contamination risk -- always segregate."
+        }
+      ],
+      "correctAnswer": "segregate",
+      "scoringRules": {
+        "maxPoints": 10,
+        "correctAnswerPoints": 10,
+        "evidenceSource": "systemObserved",
+        "technicalFailuresScoreable": false
+      },
+      "auditEvents": [
+        {
+          "eventType": "clipStarted",
+          "when": "onPlaybackStart",
+          "payload": {
+            "mode": "assessment"
+          }
+        },
+        {
+          "eventType": "clipAnswerSubmitted",
+          "when": "onAnswerSubmit",
+          "payload": {
+            "scoreable": true
+          }
+        }
+      ],
+      "cloudflareVideoPath": "micro-lessons/warehouse/v1/inward/09-clip_inspection_egg_001/inspection_egg_tray_damage_check.mp4",
+      "fallbackVideoUrl": null,
+      "modes": [
+        "lesson",
+        "practice",
+        "assessment"
+      ]
+    },
+    {
+      "id": "clip_putaway_dairy_002",
+      "title": "Storing dairy crates in cold storage",
+      "module": "inward",
+      "sequenceNumber": 10,
+      "domain": "putAway",
+      "role": "Warehouse Operations Associate",
+      "processArea": "Chilled Storage",
+      "temperatureZone": "chilled",
+      "durationSeconds": 10,
+      "videoUrl": "asset://assets/micro_lessons/videos/putaway_dairy_cold_storage_stacking.mp4",
+      "thumbnailUrl": "asset://assets/micro_lessons/thumbnails/putaway_dairy_cold_storage_stacking.jpg",
+      "transcript": "An associate carries stacked dairy crates into the cold room and stacks them while the chilled room door stands open.",
+      "description": "Dairy crates are stacked into cold storage. The learner must decide what to do about the open cold room door once the crates are in place.",
+      "expectedObservation": "The chilled room door stands open while crates are carried in and stacked.",
+      "expectedDecision": "Close the cold room door as soon as the crates are stacked, minimizing how long it stays open.",
+      "competencyTags": [
+        "cold_chain_door_discipline",
+        "dairy_putaway_accuracy"
+      ],
+      "lessonContent": "Every extra second a chilled room door stays open raises the internal temperature for all stock inside, not just the crates being handled. Storage trips should be planned to minimize open-door time.",
+      "assessmentQuestion": "What should the associate do once the crates are stacked in the cold room?",
+      "answerOptions": [
+        {
+          "id": "close_door",
+          "label": "Close the cold room door right away",
+          "feedback": "Correct -- minimizes temperature excursion for the rest of the chilled stock."
+        },
+        {
+          "id": "leave_open",
+          "label": "Leave it open for the next trip",
+          "feedback": "This raises the temperature for all stock in the room -- always close between trips."
+        }
+      ],
+      "correctAnswer": "close_door",
+      "scoringRules": {
+        "maxPoints": 10,
+        "correctAnswerPoints": 10,
+        "evidenceSource": "systemObserved",
+        "technicalFailuresScoreable": false
+      },
+      "auditEvents": [
+        {
+          "eventType": "clipStarted",
+          "when": "onPlaybackStart",
+          "payload": {
+            "mode": "assessment"
+          }
+        },
+        {
+          "eventType": "clipAnswerSubmitted",
+          "when": "onAnswerSubmit",
+          "payload": {
+            "scoreable": true
+          }
+        }
+      ],
+      "cloudflareVideoPath": "micro-lessons/warehouse/v1/inward/10-clip_putaway_dairy_002/putaway_dairy_cold_storage_stacking.mp4",
+      "fallbackVideoUrl": null,
+      "modes": [
+        "lesson",
+        "practice",
+        "assessment"
+      ]
+    },
+    {
+      "id": "clip_processing_pallet_build_001",
+      "title": "Building a mixed-item ambient pallet",
+      "module": "processing",
+      "sequenceNumber": 3,
+      "domain": "processing",
+      "role": "Warehouse Operations Associate",
+      "processArea": "Ambient Processing Area",
+      "temperatureZone": "ambient",
+      "durationSeconds": 10,
+      "videoUrl": "asset://assets/micro_lessons/videos/processing_pallet_ambient_staple_build.mp4",
+      "thumbnailUrl": "asset://assets/micro_lessons/thumbnails/processing_pallet_ambient_staple_build.jpg",
+      "transcript": "Two associates stack staple sacks and cartons onto a single pallet for onward staging.",
+      "description": "A mixed pallet of ambient staples is being built. The learner must decide how to sequence heavy sacks against lighter cartons.",
+      "expectedObservation": "Heavier sacks are placed at the base of the pallet, lighter cartons on top.",
+      "expectedDecision": "Keep the heaviest items at the bottom of the stack to keep the pallet stable and avoid crushing lighter goods.",
+      "competencyTags": [
+        "pallet_build_stability",
+        "load_sequencing"
+      ],
+      "lessonContent": "A pallet built top-heavy, or with heavy sacks resting on cartons, is a tip and crush risk in transit. Always sequence the heaviest, most crush-resistant items at the base.",
+      "assessmentQuestion": "Where should the heaviest sacks go when building a mixed pallet?",
+      "answerOptions": [
+        {
+          "id": "bottom",
+          "label": "At the base of the pallet",
+          "feedback": "Correct -- keeps the load stable and protects lighter items on top."
+        },
+        {
+          "id": "top",
+          "label": "On top, for easy access",
+          "feedback": "This risks crushing lighter cartons underneath and destabilizing the pallet."
+        }
+      ],
+      "correctAnswer": "bottom",
+      "scoringRules": {
+        "maxPoints": 10,
+        "correctAnswerPoints": 10,
+        "evidenceSource": "systemObserved",
+        "technicalFailuresScoreable": false
+      },
+      "auditEvents": [
+        {
+          "eventType": "clipStarted",
+          "when": "onPlaybackStart",
+          "payload": {
+            "mode": "assessment"
+          }
+        },
+        {
+          "eventType": "clipAnswerSubmitted",
+          "when": "onAnswerSubmit",
+          "payload": {
+            "scoreable": true
+          }
+        }
+      ],
+      "cloudflareVideoPath": "micro-lessons/warehouse/v1/processing/03-clip_processing_pallet_build_001/processing_pallet_ambient_staple_build.mp4",
+      "fallbackVideoUrl": null,
+      "modes": [
+        "lesson",
+        "practice",
+        "assessment"
+      ]
     }
   ]
 }
