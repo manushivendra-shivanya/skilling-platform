@@ -22,6 +22,7 @@ for (const item of manifest.items) {
     item.contentType,
     '--cache-control',
     item.cacheControl,
+    '--remote',
   ];
 
   console.log(`Uploading ${item.clipId} -> ${destination}`);

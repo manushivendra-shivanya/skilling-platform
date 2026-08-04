@@ -11,3 +11,6 @@ npm-debug.log*
 .env.*.local
 
 .DS_Store
+
+# Wrangler local dev state (created by `wrangler r2 object put` etc.)
+.wrangler/
