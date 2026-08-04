@@ -2516,6 +2516,34 @@ shaped to serve this purpose too (`purpose = 'employer_review'`,
   across every clip -- removed with the same `ffmpeg delogo` technique
   (`delogo=x=545:y=1110:w=100:h=100:show=0`) established for the first
   watermark removal pass.
+- A live on-device check during unrelated 3D-bridge testing caught 4 of
+  the 5 originally-shipped clips still carrying the watermark despite an
+  earlier "fixed" pass -- that pass evidently never reached those
+  specific files. Re-ran the same `delogo` cleanup against all 5
+  originally-shipped clips (only `putaway_ambient_staples_scan` was
+  already clean) and re-verified via frame extraction before shipping.
+- Catalogue grew again to 21 clips (4 new, real footage, all
+  watermark-verified): `clip_receiving_bread_001` (bakery crate scan
+  discipline), `clip_inspection_egg_001` (cracked-egg segregation),
+  `clip_putaway_dairy_002` (cold-room door discipline), and
+  `clip_processing_pallet_build_001` (heavy-item-at-base pallet
+  stability) -- appended at the end of their respective modules'
+  `sequenceNumber` range rather than renumbering existing entries, since
+  renumbering would have invalidated the `cloudflareVideoPath` keys
+  already uploaded to R2 for the existing 17 clips. Safe to do because
+  the Learn-tab UI groups by `domain`, not by module/sequence order.
+- `ops/cloudflare/upload_micro_lessons_to_r2.js` had a real bug: `wrangler
+  r2 object put` defaults to `--local` (a simulated Miniflare store)
+  unless `--remote` is passed. Every "successful" upload from the first
+  run silently went to a local-only store and never reached the real
+  bucket -- caught by fetching a just-uploaded object back with
+  `wrangler r2 object get --remote` and getting "The specified key does
+  not exist." Fixed by adding `--remote`; all 20 video-backed clips are
+  now genuinely uploaded to the real `flora-micro-lessons` R2 bucket
+  (verified by round-tripping a downloaded object against its local
+  source, byte-for-byte identical). The bucket is not yet publicly
+  accessible -- no custom domain attached -- so `MICRO_LESSON_CDN_BASE_URL`
+  remains unset and the app still serves bundled local assets.
 
 ## Target product architecture proposal
 

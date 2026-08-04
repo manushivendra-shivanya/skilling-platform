@@ -34,7 +34,7 @@ void main() {
 
     result.when(
       success: (clips) {
-        expect(clips, hasLength(17));
+        expect(clips, hasLength(21));
         expect(clips.every((clip) => clip.durationSeconds == 10), isTrue);
         expect(
           clips.map((clip) => clip.id).toSet(),
@@ -43,11 +43,15 @@ void main() {
             'clip_receiving_supplier_001',
             'clip_receiving_fnv_count_001',
             'clip_receiving_fnv_001',
+            'clip_receiving_bread_001',
             'clip_inspection_fnv_001',
+            'clip_inspection_egg_001',
             'clip_putaway_dairy_001',
+            'clip_putaway_dairy_002',
             'clip_putaway_ambient_001',
             'clip_processing_moq_001',
             'clip_processing_fnv_packing_001',
+            'clip_processing_pallet_build_001',
             'clip_picking_frozen_001',
             'clip_picking_ambient_001',
             'clip_dispatch_merge_001',
@@ -60,15 +64,13 @@ void main() {
         );
         expect(clips.first.module, MicroLessonModule.inward);
         expect(clips.first.sequenceNumber, 1);
-        expect(clips.last.module, MicroLessonModule.dispatch);
-        expect(clips.last.sequenceNumber, 8);
         expect(
           clips.where((clip) => clip.module == MicroLessonModule.inward),
-          hasLength(7),
+          hasLength(10),
         );
         expect(
           clips.where((clip) => clip.module == MicroLessonModule.processing),
-          hasLength(2),
+          hasLength(3),
         );
         expect(
           clips.where((clip) => clip.module == MicroLessonModule.dispatch),
@@ -78,9 +80,9 @@ void main() {
           clips
               .where((clip) => clip.domain == MicroLessonDomain.putAway)
               .length,
-          greaterThanOrEqualTo(2),
+          greaterThanOrEqualTo(3),
         );
-        expect(clips.where((clip) => clip.hasVideoAsset), hasLength(16));
+        expect(clips.where((clip) => clip.hasVideoAsset), hasLength(20));
         expect(
           clips.where((clip) => !clip.hasVideoAsset).single.id,
           'clip_returns_quarantine_001',
