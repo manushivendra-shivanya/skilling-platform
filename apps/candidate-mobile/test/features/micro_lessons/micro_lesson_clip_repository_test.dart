@@ -34,7 +34,7 @@ void main() {
 
     result.when(
       success: (clips) {
-        expect(clips, hasLength(26));
+        expect(clips, hasLength(29));
         expect(clips.every((clip) => clip.durationSeconds == 10), isTrue);
         expect(
           clips.map((clip) => clip.id).toSet(),
@@ -59,28 +59,62 @@ void main() {
             'clip_picking_frozen_001',
             'clip_picking_ambient_001',
             'clip_picking_forklift_aisle_awareness_001',
+            'clip_picking_fragile_item_stacking_001',
             'clip_dispatch_merge_001',
             'clip_dispatch_staging_001',
             'clip_dispatch_loading_001',
+            'clip_dispatch_perishable_loading_001',
+            'clip_dispatch_manifest_verification_001',
             'clip_delivery_handover_001',
             'clip_returns_driver_settlement_001',
             'clip_returns_quarantine_001',
           ]),
         );
+        // Operational sequence tells a complete story within each module:
+        // inward = receive everything, then inspect, then put away.
         expect(clips.first.module, MicroLessonModule.inward);
         expect(clips.first.sequenceNumber, 1);
+        final inward =
+            clips
+                .where((clip) => clip.module == MicroLessonModule.inward)
+                .toList()
+              ..sort((a, b) => a.sequenceNumber.compareTo(b.sequenceNumber));
+        expect(inward, hasLength(10));
+        expect(inward.map((clip) => clip.domain), [
+          MicroLessonDomain.receiving,
+          MicroLessonDomain.receiving,
+          MicroLessonDomain.receiving,
+          MicroLessonDomain.receiving,
+          MicroLessonDomain.receiving,
+          MicroLessonDomain.inspection,
+          MicroLessonDomain.inspection,
+          MicroLessonDomain.putAway,
+          MicroLessonDomain.putAway,
+          MicroLessonDomain.putAway,
+        ]);
+        // processing = PPE on at entry, then the processing tasks.
+        final processing =
+            clips
+                .where((clip) => clip.module == MicroLessonModule.processing)
+                .toList()
+              ..sort((a, b) => a.sequenceNumber.compareTo(b.sequenceNumber));
+        expect(processing, hasLength(7));
+        expect(processing.first.domain, MicroLessonDomain.safety);
+        // dispatch = pick, then merge/stage/load, then depart, then
+        // settle returns.
+        final dispatch =
+            clips
+                .where((clip) => clip.module == MicroLessonModule.dispatch)
+                .toList()
+              ..sort((a, b) => a.sequenceNumber.compareTo(b.sequenceNumber));
+        expect(dispatch, hasLength(12));
         expect(
-          clips.where((clip) => clip.module == MicroLessonModule.inward),
-          hasLength(10),
+          dispatch
+              .take(4)
+              .every((clip) => clip.domain == MicroLessonDomain.picking),
+          isTrue,
         );
-        expect(
-          clips.where((clip) => clip.module == MicroLessonModule.processing),
-          hasLength(7),
-        );
-        expect(
-          clips.where((clip) => clip.module == MicroLessonModule.dispatch),
-          hasLength(9),
-        );
+        expect(dispatch.last.id, 'clip_returns_quarantine_001');
         expect(
           clips
               .where((clip) => clip.domain == MicroLessonDomain.putAway)
@@ -91,11 +125,11 @@ void main() {
           clips.where((clip) => clip.domain == MicroLessonDomain.safety),
           hasLength(1),
         );
-        // Five clips this batch are CDN-only (no bundled local asset):
-        // hasVideoAsset is false for them under the default, un-configured
-        // repository, same as the still-pending returns_quarantine
-        // placeholder -- they only resolve once a real cdnBaseUrl is
-        // configured, covered by the CDN-resolution test below.
+        // Eight clips are CDN-only (no bundled local asset): hasVideoAsset
+        // is false for them under the default, un-configured repository,
+        // same as the still-pending returns_quarantine placeholder -- they
+        // only resolve once a real cdnBaseUrl is configured, covered by
+        // the CDN-resolution test below.
         expect(clips.where((clip) => clip.hasVideoAsset), hasLength(20));
         expect(
           clips.where((clip) => !clip.hasVideoAsset).map((clip) => clip.id),
@@ -103,9 +137,12 @@ void main() {
             'clip_returns_quarantine_001',
             'clip_processing_vegetable_staging_001',
             'clip_processing_sack_weight_check_001',
-            'clip_picking_forklift_aisle_awareness_001',
-            'clip_safety_ppe_entry_001',
             'clip_processing_produce_bagging_001',
+            'clip_safety_ppe_entry_001',
+            'clip_picking_forklift_aisle_awareness_001',
+            'clip_picking_fragile_item_stacking_001',
+            'clip_dispatch_perishable_loading_001',
+            'clip_dispatch_manifest_verification_001',
           ]),
         );
         expect(
@@ -172,7 +209,7 @@ void main() {
             cdnOnly.videoUrl,
             'https://cdn.example.com/training/'
             'micro-lessons/warehouse/v1/processing/'
-            '04-clip_processing_vegetable_staging_001/'
+            '05-clip_processing_vegetable_staging_001/'
             'processing_vegetable_staging.mp4',
           );
           expect(cdnOnly.fallbackVideoUrl, isNull);

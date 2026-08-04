@@ -2568,6 +2568,32 @@ shaped to serve this purpose too (`purpose = 'employer_review'`,
   have no `fallbackVideoUrl` since there was never a bundled copy.
   Catalogue is now 26 clips, 20 with a bundled local asset (unchanged
   from before) + 5 CDN-only + 1 still-pending placeholder.
+- **Full catalogue re-sequenced into a coherent operational narrative.**
+  The append-only policy from the previous two batches (new clips always
+  went to the end of their module's `sequenceNumber` range, to avoid
+  touching already-uploaded R2 keys) left the story out of order --
+  e.g. `clip_receiving_bread_001` landed after the inspection and
+  put-away clips instead of with the other receiving clips. Fixed
+  properly: every module was re-sequenced into its real operational
+  order (inward: receive everything -> inspect -> put away; processing:
+  PPE on at entry -> processing tasks; dispatch: pick -> merge/stage/load
+  -> depart -> deliver -> settle returns), which meant 18 already-live
+  R2 objects needed their key changed. Re-uploaded all 18 to their new
+  path first, verified reachable, only then deleted the 18 stale old-path
+  objects -- confirmed via direct `curl -I` that a sample new path
+  returns 200 and its corresponding old path returns 404. No clip's
+  `cloudflareVideoPath` was left dangling at any point.
+- 3 more new clips added in the same pass, correctly positioned in the
+  new sequence rather than appended: `clip_picking_fragile_item_stacking_001`
+  (fragile items go on top of the trolley load, not underneath),
+  `clip_dispatch_perishable_loading_001` (load perishables into the
+  reefer promptly, don't stage them on the open dock), and
+  `clip_dispatch_manifest_verification_001` (supervisor confirms the
+  load against the manifest before the vehicle departs, not after). All
+  CDN-only, same as the previous batch.
+  Catalogue is now 29 clips: 20 bundled, 8 CDN-only, 1 still-pending
+  placeholder (`clip_returns_quarantine_001`, still the only truly empty
+  slot).
 
 ## Target product architecture proposal
 

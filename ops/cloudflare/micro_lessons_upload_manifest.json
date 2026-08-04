@@ -41,52 +41,92 @@
       "cacheControl": "public, max-age=31536000, immutable"
     },
     {
-      "clipId": "clip_inspection_fnv_001",
+      "clipId": "clip_receiving_bread_001",
       "module": "inward",
       "sequenceNumber": 5,
+      "title": "Bakery crate barcode scan",
+      "localAssetPath": "apps/candidate-mobile/assets/micro_lessons/videos/receiving_bread_crate_barcode_scan.mp4",
+      "cloudflareObjectKey": "micro-lessons/warehouse/v1/inward/05-clip_receiving_bread_001/receiving_bread_crate_barcode_scan.mp4",
+      "contentType": "video/mp4",
+      "cacheControl": "public, max-age=31536000, immutable"
+    },
+    {
+      "clipId": "clip_inspection_fnv_001",
+      "module": "inward",
+      "sequenceNumber": 6,
       "title": "FNV damage segregation",
       "localAssetPath": "apps/candidate-mobile/assets/micro_lessons/videos/inspection_fnv_quality_check.mp4",
-      "cloudflareObjectKey": "micro-lessons/warehouse/v1/inward/05-clip_inspection_fnv_001/inspection_fnv_quality_check.mp4",
+      "cloudflareObjectKey": "micro-lessons/warehouse/v1/inward/06-clip_inspection_fnv_001/inspection_fnv_quality_check.mp4",
+      "contentType": "video/mp4",
+      "cacheControl": "public, max-age=31536000, immutable"
+    },
+    {
+      "clipId": "clip_inspection_egg_001",
+      "module": "inward",
+      "sequenceNumber": 7,
+      "title": "Egg tray damage check",
+      "localAssetPath": "apps/candidate-mobile/assets/micro_lessons/videos/inspection_egg_tray_damage_check.mp4",
+      "cloudflareObjectKey": "micro-lessons/warehouse/v1/inward/07-clip_inspection_egg_001/inspection_egg_tray_damage_check.mp4",
       "contentType": "video/mp4",
       "cacheControl": "public, max-age=31536000, immutable"
     },
     {
       "clipId": "clip_putaway_dairy_001",
       "module": "inward",
-      "sequenceNumber": 6,
+      "sequenceNumber": 8,
       "title": "Chilled dairy immediate put-away",
       "localAssetPath": "apps/candidate-mobile/assets/micro_lessons/videos/putaway_dairy_immediate_stock.mp4",
-      "cloudflareObjectKey": "micro-lessons/warehouse/v1/inward/06-clip_putaway_dairy_001/putaway_dairy_immediate_stock.mp4",
+      "cloudflareObjectKey": "micro-lessons/warehouse/v1/inward/08-clip_putaway_dairy_001/putaway_dairy_immediate_stock.mp4",
+      "contentType": "video/mp4",
+      "cacheControl": "public, max-age=31536000, immutable"
+    },
+    {
+      "clipId": "clip_putaway_dairy_002",
+      "module": "inward",
+      "sequenceNumber": 9,
+      "title": "Storing dairy crates in cold storage",
+      "localAssetPath": "apps/candidate-mobile/assets/micro_lessons/videos/putaway_dairy_cold_storage_stacking.mp4",
+      "cloudflareObjectKey": "micro-lessons/warehouse/v1/inward/09-clip_putaway_dairy_002/putaway_dairy_cold_storage_stacking.mp4",
       "contentType": "video/mp4",
       "cacheControl": "public, max-age=31536000, immutable"
     },
     {
       "clipId": "clip_putaway_ambient_001",
       "module": "inward",
-      "sequenceNumber": 7,
+      "sequenceNumber": 10,
       "title": "Ambient staples location scan",
       "localAssetPath": "apps/candidate-mobile/assets/micro_lessons/videos/putaway_ambient_staples_scan.mp4",
-      "cloudflareObjectKey": "micro-lessons/warehouse/v1/inward/07-clip_putaway_ambient_001/putaway_ambient_staples_scan.mp4",
+      "cloudflareObjectKey": "micro-lessons/warehouse/v1/inward/10-clip_putaway_ambient_001/putaway_ambient_staples_scan.mp4",
       "contentType": "video/mp4",
       "cacheControl": "public, max-age=31536000, immutable"
     },
     {
       "clipId": "clip_processing_fnv_packing_001",
       "module": "processing",
-      "sequenceNumber": 1,
+      "sequenceNumber": 2,
       "title": "FNV paper bag packing",
       "localAssetPath": "apps/candidate-mobile/assets/micro_lessons/videos/processing_fnv_paper_bag_packing.mp4",
-      "cloudflareObjectKey": "micro-lessons/warehouse/v1/processing/01-clip_processing_fnv_packing_001/processing_fnv_paper_bag_packing.mp4",
+      "cloudflareObjectKey": "micro-lessons/warehouse/v1/processing/02-clip_processing_fnv_packing_001/processing_fnv_paper_bag_packing.mp4",
       "contentType": "video/mp4",
       "cacheControl": "public, max-age=31536000, immutable"
     },
     {
       "clipId": "clip_processing_moq_001",
       "module": "processing",
-      "sequenceNumber": 2,
+      "sequenceNumber": 3,
       "title": "MOQ crate preparation",
       "localAssetPath": "apps/candidate-mobile/assets/micro_lessons/videos/processing_moq_crate_preparation.mp4",
-      "cloudflareObjectKey": "micro-lessons/warehouse/v1/processing/02-clip_processing_moq_001/processing_moq_crate_preparation.mp4",
+      "cloudflareObjectKey": "micro-lessons/warehouse/v1/processing/03-clip_processing_moq_001/processing_moq_crate_preparation.mp4",
+      "contentType": "video/mp4",
+      "cacheControl": "public, max-age=31536000, immutable"
+    },
+    {
+      "clipId": "clip_processing_pallet_build_001",
+      "module": "processing",
+      "sequenceNumber": 4,
+      "title": "Building a mixed-item ambient pallet",
+      "localAssetPath": "apps/candidate-mobile/assets/micro_lessons/videos/processing_pallet_ambient_staple_build.mp4",
+      "cloudflareObjectKey": "micro-lessons/warehouse/v1/processing/04-clip_processing_pallet_build_001/processing_pallet_ambient_staple_build.mp4",
       "contentType": "video/mp4",
       "cacheControl": "public, max-age=31536000, immutable"
     },
@@ -113,90 +153,50 @@
     {
       "clipId": "clip_dispatch_merge_001",
       "module": "dispatch",
-      "sequenceNumber": 3,
+      "sequenceNumber": 5,
       "title": "Order-level crate merge",
       "localAssetPath": "apps/candidate-mobile/assets/micro_lessons/videos/dispatch_order_level_merge_staging.mp4",
-      "cloudflareObjectKey": "micro-lessons/warehouse/v1/dispatch/03-clip_dispatch_merge_001/dispatch_order_level_merge_staging.mp4",
+      "cloudflareObjectKey": "micro-lessons/warehouse/v1/dispatch/05-clip_dispatch_merge_001/dispatch_order_level_merge_staging.mp4",
       "contentType": "video/mp4",
       "cacheControl": "public, max-age=31536000, immutable"
     },
     {
       "clipId": "clip_dispatch_staging_001",
       "module": "dispatch",
-      "sequenceNumber": 4,
+      "sequenceNumber": 6,
       "title": "Staging order completion check",
       "localAssetPath": "apps/candidate-mobile/assets/micro_lessons/videos/dispatch_staging_order_accumulation_check.mp4",
-      "cloudflareObjectKey": "micro-lessons/warehouse/v1/dispatch/04-clip_dispatch_staging_001/dispatch_staging_order_accumulation_check.mp4",
+      "cloudflareObjectKey": "micro-lessons/warehouse/v1/dispatch/06-clip_dispatch_staging_001/dispatch_staging_order_accumulation_check.mp4",
       "contentType": "video/mp4",
       "cacheControl": "public, max-age=31536000, immutable"
     },
     {
       "clipId": "clip_dispatch_loading_001",
       "module": "dispatch",
-      "sequenceNumber": 5,
+      "sequenceNumber": 7,
       "title": "Ambient small-vehicle crate loading",
       "localAssetPath": "apps/candidate-mobile/assets/micro_lessons/videos/dispatch_ambient_bolero_crate_loading.mp4",
-      "cloudflareObjectKey": "micro-lessons/warehouse/v1/dispatch/05-clip_dispatch_loading_001/dispatch_ambient_bolero_crate_loading.mp4",
+      "cloudflareObjectKey": "micro-lessons/warehouse/v1/dispatch/07-clip_dispatch_loading_001/dispatch_ambient_bolero_crate_loading.mp4",
       "contentType": "video/mp4",
       "cacheControl": "public, max-age=31536000, immutable"
     },
     {
       "clipId": "clip_delivery_handover_001",
       "module": "dispatch",
-      "sequenceNumber": 6,
+      "sequenceNumber": 10,
       "title": "Restaurant delivery handover",
       "localAssetPath": "apps/candidate-mobile/assets/micro_lessons/videos/delivery_restaurant_handover_scan.mp4",
-      "cloudflareObjectKey": "micro-lessons/warehouse/v1/dispatch/06-clip_delivery_handover_001/delivery_restaurant_handover_scan.mp4",
+      "cloudflareObjectKey": "micro-lessons/warehouse/v1/dispatch/10-clip_delivery_handover_001/delivery_restaurant_handover_scan.mp4",
       "contentType": "video/mp4",
       "cacheControl": "public, max-age=31536000, immutable"
     },
     {
       "clipId": "clip_returns_driver_settlement_001",
       "module": "dispatch",
-      "sequenceNumber": 7,
+      "sequenceNumber": 11,
       "title": "Driver empty-crate and cash settlement",
       "localAssetPath": "apps/candidate-mobile/assets/micro_lessons/videos/returns_driver_empty_crates_cash_submission.mp4",
-      "cloudflareObjectKey": "micro-lessons/warehouse/v1/dispatch/07-clip_returns_driver_settlement_001/returns_driver_empty_crates_cash_submission.mp4",
-      "contentType": "video/mp4",
-      "cacheControl": "public, max-age=31536000, immutable"
-    },
-    {
-      "clipId": "clip_receiving_bread_001",
-      "module": "inward",
-      "sequenceNumber": 8,
-      "title": "Bakery crate barcode scan",
-      "localAssetPath": "apps/candidate-mobile/assets/micro_lessons/videos/receiving_bread_crate_barcode_scan.mp4",
-      "cloudflareObjectKey": "micro-lessons/warehouse/v1/inward/08-clip_receiving_bread_001/receiving_bread_crate_barcode_scan.mp4",
-      "contentType": "video/mp4",
-      "cacheControl": "public, max-age=31536000, immutable"
-    },
-    {
-      "clipId": "clip_inspection_egg_001",
-      "module": "inward",
-      "sequenceNumber": 9,
-      "title": "Egg tray damage check",
-      "localAssetPath": "apps/candidate-mobile/assets/micro_lessons/videos/inspection_egg_tray_damage_check.mp4",
-      "cloudflareObjectKey": "micro-lessons/warehouse/v1/inward/09-clip_inspection_egg_001/inspection_egg_tray_damage_check.mp4",
-      "contentType": "video/mp4",
-      "cacheControl": "public, max-age=31536000, immutable"
-    },
-    {
-      "clipId": "clip_putaway_dairy_002",
-      "module": "inward",
-      "sequenceNumber": 10,
-      "title": "Storing dairy crates in cold storage",
-      "localAssetPath": "apps/candidate-mobile/assets/micro_lessons/videos/putaway_dairy_cold_storage_stacking.mp4",
-      "cloudflareObjectKey": "micro-lessons/warehouse/v1/inward/10-clip_putaway_dairy_002/putaway_dairy_cold_storage_stacking.mp4",
-      "contentType": "video/mp4",
-      "cacheControl": "public, max-age=31536000, immutable"
-    },
-    {
-      "clipId": "clip_processing_pallet_build_001",
-      "module": "processing",
-      "sequenceNumber": 3,
-      "title": "Building a mixed-item ambient pallet",
-      "localAssetPath": "apps/candidate-mobile/assets/micro_lessons/videos/processing_pallet_ambient_staple_build.mp4",
-      "cloudflareObjectKey": "micro-lessons/warehouse/v1/processing/03-clip_processing_pallet_build_001/processing_pallet_ambient_staple_build.mp4",
+      "cloudflareObjectKey": "micro-lessons/warehouse/v1/dispatch/11-clip_returns_driver_settlement_001/returns_driver_empty_crates_cash_submission.mp4",
       "contentType": "video/mp4",
       "cacheControl": "public, max-age=31536000, immutable"
     }

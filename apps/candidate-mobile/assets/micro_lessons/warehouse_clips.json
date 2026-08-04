@@ -265,10 +265,75 @@
       "fallbackVideoUrl": null
     },
     {
+      "id": "clip_receiving_bread_001",
+      "title": "Bakery crate barcode scan",
+      "module": "inward",
+      "sequenceNumber": 5,
+      "domain": "receiving",
+      "role": "Receiving Associate",
+      "processArea": "Receiving Dock",
+      "temperatureZone": "ambient",
+      "durationSeconds": 10,
+      "videoUrl": "asset://assets/micro_lessons/videos/receiving_bread_crate_barcode_scan.mp4",
+      "thumbnailUrl": "asset://assets/micro_lessons/thumbnails/receiving_bread_crate_barcode_scan.jpg",
+      "transcript": "The associate moves barcoded bread crates along the receiving conveyor, scanning each one before it continues down the line.",
+      "description": "Barcoded bakery crates arrive on the receiving conveyor. The learner must scan each crate individually rather than assuming visually identical crates match.",
+      "expectedObservation": "Each crate carries its own barcode label that must be scanned before it moves further down the line.",
+      "expectedDecision": "Scan every crate individually, even when several crates look identical.",
+      "competencyTags": [
+        "receiving_scan_discipline",
+        "bakery_handling"
+      ],
+      "lessonContent": "Skipping scans on visually identical crates is a common shortcut that lets mismatched or expired stock through undetected. Every crate gets its own scan, no exceptions.",
+      "assessmentQuestion": "Should the associate scan every crate, even if they look identical?",
+      "answerOptions": [
+        {
+          "id": "scan_each",
+          "label": "Yes, scan each crate individually",
+          "feedback": "Correct -- visually identical crates can still differ in batch or expiry."
+        },
+        {
+          "id": "scan_one",
+          "label": "No, one scan covers the batch",
+          "feedback": "This risks letting mismatched or expired stock through unchecked."
+        }
+      ],
+      "correctAnswer": "scan_each",
+      "scoringRules": {
+        "maxPoints": 10,
+        "correctAnswerPoints": 10,
+        "evidenceSource": "systemObserved",
+        "technicalFailuresScoreable": false
+      },
+      "auditEvents": [
+        {
+          "eventType": "clipStarted",
+          "when": "onPlaybackStart",
+          "payload": {
+            "mode": "assessment"
+          }
+        },
+        {
+          "eventType": "clipAnswerSubmitted",
+          "when": "onAnswerSubmit",
+          "payload": {
+            "scoreable": true
+          }
+        }
+      ],
+      "cloudflareVideoPath": "micro-lessons/warehouse/v1/inward/05-clip_receiving_bread_001/receiving_bread_crate_barcode_scan.mp4",
+      "fallbackVideoUrl": null,
+      "modes": [
+        "lesson",
+        "practice",
+        "assessment"
+      ]
+    },
+    {
       "id": "clip_inspection_fnv_001",
       "title": "FNV damage segregation",
       "module": "inward",
-      "sequenceNumber": 5,
+      "sequenceNumber": 6,
       "domain": "inspection",
       "role": "Quality Associate",
       "processArea": "FNV Inspection Table",
@@ -327,15 +392,80 @@
           }
         }
       ],
-      "cloudflareVideoPath": "micro-lessons/warehouse/v1/inward/05-clip_inspection_fnv_001/inspection_fnv_quality_check.mp4",
+      "cloudflareVideoPath": "micro-lessons/warehouse/v1/inward/06-clip_inspection_fnv_001/inspection_fnv_quality_check.mp4",
       "fallbackVideoUrl": null
+    },
+    {
+      "id": "clip_inspection_egg_001",
+      "title": "Egg tray damage check",
+      "module": "inward",
+      "sequenceNumber": 7,
+      "domain": "inspection",
+      "role": "Quality Associate",
+      "processArea": "Receiving Inspection",
+      "temperatureZone": "chilled",
+      "durationSeconds": 10,
+      "videoUrl": "asset://assets/micro_lessons/videos/inspection_egg_tray_damage_check.mp4",
+      "thumbnailUrl": "asset://assets/micro_lessons/thumbnails/inspection_egg_tray_damage_check.jpg",
+      "transcript": "A quality associate checks incoming egg trays for cracked or broken eggs before the crate is accepted.",
+      "description": "Incoming egg trays are checked at receiving inspection. The learner must decide what to do when a tray has visibly cracked eggs.",
+      "expectedObservation": "One or more eggs in the tray are visibly cracked or broken.",
+      "expectedDecision": "Remove and segregate the damaged tray rather than accepting the full crate as-is.",
+      "competencyTags": [
+        "quality_segregation",
+        "egg_damage_check"
+      ],
+      "lessonContent": "Cracked eggs are a food-safety risk and can also mark other product in the same crate. Damaged trays must be segregated at receiving, not passed downstream.",
+      "assessmentQuestion": "What should the associate do when a tray has cracked eggs?",
+      "answerOptions": [
+        {
+          "id": "segregate",
+          "label": "Segregate the damaged tray",
+          "feedback": "Correct -- prevents a food-safety risk from moving downstream."
+        },
+        {
+          "id": "accept_all",
+          "label": "Accept the full crate as normal",
+          "feedback": "Cracked eggs are a real safety and cross-contamination risk -- always segregate."
+        }
+      ],
+      "correctAnswer": "segregate",
+      "scoringRules": {
+        "maxPoints": 10,
+        "correctAnswerPoints": 10,
+        "evidenceSource": "systemObserved",
+        "technicalFailuresScoreable": false
+      },
+      "auditEvents": [
+        {
+          "eventType": "clipStarted",
+          "when": "onPlaybackStart",
+          "payload": {
+            "mode": "assessment"
+          }
+        },
+        {
+          "eventType": "clipAnswerSubmitted",
+          "when": "onAnswerSubmit",
+          "payload": {
+            "scoreable": true
+          }
+        }
+      ],
+      "cloudflareVideoPath": "micro-lessons/warehouse/v1/inward/07-clip_inspection_egg_001/inspection_egg_tray_damage_check.mp4",
+      "fallbackVideoUrl": null,
+      "modes": [
+        "lesson",
+        "practice",
+        "assessment"
+      ]
     },
     {
       "id": "clip_putaway_dairy_001",
       "title": "Chilled dairy immediate put-away",
       "module": "inward",
-      "sequenceNumber": 6,
-      "domain": "put-away",
+      "sequenceNumber": 8,
+      "domain": "putAway",
       "role": "Put-away Associate",
       "processArea": "Chilled Storage",
       "temperatureZone": "dairy",
@@ -393,15 +523,80 @@
           }
         }
       ],
-      "cloudflareVideoPath": "micro-lessons/warehouse/v1/inward/06-clip_putaway_dairy_001/putaway_dairy_immediate_stock.mp4",
+      "cloudflareVideoPath": "micro-lessons/warehouse/v1/inward/08-clip_putaway_dairy_001/putaway_dairy_immediate_stock.mp4",
       "fallbackVideoUrl": null
+    },
+    {
+      "id": "clip_putaway_dairy_002",
+      "title": "Storing dairy crates in cold storage",
+      "module": "inward",
+      "sequenceNumber": 9,
+      "domain": "putAway",
+      "role": "Warehouse Operations Associate",
+      "processArea": "Chilled Storage",
+      "temperatureZone": "chilled",
+      "durationSeconds": 10,
+      "videoUrl": "asset://assets/micro_lessons/videos/putaway_dairy_cold_storage_stacking.mp4",
+      "thumbnailUrl": "asset://assets/micro_lessons/thumbnails/putaway_dairy_cold_storage_stacking.jpg",
+      "transcript": "An associate carries stacked dairy crates into the cold room and stacks them while the chilled room door stands open.",
+      "description": "Dairy crates are stacked into cold storage. The learner must decide what to do about the open cold room door once the crates are in place.",
+      "expectedObservation": "The chilled room door stands open while crates are carried in and stacked.",
+      "expectedDecision": "Close the cold room door as soon as the crates are stacked, minimizing how long it stays open.",
+      "competencyTags": [
+        "cold_chain_door_discipline",
+        "dairy_putaway_accuracy"
+      ],
+      "lessonContent": "Every extra second a chilled room door stays open raises the internal temperature for all stock inside, not just the crates being handled. Storage trips should be planned to minimize open-door time.",
+      "assessmentQuestion": "What should the associate do once the crates are stacked in the cold room?",
+      "answerOptions": [
+        {
+          "id": "close_door",
+          "label": "Close the cold room door right away",
+          "feedback": "Correct -- minimizes temperature excursion for the rest of the chilled stock."
+        },
+        {
+          "id": "leave_open",
+          "label": "Leave it open for the next trip",
+          "feedback": "This raises the temperature for all stock in the room -- always close between trips."
+        }
+      ],
+      "correctAnswer": "close_door",
+      "scoringRules": {
+        "maxPoints": 10,
+        "correctAnswerPoints": 10,
+        "evidenceSource": "systemObserved",
+        "technicalFailuresScoreable": false
+      },
+      "auditEvents": [
+        {
+          "eventType": "clipStarted",
+          "when": "onPlaybackStart",
+          "payload": {
+            "mode": "assessment"
+          }
+        },
+        {
+          "eventType": "clipAnswerSubmitted",
+          "when": "onAnswerSubmit",
+          "payload": {
+            "scoreable": true
+          }
+        }
+      ],
+      "cloudflareVideoPath": "micro-lessons/warehouse/v1/inward/09-clip_putaway_dairy_002/putaway_dairy_cold_storage_stacking.mp4",
+      "fallbackVideoUrl": null,
+      "modes": [
+        "lesson",
+        "practice",
+        "assessment"
+      ]
     },
     {
       "id": "clip_putaway_ambient_001",
       "title": "Ambient staples location scan",
       "module": "inward",
-      "sequenceNumber": 7,
-      "domain": "put-away",
+      "sequenceNumber": 10,
+      "domain": "putAway",
       "role": "Inventory Associate",
       "processArea": "Ambient Storage",
       "temperatureZone": "ambient",
@@ -459,14 +654,79 @@
           }
         }
       ],
-      "cloudflareVideoPath": "micro-lessons/warehouse/v1/inward/07-clip_putaway_ambient_001/putaway_ambient_staples_scan.mp4",
+      "cloudflareVideoPath": "micro-lessons/warehouse/v1/inward/10-clip_putaway_ambient_001/putaway_ambient_staples_scan.mp4",
       "fallbackVideoUrl": null
+    },
+    {
+      "id": "clip_safety_ppe_entry_001",
+      "title": "PPE check before entering the processing area",
+      "module": "processing",
+      "sequenceNumber": 1,
+      "domain": "safety",
+      "role": "Warehouse Operations Associate",
+      "processArea": "Processing Area Entry",
+      "temperatureZone": "ambient",
+      "durationSeconds": 10,
+      "transcript": "Associates put on hairnets and aprons at the handwashing station before passing through the strip curtain into the processing area.",
+      "description": "Associates prepare to enter a food processing area through a strip-curtain doorway. The learner must decide when required PPE should go on.",
+      "expectedObservation": "Hairnets and aprons are already on before the associates step through the strip curtain.",
+      "expectedDecision": "Put on all required PPE at the entry station before entering, not after stepping inside.",
+      "competencyTags": [
+        "ppe_compliance",
+        "hygiene_entry_discipline"
+      ],
+      "lessonContent": "Food-processing PPE exists to keep contaminants out of the product area. Putting it on after entering defeats the purpose -- gowning and hairnets go on at the entry station, every time, before crossing the threshold.",
+      "assessmentQuestion": "When should hairnets and aprons be put on?",
+      "answerOptions": [
+        {
+          "id": "before_entry",
+          "label": "At the entry station, before stepping inside",
+          "feedback": "Correct -- PPE only protects the processing area if it's on before you cross the threshold."
+        },
+        {
+          "id": "after_entry",
+          "label": "Just inside, once through the curtain",
+          "feedback": "This lets contamination in during the gap -- PPE goes on before entry, not after."
+        }
+      ],
+      "correctAnswer": "before_entry",
+      "videoUrl": null,
+      "thumbnailUrl": "asset://assets/micro_lessons/thumbnails/safety_ppe_entry_check.jpg",
+      "cloudflareVideoPath": "micro-lessons/warehouse/v1/processing/01-clip_safety_ppe_entry_001/safety_ppe_entry_check.mp4",
+      "fallbackVideoUrl": null,
+      "scoringRules": {
+        "maxPoints": 10,
+        "correctAnswerPoints": 10,
+        "evidenceSource": "systemObserved",
+        "technicalFailuresScoreable": false
+      },
+      "auditEvents": [
+        {
+          "eventType": "clipStarted",
+          "when": "onPlaybackStart",
+          "payload": {
+            "mode": "assessment"
+          }
+        },
+        {
+          "eventType": "clipAnswerSubmitted",
+          "when": "onAnswerSubmit",
+          "payload": {
+            "scoreable": true
+          }
+        }
+      ],
+      "modes": [
+        "lesson",
+        "practice",
+        "assessment"
+      ]
     },
     {
       "id": "clip_processing_fnv_packing_001",
       "title": "FNV paper bag packing",
       "module": "processing",
-      "sequenceNumber": 1,
+      "sequenceNumber": 2,
       "domain": "processing",
       "role": "Processing Associate",
       "processArea": "FNV Packing Table",
@@ -525,14 +785,14 @@
           }
         }
       ],
-      "cloudflareVideoPath": "micro-lessons/warehouse/v1/processing/01-clip_processing_fnv_packing_001/processing_fnv_paper_bag_packing.mp4",
+      "cloudflareVideoPath": "micro-lessons/warehouse/v1/processing/02-clip_processing_fnv_packing_001/processing_fnv_paper_bag_packing.mp4",
       "fallbackVideoUrl": null
     },
     {
       "id": "clip_processing_moq_001",
       "title": "MOQ crate preparation",
       "module": "processing",
-      "sequenceNumber": 2,
+      "sequenceNumber": 3,
       "domain": "processing",
       "role": "Processing Associate",
       "processArea": "Order Preparation",
@@ -591,8 +851,268 @@
           }
         }
       ],
-      "cloudflareVideoPath": "micro-lessons/warehouse/v1/processing/02-clip_processing_moq_001/processing_moq_crate_preparation.mp4",
+      "cloudflareVideoPath": "micro-lessons/warehouse/v1/processing/03-clip_processing_moq_001/processing_moq_crate_preparation.mp4",
       "fallbackVideoUrl": null
+    },
+    {
+      "id": "clip_processing_pallet_build_001",
+      "title": "Building a mixed-item ambient pallet",
+      "module": "processing",
+      "sequenceNumber": 4,
+      "domain": "processing",
+      "role": "Warehouse Operations Associate",
+      "processArea": "Ambient Processing Area",
+      "temperatureZone": "ambient",
+      "durationSeconds": 10,
+      "videoUrl": "asset://assets/micro_lessons/videos/processing_pallet_ambient_staple_build.mp4",
+      "thumbnailUrl": "asset://assets/micro_lessons/thumbnails/processing_pallet_ambient_staple_build.jpg",
+      "transcript": "Two associates stack staple sacks and cartons onto a single pallet for onward staging.",
+      "description": "A mixed pallet of ambient staples is being built. The learner must decide how to sequence heavy sacks against lighter cartons.",
+      "expectedObservation": "Heavier sacks are placed at the base of the pallet, lighter cartons on top.",
+      "expectedDecision": "Keep the heaviest items at the bottom of the stack to keep the pallet stable and avoid crushing lighter goods.",
+      "competencyTags": [
+        "pallet_build_stability",
+        "load_sequencing"
+      ],
+      "lessonContent": "A pallet built top-heavy, or with heavy sacks resting on cartons, is a tip and crush risk in transit. Always sequence the heaviest, most crush-resistant items at the base.",
+      "assessmentQuestion": "Where should the heaviest sacks go when building a mixed pallet?",
+      "answerOptions": [
+        {
+          "id": "bottom",
+          "label": "At the base of the pallet",
+          "feedback": "Correct -- keeps the load stable and protects lighter items on top."
+        },
+        {
+          "id": "top",
+          "label": "On top, for easy access",
+          "feedback": "This risks crushing lighter cartons underneath and destabilizing the pallet."
+        }
+      ],
+      "correctAnswer": "bottom",
+      "scoringRules": {
+        "maxPoints": 10,
+        "correctAnswerPoints": 10,
+        "evidenceSource": "systemObserved",
+        "technicalFailuresScoreable": false
+      },
+      "auditEvents": [
+        {
+          "eventType": "clipStarted",
+          "when": "onPlaybackStart",
+          "payload": {
+            "mode": "assessment"
+          }
+        },
+        {
+          "eventType": "clipAnswerSubmitted",
+          "when": "onAnswerSubmit",
+          "payload": {
+            "scoreable": true
+          }
+        }
+      ],
+      "cloudflareVideoPath": "micro-lessons/warehouse/v1/processing/04-clip_processing_pallet_build_001/processing_pallet_ambient_staple_build.mp4",
+      "fallbackVideoUrl": null,
+      "modes": [
+        "lesson",
+        "practice",
+        "assessment"
+      ]
+    },
+    {
+      "id": "clip_processing_vegetable_staging_001",
+      "title": "Staging vegetables for processing",
+      "module": "processing",
+      "sequenceNumber": 5,
+      "domain": "processing",
+      "role": "Warehouse Operations Associate",
+      "processArea": "Vegetable Processing Floor",
+      "temperatureZone": "ambient",
+      "durationSeconds": 10,
+      "transcript": "Associates move trolleys of produce from storage racks toward the processing tables, keeping to the marked aisle lane.",
+      "description": "Multiple associates stage vegetables from storage into the processing area using trolleys. The learner must decide how to move through a shared aisle safely.",
+      "expectedObservation": "Trolleys stay within the yellow lane markings on the floor as they move between the storage racks and the processing tables.",
+      "expectedDecision": "Keep trolleys within the marked lane so the aisle stays clear for cross traffic.",
+      "competencyTags": [
+        "aisle_lane_discipline",
+        "vegetable_staging"
+      ],
+      "lessonContent": "Marked floor lanes exist so multiple associates can move produce through the same aisle without blocking each other or cross traffic. Straying outside the lane -- even briefly -- creates a collision risk in a busy processing floor.",
+      "assessmentQuestion": "Where should a trolley stay while moving produce through a shared aisle?",
+      "answerOptions": [
+        {
+          "id": "in_lane",
+          "label": "Within the marked yellow lane",
+          "feedback": "Correct -- keeps the aisle clear and predictable for everyone else moving through it."
+        },
+        {
+          "id": "wherever_faster",
+          "label": "Wherever is fastest at the time",
+          "feedback": "This creates unpredictable collision risk for other associates and cross traffic."
+        }
+      ],
+      "correctAnswer": "in_lane",
+      "videoUrl": null,
+      "thumbnailUrl": "asset://assets/micro_lessons/thumbnails/processing_vegetable_staging.jpg",
+      "cloudflareVideoPath": "micro-lessons/warehouse/v1/processing/05-clip_processing_vegetable_staging_001/processing_vegetable_staging.mp4",
+      "fallbackVideoUrl": null,
+      "scoringRules": {
+        "maxPoints": 10,
+        "correctAnswerPoints": 10,
+        "evidenceSource": "systemObserved",
+        "technicalFailuresScoreable": false
+      },
+      "auditEvents": [
+        {
+          "eventType": "clipStarted",
+          "when": "onPlaybackStart",
+          "payload": {
+            "mode": "assessment"
+          }
+        },
+        {
+          "eventType": "clipAnswerSubmitted",
+          "when": "onAnswerSubmit",
+          "payload": {
+            "scoreable": true
+          }
+        }
+      ],
+      "modes": [
+        "lesson",
+        "practice",
+        "assessment"
+      ]
+    },
+    {
+      "id": "clip_processing_sack_weight_check_001",
+      "title": "Verifying sack weight before sealing",
+      "module": "processing",
+      "sequenceNumber": 6,
+      "domain": "processing",
+      "role": "Warehouse Operations Associate",
+      "processArea": "Weighing Station",
+      "temperatureZone": "ambient",
+      "durationSeconds": 10,
+      "transcript": "An associate places a produce sack on a digital scale and checks the reading before sealing it.",
+      "description": "A 50kg produce sack is weighed before sealing. The learner must decide when to confirm the weight against the target.",
+      "expectedObservation": "The digital scale display is checked while the sack sits on the platform, before it is sealed.",
+      "expectedDecision": "Confirm the scale reading matches the target weight before sealing the sack, not after.",
+      "competencyTags": [
+        "weight_verification_discipline",
+        "sack_sealing_accuracy"
+      ],
+      "lessonContent": "Sealing a sack before confirming its weight means any shortfall or overfill only gets caught later, if at all -- after it's harder to correct. The scale reading has to be checked while the sack is still open.",
+      "assessmentQuestion": "When should the associate check the scale reading?",
+      "answerOptions": [
+        {
+          "id": "before_sealing",
+          "label": "Before sealing the sack",
+          "feedback": "Correct -- lets a shortfall or overfill be corrected while the sack is still open."
+        },
+        {
+          "id": "after_sealing",
+          "label": "After sealing, as a final check",
+          "feedback": "By then the sack is harder to correct -- always confirm weight before sealing."
+        }
+      ],
+      "correctAnswer": "before_sealing",
+      "videoUrl": null,
+      "thumbnailUrl": "asset://assets/micro_lessons/thumbnails/processing_sack_weight_check.jpg",
+      "cloudflareVideoPath": "micro-lessons/warehouse/v1/processing/06-clip_processing_sack_weight_check_001/processing_sack_weight_check.mp4",
+      "fallbackVideoUrl": null,
+      "scoringRules": {
+        "maxPoints": 10,
+        "correctAnswerPoints": 10,
+        "evidenceSource": "systemObserved",
+        "technicalFailuresScoreable": false
+      },
+      "auditEvents": [
+        {
+          "eventType": "clipStarted",
+          "when": "onPlaybackStart",
+          "payload": {
+            "mode": "assessment"
+          }
+        },
+        {
+          "eventType": "clipAnswerSubmitted",
+          "when": "onAnswerSubmit",
+          "payload": {
+            "scoreable": true
+          }
+        }
+      ],
+      "modes": [
+        "lesson",
+        "practice",
+        "assessment"
+      ]
+    },
+    {
+      "id": "clip_processing_produce_bagging_001",
+      "title": "Weighing and bagging produce for orders",
+      "module": "processing",
+      "sequenceNumber": 7,
+      "domain": "processing",
+      "role": "Warehouse Operations Associate",
+      "processArea": "Produce Bagging Line",
+      "temperatureZone": "ambient",
+      "durationSeconds": 10,
+      "transcript": "Associates portion carrots and cucumbers onto a scale before bagging them into paper bags for outbound orders.",
+      "description": "A team portions produce into bags at a bagging line. The learner must decide whether to rely on the scale or estimate quantities by eye.",
+      "expectedObservation": "Each portion is weighed on the scale before it goes into the bag.",
+      "expectedDecision": "Confirm the scale reading for every bag rather than estimating the quantity by eye.",
+      "competencyTags": [
+        "weight_accuracy",
+        "produce_bagging"
+      ],
+      "lessonContent": "Eyeballing produce quantities to save time is a common shortcut that produces inconsistent bag weights -- some short, some over. Checking the scale for every bag is what keeps orders accurate and consistent.",
+      "assessmentQuestion": "Should each bag's quantity be estimated by eye or confirmed on the scale?",
+      "answerOptions": [
+        {
+          "id": "confirm_scale",
+          "label": "Confirmed on the scale every time",
+          "feedback": "Correct -- keeps bag weights consistent instead of drifting short or over."
+        },
+        {
+          "id": "estimate_eye",
+          "label": "Estimated by eye to save time",
+          "feedback": "This produces inconsistent bag weights -- always confirm on the scale."
+        }
+      ],
+      "correctAnswer": "confirm_scale",
+      "videoUrl": null,
+      "thumbnailUrl": "asset://assets/micro_lessons/thumbnails/processing_produce_bagging.jpg",
+      "cloudflareVideoPath": "micro-lessons/warehouse/v1/processing/07-clip_processing_produce_bagging_001/processing_produce_bagging.mp4",
+      "fallbackVideoUrl": null,
+      "scoringRules": {
+        "maxPoints": 10,
+        "correctAnswerPoints": 10,
+        "evidenceSource": "systemObserved",
+        "technicalFailuresScoreable": false
+      },
+      "auditEvents": [
+        {
+          "eventType": "clipStarted",
+          "when": "onPlaybackStart",
+          "payload": {
+            "mode": "assessment"
+          }
+        },
+        {
+          "eventType": "clipAnswerSubmitted",
+          "when": "onAnswerSubmit",
+          "payload": {
+            "scoreable": true
+          }
+        }
+      ],
+      "modes": [
+        "lesson",
+        "practice",
+        "assessment"
+      ]
     },
     {
       "id": "clip_picking_ambient_001",
@@ -727,10 +1247,140 @@
       "fallbackVideoUrl": null
     },
     {
+      "id": "clip_picking_forklift_aisle_awareness_001",
+      "title": "Staying alert to forklift traffic while picking",
+      "module": "dispatch",
+      "sequenceNumber": 3,
+      "domain": "picking",
+      "role": "Warehouse Operations Associate",
+      "processArea": "Ambient Storage Aisle",
+      "temperatureZone": "ambient",
+      "durationSeconds": 10,
+      "transcript": "A forklift operates in the same tall-racking aisle an associate is walking through to pick items.",
+      "description": "A forklift shares the picking aisle with a pedestrian associate. The learner must decide how to behave when a forklift is operating nearby.",
+      "expectedObservation": "The forklift is active in the same aisle the associate needs to walk through.",
+      "expectedDecision": "Stay visible, make eye contact with the operator, and let the forklift complete its move before crossing its path.",
+      "competencyTags": [
+        "forklift_pedestrian_safety",
+        "picking_aisle_awareness"
+      ],
+      "lessonContent": "Forklifts have significant blind spots and stopping distance. A pedestrian who assumes the operator has seen them, or tries to slip past while the forklift is moving, is taking on real risk that's entirely avoidable by waiting.",
+      "assessmentQuestion": "What should the associate do when a forklift is active in the same aisle?",
+      "answerOptions": [
+        {
+          "id": "wait_and_confirm",
+          "label": "Stay visible and wait for the forklift to finish its move",
+          "feedback": "Correct -- forklifts have blind spots; never assume the operator has seen you."
+        },
+        {
+          "id": "slip_past",
+          "label": "Move past quickly while there's a gap",
+          "feedback": "This risks a collision -- always wait for confirmed clearance, not just a gap."
+        }
+      ],
+      "correctAnswer": "wait_and_confirm",
+      "videoUrl": null,
+      "thumbnailUrl": "asset://assets/micro_lessons/thumbnails/picking_forklift_aisle_awareness.jpg",
+      "cloudflareVideoPath": "micro-lessons/warehouse/v1/dispatch/03-clip_picking_forklift_aisle_awareness_001/picking_forklift_aisle_awareness.mp4",
+      "fallbackVideoUrl": null,
+      "scoringRules": {
+        "maxPoints": 10,
+        "correctAnswerPoints": 10,
+        "evidenceSource": "systemObserved",
+        "technicalFailuresScoreable": false
+      },
+      "auditEvents": [
+        {
+          "eventType": "clipStarted",
+          "when": "onPlaybackStart",
+          "payload": {
+            "mode": "assessment"
+          }
+        },
+        {
+          "eventType": "clipAnswerSubmitted",
+          "when": "onAnswerSubmit",
+          "payload": {
+            "scoreable": true
+          }
+        }
+      ],
+      "modes": [
+        "lesson",
+        "practice",
+        "assessment"
+      ]
+    },
+    {
+      "id": "clip_picking_fragile_item_stacking_001",
+      "title": "Stacking fragile items safely on the picking trolley",
+      "module": "dispatch",
+      "sequenceNumber": 4,
+      "domain": "picking",
+      "role": "Warehouse Operations Associate",
+      "processArea": "Ambient Storage Aisle",
+      "temperatureZone": "ambient",
+      "durationSeconds": 10,
+      "videoUrl": null,
+      "thumbnailUrl": "asset://assets/micro_lessons/thumbnails/picking_fragile_item_stacking.jpg",
+      "transcript": "Associates load egg trays and other fragile items onto a picking trolley alongside heavier boxes.",
+      "description": "A picking trolley is loaded with a mix of fragile egg trays and heavier boxes. The learner must decide how to stack them for the trip through the aisle.",
+      "expectedObservation": "Fragile egg trays are placed on top of the load, not underneath the heavier boxes.",
+      "expectedDecision": "Load fragile items on top of the stack, never underneath heavier boxes that could crush them in transit.",
+      "competencyTags": [
+        "fragile_item_handling",
+        "picking_load_sequencing"
+      ],
+      "lessonContent": "A moving trolley shifts and jolts more than a stationary pallet. Fragile trays placed under heavier boxes have no protection from that movement -- they always go on top, where nothing can crush them.",
+      "assessmentQuestion": "Where should fragile egg trays go when loading a picking trolley with other items?",
+      "answerOptions": [
+        {
+          "id": "on_top",
+          "label": "On top of the load",
+          "feedback": "Correct -- protects them from being crushed by heavier items during the trip."
+        },
+        {
+          "id": "underneath",
+          "label": "Underneath, to save space on top",
+          "feedback": "This risks crushing the fragile trays under heavier boxes -- always load fragile items on top."
+        }
+      ],
+      "correctAnswer": "on_top",
+      "scoringRules": {
+        "maxPoints": 10,
+        "correctAnswerPoints": 10,
+        "evidenceSource": "systemObserved",
+        "technicalFailuresScoreable": false
+      },
+      "auditEvents": [
+        {
+          "eventType": "clipStarted",
+          "when": "onPlaybackStart",
+          "payload": {
+            "mode": "assessment"
+          }
+        },
+        {
+          "eventType": "clipAnswerSubmitted",
+          "when": "onAnswerSubmit",
+          "payload": {
+            "scoreable": true
+          }
+        }
+      ],
+      "cloudflareVideoPath": "micro-lessons/warehouse/v1/dispatch/04-clip_picking_fragile_item_stacking_001/picking_fragile_item_stacking.mp4",
+      "fallbackVideoUrl": null,
+      "modes": [
+        "lesson",
+        "practice",
+        "assessment"
+      ]
+    },
+    {
       "id": "clip_dispatch_merge_001",
       "title": "Order-level crate merge",
       "module": "dispatch",
-      "sequenceNumber": 3,
+      "sequenceNumber": 5,
       "domain": "dispatch",
       "role": "Dispatch Associate",
       "processArea": "Dispatch Staging",
@@ -789,14 +1439,14 @@
           }
         }
       ],
-      "cloudflareVideoPath": "micro-lessons/warehouse/v1/dispatch/03-clip_dispatch_merge_001/dispatch_order_level_merge_staging.mp4",
+      "cloudflareVideoPath": "micro-lessons/warehouse/v1/dispatch/05-clip_dispatch_merge_001/dispatch_order_level_merge_staging.mp4",
       "fallbackVideoUrl": null
     },
     {
       "id": "clip_dispatch_staging_001",
       "title": "Staging order completion check",
       "module": "dispatch",
-      "sequenceNumber": 4,
+      "sequenceNumber": 6,
       "domain": "dispatch",
       "role": "Dispatch Associate",
       "processArea": "Dispatch Staging",
@@ -855,14 +1505,14 @@
           }
         }
       ],
-      "cloudflareVideoPath": "micro-lessons/warehouse/v1/dispatch/04-clip_dispatch_staging_001/dispatch_staging_order_accumulation_check.mp4",
+      "cloudflareVideoPath": "micro-lessons/warehouse/v1/dispatch/06-clip_dispatch_staging_001/dispatch_staging_order_accumulation_check.mp4",
       "fallbackVideoUrl": null
     },
     {
       "id": "clip_dispatch_loading_001",
       "title": "Ambient small-vehicle crate loading",
       "module": "dispatch",
-      "sequenceNumber": 5,
+      "sequenceNumber": 7,
       "domain": "dispatch",
       "role": "Dispatch Associate",
       "processArea": "Ambient Loading Dock",
@@ -921,14 +1571,144 @@
           }
         }
       ],
-      "cloudflareVideoPath": "micro-lessons/warehouse/v1/dispatch/05-clip_dispatch_loading_001/dispatch_ambient_bolero_crate_loading.mp4",
+      "cloudflareVideoPath": "micro-lessons/warehouse/v1/dispatch/07-clip_dispatch_loading_001/dispatch_ambient_bolero_crate_loading.mp4",
       "fallbackVideoUrl": null
+    },
+    {
+      "id": "clip_dispatch_perishable_loading_001",
+      "title": "Loading perishable stock into a refrigerated vehicle",
+      "module": "dispatch",
+      "sequenceNumber": 8,
+      "domain": "dispatch",
+      "role": "Warehouse Operations Associate",
+      "processArea": "Chilled Dispatch Dock",
+      "temperatureZone": "chilled",
+      "durationSeconds": 10,
+      "videoUrl": null,
+      "thumbnailUrl": "asset://assets/micro_lessons/thumbnails/dispatch_perishable_dock_loading.jpg",
+      "transcript": "Perishable crates are packed into insulated containers and loaded directly from the dock into a refrigerated truck.",
+      "description": "Perishable produce and chilled goods are staged at the dock in insulated containers before loading. The learner must decide how long that stock should wait at the dock.",
+      "expectedObservation": "Perishable stock is packed into insulated containers and moved straight from the dock into the refrigerated truck.",
+      "expectedDecision": "Load perishable stock into the refrigerated vehicle promptly rather than leaving it staged on the open dock.",
+      "competencyTags": [
+        "cold_chain_dock_discipline",
+        "perishable_loading"
+      ],
+      "lessonContent": "Every minute perishable stock spends staged on an open dock is time outside the cold chain, even inside insulated containers. Loading should happen as soon as the vehicle is ready, not whenever it's convenient.",
+      "assessmentQuestion": "How long should perishable stock wait at the dock before loading?",
+      "answerOptions": [
+        {
+          "id": "load_promptly",
+          "label": "As little time as possible -- load as soon as the vehicle is ready",
+          "feedback": "Correct -- minimizes time outside the cold chain, even in insulated containers."
+        },
+        {
+          "id": "wait_convenient",
+          "label": "However long is convenient for the loading schedule",
+          "feedback": "This extends time outside the cold chain -- perishables should move to the vehicle promptly."
+        }
+      ],
+      "correctAnswer": "load_promptly",
+      "scoringRules": {
+        "maxPoints": 10,
+        "correctAnswerPoints": 10,
+        "evidenceSource": "systemObserved",
+        "technicalFailuresScoreable": false
+      },
+      "auditEvents": [
+        {
+          "eventType": "clipStarted",
+          "when": "onPlaybackStart",
+          "payload": {
+            "mode": "assessment"
+          }
+        },
+        {
+          "eventType": "clipAnswerSubmitted",
+          "when": "onAnswerSubmit",
+          "payload": {
+            "scoreable": true
+          }
+        }
+      ],
+      "cloudflareVideoPath": "micro-lessons/warehouse/v1/dispatch/08-clip_dispatch_perishable_loading_001/dispatch_perishable_dock_loading.mp4",
+      "fallbackVideoUrl": null,
+      "modes": [
+        "lesson",
+        "practice",
+        "assessment"
+      ]
+    },
+    {
+      "id": "clip_dispatch_manifest_verification_001",
+      "title": "Verifying the load manifest before departure",
+      "module": "dispatch",
+      "sequenceNumber": 9,
+      "domain": "dispatch",
+      "role": "Shift Supervisor",
+      "processArea": "Dispatch Dock",
+      "temperatureZone": "ambient",
+      "durationSeconds": 10,
+      "videoUrl": null,
+      "thumbnailUrl": "asset://assets/micro_lessons/thumbnails/dispatch_manifest_verification.jpg",
+      "transcript": "A supervisor checks a handheld device against the crates loaded onto a delivery vehicle before it departs.",
+      "description": "A supervisor coordinates with associates loading a delivery vehicle, checking a handheld device against what's been loaded. The learner must decide when this check should happen.",
+      "expectedObservation": "The supervisor checks the manifest on the handheld device while the vehicle is still at the dock, before it pulls away.",
+      "expectedDecision": "Confirm the loaded crates match the manifest before the vehicle departs, not after.",
+      "competencyTags": [
+        "load_verification",
+        "dispatch_departure_discipline"
+      ],
+      "lessonContent": "A manifest mismatch caught after the vehicle has left the dock means a delayed correction, a return trip, or a customer receiving the wrong order. The check has to happen while the vehicle is still there to fix.",
+      "assessmentQuestion": "When should the loaded crates be checked against the manifest?",
+      "answerOptions": [
+        {
+          "id": "before_departure",
+          "label": "Before the vehicle departs",
+          "feedback": "Correct -- any mismatch can still be corrected while the vehicle is at the dock."
+        },
+        {
+          "id": "after_departure",
+          "label": "After departure, if an issue comes up",
+          "feedback": "By then correcting a mismatch means a delay or a return trip -- always verify before departure."
+        }
+      ],
+      "correctAnswer": "before_departure",
+      "scoringRules": {
+        "maxPoints": 10,
+        "correctAnswerPoints": 10,
+        "evidenceSource": "systemObserved",
+        "technicalFailuresScoreable": false
+      },
+      "auditEvents": [
+        {
+          "eventType": "clipStarted",
+          "when": "onPlaybackStart",
+          "payload": {
+            "mode": "assessment"
+          }
+        },
+        {
+          "eventType": "clipAnswerSubmitted",
+          "when": "onAnswerSubmit",
+          "payload": {
+            "scoreable": true
+          }
+        }
+      ],
+      "cloudflareVideoPath": "micro-lessons/warehouse/v1/dispatch/09-clip_dispatch_manifest_verification_001/dispatch_manifest_verification.mp4",
+      "fallbackVideoUrl": null,
+      "modes": [
+        "lesson",
+        "practice",
+        "assessment"
+      ]
     },
     {
       "id": "clip_delivery_handover_001",
       "title": "Restaurant delivery handover",
       "module": "dispatch",
-      "sequenceNumber": 6,
+      "sequenceNumber": 10,
       "domain": "delivery",
       "role": "Delivery Associate",
       "processArea": "Customer Delivery Point",
@@ -987,14 +1767,14 @@
           }
         }
       ],
-      "cloudflareVideoPath": "micro-lessons/warehouse/v1/dispatch/06-clip_delivery_handover_001/delivery_restaurant_handover_scan.mp4",
+      "cloudflareVideoPath": "micro-lessons/warehouse/v1/dispatch/10-clip_delivery_handover_001/delivery_restaurant_handover_scan.mp4",
       "fallbackVideoUrl": null
     },
     {
       "id": "clip_returns_driver_settlement_001",
       "title": "Driver empty-crate and cash settlement",
       "module": "dispatch",
-      "sequenceNumber": 7,
+      "sequenceNumber": 11,
       "domain": "supervisor",
       "role": "Route Settlement Associate",
       "processArea": "Returns and Settlement Counter",
@@ -1053,14 +1833,14 @@
           }
         }
       ],
-      "cloudflareVideoPath": "micro-lessons/warehouse/v1/dispatch/07-clip_returns_driver_settlement_001/returns_driver_empty_crates_cash_submission.mp4",
+      "cloudflareVideoPath": "micro-lessons/warehouse/v1/dispatch/11-clip_returns_driver_settlement_001/returns_driver_empty_crates_cash_submission.mp4",
       "fallbackVideoUrl": null
     },
     {
       "id": "clip_returns_quarantine_001",
       "title": "Returned goods quarantine",
       "module": "dispatch",
-      "sequenceNumber": 8,
+      "sequenceNumber": 12,
       "domain": "supervisor",
       "role": "Hub Supervisor",
       "processArea": "Returns and Quarantine",
@@ -1121,591 +1901,6 @@
       ],
       "cloudflareVideoPath": null,
       "fallbackVideoUrl": null
-    },
-    {
-      "id": "clip_receiving_bread_001",
-      "title": "Bakery crate barcode scan",
-      "module": "inward",
-      "sequenceNumber": 8,
-      "domain": "receiving",
-      "role": "Receiving Associate",
-      "processArea": "Receiving Dock",
-      "temperatureZone": "ambient",
-      "durationSeconds": 10,
-      "videoUrl": "asset://assets/micro_lessons/videos/receiving_bread_crate_barcode_scan.mp4",
-      "thumbnailUrl": "asset://assets/micro_lessons/thumbnails/receiving_bread_crate_barcode_scan.jpg",
-      "transcript": "The associate moves barcoded bread crates along the receiving conveyor, scanning each one before it continues down the line.",
-      "description": "Barcoded bakery crates arrive on the receiving conveyor. The learner must scan each crate individually rather than assuming visually identical crates match.",
-      "expectedObservation": "Each crate carries its own barcode label that must be scanned before it moves further down the line.",
-      "expectedDecision": "Scan every crate individually, even when several crates look identical.",
-      "competencyTags": [
-        "receiving_scan_discipline",
-        "bakery_handling"
-      ],
-      "lessonContent": "Skipping scans on visually identical crates is a common shortcut that lets mismatched or expired stock through undetected. Every crate gets its own scan, no exceptions.",
-      "assessmentQuestion": "Should the associate scan every crate, even if they look identical?",
-      "answerOptions": [
-        {
-          "id": "scan_each",
-          "label": "Yes, scan each crate individually",
-          "feedback": "Correct -- visually identical crates can still differ in batch or expiry."
-        },
-        {
-          "id": "scan_one",
-          "label": "No, one scan covers the batch",
-          "feedback": "This risks letting mismatched or expired stock through unchecked."
-        }
-      ],
-      "correctAnswer": "scan_each",
-      "scoringRules": {
-        "maxPoints": 10,
-        "correctAnswerPoints": 10,
-        "evidenceSource": "systemObserved",
-        "technicalFailuresScoreable": false
-      },
-      "auditEvents": [
-        {
-          "eventType": "clipStarted",
-          "when": "onPlaybackStart",
-          "payload": {
-            "mode": "assessment"
-          }
-        },
-        {
-          "eventType": "clipAnswerSubmitted",
-          "when": "onAnswerSubmit",
-          "payload": {
-            "scoreable": true
-          }
-        }
-      ],
-      "cloudflareVideoPath": "micro-lessons/warehouse/v1/inward/08-clip_receiving_bread_001/receiving_bread_crate_barcode_scan.mp4",
-      "fallbackVideoUrl": null,
-      "modes": [
-        "lesson",
-        "practice",
-        "assessment"
-      ]
-    },
-    {
-      "id": "clip_inspection_egg_001",
-      "title": "Egg tray damage check",
-      "module": "inward",
-      "sequenceNumber": 9,
-      "domain": "inspection",
-      "role": "Quality Associate",
-      "processArea": "Receiving Inspection",
-      "temperatureZone": "chilled",
-      "durationSeconds": 10,
-      "videoUrl": "asset://assets/micro_lessons/videos/inspection_egg_tray_damage_check.mp4",
-      "thumbnailUrl": "asset://assets/micro_lessons/thumbnails/inspection_egg_tray_damage_check.jpg",
-      "transcript": "A quality associate checks incoming egg trays for cracked or broken eggs before the crate is accepted.",
-      "description": "Incoming egg trays are checked at receiving inspection. The learner must decide what to do when a tray has visibly cracked eggs.",
-      "expectedObservation": "One or more eggs in the tray are visibly cracked or broken.",
-      "expectedDecision": "Remove and segregate the damaged tray rather than accepting the full crate as-is.",
-      "competencyTags": [
-        "quality_segregation",
-        "egg_damage_check"
-      ],
-      "lessonContent": "Cracked eggs are a food-safety risk and can also mark other product in the same crate. Damaged trays must be segregated at receiving, not passed downstream.",
-      "assessmentQuestion": "What should the associate do when a tray has cracked eggs?",
-      "answerOptions": [
-        {
-          "id": "segregate",
-          "label": "Segregate the damaged tray",
-          "feedback": "Correct -- prevents a food-safety risk from moving downstream."
-        },
-        {
-          "id": "accept_all",
-          "label": "Accept the full crate as normal",
-          "feedback": "Cracked eggs are a real safety and cross-contamination risk -- always segregate."
-        }
-      ],
-      "correctAnswer": "segregate",
-      "scoringRules": {
-        "maxPoints": 10,
-        "correctAnswerPoints": 10,
-        "evidenceSource": "systemObserved",
-        "technicalFailuresScoreable": false
-      },
-      "auditEvents": [
-        {
-          "eventType": "clipStarted",
-          "when": "onPlaybackStart",
-          "payload": {
-            "mode": "assessment"
-          }
-        },
-        {
-          "eventType": "clipAnswerSubmitted",
-          "when": "onAnswerSubmit",
-          "payload": {
-            "scoreable": true
-          }
-        }
-      ],
-      "cloudflareVideoPath": "micro-lessons/warehouse/v1/inward/09-clip_inspection_egg_001/inspection_egg_tray_damage_check.mp4",
-      "fallbackVideoUrl": null,
-      "modes": [
-        "lesson",
-        "practice",
-        "assessment"
-      ]
-    },
-    {
-      "id": "clip_putaway_dairy_002",
-      "title": "Storing dairy crates in cold storage",
-      "module": "inward",
-      "sequenceNumber": 10,
-      "domain": "putAway",
-      "role": "Warehouse Operations Associate",
-      "processArea": "Chilled Storage",
-      "temperatureZone": "chilled",
-      "durationSeconds": 10,
-      "videoUrl": "asset://assets/micro_lessons/videos/putaway_dairy_cold_storage_stacking.mp4",
-      "thumbnailUrl": "asset://assets/micro_lessons/thumbnails/putaway_dairy_cold_storage_stacking.jpg",
-      "transcript": "An associate carries stacked dairy crates into the cold room and stacks them while the chilled room door stands open.",
-      "description": "Dairy crates are stacked into cold storage. The learner must decide what to do about the open cold room door once the crates are in place.",
-      "expectedObservation": "The chilled room door stands open while crates are carried in and stacked.",
-      "expectedDecision": "Close the cold room door as soon as the crates are stacked, minimizing how long it stays open.",
-      "competencyTags": [
-        "cold_chain_door_discipline",
-        "dairy_putaway_accuracy"
-      ],
-      "lessonContent": "Every extra second a chilled room door stays open raises the internal temperature for all stock inside, not just the crates being handled. Storage trips should be planned to minimize open-door time.",
-      "assessmentQuestion": "What should the associate do once the crates are stacked in the cold room?",
-      "answerOptions": [
-        {
-          "id": "close_door",
-          "label": "Close the cold room door right away",
-          "feedback": "Correct -- minimizes temperature excursion for the rest of the chilled stock."
-        },
-        {
-          "id": "leave_open",
-          "label": "Leave it open for the next trip",
-          "feedback": "This raises the temperature for all stock in the room -- always close between trips."
-        }
-      ],
-      "correctAnswer": "close_door",
-      "scoringRules": {
-        "maxPoints": 10,
-        "correctAnswerPoints": 10,
-        "evidenceSource": "systemObserved",
-        "technicalFailuresScoreable": false
-      },
-      "auditEvents": [
-        {
-          "eventType": "clipStarted",
-          "when": "onPlaybackStart",
-          "payload": {
-            "mode": "assessment"
-          }
-        },
-        {
-          "eventType": "clipAnswerSubmitted",
-          "when": "onAnswerSubmit",
-          "payload": {
-            "scoreable": true
-          }
-        }
-      ],
-      "cloudflareVideoPath": "micro-lessons/warehouse/v1/inward/10-clip_putaway_dairy_002/putaway_dairy_cold_storage_stacking.mp4",
-      "fallbackVideoUrl": null,
-      "modes": [
-        "lesson",
-        "practice",
-        "assessment"
-      ]
-    },
-    {
-      "id": "clip_processing_pallet_build_001",
-      "title": "Building a mixed-item ambient pallet",
-      "module": "processing",
-      "sequenceNumber": 3,
-      "domain": "processing",
-      "role": "Warehouse Operations Associate",
-      "processArea": "Ambient Processing Area",
-      "temperatureZone": "ambient",
-      "durationSeconds": 10,
-      "videoUrl": "asset://assets/micro_lessons/videos/processing_pallet_ambient_staple_build.mp4",
-      "thumbnailUrl": "asset://assets/micro_lessons/thumbnails/processing_pallet_ambient_staple_build.jpg",
-      "transcript": "Two associates stack staple sacks and cartons onto a single pallet for onward staging.",
-      "description": "A mixed pallet of ambient staples is being built. The learner must decide how to sequence heavy sacks against lighter cartons.",
-      "expectedObservation": "Heavier sacks are placed at the base of the pallet, lighter cartons on top.",
-      "expectedDecision": "Keep the heaviest items at the bottom of the stack to keep the pallet stable and avoid crushing lighter goods.",
-      "competencyTags": [
-        "pallet_build_stability",
-        "load_sequencing"
-      ],
-      "lessonContent": "A pallet built top-heavy, or with heavy sacks resting on cartons, is a tip and crush risk in transit. Always sequence the heaviest, most crush-resistant items at the base.",
-      "assessmentQuestion": "Where should the heaviest sacks go when building a mixed pallet?",
-      "answerOptions": [
-        {
-          "id": "bottom",
-          "label": "At the base of the pallet",
-          "feedback": "Correct -- keeps the load stable and protects lighter items on top."
-        },
-        {
-          "id": "top",
-          "label": "On top, for easy access",
-          "feedback": "This risks crushing lighter cartons underneath and destabilizing the pallet."
-        }
-      ],
-      "correctAnswer": "bottom",
-      "scoringRules": {
-        "maxPoints": 10,
-        "correctAnswerPoints": 10,
-        "evidenceSource": "systemObserved",
-        "technicalFailuresScoreable": false
-      },
-      "auditEvents": [
-        {
-          "eventType": "clipStarted",
-          "when": "onPlaybackStart",
-          "payload": {
-            "mode": "assessment"
-          }
-        },
-        {
-          "eventType": "clipAnswerSubmitted",
-          "when": "onAnswerSubmit",
-          "payload": {
-            "scoreable": true
-          }
-        }
-      ],
-      "cloudflareVideoPath": "micro-lessons/warehouse/v1/processing/03-clip_processing_pallet_build_001/processing_pallet_ambient_staple_build.mp4",
-      "fallbackVideoUrl": null,
-      "modes": [
-        "lesson",
-        "practice",
-        "assessment"
-      ]
-    },
-    {
-      "id": "clip_processing_vegetable_staging_001",
-      "title": "Staging vegetables for processing",
-      "module": "processing",
-      "sequenceNumber": 4,
-      "domain": "processing",
-      "role": "Warehouse Operations Associate",
-      "processArea": "Vegetable Processing Floor",
-      "temperatureZone": "ambient",
-      "durationSeconds": 10,
-      "transcript": "Associates move trolleys of produce from storage racks toward the processing tables, keeping to the marked aisle lane.",
-      "description": "Multiple associates stage vegetables from storage into the processing area using trolleys. The learner must decide how to move through a shared aisle safely.",
-      "expectedObservation": "Trolleys stay within the yellow lane markings on the floor as they move between the storage racks and the processing tables.",
-      "expectedDecision": "Keep trolleys within the marked lane so the aisle stays clear for cross traffic.",
-      "competencyTags": [
-        "aisle_lane_discipline",
-        "vegetable_staging"
-      ],
-      "lessonContent": "Marked floor lanes exist so multiple associates can move produce through the same aisle without blocking each other or cross traffic. Straying outside the lane -- even briefly -- creates a collision risk in a busy processing floor.",
-      "assessmentQuestion": "Where should a trolley stay while moving produce through a shared aisle?",
-      "answerOptions": [
-        {
-          "id": "in_lane",
-          "label": "Within the marked yellow lane",
-          "feedback": "Correct -- keeps the aisle clear and predictable for everyone else moving through it."
-        },
-        {
-          "id": "wherever_faster",
-          "label": "Wherever is fastest at the time",
-          "feedback": "This creates unpredictable collision risk for other associates and cross traffic."
-        }
-      ],
-      "correctAnswer": "in_lane",
-      "videoUrl": null,
-      "thumbnailUrl": "asset://assets/micro_lessons/thumbnails/processing_vegetable_staging.jpg",
-      "cloudflareVideoPath": "micro-lessons/warehouse/v1/processing/04-clip_processing_vegetable_staging_001/processing_vegetable_staging.mp4",
-      "fallbackVideoUrl": null,
-      "scoringRules": {
-        "maxPoints": 10,
-        "correctAnswerPoints": 10,
-        "evidenceSource": "systemObserved",
-        "technicalFailuresScoreable": false
-      },
-      "auditEvents": [
-        {
-          "eventType": "clipStarted",
-          "when": "onPlaybackStart",
-          "payload": {
-            "mode": "assessment"
-          }
-        },
-        {
-          "eventType": "clipAnswerSubmitted",
-          "when": "onAnswerSubmit",
-          "payload": {
-            "scoreable": true
-          }
-        }
-      ],
-      "modes": [
-        "lesson",
-        "practice",
-        "assessment"
-      ]
-    },
-    {
-      "id": "clip_processing_sack_weight_check_001",
-      "title": "Verifying sack weight before sealing",
-      "module": "processing",
-      "sequenceNumber": 5,
-      "domain": "processing",
-      "role": "Warehouse Operations Associate",
-      "processArea": "Weighing Station",
-      "temperatureZone": "ambient",
-      "durationSeconds": 10,
-      "transcript": "An associate places a produce sack on a digital scale and checks the reading before sealing it.",
-      "description": "A 50kg produce sack is weighed before sealing. The learner must decide when to confirm the weight against the target.",
-      "expectedObservation": "The digital scale display is checked while the sack sits on the platform, before it is sealed.",
-      "expectedDecision": "Confirm the scale reading matches the target weight before sealing the sack, not after.",
-      "competencyTags": [
-        "weight_verification_discipline",
-        "sack_sealing_accuracy"
-      ],
-      "lessonContent": "Sealing a sack before confirming its weight means any shortfall or overfill only gets caught later, if at all -- after it's harder to correct. The scale reading has to be checked while the sack is still open.",
-      "assessmentQuestion": "When should the associate check the scale reading?",
-      "answerOptions": [
-        {
-          "id": "before_sealing",
-          "label": "Before sealing the sack",
-          "feedback": "Correct -- lets a shortfall or overfill be corrected while the sack is still open."
-        },
-        {
-          "id": "after_sealing",
-          "label": "After sealing, as a final check",
-          "feedback": "By then the sack is harder to correct -- always confirm weight before sealing."
-        }
-      ],
-      "correctAnswer": "before_sealing",
-      "videoUrl": null,
-      "thumbnailUrl": "asset://assets/micro_lessons/thumbnails/processing_sack_weight_check.jpg",
-      "cloudflareVideoPath": "micro-lessons/warehouse/v1/processing/05-clip_processing_sack_weight_check_001/processing_sack_weight_check.mp4",
-      "fallbackVideoUrl": null,
-      "scoringRules": {
-        "maxPoints": 10,
-        "correctAnswerPoints": 10,
-        "evidenceSource": "systemObserved",
-        "technicalFailuresScoreable": false
-      },
-      "auditEvents": [
-        {
-          "eventType": "clipStarted",
-          "when": "onPlaybackStart",
-          "payload": {
-            "mode": "assessment"
-          }
-        },
-        {
-          "eventType": "clipAnswerSubmitted",
-          "when": "onAnswerSubmit",
-          "payload": {
-            "scoreable": true
-          }
-        }
-      ],
-      "modes": [
-        "lesson",
-        "practice",
-        "assessment"
-      ]
-    },
-    {
-      "id": "clip_picking_forklift_aisle_awareness_001",
-      "title": "Staying alert to forklift traffic while picking",
-      "module": "dispatch",
-      "sequenceNumber": 9,
-      "domain": "picking",
-      "role": "Warehouse Operations Associate",
-      "processArea": "Ambient Storage Aisle",
-      "temperatureZone": "ambient",
-      "durationSeconds": 10,
-      "transcript": "A forklift operates in the same tall-racking aisle an associate is walking through to pick items.",
-      "description": "A forklift shares the picking aisle with a pedestrian associate. The learner must decide how to behave when a forklift is operating nearby.",
-      "expectedObservation": "The forklift is active in the same aisle the associate needs to walk through.",
-      "expectedDecision": "Stay visible, make eye contact with the operator, and let the forklift complete its move before crossing its path.",
-      "competencyTags": [
-        "forklift_pedestrian_safety",
-        "picking_aisle_awareness"
-      ],
-      "lessonContent": "Forklifts have significant blind spots and stopping distance. A pedestrian who assumes the operator has seen them, or tries to slip past while the forklift is moving, is taking on real risk that's entirely avoidable by waiting.",
-      "assessmentQuestion": "What should the associate do when a forklift is active in the same aisle?",
-      "answerOptions": [
-        {
-          "id": "wait_and_confirm",
-          "label": "Stay visible and wait for the forklift to finish its move",
-          "feedback": "Correct -- forklifts have blind spots; never assume the operator has seen you."
-        },
-        {
-          "id": "slip_past",
-          "label": "Move past quickly while there's a gap",
-          "feedback": "This risks a collision -- always wait for confirmed clearance, not just a gap."
-        }
-      ],
-      "correctAnswer": "wait_and_confirm",
-      "videoUrl": null,
-      "thumbnailUrl": "asset://assets/micro_lessons/thumbnails/picking_forklift_aisle_awareness.jpg",
-      "cloudflareVideoPath": "micro-lessons/warehouse/v1/dispatch/09-clip_picking_forklift_aisle_awareness_001/picking_forklift_aisle_awareness.mp4",
-      "fallbackVideoUrl": null,
-      "scoringRules": {
-        "maxPoints": 10,
-        "correctAnswerPoints": 10,
-        "evidenceSource": "systemObserved",
-        "technicalFailuresScoreable": false
-      },
-      "auditEvents": [
-        {
-          "eventType": "clipStarted",
-          "when": "onPlaybackStart",
-          "payload": {
-            "mode": "assessment"
-          }
-        },
-        {
-          "eventType": "clipAnswerSubmitted",
-          "when": "onAnswerSubmit",
-          "payload": {
-            "scoreable": true
-          }
-        }
-      ],
-      "modes": [
-        "lesson",
-        "practice",
-        "assessment"
-      ]
-    },
-    {
-      "id": "clip_safety_ppe_entry_001",
-      "title": "PPE check before entering the processing area",
-      "module": "processing",
-      "sequenceNumber": 6,
-      "domain": "safety",
-      "role": "Warehouse Operations Associate",
-      "processArea": "Processing Area Entry",
-      "temperatureZone": "ambient",
-      "durationSeconds": 10,
-      "transcript": "Associates put on hairnets and aprons at the handwashing station before passing through the strip curtain into the processing area.",
-      "description": "Associates prepare to enter a food processing area through a strip-curtain doorway. The learner must decide when required PPE should go on.",
-      "expectedObservation": "Hairnets and aprons are already on before the associates step through the strip curtain.",
-      "expectedDecision": "Put on all required PPE at the entry station before entering, not after stepping inside.",
-      "competencyTags": [
-        "ppe_compliance",
-        "hygiene_entry_discipline"
-      ],
-      "lessonContent": "Food-processing PPE exists to keep contaminants out of the product area. Putting it on after entering defeats the purpose -- gowning and hairnets go on at the entry station, every time, before crossing the threshold.",
-      "assessmentQuestion": "When should hairnets and aprons be put on?",
-      "answerOptions": [
-        {
-          "id": "before_entry",
-          "label": "At the entry station, before stepping inside",
-          "feedback": "Correct -- PPE only protects the processing area if it's on before you cross the threshold."
-        },
-        {
-          "id": "after_entry",
-          "label": "Just inside, once through the curtain",
-          "feedback": "This lets contamination in during the gap -- PPE goes on before entry, not after."
-        }
-      ],
-      "correctAnswer": "before_entry",
-      "videoUrl": null,
-      "thumbnailUrl": "asset://assets/micro_lessons/thumbnails/safety_ppe_entry_check.jpg",
-      "cloudflareVideoPath": "micro-lessons/warehouse/v1/processing/06-clip_safety_ppe_entry_001/safety_ppe_entry_check.mp4",
-      "fallbackVideoUrl": null,
-      "scoringRules": {
-        "maxPoints": 10,
-        "correctAnswerPoints": 10,
-        "evidenceSource": "systemObserved",
-        "technicalFailuresScoreable": false
-      },
-      "auditEvents": [
-        {
-          "eventType": "clipStarted",
-          "when": "onPlaybackStart",
-          "payload": {
-            "mode": "assessment"
-          }
-        },
-        {
-          "eventType": "clipAnswerSubmitted",
-          "when": "onAnswerSubmit",
-          "payload": {
-            "scoreable": true
-          }
-        }
-      ],
-      "modes": [
-        "lesson",
-        "practice",
-        "assessment"
-      ]
-    },
-    {
-      "id": "clip_processing_produce_bagging_001",
-      "title": "Weighing and bagging produce for orders",
-      "module": "processing",
-      "sequenceNumber": 7,
-      "domain": "processing",
-      "role": "Warehouse Operations Associate",
-      "processArea": "Produce Bagging Line",
-      "temperatureZone": "ambient",
-      "durationSeconds": 10,
-      "transcript": "Associates portion carrots and cucumbers onto a scale before bagging them into paper bags for outbound orders.",
-      "description": "A team portions produce into bags at a bagging line. The learner must decide whether to rely on the scale or estimate quantities by eye.",
-      "expectedObservation": "Each portion is weighed on the scale before it goes into the bag.",
-      "expectedDecision": "Confirm the scale reading for every bag rather than estimating the quantity by eye.",
-      "competencyTags": [
-        "weight_accuracy",
-        "produce_bagging"
-      ],
-      "lessonContent": "Eyeballing produce quantities to save time is a common shortcut that produces inconsistent bag weights -- some short, some over. Checking the scale for every bag is what keeps orders accurate and consistent.",
-      "assessmentQuestion": "Should each bag's quantity be estimated by eye or confirmed on the scale?",
-      "answerOptions": [
-        {
-          "id": "confirm_scale",
-          "label": "Confirmed on the scale every time",
-          "feedback": "Correct -- keeps bag weights consistent instead of drifting short or over."
-        },
-        {
-          "id": "estimate_eye",
-          "label": "Estimated by eye to save time",
-          "feedback": "This produces inconsistent bag weights -- always confirm on the scale."
-        }
-      ],
-      "correctAnswer": "confirm_scale",
-      "videoUrl": null,
-      "thumbnailUrl": "asset://assets/micro_lessons/thumbnails/processing_produce_bagging.jpg",
-      "cloudflareVideoPath": "micro-lessons/warehouse/v1/processing/07-clip_processing_produce_bagging_001/processing_produce_bagging.mp4",
-      "fallbackVideoUrl": null,
-      "scoringRules": {
-        "maxPoints": 10,
-        "correctAnswerPoints": 10,
-        "evidenceSource": "systemObserved",
-        "technicalFailuresScoreable": false
-      },
-      "auditEvents": [
-        {
-          "eventType": "clipStarted",
-          "when": "onPlaybackStart",
-          "payload": {
-            "mode": "assessment"
-          }
-        },
-        {
-          "eventType": "clipAnswerSubmitted",
-          "when": "onAnswerSubmit",
-          "payload": {
-            "scoreable": true
-          }
-        }
-      ],
-      "modes": [
-        "lesson",
-        "practice",
-        "assessment"
-      ]
     }
   ]
 }
