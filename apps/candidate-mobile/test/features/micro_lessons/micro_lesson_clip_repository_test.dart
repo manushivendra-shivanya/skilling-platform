@@ -34,7 +34,7 @@ void main() {
 
     result.when(
       success: (clips) {
-        expect(clips, hasLength(29));
+        expect(clips, hasLength(32));
         expect(clips.every((clip) => clip.durationSeconds == 10), isTrue);
         expect(
           clips.map((clip) => clip.id).toSet(),
@@ -46,6 +46,7 @@ void main() {
             'clip_receiving_bread_001',
             'clip_inspection_fnv_001',
             'clip_inspection_egg_001',
+            'clip_inspection_carton_damage_001',
             'clip_putaway_dairy_001',
             'clip_putaway_dairy_002',
             'clip_putaway_ambient_001',
@@ -56,6 +57,7 @@ void main() {
             'clip_processing_sack_weight_check_001',
             'clip_processing_produce_bagging_001',
             'clip_safety_ppe_entry_001',
+            'clip_supervisor_bag_quality_check_001',
             'clip_picking_frozen_001',
             'clip_picking_ambient_001',
             'clip_picking_forklift_aisle_awareness_001',
@@ -65,6 +67,7 @@ void main() {
             'clip_dispatch_loading_001',
             'clip_dispatch_perishable_loading_001',
             'clip_dispatch_manifest_verification_001',
+            'clip_dispatch_missing_item_check_001',
             'clip_delivery_handover_001',
             'clip_returns_driver_settlement_001',
             'clip_returns_quarantine_001',
@@ -79,13 +82,14 @@ void main() {
                 .where((clip) => clip.module == MicroLessonModule.inward)
                 .toList()
               ..sort((a, b) => a.sequenceNumber.compareTo(b.sequenceNumber));
-        expect(inward, hasLength(10));
+        expect(inward, hasLength(11));
         expect(inward.map((clip) => clip.domain), [
           MicroLessonDomain.receiving,
           MicroLessonDomain.receiving,
           MicroLessonDomain.receiving,
           MicroLessonDomain.receiving,
           MicroLessonDomain.receiving,
+          MicroLessonDomain.inspection,
           MicroLessonDomain.inspection,
           MicroLessonDomain.inspection,
           MicroLessonDomain.putAway,
@@ -98,7 +102,7 @@ void main() {
                 .where((clip) => clip.module == MicroLessonModule.processing)
                 .toList()
               ..sort((a, b) => a.sequenceNumber.compareTo(b.sequenceNumber));
-        expect(processing, hasLength(7));
+        expect(processing, hasLength(8));
         expect(processing.first.domain, MicroLessonDomain.safety);
         // dispatch = pick, then merge/stage/load, then depart, then
         // settle returns.
@@ -107,7 +111,7 @@ void main() {
                 .where((clip) => clip.module == MicroLessonModule.dispatch)
                 .toList()
               ..sort((a, b) => a.sequenceNumber.compareTo(b.sequenceNumber));
-        expect(dispatch, hasLength(12));
+        expect(dispatch, hasLength(13));
         expect(
           dispatch
               .take(4)
@@ -125,7 +129,7 @@ void main() {
           clips.where((clip) => clip.domain == MicroLessonDomain.safety),
           hasLength(1),
         );
-        // Eight clips are CDN-only (no bundled local asset): hasVideoAsset
+        // Eleven clips are CDN-only (no bundled local asset): hasVideoAsset
         // is false for them under the default, un-configured repository,
         // same as the still-pending returns_quarantine placeholder -- they
         // only resolve once a real cdnBaseUrl is configured, covered by
@@ -135,14 +139,17 @@ void main() {
           clips.where((clip) => !clip.hasVideoAsset).map((clip) => clip.id),
           unorderedEquals([
             'clip_returns_quarantine_001',
+            'clip_inspection_carton_damage_001',
             'clip_processing_vegetable_staging_001',
             'clip_processing_sack_weight_check_001',
             'clip_processing_produce_bagging_001',
             'clip_safety_ppe_entry_001',
+            'clip_supervisor_bag_quality_check_001',
             'clip_picking_forklift_aisle_awareness_001',
             'clip_picking_fragile_item_stacking_001',
             'clip_dispatch_perishable_loading_001',
             'clip_dispatch_manifest_verification_001',
+            'clip_dispatch_missing_item_check_001',
           ]),
         );
         expect(

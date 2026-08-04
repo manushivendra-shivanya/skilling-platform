@@ -464,7 +464,7 @@
       "id": "clip_putaway_dairy_001",
       "title": "Chilled dairy immediate put-away",
       "module": "inward",
-      "sequenceNumber": 8,
+      "sequenceNumber": 9,
       "domain": "putAway",
       "role": "Put-away Associate",
       "processArea": "Chilled Storage",
@@ -523,14 +523,14 @@
           }
         }
       ],
-      "cloudflareVideoPath": "micro-lessons/warehouse/v1/inward/08-clip_putaway_dairy_001/putaway_dairy_immediate_stock.mp4",
+      "cloudflareVideoPath": "micro-lessons/warehouse/v1/inward/09-clip_putaway_dairy_001/putaway_dairy_immediate_stock.mp4",
       "fallbackVideoUrl": null
     },
     {
       "id": "clip_putaway_dairy_002",
       "title": "Storing dairy crates in cold storage",
       "module": "inward",
-      "sequenceNumber": 9,
+      "sequenceNumber": 10,
       "domain": "putAway",
       "role": "Warehouse Operations Associate",
       "processArea": "Chilled Storage",
@@ -583,7 +583,7 @@
           }
         }
       ],
-      "cloudflareVideoPath": "micro-lessons/warehouse/v1/inward/09-clip_putaway_dairy_002/putaway_dairy_cold_storage_stacking.mp4",
+      "cloudflareVideoPath": "micro-lessons/warehouse/v1/inward/10-clip_putaway_dairy_002/putaway_dairy_cold_storage_stacking.mp4",
       "fallbackVideoUrl": null,
       "modes": [
         "lesson",
@@ -595,7 +595,7 @@
       "id": "clip_putaway_ambient_001",
       "title": "Ambient staples location scan",
       "module": "inward",
-      "sequenceNumber": 10,
+      "sequenceNumber": 11,
       "domain": "putAway",
       "role": "Inventory Associate",
       "processArea": "Ambient Storage",
@@ -654,7 +654,7 @@
           }
         }
       ],
-      "cloudflareVideoPath": "micro-lessons/warehouse/v1/inward/10-clip_putaway_ambient_001/putaway_ambient_staples_scan.mp4",
+      "cloudflareVideoPath": "micro-lessons/warehouse/v1/inward/11-clip_putaway_ambient_001/putaway_ambient_staples_scan.mp4",
       "fallbackVideoUrl": null
     },
     {
@@ -1708,7 +1708,7 @@
       "id": "clip_delivery_handover_001",
       "title": "Restaurant delivery handover",
       "module": "dispatch",
-      "sequenceNumber": 10,
+      "sequenceNumber": 11,
       "domain": "delivery",
       "role": "Delivery Associate",
       "processArea": "Customer Delivery Point",
@@ -1767,14 +1767,14 @@
           }
         }
       ],
-      "cloudflareVideoPath": "micro-lessons/warehouse/v1/dispatch/10-clip_delivery_handover_001/delivery_restaurant_handover_scan.mp4",
+      "cloudflareVideoPath": "micro-lessons/warehouse/v1/dispatch/11-clip_delivery_handover_001/delivery_restaurant_handover_scan.mp4",
       "fallbackVideoUrl": null
     },
     {
       "id": "clip_returns_driver_settlement_001",
       "title": "Driver empty-crate and cash settlement",
       "module": "dispatch",
-      "sequenceNumber": 11,
+      "sequenceNumber": 12,
       "domain": "supervisor",
       "role": "Route Settlement Associate",
       "processArea": "Returns and Settlement Counter",
@@ -1833,14 +1833,14 @@
           }
         }
       ],
-      "cloudflareVideoPath": "micro-lessons/warehouse/v1/dispatch/11-clip_returns_driver_settlement_001/returns_driver_empty_crates_cash_submission.mp4",
+      "cloudflareVideoPath": "micro-lessons/warehouse/v1/dispatch/12-clip_returns_driver_settlement_001/returns_driver_empty_crates_cash_submission.mp4",
       "fallbackVideoUrl": null
     },
     {
       "id": "clip_returns_quarantine_001",
       "title": "Returned goods quarantine",
       "module": "dispatch",
-      "sequenceNumber": 12,
+      "sequenceNumber": 13,
       "domain": "supervisor",
       "role": "Hub Supervisor",
       "processArea": "Returns and Quarantine",
@@ -1901,6 +1901,201 @@
       ],
       "cloudflareVideoPath": null,
       "fallbackVideoUrl": null
+    },
+    {
+      "id": "clip_inspection_carton_damage_001",
+      "title": "General carton damage check while unloading",
+      "module": "inward",
+      "sequenceNumber": 8,
+      "domain": "inspection",
+      "role": "Receiving Associate",
+      "processArea": "Receiving Dock",
+      "temperatureZone": "ambient",
+      "transcript": "Associates unload cartons from a delivery truck onto the receiving conveyor, checking each one as it comes off.",
+      "description": "Cartons are unloaded from a truck onto the receiving conveyor. The learner must decide when to check each carton for damage.",
+      "expectedObservation": "Each carton is visually checked for damage as it's placed on the conveyor, not after it has already moved on.",
+      "expectedDecision": "Check each carton for damage at the point of unloading, before it moves further down the line.",
+      "competencyTags": [
+        "receiving_damage_check",
+        "carton_handling"
+      ],
+      "lessonContent": "A damaged carton caught at unloading can be set aside immediately. The same carton caught further down the line means retracing where it came from and which other cartons might share the same issue.",
+      "assessmentQuestion": "When should a carton be checked for damage?",
+      "answerOptions": [
+        {
+          "id": "at_unloading",
+          "label": "At the point of unloading, before it moves on",
+          "feedback": "Correct -- catches the issue immediately, before it's mixed in with other stock."
+        },
+        {
+          "id": "later",
+          "label": "Later, whenever there's time",
+          "feedback": "This risks damaged stock moving further into the flow before anyone notices."
+        }
+      ],
+      "correctAnswer": "at_unloading",
+      "videoUrl": null,
+      "thumbnailUrl": "asset://assets/micro_lessons/thumbnails/inspection_carton_damage_check.jpg",
+      "fallbackVideoUrl": null,
+      "cloudflareVideoPath": "micro-lessons/warehouse/v1/inward/08-clip_inspection_carton_damage_001/inspection_carton_damage_check.mp4",
+      "durationSeconds": 10,
+      "scoringRules": {
+        "maxPoints": 10,
+        "correctAnswerPoints": 10,
+        "evidenceSource": "systemObserved",
+        "technicalFailuresScoreable": false
+      },
+      "auditEvents": [
+        {
+          "eventType": "clipStarted",
+          "when": "onPlaybackStart",
+          "payload": {
+            "mode": "assessment"
+          }
+        },
+        {
+          "eventType": "clipAnswerSubmitted",
+          "when": "onAnswerSubmit",
+          "payload": {
+            "scoreable": true
+          }
+        }
+      ],
+      "modes": [
+        "lesson",
+        "practice",
+        "assessment"
+      ]
+    },
+    {
+      "id": "clip_supervisor_bag_quality_check_001",
+      "title": "Supervisor quality check on packed produce bags",
+      "module": "processing",
+      "sequenceNumber": 8,
+      "domain": "supervisor",
+      "role": "Shift Supervisor",
+      "processArea": "Produce Packing Room",
+      "temperatureZone": "chilled",
+      "transcript": "A supervisor moves between associates packing produce into paper bags, checking the packed bags as they're completed.",
+      "description": "A supervisor oversees a team packing produce into bags. The learner must decide how the supervisor should verify packing quality.",
+      "expectedObservation": "The supervisor checks completed bags against the associates, rather than only observing from a distance.",
+      "expectedDecision": "Spot-check completed bags directly rather than relying on visual observation of the packing process alone.",
+      "competencyTags": [
+        "supervisor_quality_oversight",
+        "produce_packing_verification"
+      ],
+      "lessonContent": "Watching associates work looks productive but doesn't catch a badly packed bag that looked fine from a distance. A supervisor's oversight role means directly checking finished output, not just monitoring activity.",
+      "assessmentQuestion": "How should a supervisor verify packing quality?",
+      "answerOptions": [
+        {
+          "id": "spot_check",
+          "label": "Spot-check completed bags directly",
+          "feedback": "Correct -- directly verifying finished output catches issues that observation alone would miss."
+        },
+        {
+          "id": "observe_only",
+          "label": "Observe the packing process from a distance",
+          "feedback": "This can miss quality issues in the finished bags themselves -- direct checks are needed."
+        }
+      ],
+      "correctAnswer": "spot_check",
+      "videoUrl": null,
+      "thumbnailUrl": "asset://assets/micro_lessons/thumbnails/supervisor_bag_quality_check.jpg",
+      "fallbackVideoUrl": null,
+      "cloudflareVideoPath": "micro-lessons/warehouse/v1/processing/08-clip_supervisor_bag_quality_check_001/supervisor_bag_quality_check.mp4",
+      "durationSeconds": 10,
+      "scoringRules": {
+        "maxPoints": 10,
+        "correctAnswerPoints": 10,
+        "evidenceSource": "systemObserved",
+        "technicalFailuresScoreable": false
+      },
+      "auditEvents": [
+        {
+          "eventType": "clipStarted",
+          "when": "onPlaybackStart",
+          "payload": {
+            "mode": "assessment"
+          }
+        },
+        {
+          "eventType": "clipAnswerSubmitted",
+          "when": "onAnswerSubmit",
+          "payload": {
+            "scoreable": true
+          }
+        }
+      ],
+      "modes": [
+        "lesson",
+        "practice",
+        "assessment"
+      ]
+    },
+    {
+      "id": "clip_dispatch_missing_item_check_001",
+      "title": "Handling a missing item found during sortation",
+      "module": "dispatch",
+      "sequenceNumber": 10,
+      "domain": "dispatch",
+      "role": "Warehouse Operations Associate",
+      "processArea": "Sortation Line",
+      "temperatureZone": "mixed",
+      "transcript": "Associates work along a long sortation line of crates and insulated containers, checking labels against what should be in each order.",
+      "description": "Orders move along a sortation line where associates verify contents against labels. The learner must decide what to do when an item appears to be missing from an order.",
+      "expectedObservation": "Associates check each container's contents against its label as it moves along the sortation line.",
+      "expectedDecision": "Flag the order with the missing item and escalate it rather than letting it continue to dispatch incomplete.",
+      "competencyTags": [
+        "sortation_accuracy",
+        "missing_item_escalation"
+      ],
+      "lessonContent": "An order that dispatches with a missing item becomes a customer-facing problem instead of a warehouse-facing one. Catching it on the sortation line and escalating it is far cheaper than a return or a complaint after delivery.",
+      "assessmentQuestion": "What should happen when an item appears to be missing from an order on the sortation line?",
+      "answerOptions": [
+        {
+          "id": "flag_escalate",
+          "label": "Flag the order and escalate before it continues",
+          "feedback": "Correct -- catches the issue before it becomes a customer-facing problem."
+        },
+        {
+          "id": "let_it_through",
+          "label": "Let it continue and note it for later",
+          "feedback": "This lets an incomplete order reach the customer -- flag and escalate immediately instead."
+        }
+      ],
+      "correctAnswer": "flag_escalate",
+      "videoUrl": null,
+      "thumbnailUrl": "asset://assets/micro_lessons/thumbnails/dispatch_missing_item_check.jpg",
+      "fallbackVideoUrl": null,
+      "cloudflareVideoPath": "micro-lessons/warehouse/v1/dispatch/10-clip_dispatch_missing_item_check_001/dispatch_missing_item_check.mp4",
+      "durationSeconds": 10,
+      "scoringRules": {
+        "maxPoints": 10,
+        "correctAnswerPoints": 10,
+        "evidenceSource": "systemObserved",
+        "technicalFailuresScoreable": false
+      },
+      "auditEvents": [
+        {
+          "eventType": "clipStarted",
+          "when": "onPlaybackStart",
+          "payload": {
+            "mode": "assessment"
+          }
+        },
+        {
+          "eventType": "clipAnswerSubmitted",
+          "when": "onAnswerSubmit",
+          "payload": {
+            "scoreable": true
+          }
+        }
+      ],
+      "modes": [
+        "lesson",
+        "practice",
+        "assessment"
+      ]
     }
   ]
 }
