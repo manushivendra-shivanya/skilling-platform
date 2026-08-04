@@ -1,5 +1,10 @@
+import 'package:candidate_mobile/core/errors/result.dart';
 import 'package:candidate_mobile/core/storage/secure_key_value_store.dart';
 import 'package:candidate_mobile/features/career_passport/data/wms_career_passport_repository.dart';
+import 'package:candidate_mobile/features/certification_exam/data/secure_certification_exam_attempt_repository.dart';
+import 'package:candidate_mobile/features/certification_exam/domain/certification_exam.dart';
+import 'package:candidate_mobile/features/certification_exam/domain/certification_exam_attempt.dart';
+import 'package:candidate_mobile/features/certification_exam/domain/certification_exam_repository.dart';
 import 'package:candidate_mobile/features/micro_lessons/data/secure_micro_lesson_assessment_repository.dart';
 import 'package:candidate_mobile/features/micro_lessons/domain/micro_lesson_clip.dart';
 import 'package:candidate_mobile/features/workplace_simulation/application/workplace_simulation_controller.dart';
@@ -181,6 +186,116 @@ void main() {
     );
   });
 
+  test(
+    'merges certification exam evidence only when the attempt passed',
+    () async {
+      final store = InMemorySecureKeyValueStore();
+      final attempts = LocalSimulationAttemptRepository(
+        store,
+        clock: () => fixedTime,
+      );
+      final examAttempts = SecureCertificationExamAttemptRepository(store);
+      final repository = WmsCareerPassportRepository(
+        attemptRepository: attempts,
+        certificationExamRepository: _FakeCertificationExamRepository(),
+        certificationExamAttemptRepository: examAttempts,
+      );
+
+      final wmsAttempt = await attempts.createAttempt(
+        candidateId: candidateId,
+        missionId: WorkplaceSimulationController.missionId,
+        missionVersion: '1.0.0',
+        scenarioSeed: 1,
+      );
+      await attempts.saveAttempt(
+        wmsAttempt.copyWith(state: MissionState.completed),
+      );
+      await attempts.saveResult(candidateId, _result(wmsAttempt, score: 80));
+
+      // Passes: both questions answered correctly.
+      await examAttempts.recordAttempt(
+        candidateId: candidateId,
+        exam: _exam(),
+        responses: const [
+          QuestionResponse(
+            questionId: 'q1',
+            competencyId: 'tag-a',
+            selectedOptionId: 'correct',
+            correctOptionId: 'correct',
+          ),
+          QuestionResponse(
+            questionId: 'q2',
+            competencyId: 'tag-b',
+            selectedOptionId: 'correct',
+            correctOptionId: 'correct',
+          ),
+        ],
+        startedAt: fixedTime,
+        submittedAt: fixedTime.add(const Duration(minutes: 5)),
+      );
+
+      final result = await repository.loadEvidence(candidateId);
+
+      result.when(
+        success: (evidence) {
+          expect(evidence, hasLength(3));
+          expect(
+            evidence.map((e) => e.evidenceType),
+            containsAll([
+              EvidenceType.simulationObservation,
+              EvidenceType.certificationExam,
+            ]),
+          );
+        },
+        failure: (failure) => fail('expected success, got $failure'),
+      );
+    },
+  );
+
+  test('a failed certification exam attempt contributes no evidence', () async {
+    final store = InMemorySecureKeyValueStore();
+    final attempts = LocalSimulationAttemptRepository(
+      store,
+      clock: () => fixedTime,
+    );
+    final examAttempts = SecureCertificationExamAttemptRepository(store);
+    final repository = WmsCareerPassportRepository(
+      attemptRepository: attempts,
+      certificationExamRepository: _FakeCertificationExamRepository(),
+      certificationExamAttemptRepository: examAttempts,
+    );
+
+    // Fails: both questions answered incorrectly (0%, below the 70% pass
+    // threshold on _exam()).
+    await examAttempts.recordAttempt(
+      candidateId: candidateId,
+      exam: _exam(),
+      responses: const [
+        QuestionResponse(
+          questionId: 'q1',
+          competencyId: 'tag-a',
+          selectedOptionId: 'wrong',
+          correctOptionId: 'correct',
+        ),
+        QuestionResponse(
+          questionId: 'q2',
+          competencyId: 'tag-b',
+          selectedOptionId: 'wrong',
+          correctOptionId: 'correct',
+        ),
+      ],
+      startedAt: fixedTime,
+      submittedAt: fixedTime.add(const Duration(minutes: 5)),
+    );
+
+    final result = await repository.loadEvidence(candidateId);
+
+    result.when(
+      success: (evidence) => expect(evidence, isEmpty),
+      failure: (failure) => fail('expected success, got $failure'),
+    );
+  });
+
   test('local-only repository cannot manage employer access', () async {
     final store = InMemorySecureKeyValueStore();
     final attempts = LocalSimulationAttemptRepository(
@@ -290,6 +405,44 @@ SimulationResult _result(SimulationAttempt attempt, {required int score}) {
     recommendedRemediationIds: const [],
     completedAt: DateTime.utc(2026, 8, 1, 9, 20),
   );
+}
+
+CertificationExam _exam() {
+  return const CertificationExam(
+    id: 'exam-1',
+    title: 'Test Exam',
+    version: '1',
+    description: 'Description',
+    timeLimit: Duration(minutes: 10),
+    passThresholdPercent: 70,
+    questions: [
+      CertificationExamQuestion(
+        id: 'q1',
+        competencyId: 'tag-a',
+        prompt: 'Prompt 1?',
+        options: [
+          ExamAnswerOption(id: 'correct', label: 'Correct', feedback: 'Good'),
+          ExamAnswerOption(id: 'wrong', label: 'Wrong', feedback: 'Bad'),
+        ],
+        correctOptionId: 'correct',
+      ),
+      CertificationExamQuestion(
+        id: 'q2',
+        competencyId: 'tag-b',
+        prompt: 'Prompt 2?',
+        options: [
+          ExamAnswerOption(id: 'correct', label: 'Correct', feedback: 'Good'),
+          ExamAnswerOption(id: 'wrong', label: 'Wrong', feedback: 'Bad'),
+        ],
+        correctOptionId: 'correct',
+      ),
+    ],
+  );
+}
+
+class _FakeCertificationExamRepository implements CertificationExamRepository {
+  @override
+  Future<Result<CertificationExam>> loadExam() async => Success(_exam());
 }
 
 MicroLessonClip _microLessonClip() {

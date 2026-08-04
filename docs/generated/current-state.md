@@ -2655,6 +2655,68 @@ shaped to serve this purpose too (`purpose = 'employer_review'`,
   scene duplicated `clip_returns_driver_settlement_001`'s scenario
   closely enough not to be worth a second slot.
 
+## Certification Exam v1 (manual question bank)
+
+- New `apps/candidate-mobile/lib/features/certification_exam/` feature
+  slice: a formal, timed, hand-authored multiple-choice exam, distinct
+  from the unlimited casual practice offered by micro-lesson clips.
+  Scoped via AskUserQuestion against a "for now build" list where this
+  was the one genuinely new item (clip-based micro assessments, WMS
+  simulation evidence, Career Passport evidence, and employer evidence
+  review were all already shipped).
+- Design decisions, made explicit rather than inherited from the
+  micro-lesson pattern: **one competency per question** (not a
+  list-per-question like `MicroLessonClip.competencyTags` -- keeps each
+  question's contribution to certification unambiguous); **binary
+  correct/incorrect per question** (not `DiagnosticQuestion`'s graded
+  int score); **evidence only on an overall pass** -- a failed attempt
+  earns zero `EvidenceRecord`s (no partial credit for a certification),
+  a passed attempt earns evidence for every competency the exam covers,
+  scored at the overall exam percentage; **retake cooldown
+  (`certificationExamRetakeCooldown`, 24h) is UI-advisory only**, not
+  enforced server-side -- attempts are on-device only
+  (`SecureKeyValueStore`), same posture as micro-lesson assessments
+  today, so hard enforcement here would be inconsistent rigor for no
+  real security benefit.
+- New `EvidenceType.certificationExam` enum value
+  (`workplace_simulation/domain/simulation_enums.dart`) alongside the
+  existing `simulationObservation`/`microLessonAssessment`, with both
+  exhaustive switches in `career_passport_section.dart` updated.
+  `WmsCareerPassportRepository` gained
+  `certificationExamRepository`/`certificationExamAttemptRepository`
+  constructor params and a `_loadCertificationExamEvidence()` helper
+  that merges in unconditionally and fails soft, mirroring
+  `_loadMicroLessonEvidence()`'s existing pattern exactly.
+- Content: a single "Warehouse Operations Certification" exam --
+  12 hand-authored questions, one per already-established competency
+  tag pulled straight from `warehouse_clips.json` (spanning
+  inward/processing/dispatch), 15-minute time limit, 70% pass
+  threshold. Static JSON asset
+  (`assets/certification_exam/warehouse_operations_exam_v1.json`),
+  loaded and validated the same way `AssetMicroLessonClipRepository`
+  loads clips (own validator:
+  `certification_exam_validator.dart`). No admin authoring UI exists
+  (or is planned for v1) -- content is hand-edited JSON, matching every
+  other content catalogue in this codebase.
+- UI: a new `CertificationExamSection` card in the Learn tab, below the
+  existing `WarehouseClipsSection` -- explicitly does NOT reuse
+  `NotEmployerEvidenceBanner`'s "not evidence yet" copy (which would be
+  false here); instead states plainly that passing adds real Career
+  Passport evidence. `CertificationExamScreen` is a timed question flow
+  (visible countdown, free navigation between questions while time
+  remains, no per-question right/wrong feedback -- a formal assessment,
+  not practice); a timeout auto-submits with a sentinel
+  `unansweredOptionId` for any question never reached, which always
+  scores incorrect without needing a fake real answer.
+  `CertificationExamResultScreen` shows the score, pass/fail, and a
+  full per-question breakdown with correct answers revealed.
+- Tests: 27 new (domain scoring/evidence/validator, asset-loading
+  against the real 12-question content, repository attempt validation,
+  a widget test driving a full pass end to end, plus two new
+  `WmsCareerPassportRepository` cases for evidence-on-pass and
+  no-evidence-on-fail). Catalogue total now 181 tests, all passing.
+  `flutter analyze` clean, debug APK builds successfully.
+
 ## Target product architecture proposal
 
 - Added the proposed Flora AI Employability Infrastructure architecture in

@@ -7,6 +7,8 @@ import 'package:candidate_mobile/core/network/connectivity_status.dart';
 import 'package:candidate_mobile/core/repositories/candidate_session_repository.dart';
 import 'package:candidate_mobile/core/storage/secure_key_value_store.dart';
 import 'package:candidate_mobile/features/authentication/domain/development_auth_repository.dart';
+import 'package:candidate_mobile/features/certification_exam/data/secure_certification_exam_attempt_repository.dart';
+import 'package:candidate_mobile/features/certification_exam/domain/certification_exam_repository.dart';
 import 'package:candidate_mobile/features/home/domain/home_dashboard_repository.dart';
 import 'package:candidate_mobile/features/jobs/data/local_mock_jobs_repository.dart';
 import 'package:candidate_mobile/features/jobs/domain/jobs_repository.dart';
@@ -40,6 +42,8 @@ extension CandidateAppPump on WidgetTester {
     LearningRepository? learningRepository,
     MicroLessonClipRepository? microLessonClipRepository,
     MicroLessonAssessmentRepository? microLessonAssessmentRepository,
+    CertificationExamRepository? certificationExamRepository,
+    CertificationExamAttemptRepository? certificationExamAttemptRepository,
     JobsRepository? jobsRepository,
     CandidateIntelligenceRepository? candidateIntelligenceRepository,
     VoiceInterviewRepository? voiceInterviewRepository,
@@ -90,6 +94,19 @@ extension CandidateAppPump on WidgetTester {
           microLessonAssessmentRepositoryProvider.overrideWithValue(
             microLessonAssessmentRepository ??
                 SecureMicroLessonAssessmentRepository(
+                  InMemorySecureKeyValueStore(),
+                ),
+          ),
+          if (certificationExamRepository != null)
+            certificationExamRepositoryProvider.overrideWithValue(
+              certificationExamRepository,
+            ),
+          // Same rationale as microLessonAssessmentRepositoryProvider above:
+          // always overridden so it never falls through to the real
+          // secure-storage-backed provider in the widget test sandbox.
+          certificationExamAttemptRepositoryProvider.overrideWithValue(
+            certificationExamAttemptRepository ??
+                SecureCertificationExamAttemptRepository(
                   InMemorySecureKeyValueStore(),
                 ),
           ),
