@@ -32,7 +32,13 @@ jobs:
 
       - run: flutter analyze
 
-      - run: flutter build apk --debug
+      # MICRO_LESSON_CDN_BASE_URL is the public r2.dev URL for the
+      # flora-micro-lessons bucket -- not a secret, it's meant to be
+      # publicly reachable. Clips with a cloudflareVideoPath resolve to
+      # this CDN; clips without one keep using their bundled local asset.
+      - run: >-
+          flutter build apk --debug
+          --dart-define=MICRO_LESSON_CDN_BASE_URL=https://pub-968107cb08f34b87b748a3700b60843e.r2.dev
 
       - uses: actions/upload-artifact@v4
         with:
