@@ -467,6 +467,10 @@ class _CareerPassportEntryDetails extends StatelessWidget {
             label: 'Clip',
             value: evidence.missionId,
           ),
+          EvidenceType.certificationExam => _DetailRow(
+            label: 'Exam',
+            value: evidence.missionId,
+          ),
         },
         _DetailRow(label: 'Attempt', value: evidence.attemptId),
         _DetailRow(
@@ -489,6 +493,7 @@ class _CareerPassportEntryDetails extends StatelessWidget {
       switch (evidenceType) {
         EvidenceType.simulationObservation => 'Simulation observation',
         EvidenceType.microLessonAssessment => 'Micro-lesson assessment',
+        EvidenceType.certificationExam => 'Certification exam',
       };
 }
 

@@ -1,0 +1,142 @@
+{
+  "id": "warehouse_operations_exam_v1",
+  "title": "Warehouse Operations Certification",
+  "version": "1",
+  "description": "A cumulative certification covering receiving, processing, and dispatch fundamentals across the warehouse operation. Pass to add verified Career Passport evidence for every competency this exam covers.",
+  "timeLimitSeconds": 900,
+  "passThresholdPercent": 70,
+  "questions": [
+    {
+      "id": "q_cold_chain_receiving_check",
+      "competencyId": "cold_chain_receiving_check",
+      "prompt": "A frozen delivery arrives and its internal temperature reads several degrees above the required threshold. What should happen before the stock is accepted into inventory?",
+      "context": "Frozen stock is being received at the dock, and a temperature probe check is part of the standard receiving process.",
+      "options": [
+        { "id": "flag_before_accept", "label": "Flag the temperature breach and hold the stock before it's accepted", "feedback": "Correct -- accepting stock that has already broken cold chain just moves the problem further into the warehouse." },
+        { "id": "accept_then_note", "label": "Accept it into inventory and make a note to check on it later", "feedback": "This lets a cold-chain breach move into stock as if nothing happened -- flag it before accepting." }
+      ],
+      "correctOptionId": "flag_before_accept"
+    },
+    {
+      "id": "q_food_safety_compliance",
+      "competencyId": "food_safety_compliance",
+      "prompt": "During a quality inspection, a batch of produce shows visible spoilage on some units but not others. What's the correct action?",
+      "context": "Fresh produce inspection happens after receiving, before the batch moves to storage or processing.",
+      "options": [
+        { "id": "segregate_hold", "label": "Segregate the affected units and hold the batch for a decision", "feedback": "Correct -- isolates the risk without discarding good stock or letting spoiled units mix in." },
+        { "id": "sort_pass", "label": "Pull out the visibly bad units and pass the rest through immediately", "feedback": "Spoilage often isn't fully visible yet -- the batch should be held for a proper decision, not waved through." }
+      ],
+      "correctOptionId": "segregate_hold"
+    },
+    {
+      "id": "q_receiving_damage_check",
+      "competencyId": "receiving_damage_check",
+      "prompt": "When should a carton be checked for physical damage during receiving?",
+      "context": "Cartons come off the delivery truck onto the receiving conveyor in a continuous stream.",
+      "options": [
+        { "id": "at_unloading", "label": "At the point of unloading, before it moves further into the flow", "feedback": "Correct -- catches damage immediately, before the carton is mixed in with other stock." },
+        { "id": "batch_end", "label": "After the whole truck is unloaded, in one final pass", "feedback": "This risks damaged stock already moving deeper into the warehouse before anyone notices." }
+      ],
+      "correctOptionId": "at_unloading"
+    },
+    {
+      "id": "q_ppe_compliance",
+      "competencyId": "ppe_compliance",
+      "prompt": "An associate is about to enter the food processing area without full required PPE. What should happen?",
+      "context": "The processing area has a marked PPE checkpoint at its entrance.",
+      "options": [
+        { "id": "stop_at_entry", "label": "Stop them at the entry point until PPE is complete", "feedback": "Correct -- PPE compliance has to be enforced at the point of entry, not after the fact." },
+        { "id": "allow_fix_later", "label": "Let them in and have them fix it once they're inside", "feedback": "Once inside, the hygiene risk has already occurred -- PPE must be checked at entry." }
+      ],
+      "correctOptionId": "stop_at_entry"
+    },
+    {
+      "id": "q_weight_verification_discipline",
+      "competencyId": "weight_verification_discipline",
+      "prompt": "A packed sack's weight reads slightly outside the acceptable tolerance on the scale. What's the correct next step?",
+      "context": "Sacks are weighed and sealed as part of the processing line.",
+      "options": [
+        { "id": "reweigh_correct", "label": "Re-check the weight and correct the pack before sealing", "feedback": "Correct -- catches the shortfall or overage before the sack is sealed and shipped." },
+        { "id": "seal_anyway", "label": "Seal it anyway since the difference is small", "feedback": "A small difference at the sack level can still add up to a real customer-facing issue -- correct it before sealing." }
+      ],
+      "correctOptionId": "reweigh_correct"
+    },
+    {
+      "id": "q_supervisor_quality_oversight",
+      "competencyId": "supervisor_quality_oversight",
+      "prompt": "How should a supervisor verify the quality of bags an associate has already packed?",
+      "context": "A supervisor oversees a team packing produce into bags on the processing line.",
+      "options": [
+        { "id": "spot_check_finished", "label": "Spot-check completed bags directly", "feedback": "Correct -- directly checking finished output catches issues that watching the process alone would miss." },
+        { "id": "observe_only", "label": "Observe the packing process from a distance", "feedback": "Watching the process doesn't catch a badly packed bag that looked fine from a distance -- check finished output directly." }
+      ],
+      "correctOptionId": "spot_check_finished"
+    },
+    {
+      "id": "q_pre_loading_temperature_check",
+      "competencyId": "pre_loading_temperature_check",
+      "prompt": "A refrigerated vehicle has just backed into the frozen dock bay. When should its internal temperature be verified relative to loading?",
+      "context": "Frozen stock is staged at the dock, ready to be loaded once the vehicle is ready.",
+      "options": [
+        { "id": "before_any_crate", "label": "Before any crates are loaded", "feedback": "Correct -- loading into a vehicle that hasn't reached temperature defeats the cold chain before the trip starts." },
+        { "id": "partway_through", "label": "Partway through loading, once a few crates are already in", "feedback": "By then some stock has already gone into a vehicle that wasn't ready -- verify before loading starts." }
+      ],
+      "correctOptionId": "before_any_crate"
+    },
+    {
+      "id": "q_dispatch_security_seal_verification",
+      "competencyId": "dispatch_security_seal_verification",
+      "prompt": "When should a vehicle's tamper-evident security seal be applied and confirmed?",
+      "context": "A refrigerated vehicle has just finished loading at the dispatch dock.",
+      "options": [
+        { "id": "right_after_loading", "label": "Right after loading finishes, before the vehicle leaves", "feedback": "Correct -- closes the tamper-evidence gap before the vehicle ever moves." },
+        { "id": "next_trip", "label": "Whenever convenient before the next trip", "feedback": "This leaves the vehicle unsealed and unverified in the meantime -- seal it right after loading." }
+      ],
+      "correctOptionId": "right_after_loading"
+    },
+    {
+      "id": "q_dispatch_route_assignment",
+      "competencyId": "dispatch_route_assignment",
+      "prompt": "When should a driver's route assignment be confirmed against the assignment board?",
+      "context": "Drivers gather near their staged vehicles before departure.",
+      "options": [
+        { "id": "before_departure", "label": "Before the driver departs with the vehicle", "feedback": "Correct -- catches a mix-up while it's still easy to fix." },
+        { "id": "after_departure", "label": "After departure, if a stop seems wrong", "feedback": "By then the driver is already on the wrong route -- confirm before departure instead." }
+      ],
+      "correctOptionId": "before_departure"
+    },
+    {
+      "id": "q_missing_item_escalation",
+      "competencyId": "missing_item_escalation",
+      "prompt": "An associate notices an item appears to be missing from an order on the sortation line. What should happen?",
+      "context": "Orders move along a sortation line where contents are checked against labels.",
+      "options": [
+        { "id": "flag_escalate", "label": "Flag the order and escalate it before it continues", "feedback": "Correct -- catches the issue before it becomes a customer-facing problem." },
+        { "id": "let_it_through", "label": "Let it continue and note it for later", "feedback": "This lets an incomplete order reach the customer -- flag and escalate immediately instead." }
+      ],
+      "correctOptionId": "flag_escalate"
+    },
+    {
+      "id": "q_last_mile_cold_chain_verification",
+      "competencyId": "last_mile_cold_chain_verification",
+      "prompt": "When should product temperature be verified during a chilled delivery to a restaurant?",
+      "context": "A delivery associate has arrived at a restaurant with chilled stock.",
+      "options": [
+        { "id": "at_handover", "label": "At the point of handover, before the restaurant accepts it", "feedback": "Correct -- confirms the cold chain held all the way to the customer." },
+        { "id": "skip_it", "label": "Skip it -- the vehicle was refrigerated, so it should be fine", "feedback": "A refrigerated vehicle doesn't guarantee the product itself held temperature -- always verify at handover." }
+      ],
+      "correctOptionId": "at_handover"
+    },
+    {
+      "id": "q_delivery_dispute_resolution",
+      "competencyId": "delivery_dispute_resolution",
+      "prompt": "A restaurant raises a shortage claim while a delivery is being unloaded. How should the delivery associate respond?",
+      "context": "Both the delivery associate and the restaurant carry handheld devices with order records.",
+      "options": [
+        { "id": "verify_device", "label": "Check the device record against what was actually delivered", "feedback": "Correct -- settles the dispute with the actual record instead of guesswork." },
+        { "id": "accept_claim", "label": "Accept the customer's claim without checking", "feedback": "This risks incorrect adjustments -- always verify against the device record first." }
+      ],
+      "correctOptionId": "verify_device"
+    }
+  ]
+}

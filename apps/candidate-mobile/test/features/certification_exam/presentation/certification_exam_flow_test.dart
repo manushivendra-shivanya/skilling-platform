@@ -1,0 +1,184 @@
+import 'package:candidate_mobile/core/errors/result.dart';
+import 'package:candidate_mobile/core/repositories/candidate_session_repository.dart';
+import 'package:candidate_mobile/features/certification_exam/domain/certification_exam.dart';
+import 'package:candidate_mobile/features/certification_exam/domain/certification_exam_repository.dart';
+import 'package:candidate_mobile/features/onboarding/data/secure_candidate_onboarding_repository.dart';
+import 'package:candidate_mobile/features/onboarding/domain/candidate_onboarding_draft.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+
+import '../../../helpers/pump_app.dart';
+
+class _FakeCertificationExamRepository implements CertificationExamRepository {
+  @override
+  Future<Result<CertificationExam>> loadExam() async => Success(_exam());
+}
+
+CertificationExam _exam() {
+  return const CertificationExam(
+    id: 'exam-1',
+    title: 'Warehouse Operations Certification',
+    version: '1',
+    description: 'A short cumulative check.',
+    timeLimit: Duration(minutes: 5),
+    passThresholdPercent: 50,
+    questions: [
+      CertificationExamQuestion(
+        id: 'q1',
+        competencyId: 'tag-a',
+        prompt: 'What should happen first?',
+        options: [
+          ExamAnswerOption(
+            id: 'right',
+            label: 'The correct action',
+            feedback: 'Correct.',
+          ),
+          ExamAnswerOption(
+            id: 'wrong',
+            label: 'The incorrect action',
+            feedback: 'Incorrect.',
+          ),
+        ],
+        correctOptionId: 'right',
+      ),
+      CertificationExamQuestion(
+        id: 'q2',
+        competencyId: 'tag-b',
+        prompt: 'What should happen next?',
+        options: [
+          ExamAnswerOption(
+            id: 'right',
+            label: 'The correct next step',
+            feedback: 'Correct.',
+          ),
+          ExamAnswerOption(
+            id: 'wrong',
+            label: 'The incorrect next step',
+            feedback: 'Incorrect.',
+          ),
+        ],
+        correctOptionId: 'right',
+      ),
+    ],
+  );
+}
+
+void main() {
+  late InMemoryCandidateSessionRepository sessions;
+  late InMemoryCandidateOnboardingRepository onboarding;
+
+  setUp(() {
+    sessions = InMemoryCandidateSessionRepository(
+      session: const CandidateSession(
+        candidateId: 'dev-candidate-3210',
+        isAuthenticated: true,
+      ),
+    );
+    onboarding = InMemoryCandidateOnboardingRepository(
+      initialDraft: _completedDraft(),
+    );
+  });
+
+  testWidgets('shows the exam card in the Learn tab', (tester) async {
+    await tester.pumpCandidateApp(
+      candidateSessionRepository: sessions,
+      candidateOnboardingRepository: onboarding,
+      certificationExamRepository: _FakeCertificationExamRepository(),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Learn'));
+    await tester.pumpAndSettle();
+    // The exam's title also matches the section header above the card
+    // ("Warehouse Operations Certification"), so scroll to something that
+    // only appears once instead.
+    await tester.scrollUntilVisible(
+      find.text('Start certification exam'),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+
+    expect(find.text('Warehouse Operations Certification'), findsWidgets);
+    expect(find.textContaining('2 questions'), findsOneWidget);
+    expect(find.text('Start certification exam'), findsOneWidget);
+  });
+
+  testWidgets(
+    'completes a passing attempt end to end and shows the pass result',
+    (tester) async {
+      await tester.binding.setSurfaceSize(const Size(800, 2400));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await tester.pumpCandidateApp(
+        candidateSessionRepository: sessions,
+        candidateOnboardingRepository: onboarding,
+        certificationExamRepository: _FakeCertificationExamRepository(),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Learn'));
+      await tester.pumpAndSettle();
+      await tester.scrollUntilVisible(
+        find.text('Start certification exam'),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.tap(find.text('Start certification exam'));
+      // The exam screen starts a periodic countdown timer -- pumpAndSettle
+      // would spin forever against it, so every step below uses explicit
+      // pumps instead, until the attempt is recorded and the timer is
+      // cancelled by navigating away. The push transition itself still
+      // needs its animation duration pumped through.
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(find.text('Question 1 of 2'), findsOneWidget);
+      await tester.tap(find.text('The correct action'));
+      await tester.pump();
+      await tester.tap(find.text('Next'));
+      await tester.pump();
+
+      expect(find.text('Question 2 of 2'), findsOneWidget);
+      await tester.tap(find.text('The correct next step'));
+      await tester.pump();
+      expect(find.text('2 of 2 questions answered'), findsOneWidget);
+
+      await tester.tap(find.text('Submit exam'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 50));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Passed'), findsOneWidget);
+      expect(find.textContaining('100%'), findsWidgets);
+      expect(
+        find.textContaining('Career Passport has been updated'),
+        findsOneWidget,
+      );
+    },
+  );
+}
+
+CandidateOnboardingDraft _completedDraft() {
+  final acceptedAt = DateTime.utc(2026, 7, 27);
+  return CandidateOnboardingDraft(
+    currentStep: 10,
+    goal: CandidateGoal.findJob,
+    fullName: 'Asha Kumari',
+    city: 'Lucknow',
+    state: 'Uttar Pradesh',
+    pinCode: '226001',
+    education: EducationLevel.twelfthPass,
+    experience: ExperienceLevel.fresher,
+    preferredRoles: const {LogisticsRole.warehouseAssociate},
+    consents: {
+      OnboardingConsentVersions.termsPurpose: ConsentAcceptance(
+        purpose: OnboardingConsentVersions.termsPurpose,
+        version: OnboardingConsentVersions.termsVersion,
+        acceptedAt: acceptedAt,
+      ),
+      OnboardingConsentVersions.privacyPurpose: ConsentAcceptance(
+        purpose: OnboardingConsentVersions.privacyPurpose,
+        version: OnboardingConsentVersions.privacyVersion,
+        acceptedAt: acceptedAt,
+      ),
+    },
+    isCompleted: true,
+  );
+}

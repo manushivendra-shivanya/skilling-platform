@@ -350,7 +350,8 @@ enum CriticalErrorSeverity { minor, major, critical }
 
 enum EvidenceType {
   simulationObservation('simulation_observation'),
-  microLessonAssessment('micro_lesson_assessment');
+  microLessonAssessment('micro_lesson_assessment'),
+  certificationExam('certification_exam');
 
   const EvidenceType(this.wireName);
   final String wireName;

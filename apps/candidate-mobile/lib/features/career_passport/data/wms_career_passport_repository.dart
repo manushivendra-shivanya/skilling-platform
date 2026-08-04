@@ -6,6 +6,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/errors/app_failure.dart';
 import '../../../core/errors/result.dart';
+import '../../certification_exam/domain/certification_exam_evidence_generation_service.dart';
+import '../../certification_exam/domain/certification_exam_repository.dart';
 import '../../micro_lessons/domain/micro_lesson_assessment_repository.dart';
 import '../../micro_lessons/domain/micro_lesson_evidence_generation_service.dart';
 import '../../workplace_simulation/application/workplace_simulation_controller.dart';
@@ -33,22 +35,30 @@ class WmsCareerPassportRepository implements CareerPassportRepository {
   WmsCareerPassportRepository({
     required SimulationAttemptRepository attemptRepository,
     MicroLessonAssessmentRepository? microLessonAssessmentRepository,
+    CertificationExamRepository? certificationExamRepository,
+    CertificationExamAttemptRepository? certificationExamAttemptRepository,
     SupabaseClient? supabaseClient,
     String? apiBaseUrl,
     Dio? dio,
   }) : _attemptRepository = attemptRepository,
        _microLessonAssessmentRepository = microLessonAssessmentRepository,
+       _certificationExamRepository = certificationExamRepository,
+       _certificationExamAttemptRepository = certificationExamAttemptRepository,
        _supabaseClient = supabaseClient,
        _apiBaseUrl = apiBaseUrl,
        _dio = dio ?? Dio();
 
   final SimulationAttemptRepository _attemptRepository;
   final MicroLessonAssessmentRepository? _microLessonAssessmentRepository;
+  final CertificationExamRepository? _certificationExamRepository;
+  final CertificationExamAttemptRepository? _certificationExamAttemptRepository;
   final SupabaseClient? _supabaseClient;
   final String? _apiBaseUrl;
   final Dio _dio;
   static const _microLessonEvidenceService =
       MicroLessonEvidenceGenerationService();
+  static const _certificationExamEvidenceService =
+      CertificationExamEvidenceGenerationService();
 
   @override
   bool get canManageShareLink =>
@@ -68,6 +78,7 @@ class WmsCareerPassportRepository implements CareerPassportRepository {
       Success<List<EvidenceRecord>>(value: final wmsEvidence) => Success([
         ...wmsEvidence,
         ...await _loadMicroLessonEvidence(candidateId),
+        ...await _loadCertificationExamEvidence(candidateId),
       ]),
     };
   }
@@ -117,6 +128,34 @@ class WmsCareerPassportRepository implements CareerPassportRepository {
           ..._microLessonEvidenceService.generate(attempt),
       ],
       failure: (_) => const [],
+    );
+  }
+
+  /// Certification exam evidence is device-local only today, same as
+  /// micro-lesson assessments -- merged in unconditionally and failing
+  /// quietly for the same reasons (see [_loadMicroLessonEvidence]).
+  Future<List<EvidenceRecord>> _loadCertificationExamEvidence(
+    String candidateId,
+  ) async {
+    final examRepository = _certificationExamRepository;
+    final attemptRepository = _certificationExamAttemptRepository;
+    if (examRepository == null || attemptRepository == null) return const [];
+    final examResult = await examRepository.loadExam();
+    return examResult.when(
+      success: (exam) async {
+        final attemptsResult = await attemptRepository.listAttempts(
+          candidateId,
+          exam.id,
+        );
+        return attemptsResult.when(
+          success: (attempts) => [
+            for (final attempt in attempts)
+              ..._certificationExamEvidenceService.generate(attempt, exam),
+          ],
+          failure: (_) => const <EvidenceRecord>[],
+        );
+      },
+      failure: (_) async => const <EvidenceRecord>[],
     );
   }
 

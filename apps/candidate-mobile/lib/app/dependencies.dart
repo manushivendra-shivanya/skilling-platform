@@ -10,6 +10,9 @@ import '../core/repositories/candidate_session_repository.dart';
 import '../core/storage/local_key_value_store.dart';
 import '../core/storage/secure_key_value_store.dart';
 import '../features/authentication/data/mock_development_auth_repository.dart';
+import '../features/certification_exam/data/asset_certification_exam_repository.dart';
+import '../features/certification_exam/data/secure_certification_exam_attempt_repository.dart';
+import '../features/certification_exam/domain/certification_exam_repository.dart';
 import '../features/authentication/data/supabase_phone_auth_repository.dart';
 import '../features/authentication/domain/development_auth_repository.dart';
 import '../features/career_passport/data/wms_career_passport_repository.dart';
@@ -125,6 +128,18 @@ final microLessonAssessmentRepositoryProvider =
       ),
     );
 
+final certificationExamRepositoryProvider =
+    Provider<CertificationExamRepository>(
+      (ref) => const AssetCertificationExamRepository(),
+    );
+
+final certificationExamAttemptRepositoryProvider =
+    Provider<CertificationExamAttemptRepository>(
+      (ref) => SecureCertificationExamAttemptRepository(
+        ref.watch(secureKeyValueStoreProvider),
+      ),
+    );
+
 final jobsRepositoryProvider = Provider<JobsRepository>((ref) {
   final config = ref.watch(appConfigProvider);
   if (config.hasSupabaseConfiguration && config.hasApiConfiguration) {
@@ -199,6 +214,10 @@ final careerPassportRepositoryProvider = Provider<CareerPassportRepository>((
     attemptRepository: ref.watch(simulationAttemptRepositoryProvider),
     microLessonAssessmentRepository: ref.watch(
       microLessonAssessmentRepositoryProvider,
+    ),
+    certificationExamRepository: ref.watch(certificationExamRepositoryProvider),
+    certificationExamAttemptRepository: ref.watch(
+      certificationExamAttemptRepositoryProvider,
     ),
     supabaseClient: config.hasSupabaseConfiguration
         ? Supabase.instance.client
