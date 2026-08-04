@@ -34,7 +34,7 @@ void main() {
 
     result.when(
       success: (clips) {
-        expect(clips, hasLength(21));
+        expect(clips, hasLength(26));
         expect(clips.every((clip) => clip.durationSeconds == 10), isTrue);
         expect(
           clips.map((clip) => clip.id).toSet(),
@@ -52,8 +52,13 @@ void main() {
             'clip_processing_moq_001',
             'clip_processing_fnv_packing_001',
             'clip_processing_pallet_build_001',
+            'clip_processing_vegetable_staging_001',
+            'clip_processing_sack_weight_check_001',
+            'clip_processing_produce_bagging_001',
+            'clip_safety_ppe_entry_001',
             'clip_picking_frozen_001',
             'clip_picking_ambient_001',
+            'clip_picking_forklift_aisle_awareness_001',
             'clip_dispatch_merge_001',
             'clip_dispatch_staging_001',
             'clip_dispatch_loading_001',
@@ -70,11 +75,11 @@ void main() {
         );
         expect(
           clips.where((clip) => clip.module == MicroLessonModule.processing),
-          hasLength(3),
+          hasLength(7),
         );
         expect(
           clips.where((clip) => clip.module == MicroLessonModule.dispatch),
-          hasLength(8),
+          hasLength(9),
         );
         expect(
           clips
@@ -82,16 +87,41 @@ void main() {
               .length,
           greaterThanOrEqualTo(3),
         );
+        expect(
+          clips.where((clip) => clip.domain == MicroLessonDomain.safety),
+          hasLength(1),
+        );
+        // Five clips this batch are CDN-only (no bundled local asset):
+        // hasVideoAsset is false for them under the default, un-configured
+        // repository, same as the still-pending returns_quarantine
+        // placeholder -- they only resolve once a real cdnBaseUrl is
+        // configured, covered by the CDN-resolution test below.
         expect(clips.where((clip) => clip.hasVideoAsset), hasLength(20));
         expect(
-          clips.where((clip) => !clip.hasVideoAsset).single.id,
-          'clip_returns_quarantine_001',
+          clips.where((clip) => !clip.hasVideoAsset).map((clip) => clip.id),
+          unorderedEquals([
+            'clip_returns_quarantine_001',
+            'clip_processing_vegetable_staging_001',
+            'clip_processing_sack_weight_check_001',
+            'clip_picking_forklift_aisle_awareness_001',
+            'clip_safety_ppe_entry_001',
+            'clip_processing_produce_bagging_001',
+          ]),
         );
         expect(
           clips
               .where((clip) => clip.hasVideoAsset)
               .every((clip) => clip.cloudflareVideoPath != null),
           isTrue,
+        );
+        expect(
+          clips
+              .where(
+                (clip) => clip.id == 'clip_processing_vegetable_staging_001',
+              )
+              .single
+              .cloudflareVideoPath,
+          isNotNull,
         );
       },
       failure: (failure) => fail(failure.message),
@@ -130,6 +160,23 @@ void main() {
           );
           expect(placeholder.videoUrl, isNull);
           expect(placeholder.cloudflareVideoPath, isNull);
+
+          // CDN-only clips (never bundled locally) resolve a real
+          // videoUrl once a CDN base is configured, but have no
+          // fallbackVideoUrl since there was never a bundled asset to
+          // fall back to.
+          final cdnOnly = clips.firstWhere(
+            (clip) => clip.id == 'clip_processing_vegetable_staging_001',
+          );
+          expect(
+            cdnOnly.videoUrl,
+            'https://cdn.example.com/training/'
+            'micro-lessons/warehouse/v1/processing/'
+            '04-clip_processing_vegetable_staging_001/'
+            'processing_vegetable_staging.mp4',
+          );
+          expect(cdnOnly.fallbackVideoUrl, isNull);
+          expect(cdnOnly.hasRemoteVideo, isTrue);
         },
         failure: (failure) => fail(failure.message),
       );
