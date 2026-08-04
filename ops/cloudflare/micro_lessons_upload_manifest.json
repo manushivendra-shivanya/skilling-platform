@@ -1,0 +1,164 @@
+{
+  "items": [
+    {
+      "clipId": "clip_receiving_supplier_001",
+      "module": "inward",
+      "sequenceNumber": 1,
+      "title": "Wrong supplier at receiving",
+      "localAssetPath": "apps/candidate-mobile/assets/micro_lessons/videos/receiving_wrong_supplier_stop.mp4",
+      "cloudflareObjectKey": "micro-lessons/warehouse/v1/inward/01-clip_receiving_supplier_001/receiving_wrong_supplier_stop.mp4",
+      "contentType": "video/mp4",
+      "cacheControl": "public, max-age=31536000, immutable"
+    },
+    {
+      "clipId": "clip_receiving_fnv_count_001",
+      "module": "inward",
+      "sequenceNumber": 2,
+      "title": "Vendor FNV crate count check",
+      "localAssetPath": "apps/candidate-mobile/assets/micro_lessons/videos/receiving_fnv_vendor_crate_count_check.mp4",
+      "cloudflareObjectKey": "micro-lessons/warehouse/v1/inward/02-clip_receiving_fnv_count_001/receiving_fnv_vendor_crate_count_check.mp4",
+      "contentType": "video/mp4",
+      "cacheControl": "public, max-age=31536000, immutable"
+    },
+    {
+      "clipId": "clip_receiving_fnv_001",
+      "module": "inward",
+      "sequenceNumber": 3,
+      "title": "FNV crate receiving scan",
+      "localAssetPath": "apps/candidate-mobile/assets/micro_lessons/videos/receiving_fnv_crate_scan.mp4",
+      "cloudflareObjectKey": "micro-lessons/warehouse/v1/inward/03-clip_receiving_fnv_001/receiving_fnv_crate_scan.mp4",
+      "contentType": "video/mp4",
+      "cacheControl": "public, max-age=31536000, immutable"
+    },
+    {
+      "clipId": "clip_receiving_frozen_001",
+      "module": "inward",
+      "sequenceNumber": 4,
+      "title": "Frozen goods temperature check",
+      "localAssetPath": "apps/candidate-mobile/assets/micro_lessons/videos/receiving_frozen_temperature_check.mp4",
+      "cloudflareObjectKey": "micro-lessons/warehouse/v1/inward/04-clip_receiving_frozen_001/receiving_frozen_temperature_check.mp4",
+      "contentType": "video/mp4",
+      "cacheControl": "public, max-age=31536000, immutable"
+    },
+    {
+      "clipId": "clip_inspection_fnv_001",
+      "module": "inward",
+      "sequenceNumber": 5,
+      "title": "FNV damage segregation",
+      "localAssetPath": "apps/candidate-mobile/assets/micro_lessons/videos/inspection_fnv_quality_check.mp4",
+      "cloudflareObjectKey": "micro-lessons/warehouse/v1/inward/05-clip_inspection_fnv_001/inspection_fnv_quality_check.mp4",
+      "contentType": "video/mp4",
+      "cacheControl": "public, max-age=31536000, immutable"
+    },
+    {
+      "clipId": "clip_putaway_dairy_001",
+      "module": "inward",
+      "sequenceNumber": 6,
+      "title": "Chilled dairy immediate put-away",
+      "localAssetPath": "apps/candidate-mobile/assets/micro_lessons/videos/putaway_dairy_immediate_stock.mp4",
+      "cloudflareObjectKey": "micro-lessons/warehouse/v1/inward/06-clip_putaway_dairy_001/putaway_dairy_immediate_stock.mp4",
+      "contentType": "video/mp4",
+      "cacheControl": "public, max-age=31536000, immutable"
+    },
+    {
+      "clipId": "clip_putaway_ambient_001",
+      "module": "inward",
+      "sequenceNumber": 7,
+      "title": "Ambient staples location scan",
+      "localAssetPath": "apps/candidate-mobile/assets/micro_lessons/videos/putaway_ambient_staples_scan.mp4",
+      "cloudflareObjectKey": "micro-lessons/warehouse/v1/inward/07-clip_putaway_ambient_001/putaway_ambient_staples_scan.mp4",
+      "contentType": "video/mp4",
+      "cacheControl": "public, max-age=31536000, immutable"
+    },
+    {
+      "clipId": "clip_processing_fnv_packing_001",
+      "module": "processing",
+      "sequenceNumber": 1,
+      "title": "FNV paper bag packing",
+      "localAssetPath": "apps/candidate-mobile/assets/micro_lessons/videos/processing_fnv_paper_bag_packing.mp4",
+      "cloudflareObjectKey": "micro-lessons/warehouse/v1/processing/01-clip_processing_fnv_packing_001/processing_fnv_paper_bag_packing.mp4",
+      "contentType": "video/mp4",
+      "cacheControl": "public, max-age=31536000, immutable"
+    },
+    {
+      "clipId": "clip_processing_moq_001",
+      "module": "processing",
+      "sequenceNumber": 2,
+      "title": "MOQ crate preparation",
+      "localAssetPath": "apps/candidate-mobile/assets/micro_lessons/videos/processing_moq_crate_preparation.mp4",
+      "cloudflareObjectKey": "micro-lessons/warehouse/v1/processing/02-clip_processing_moq_001/processing_moq_crate_preparation.mp4",
+      "contentType": "video/mp4",
+      "cacheControl": "public, max-age=31536000, immutable"
+    },
+    {
+      "clipId": "clip_picking_ambient_001",
+      "module": "dispatch",
+      "sequenceNumber": 1,
+      "title": "Ambient staples SPR pick",
+      "localAssetPath": "apps/candidate-mobile/assets/micro_lessons/videos/picking_ambient_staples_spr_scan.mp4",
+      "cloudflareObjectKey": "micro-lessons/warehouse/v1/dispatch/01-clip_picking_ambient_001/picking_ambient_staples_spr_scan.mp4",
+      "contentType": "video/mp4",
+      "cacheControl": "public, max-age=31536000, immutable"
+    },
+    {
+      "clipId": "clip_picking_frozen_001",
+      "module": "dispatch",
+      "sequenceNumber": 2,
+      "title": "Frozen order item scan",
+      "localAssetPath": "apps/candidate-mobile/assets/micro_lessons/videos/picking_frozen_order_item_scan.mp4",
+      "cloudflareObjectKey": "micro-lessons/warehouse/v1/dispatch/02-clip_picking_frozen_001/picking_frozen_order_item_scan.mp4",
+      "contentType": "video/mp4",
+      "cacheControl": "public, max-age=31536000, immutable"
+    },
+    {
+      "clipId": "clip_dispatch_merge_001",
+      "module": "dispatch",
+      "sequenceNumber": 3,
+      "title": "Order-level crate merge",
+      "localAssetPath": "apps/candidate-mobile/assets/micro_lessons/videos/dispatch_order_level_merge_staging.mp4",
+      "cloudflareObjectKey": "micro-lessons/warehouse/v1/dispatch/03-clip_dispatch_merge_001/dispatch_order_level_merge_staging.mp4",
+      "contentType": "video/mp4",
+      "cacheControl": "public, max-age=31536000, immutable"
+    },
+    {
+      "clipId": "clip_dispatch_staging_001",
+      "module": "dispatch",
+      "sequenceNumber": 4,
+      "title": "Staging order completion check",
+      "localAssetPath": "apps/candidate-mobile/assets/micro_lessons/videos/dispatch_staging_order_accumulation_check.mp4",
+      "cloudflareObjectKey": "micro-lessons/warehouse/v1/dispatch/04-clip_dispatch_staging_001/dispatch_staging_order_accumulation_check.mp4",
+      "contentType": "video/mp4",
+      "cacheControl": "public, max-age=31536000, immutable"
+    },
+    {
+      "clipId": "clip_dispatch_loading_001",
+      "module": "dispatch",
+      "sequenceNumber": 5,
+      "title": "Ambient small-vehicle crate loading",
+      "localAssetPath": "apps/candidate-mobile/assets/micro_lessons/videos/dispatch_ambient_bolero_crate_loading.mp4",
+      "cloudflareObjectKey": "micro-lessons/warehouse/v1/dispatch/05-clip_dispatch_loading_001/dispatch_ambient_bolero_crate_loading.mp4",
+      "contentType": "video/mp4",
+      "cacheControl": "public, max-age=31536000, immutable"
+    },
+    {
+      "clipId": "clip_delivery_handover_001",
+      "module": "dispatch",
+      "sequenceNumber": 6,
+      "title": "Restaurant delivery handover",
+      "localAssetPath": "apps/candidate-mobile/assets/micro_lessons/videos/delivery_restaurant_handover_scan.mp4",
+      "cloudflareObjectKey": "micro-lessons/warehouse/v1/dispatch/06-clip_delivery_handover_001/delivery_restaurant_handover_scan.mp4",
+      "contentType": "video/mp4",
+      "cacheControl": "public, max-age=31536000, immutable"
+    },
+    {
+      "clipId": "clip_returns_driver_settlement_001",
+      "module": "dispatch",
+      "sequenceNumber": 7,
+      "title": "Driver empty-crate and cash settlement",
+      "localAssetPath": "apps/candidate-mobile/assets/micro_lessons/videos/returns_driver_empty_crates_cash_submission.mp4",
+      "cloudflareObjectKey": "micro-lessons/warehouse/v1/dispatch/07-clip_returns_driver_settlement_001/returns_driver_empty_crates_cash_submission.mp4",
+      "contentType": "video/mp4",
+      "cacheControl": "public, max-age=31536000, immutable"
+    }
+  ]
+}

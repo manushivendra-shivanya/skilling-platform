@@ -2476,6 +2476,47 @@ shaped to serve this purpose too (`purpose = 'employer_review'`,
   reliable public URL -- Cloudflare discourages relying on the default
   `*.r2.dev` bucket URL for production traffic).
 
+### Catalogue expansion to 17 clips + automatic CDN resolution
+- Expanded `warehouse_clips.json` from 7 to 17 clips, covering the full
+  operational sequence across three `MicroLessonModule`s (`inward`,
+  `processing`, `dispatch`), each clip carrying a `sequenceNumber` for
+  in-module ordering. `MicroLessonDomain` grew from 7 to 10 values
+  (added `processing`, `picking`, `delivery`) -- the existing v0.1/v0.2
+  content model (`domain`-grouped Learn-tab UI, `MicroLessonAssessmentAttempt`
+  recording, evidence generation) is unchanged and applies to all 17 clips
+  identically; the module/sequence fields are additive metadata for
+  operational ordering and the CDN path scheme, not a replacement for the
+  `domain` grouping candidates see.
+- 16 of 17 clips now have real bundled video (up from 5); `clip_returns_quarantine_001`
+  is the only clip still awaiting footage (`clip_dispatch_loading_001`,
+  previously pending, now has a real clip as part of this expansion).
+- Every video-backed clip carries a `cloudflareVideoPath` (the eventual R2
+  object key) and `fallbackVideoUrl`. `AssetMicroLessonClipRepository`
+  gained a `cdnBaseUrl` constructor param (wired from the new
+  `AppConfig.microLessonCdnBaseUrl` / `MICRO_LESSON_CDN_BASE_URL`
+  dart-define): when set, it rewrites each clip's `videoUrl` to
+  `<cdnBaseUrl>/<cloudflareVideoPath>` and moves the original bundled
+  `asset://` URL into `fallbackVideoUrl`; when unset (today's default),
+  clips resolve to their bundled local asset exactly as before. No
+  `MicroLessonPlayerScreen` changes needed either way -- it already
+  branches on URL scheme.
+- `ops/cloudflare/` holds the manual upload path: `upload_micro_lessons_to_r2.js`
+  (Node, uses `npx wrangler r2 object put` per clip -- authenticates via
+  `wrangler login`, not a stored API token) walks
+  `micro_lessons_upload_manifest.json` (regenerated from
+  `warehouse_clips.json`, one entry per video-backed clip: local path,
+  bucket-relative `cloudflareObjectKey`, content type, cache headers).
+  Deliberately no GitHub Actions workflow drives this yet -- it stayed a
+  manual, locally-run step rather than adding CI secrets before the CDN
+  path itself has been exercised against real infrastructure. See
+  `ops/cloudflare/README.md` for the exact `wrangler` invocation.
+- All new clip footage (Google Flow/Veo-generated) had the same visible
+  sparkle watermark as earlier clips this session, in a consistent
+  on-screen position (~x=545-645, y=1110-1210 in the 720x1280 frame)
+  across every clip -- removed with the same `ffmpeg delogo` technique
+  (`delogo=x=545:y=1110:w=100:h=100:show=0`) established for the first
+  watermark removal pass.
+
 ## Target product architecture proposal
 
 - Added the proposed Flora AI Employability Infrastructure architecture in

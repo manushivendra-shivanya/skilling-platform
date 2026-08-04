@@ -7,6 +7,7 @@ class AppConfig {
     this.supabaseUrl = '',
     this.supabasePublishableKey = '',
     this.apiBaseUrl = '',
+    this.microLessonCdnBaseUrl = '',
   });
 
   const AppConfig.development()
@@ -14,7 +15,8 @@ class AppConfig {
       enableLogging = true,
       supabaseUrl = '',
       supabasePublishableKey = '',
-      apiBaseUrl = '';
+      apiBaseUrl = '',
+      microLessonCdnBaseUrl = '';
 
   factory AppConfig.fromDartDefines() {
     const configuredEnvironment = String.fromEnvironment(
@@ -39,6 +41,9 @@ class AppConfig {
         'SUPABASE_PUBLISHABLE_KEY',
       ),
       apiBaseUrl: const String.fromEnvironment('API_BASE_URL'),
+      microLessonCdnBaseUrl: const String.fromEnvironment(
+        'MICRO_LESSON_CDN_BASE_URL',
+      ),
     );
   }
 
@@ -47,6 +52,7 @@ class AppConfig {
   final String supabaseUrl;
   final String supabasePublishableKey;
   final String apiBaseUrl;
+  final String microLessonCdnBaseUrl;
 
   bool get isProduction => environment == AppEnvironment.production;
 
@@ -55,4 +61,7 @@ class AppConfig {
       supabasePublishableKey.startsWith('sb_publishable_');
 
   bool get hasApiConfiguration => Uri.tryParse(apiBaseUrl)?.hasScheme == true;
+
+  bool get hasMicroLessonCdnConfiguration =>
+      Uri.tryParse(microLessonCdnBaseUrl)?.hasScheme == true;
 }

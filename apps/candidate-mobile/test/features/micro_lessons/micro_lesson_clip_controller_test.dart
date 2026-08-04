@@ -25,13 +25,24 @@ void main() {
             _FakeMicroLessonClipRepository([
               _clip(
                 id: 'receiving',
+                module: MicroLessonModule.inward,
+                sequenceNumber: 1,
                 domain: MicroLessonDomain.receiving,
                 competencyTags: ['cold_chain_receiving_check'],
               ),
               _clip(
                 id: 'putaway',
+                module: MicroLessonModule.inward,
+                sequenceNumber: 2,
                 domain: MicroLessonDomain.putAway,
                 competencyTags: ['putaway_scan_accuracy'],
+              ),
+              _clip(
+                id: 'dispatch',
+                module: MicroLessonModule.dispatch,
+                sequenceNumber: 1,
+                domain: MicroLessonDomain.dispatch,
+                competencyTags: ['dispatch_order_merge'],
               ),
             ]),
           ),
@@ -46,6 +57,14 @@ void main() {
       expect(state.clipsForDomain(MicroLessonDomain.receiving), hasLength(1));
       expect(state.clipsForDomain(MicroLessonDomain.putAway), hasLength(1));
       expect(
+        state.clipsForModule(MicroLessonModule.inward).map((clip) => clip.id),
+        ['receiving', 'putaway'],
+      );
+      expect(
+        state.clipsForModule(MicroLessonModule.dispatch).single.id,
+        'dispatch',
+      );
+      expect(
         state.clipsForCompetency('cold_chain_receiving_check').single.id,
         'receiving',
       );
@@ -55,18 +74,24 @@ void main() {
 
 MicroLessonClip _clip({
   required String id,
+  required MicroLessonModule module,
+  required int sequenceNumber,
   required MicroLessonDomain domain,
   required List<String> competencyTags,
 }) {
   return MicroLessonClip(
     id: id,
     title: 'Clip $id',
+    module: module,
+    sequenceNumber: sequenceNumber,
     domain: domain,
     role: 'Warehouse Operations Associate',
     processArea: 'Receiving Dock',
     temperatureZone: TemperatureZone.mixed,
     durationSeconds: 10,
     videoUrl: null,
+    cloudflareVideoPath: null,
+    fallbackVideoUrl: null,
     thumbnailUrl: null,
     transcript: 'Transcript',
     description: 'Description',

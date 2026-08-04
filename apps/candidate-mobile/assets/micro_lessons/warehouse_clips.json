@@ -1,71 +1,10 @@
 {
-  "version": "warehouse-micro-clips-v1",
   "clips": [
-    {
-      "id": "clip_receiving_frozen_001",
-      "title": "Frozen goods temperature check",
-      "domain": "receiving",
-      "role": "Warehouse Operations Associate",
-      "processArea": "Receiving Dock",
-      "temperatureZone": "frozen",
-      "durationSeconds": 10,
-      "videoUrl": "asset://assets/micro_lessons/videos/receiving_frozen_temperature_check.mp4",
-      "thumbnailUrl": "asset://assets/micro_lessons/thumbnails/receiving_frozen_temperature_check.jpg",
-      "transcript": "A refrigerated truck arrives. The receiving associate checks the frozen cartons with a temperature probe before accepting the shipment.",
-      "description": "A frozen-food delivery arrives for restaurant supply. The learner must notice that temperature is checked before acceptance.",
-      "expectedObservation": "Frozen goods must be temperature-checked before acceptance.",
-      "expectedDecision": "Hold acceptance until cold-chain condition is verified and escalate if outside limits.",
-      "competencyTags": [
-        "cold_chain_receiving_check",
-        "food_safety_compliance",
-        "receiving_discipline"
-      ],
-      "lessonContent": "Frozen products can become unsafe if the cold chain is broken. The first receiving action is to verify temperature and condition before the cartons enter normal stock flow.",
-      "assessmentQuestion": "What should the associate check before accepting frozen goods?",
-      "answerOptions": [
-        {
-          "id": "temperature_condition",
-          "label": "Product temperature and cold-chain condition",
-          "feedback": "Correct. Temperature and cold-chain condition decide whether frozen goods can be accepted."
-        },
-        {
-          "id": "carton_colour",
-          "label": "Carton colour",
-          "feedback": "Carton colour is not the safety control. Temperature and condition come first."
-        },
-        {
-          "id": "driver_name",
-          "label": "Driver name",
-          "feedback": "Driver identity may matter administratively, but it does not replace cold-chain verification."
-        }
-      ],
-      "correctAnswer": "temperature_condition",
-      "scoringRules": {
-        "maxPoints": 10,
-        "correctAnswerPoints": 10,
-        "evidenceSource": "systemObserved",
-        "technicalFailuresScoreable": false
-      },
-      "auditEvents": [
-        {
-          "eventType": "clipStarted",
-          "when": "onPlaybackStart",
-          "payload": {
-            "mode": "assessment"
-          }
-        },
-        {
-          "eventType": "clipAnswerSubmitted",
-          "when": "onAnswerSubmit",
-          "payload": {
-            "scoreable": true
-          }
-        }
-      ]
-    },
     {
       "id": "clip_receiving_supplier_001",
       "title": "Wrong supplier at receiving",
+      "module": "inward",
+      "sequenceNumber": 1,
       "domain": "receiving",
       "role": "Receiving Associate",
       "processArea": "Receiving Dock",
@@ -123,11 +62,213 @@
             "scoreable": true
           }
         }
-      ]
+      ],
+      "cloudflareVideoPath": "micro-lessons/warehouse/v1/inward/01-clip_receiving_supplier_001/receiving_wrong_supplier_stop.mp4",
+      "fallbackVideoUrl": null
+    },
+    {
+      "id": "clip_receiving_fnv_count_001",
+      "title": "Vendor FNV crate count check",
+      "module": "inward",
+      "sequenceNumber": 2,
+      "domain": "receiving",
+      "role": "Receiving Associate",
+      "processArea": "Receiving Dock",
+      "temperatureZone": "fnv",
+      "durationSeconds": 10,
+      "videoUrl": "asset://assets/micro_lessons/videos/receiving_fnv_vendor_crate_count_check.mp4",
+      "thumbnailUrl": "asset://assets/micro_lessons/thumbnails/receiving_fnv_vendor_crate_count_check.jpg",
+      "transcript": "A vendor truck unloads FNV crates while receiving associates scan crate labels and count crates against the digital receiving task.",
+      "description": "Fresh fruits and vegetables are checked at the dock by crate label, count and basic item condition before moving to inspection.",
+      "expectedObservation": "Crate labels, counts and item condition must be checked before FNV crates enter the inspection flow.",
+      "expectedDecision": "Scan and count the crates against the digital receiving task before moving them forward.",
+      "competencyTags": [
+        "fnv_receiving_count",
+        "shipment_quantity_verification",
+        "receiving_discipline"
+      ],
+      "lessonContent": "Vendor receiving is the first inventory control point. Crate count and label verification prevent shortages, wrong-item flow and untraceable produce before quality inspection starts.",
+      "assessmentQuestion": "What should be checked before vendor FNV crates move to inspection?",
+      "answerOptions": [
+        {
+          "id": "crate_labels_count_task",
+          "label": "Crate labels and count against the digital task",
+          "feedback": "Correct. This confirms both identity and quantity before inspection."
+        },
+        {
+          "id": "only_visual_freshness",
+          "label": "Only whether the vegetables look fresh",
+          "feedback": "Freshness matters, but it does not replace label and count verification."
+        },
+        {
+          "id": "driver_confirmation_only",
+          "label": "Only the driver\u2019s verbal confirmation",
+          "feedback": "Driver confirmation is not a system-controlled receiving record."
+        }
+      ],
+      "correctAnswer": "crate_labels_count_task",
+      "scoringRules": {
+        "maxPoints": 10,
+        "correctAnswerPoints": 10,
+        "evidenceSource": "systemObserved",
+        "technicalFailuresScoreable": false
+      },
+      "auditEvents": [
+        {
+          "eventType": "clipStarted",
+          "when": "onPlaybackStart",
+          "payload": {
+            "mode": "assessment"
+          }
+        },
+        {
+          "eventType": "clipAnswerSubmitted",
+          "when": "onAnswerSubmit",
+          "payload": {
+            "scoreable": true
+          }
+        }
+      ],
+      "cloudflareVideoPath": "micro-lessons/warehouse/v1/inward/02-clip_receiving_fnv_count_001/receiving_fnv_vendor_crate_count_check.mp4",
+      "fallbackVideoUrl": null
+    },
+    {
+      "id": "clip_receiving_fnv_001",
+      "title": "FNV crate receiving scan",
+      "module": "inward",
+      "sequenceNumber": 3,
+      "domain": "receiving",
+      "role": "Receiving Associate",
+      "processArea": "Receiving Dock",
+      "temperatureZone": "fnv",
+      "durationSeconds": 10,
+      "videoUrl": "asset://assets/micro_lessons/videos/receiving_fnv_crate_scan.mp4",
+      "thumbnailUrl": "asset://assets/micro_lessons/thumbnails/receiving_fnv_crate_scan.jpg",
+      "transcript": "Fresh produce crates arrive at the receiving dock. The associate scans crate labels and verifies that the FNV delivery is ready for inspection flow.",
+      "description": "Fruits and vegetables are received in crates before they move to quality inspection or temperature-controlled staging.",
+      "expectedObservation": "FNV crates must be scanned and kept in the right receiving flow before inspection.",
+      "expectedDecision": "Scan crate identity and move the FNV shipment into the correct receiving-to-inspection lane.",
+      "competencyTags": [
+        "fnv_receiving_scan",
+        "temperature_zone_receiving",
+        "receiving_discipline"
+      ],
+      "lessonContent": "Fresh produce is high-volume and time-sensitive. Receiving associates must scan crate identity and maintain the correct FNV flow so quality teams can inspect without losing traceability.",
+      "assessmentQuestion": "What should the associate confirm before moving FNV crates forward?",
+      "answerOptions": [
+        {
+          "id": "crate_identity_and_flow",
+          "label": "Crate identity and correct FNV flow",
+          "feedback": "Correct. FNV crates need traceable receiving before inspection."
+        },
+        {
+          "id": "only_crate_colour",
+          "label": "Only the crate colour",
+          "feedback": "Crate colour alone does not prove delivery identity or flow."
+        },
+        {
+          "id": "skip_scan",
+          "label": "Skip scanning if crates look fresh",
+          "feedback": "Fresh appearance does not replace receiving traceability."
+        }
+      ],
+      "correctAnswer": "crate_identity_and_flow",
+      "scoringRules": {
+        "maxPoints": 10,
+        "correctAnswerPoints": 10,
+        "evidenceSource": "systemObserved",
+        "technicalFailuresScoreable": false
+      },
+      "auditEvents": [
+        {
+          "eventType": "clipStarted",
+          "when": "onPlaybackStart",
+          "payload": {
+            "mode": "assessment"
+          }
+        },
+        {
+          "eventType": "clipAnswerSubmitted",
+          "when": "onAnswerSubmit",
+          "payload": {
+            "scoreable": true
+          }
+        }
+      ],
+      "cloudflareVideoPath": "micro-lessons/warehouse/v1/inward/03-clip_receiving_fnv_001/receiving_fnv_crate_scan.mp4",
+      "fallbackVideoUrl": null
+    },
+    {
+      "id": "clip_receiving_frozen_001",
+      "title": "Frozen goods temperature check",
+      "module": "inward",
+      "sequenceNumber": 4,
+      "domain": "receiving",
+      "role": "Warehouse Operations Associate",
+      "processArea": "Receiving Dock",
+      "temperatureZone": "frozen",
+      "durationSeconds": 10,
+      "videoUrl": "asset://assets/micro_lessons/videos/receiving_frozen_temperature_check.mp4",
+      "thumbnailUrl": "asset://assets/micro_lessons/thumbnails/receiving_frozen_temperature_check.jpg",
+      "transcript": "A refrigerated truck arrives. The receiving associate checks the frozen cartons with a temperature probe before accepting the shipment.",
+      "description": "A frozen-food delivery arrives for restaurant supply. The learner must notice that temperature is checked before acceptance.",
+      "expectedObservation": "Frozen goods must be temperature-checked before acceptance.",
+      "expectedDecision": "Hold acceptance until cold-chain condition is verified and escalate if outside limits.",
+      "competencyTags": [
+        "cold_chain_receiving_check",
+        "food_safety_compliance",
+        "receiving_discipline"
+      ],
+      "lessonContent": "Frozen products can become unsafe if the cold chain is broken. The first receiving action is to verify temperature and condition before the cartons enter normal stock flow.",
+      "assessmentQuestion": "What should the associate check before accepting frozen goods?",
+      "answerOptions": [
+        {
+          "id": "temperature_condition",
+          "label": "Product temperature and cold-chain condition",
+          "feedback": "Correct. Temperature and cold-chain condition decide whether frozen goods can be accepted."
+        },
+        {
+          "id": "carton_colour",
+          "label": "Carton colour",
+          "feedback": "Carton colour is not the safety control. Temperature and condition come first."
+        },
+        {
+          "id": "driver_name",
+          "label": "Driver name",
+          "feedback": "Driver identity may matter administratively, but it does not replace cold-chain verification."
+        }
+      ],
+      "correctAnswer": "temperature_condition",
+      "scoringRules": {
+        "maxPoints": 10,
+        "correctAnswerPoints": 10,
+        "evidenceSource": "systemObserved",
+        "technicalFailuresScoreable": false
+      },
+      "auditEvents": [
+        {
+          "eventType": "clipStarted",
+          "when": "onPlaybackStart",
+          "payload": {
+            "mode": "assessment"
+          }
+        },
+        {
+          "eventType": "clipAnswerSubmitted",
+          "when": "onAnswerSubmit",
+          "payload": {
+            "scoreable": true
+          }
+        }
+      ],
+      "cloudflareVideoPath": "micro-lessons/warehouse/v1/inward/04-clip_receiving_frozen_001/receiving_frozen_temperature_check.mp4",
+      "fallbackVideoUrl": null
     },
     {
       "id": "clip_inspection_fnv_001",
       "title": "FNV damage segregation",
+      "module": "inward",
+      "sequenceNumber": 5,
       "domain": "inspection",
       "role": "Quality Associate",
       "processArea": "FNV Inspection Table",
@@ -185,11 +326,15 @@
             "scoreable": true
           }
         }
-      ]
+      ],
+      "cloudflareVideoPath": "micro-lessons/warehouse/v1/inward/05-clip_inspection_fnv_001/inspection_fnv_quality_check.mp4",
+      "fallbackVideoUrl": null
     },
     {
       "id": "clip_putaway_dairy_001",
       "title": "Chilled dairy immediate put-away",
+      "module": "inward",
+      "sequenceNumber": 6,
       "domain": "put-away",
       "role": "Put-away Associate",
       "processArea": "Chilled Storage",
@@ -247,11 +392,15 @@
             "scoreable": true
           }
         }
-      ]
+      ],
+      "cloudflareVideoPath": "micro-lessons/warehouse/v1/inward/06-clip_putaway_dairy_001/putaway_dairy_immediate_stock.mp4",
+      "fallbackVideoUrl": null
     },
     {
       "id": "clip_putaway_ambient_001",
       "title": "Ambient staples location scan",
+      "module": "inward",
+      "sequenceNumber": 7,
       "domain": "put-away",
       "role": "Inventory Associate",
       "processArea": "Ambient Storage",
@@ -309,47 +458,51 @@
             "scoreable": true
           }
         }
-      ]
+      ],
+      "cloudflareVideoPath": "micro-lessons/warehouse/v1/inward/07-clip_putaway_ambient_001/putaway_ambient_staples_scan.mp4",
+      "fallbackVideoUrl": null
     },
     {
-      "id": "clip_dispatch_loading_001",
-      "title": "Restaurant order route loading",
-      "domain": "dispatch",
-      "role": "Dispatch Executive",
-      "processArea": "Dispatch Bay",
-      "temperatureZone": "mixed",
+      "id": "clip_processing_fnv_packing_001",
+      "title": "FNV paper bag packing",
+      "module": "processing",
+      "sequenceNumber": 1,
+      "domain": "processing",
+      "role": "Processing Associate",
+      "processArea": "FNV Packing Table",
+      "temperatureZone": "fnv",
       "durationSeconds": 10,
-      "videoUrl": null,
-      "thumbnailUrl": null,
-      "transcript": "A dispatch executive checks route totes for a hotel, a restaurant, and a cafe before loading them into the correct vehicle bay.",
-      "description": "Mixed customer orders are loaded by route and customer sequence to avoid wrong deliveries.",
-      "expectedObservation": "Totes must match route/customer labels before loading.",
-      "expectedDecision": "Verify route sequence and load only the correct totes into the assigned vehicle.",
+      "videoUrl": "asset://assets/micro_lessons/videos/processing_fnv_paper_bag_packing.mp4",
+      "thumbnailUrl": "asset://assets/micro_lessons/thumbnails/processing_fnv_paper_bag_packing.jpg",
+      "transcript": "Associates pack fresh vegetables from large crates into 500 gram and 1 kilogram paper bags while potatoes and onions are portioned from bulk sacks.",
+      "description": "Fresh vegetables move from bulk crates and sacks into customer-ready pack sizes using weighing and item verification.",
+      "expectedObservation": "Pack size, item identity, hygiene and weight must be controlled before the bag moves forward.",
+      "expectedDecision": "Verify item and weight on the scale before closing or staging the paper bag.",
       "competencyTags": [
-        "dispatch_route_verification",
-        "customer_order_accuracy",
-        "loading_sequence_control"
+        "fnv_packing_accuracy",
+        "pack_weight_control",
+        "food_safety_compliance"
       ],
-      "lessonContent": "Hotels, restaurants, and cafes depend on accurate route loading. A tote placed in the wrong vehicle can create a missed delivery even if picking was correct.",
-      "assessmentQuestion": "What should be checked before route loading?",
+      "lessonContent": "FNV packing converts bulk inventory into ordered pack sizes. Associates must keep products separate, use clean handling and verify weight so customers receive the right quantity.",
+      "assessmentQuestion": "What must be confirmed before a packed vegetable bag goes to staging?",
       "answerOptions": [
         {
-          "id": "route_customer_match",
-          "label": "Route and customer labels match the vehicle bay",
-          "feedback": "Correct. Route/customer match prevents wrong delivery."
+          "id": "item_and_weight_match",
+          "label": "The item and weight match the order",
+          "feedback": "Correct. Pack-size accuracy is the main control."
         },
         {
-          "id": "box_weight",
-          "label": "Only the box weight",
-          "feedback": "Weight does not confirm route or customer accuracy."
+          "id": "bag_is_full",
+          "label": "Only that the bag looks full",
+          "feedback": "Visual fullness does not prove 500g or 1kg accuracy."
         },
         {
-          "id": "fastest_loading",
-          "label": "Load whatever is closest first",
-          "feedback": "Speed cannot override route control."
+          "id": "same_table",
+          "label": "Only that it came from the same table",
+          "feedback": "The table location does not prove item or weight accuracy."
         }
       ],
-      "correctAnswer": "route_customer_match",
+      "correctAnswer": "item_and_weight_match",
       "scoringRules": {
         "maxPoints": 10,
         "correctAnswerPoints": 10,
@@ -371,11 +524,543 @@
             "scoreable": true
           }
         }
-      ]
+      ],
+      "cloudflareVideoPath": "micro-lessons/warehouse/v1/processing/01-clip_processing_fnv_packing_001/processing_fnv_paper_bag_packing.mp4",
+      "fallbackVideoUrl": null
+    },
+    {
+      "id": "clip_processing_moq_001",
+      "title": "MOQ crate preparation",
+      "module": "processing",
+      "sequenceNumber": 2,
+      "domain": "processing",
+      "role": "Processing Associate",
+      "processArea": "Order Preparation",
+      "temperatureZone": "mixed",
+      "durationSeconds": 10,
+      "videoUrl": "asset://assets/micro_lessons/videos/processing_moq_crate_preparation.mp4",
+      "thumbnailUrl": "asset://assets/micro_lessons/thumbnails/processing_moq_crate_preparation.jpg",
+      "transcript": "Workers prepare minimum-order-quantity crates by scanning the order, picking exact quantities, and moving the completed crate to staging.",
+      "description": "Restaurant, hotel, and cafe orders are prepared in customer-ready crates with item and quantity checks.",
+      "expectedObservation": "MOQ preparation must match the order quantity and customer crate identity.",
+      "expectedDecision": "Scan the order, verify item quantity, and stage only correctly prepared crates.",
+      "competencyTags": [
+        "moq_preparation_accuracy",
+        "order_quantity_control",
+        "processing_discipline"
+      ],
+      "lessonContent": "MOQ preparation converts warehouse stock into customer-ready quantities. Associates must scan, count, and stage carefully so downstream dispatch does not inherit errors.",
+      "assessmentQuestion": "What must be verified before an MOQ crate goes to staging?",
+      "answerOptions": [
+        {
+          "id": "item_quantity_customer",
+          "label": "Item, quantity, and customer crate identity",
+          "feedback": "Correct. All three protect order accuracy."
+        },
+        {
+          "id": "only_crate_full",
+          "label": "Only that the crate looks full",
+          "feedback": "Visual fullness does not prove quantity or customer identity."
+        },
+        {
+          "id": "skip_if_busy",
+          "label": "Skip verification during peak time",
+          "feedback": "Peak load is when scan discipline matters most."
+        }
+      ],
+      "correctAnswer": "item_quantity_customer",
+      "scoringRules": {
+        "maxPoints": 10,
+        "correctAnswerPoints": 10,
+        "evidenceSource": "systemObserved",
+        "technicalFailuresScoreable": false
+      },
+      "auditEvents": [
+        {
+          "eventType": "clipStarted",
+          "when": "onPlaybackStart",
+          "payload": {
+            "mode": "assessment"
+          }
+        },
+        {
+          "eventType": "clipAnswerSubmitted",
+          "when": "onAnswerSubmit",
+          "payload": {
+            "scoreable": true
+          }
+        }
+      ],
+      "cloudflareVideoPath": "micro-lessons/warehouse/v1/processing/02-clip_processing_moq_001/processing_moq_crate_preparation.mp4",
+      "fallbackVideoUrl": null
+    },
+    {
+      "id": "clip_picking_ambient_001",
+      "title": "Ambient staples SPR pick",
+      "module": "dispatch",
+      "sequenceNumber": 1,
+      "domain": "picking",
+      "role": "Picker",
+      "processArea": "Ambient Storage",
+      "temperatureZone": "ambient",
+      "durationSeconds": 10,
+      "videoUrl": "asset://assets/micro_lessons/videos/picking_ambient_staples_spr_scan.mp4",
+      "thumbnailUrl": "asset://assets/micro_lessons/thumbnails/picking_ambient_staples_spr_scan.jpg",
+      "transcript": "A picker scans a WMS task in the ambient SPR aisle, scans the rack location, selects the correct carton, and places it into an order crate.",
+      "description": "Ambient staples are picked from selective pallet racking using task, location, and item confirmation.",
+      "expectedObservation": "The picker follows the WMS-directed pick path and confirms the rack location before taking stock.",
+      "expectedDecision": "Pick only after task, location, item, and quantity match.",
+      "competencyTags": [
+        "ambient_picking_accuracy",
+        "spr_location_scan",
+        "order_quantity_control"
+      ],
+      "lessonContent": "Large ambient warehouses depend on location accuracy. Even when the item appears obvious, picking must follow task and rack confirmation to avoid restaurant order errors.",
+      "assessmentQuestion": "What is the correct picking control in the ambient SPR aisle?",
+      "answerOptions": [
+        {
+          "id": "task_location_item_quantity",
+          "label": "Match task, location, item, and quantity",
+          "feedback": "Correct. This prevents wrong-stock and wrong-quantity picks."
+        },
+        {
+          "id": "nearest_case",
+          "label": "Pick the nearest similar case",
+          "feedback": "Similar-looking cartons can create order errors."
+        },
+        {
+          "id": "remember_location",
+          "label": "Use memory instead of scanning",
+          "feedback": "Memory is not a reliable WMS control."
+        }
+      ],
+      "correctAnswer": "task_location_item_quantity",
+      "scoringRules": {
+        "maxPoints": 10,
+        "correctAnswerPoints": 10,
+        "evidenceSource": "systemObserved",
+        "technicalFailuresScoreable": false
+      },
+      "auditEvents": [
+        {
+          "eventType": "clipStarted",
+          "when": "onPlaybackStart",
+          "payload": {
+            "mode": "assessment"
+          }
+        },
+        {
+          "eventType": "clipAnswerSubmitted",
+          "when": "onAnswerSubmit",
+          "payload": {
+            "scoreable": true
+          }
+        }
+      ],
+      "cloudflareVideoPath": "micro-lessons/warehouse/v1/dispatch/01-clip_picking_ambient_001/picking_ambient_staples_spr_scan.mp4",
+      "fallbackVideoUrl": null
+    },
+    {
+      "id": "clip_picking_frozen_001",
+      "title": "Frozen order item scan",
+      "module": "dispatch",
+      "sequenceNumber": 2,
+      "domain": "picking",
+      "role": "Picker",
+      "processArea": "Frozen Storage",
+      "temperatureZone": "frozen",
+      "durationSeconds": 10,
+      "videoUrl": "asset://assets/micro_lessons/videos/picking_frozen_order_item_scan.mp4",
+      "thumbnailUrl": "asset://assets/micro_lessons/thumbnails/picking_frozen_order_item_scan.jpg",
+      "transcript": "A picker scans a frozen pick task, verifies the rack location, selects the correct carton, and places it into the order crate.",
+      "description": "Frozen picking requires location scan discipline while preserving cold-chain handling.",
+      "expectedObservation": "The picker verifies both task and rack location before selecting frozen stock.",
+      "expectedDecision": "Scan the rack and item, pick the requested quantity, and keep the carton in the correct cold-chain flow.",
+      "competencyTags": [
+        "frozen_picking_accuracy",
+        "cold_chain_picking",
+        "inventory_location_control"
+      ],
+      "lessonContent": "Frozen picking has two risks: wrong item selection and cold-chain exposure. The picker must follow the WMS task and scan the location before moving stock.",
+      "assessmentQuestion": "What should the picker scan before taking the frozen carton?",
+      "answerOptions": [
+        {
+          "id": "task_location_item",
+          "label": "Task, rack location, and item",
+          "feedback": "Correct. These scans prove the right frozen stock was picked."
+        },
+        {
+          "id": "item_only",
+          "label": "Only the item barcode",
+          "feedback": "Item-only scanning misses location discipline."
+        },
+        {
+          "id": "no_scan_if_visible",
+          "label": "No scan if the carton is visible",
+          "feedback": "Visual recognition is not enough for inventory control."
+        }
+      ],
+      "correctAnswer": "task_location_item",
+      "scoringRules": {
+        "maxPoints": 10,
+        "correctAnswerPoints": 10,
+        "evidenceSource": "systemObserved",
+        "technicalFailuresScoreable": false
+      },
+      "auditEvents": [
+        {
+          "eventType": "clipStarted",
+          "when": "onPlaybackStart",
+          "payload": {
+            "mode": "assessment"
+          }
+        },
+        {
+          "eventType": "clipAnswerSubmitted",
+          "when": "onAnswerSubmit",
+          "payload": {
+            "scoreable": true
+          }
+        }
+      ],
+      "cloudflareVideoPath": "micro-lessons/warehouse/v1/dispatch/02-clip_picking_frozen_001/picking_frozen_order_item_scan.mp4",
+      "fallbackVideoUrl": null
+    },
+    {
+      "id": "clip_dispatch_merge_001",
+      "title": "Order-level crate merge",
+      "module": "dispatch",
+      "sequenceNumber": 3,
+      "domain": "dispatch",
+      "role": "Dispatch Associate",
+      "processArea": "Dispatch Staging",
+      "temperatureZone": "mixed",
+      "durationSeconds": 10,
+      "videoUrl": "asset://assets/micro_lessons/videos/dispatch_order_level_merge_staging.mp4",
+      "thumbnailUrl": "asset://assets/micro_lessons/thumbnails/dispatch_order_level_merge_staging.jpg",
+      "transcript": "A dispatch associate scans crates from different temperature zones and groups them into the correct customer order staging lane.",
+      "description": "Crates from frozen, chilled, FNV, and ambient flows are merged at order level before route loading.",
+      "expectedObservation": "Each crate must belong to the same customer order before it is grouped for dispatch.",
+      "expectedDecision": "Scan every crate and hold mismatched crates outside the order staging lane.",
+      "competencyTags": [
+        "dispatch_order_merge",
+        "customer_order_accuracy",
+        "temperature_zone_dispatch"
+      ],
+      "lessonContent": "Order-level merge is where separate warehouse flows become one customer delivery. Scan discipline prevents a frozen, chilled, FNV, or ambient crate from joining the wrong order.",
+      "assessmentQuestion": "What should dispatch verify during order-level merge?",
+      "answerOptions": [
+        {
+          "id": "all_crates_same_order",
+          "label": "All crates belong to the same customer order",
+          "feedback": "Correct. Dispatch merge protects customer-order accuracy."
+        },
+        {
+          "id": "same_colour_crates",
+          "label": "Only that crate colours match",
+          "feedback": "Crate colour does not prove customer order identity."
+        },
+        {
+          "id": "load_without_scan",
+          "label": "Load quickly without scanning",
+          "feedback": "Skipping scan makes misdelivery more likely."
+        }
+      ],
+      "correctAnswer": "all_crates_same_order",
+      "scoringRules": {
+        "maxPoints": 10,
+        "correctAnswerPoints": 10,
+        "evidenceSource": "systemObserved",
+        "technicalFailuresScoreable": false
+      },
+      "auditEvents": [
+        {
+          "eventType": "clipStarted",
+          "when": "onPlaybackStart",
+          "payload": {
+            "mode": "assessment"
+          }
+        },
+        {
+          "eventType": "clipAnswerSubmitted",
+          "when": "onAnswerSubmit",
+          "payload": {
+            "scoreable": true
+          }
+        }
+      ],
+      "cloudflareVideoPath": "micro-lessons/warehouse/v1/dispatch/03-clip_dispatch_merge_001/dispatch_order_level_merge_staging.mp4",
+      "fallbackVideoUrl": null
+    },
+    {
+      "id": "clip_dispatch_staging_001",
+      "title": "Staging order completion check",
+      "module": "dispatch",
+      "sequenceNumber": 4,
+      "domain": "dispatch",
+      "role": "Dispatch Associate",
+      "processArea": "Dispatch Staging",
+      "temperatureZone": "mixed",
+      "durationSeconds": 10,
+      "videoUrl": "asset://assets/micro_lessons/videos/dispatch_staging_order_accumulation_check.mp4",
+      "thumbnailUrl": "asset://assets/micro_lessons/thumbnails/dispatch_staging_order_accumulation_check.jpg",
+      "transcript": "Ambient crates, frozen ice boxes, FNV crates, bread trays and egg cartons arrive at one staging lane where associates scan and check order completion before loading.",
+      "description": "Customer orders are accumulated across temperature zones and checked for completeness before vehicle loading starts.",
+      "expectedObservation": "All expected crates, totes, cartons and ice boxes must be scanned into the same order group before loading.",
+      "expectedDecision": "Do not load until the digital task shows the full order is complete.",
+      "competencyTags": [
+        "dispatch_staging_completion",
+        "temperature_zone_dispatch",
+        "customer_order_accuracy"
+      ],
+      "lessonContent": "Dispatch staging is the final completeness check before loading. Missing one crate, carton or ice box can cause a customer shortage even if earlier picking was correct.",
+      "assessmentQuestion": "What should the team verify before loading this staged order?",
+      "answerOptions": [
+        {
+          "id": "full_order_scanned_complete",
+          "label": "The full order is scanned and complete",
+          "feedback": "Correct. Loading starts only after completion is confirmed."
+        },
+        {
+          "id": "vehicle_arrived",
+          "label": "Only that the vehicle has arrived",
+          "feedback": "Vehicle arrival does not prove the order is complete."
+        },
+        {
+          "id": "some_crates_ready",
+          "label": "Only that some crates are ready",
+          "feedback": "Partial readiness is not enough for dispatch loading."
+        }
+      ],
+      "correctAnswer": "full_order_scanned_complete",
+      "scoringRules": {
+        "maxPoints": 10,
+        "correctAnswerPoints": 10,
+        "evidenceSource": "systemObserved",
+        "technicalFailuresScoreable": false
+      },
+      "auditEvents": [
+        {
+          "eventType": "clipStarted",
+          "when": "onPlaybackStart",
+          "payload": {
+            "mode": "assessment"
+          }
+        },
+        {
+          "eventType": "clipAnswerSubmitted",
+          "when": "onAnswerSubmit",
+          "payload": {
+            "scoreable": true
+          }
+        }
+      ],
+      "cloudflareVideoPath": "micro-lessons/warehouse/v1/dispatch/04-clip_dispatch_staging_001/dispatch_staging_order_accumulation_check.mp4",
+      "fallbackVideoUrl": null
+    },
+    {
+      "id": "clip_dispatch_loading_001",
+      "title": "Ambient small-vehicle crate loading",
+      "module": "dispatch",
+      "sequenceNumber": 5,
+      "domain": "dispatch",
+      "role": "Dispatch Associate",
+      "processArea": "Ambient Loading Dock",
+      "temperatureZone": "ambient",
+      "durationSeconds": 10,
+      "videoUrl": "asset://assets/micro_lessons/videos/dispatch_ambient_bolero_crate_loading.mp4",
+      "thumbnailUrl": "asset://assets/micro_lessons/thumbnails/dispatch_ambient_bolero_crate_loading.jpg",
+      "transcript": "Dispatch associates scan ambient totes, crates and cartons before loading them into a small Bolero-style delivery vehicle by route sequence.",
+      "description": "Ambient orders are loaded into a compact goods vehicle with scan control and route sequencing.",
+      "expectedObservation": "Each tote, crate and carton is scanned before it is placed into the assigned small vehicle.",
+      "expectedDecision": "Load only scanned crates for the route and arrange them securely in delivery sequence.",
+      "competencyTags": [
+        "ambient_vehicle_loading",
+        "dispatch_route_verification",
+        "loading_sequence_control"
+      ],
+      "lessonContent": "Small vehicle loading still needs WMS discipline. Associates must scan every crate and load by route sequence so the driver can deliver without searching or mixing orders.",
+      "assessmentQuestion": "What is required before loading crates into the small ambient vehicle?",
+      "answerOptions": [
+        {
+          "id": "scan_and_route_sequence",
+          "label": "Scan each crate and load by route sequence",
+          "feedback": "Correct. This protects route and customer accuracy."
+        },
+        {
+          "id": "load_nearest_first",
+          "label": "Load whatever is nearest first",
+          "feedback": "That can break route sequence and cause delivery delays."
+        },
+        {
+          "id": "skip_scan_small_vehicle",
+          "label": "Skip scans because it is a small vehicle",
+          "feedback": "Vehicle size does not remove scan-control requirements."
+        }
+      ],
+      "correctAnswer": "scan_and_route_sequence",
+      "scoringRules": {
+        "maxPoints": 10,
+        "correctAnswerPoints": 10,
+        "evidenceSource": "systemObserved",
+        "technicalFailuresScoreable": false
+      },
+      "auditEvents": [
+        {
+          "eventType": "clipStarted",
+          "when": "onPlaybackStart",
+          "payload": {
+            "mode": "assessment"
+          }
+        },
+        {
+          "eventType": "clipAnswerSubmitted",
+          "when": "onAnswerSubmit",
+          "payload": {
+            "scoreable": true
+          }
+        }
+      ],
+      "cloudflareVideoPath": "micro-lessons/warehouse/v1/dispatch/05-clip_dispatch_loading_001/dispatch_ambient_bolero_crate_loading.mp4",
+      "fallbackVideoUrl": null
+    },
+    {
+      "id": "clip_delivery_handover_001",
+      "title": "Restaurant delivery handover",
+      "module": "dispatch",
+      "sequenceNumber": 6,
+      "domain": "delivery",
+      "role": "Delivery Associate",
+      "processArea": "Customer Delivery Point",
+      "temperatureZone": "mixed",
+      "durationSeconds": 10,
+      "videoUrl": "asset://assets/micro_lessons/videos/delivery_restaurant_handover_scan.mp4",
+      "thumbnailUrl": "asset://assets/micro_lessons/thumbnails/delivery_restaurant_handover_scan.jpg",
+      "transcript": "The delivery associate unloads crates at a restaurant, scans the order, counts crates with the receiver, and completes digital handover.",
+      "description": "Delivery handover confirms that the correct crates reached the customer and were acknowledged digitally.",
+      "expectedObservation": "The associate counts crates with the receiver and records proof of delivery on the device.",
+      "expectedDecision": "Complete digital handover only after crate count and customer acknowledgement match.",
+      "competencyTags": [
+        "delivery_handover_control",
+        "proof_of_delivery",
+        "customer_order_accuracy"
+      ],
+      "lessonContent": "The last control point is customer handover. A clean scan, count, and acknowledgement protects both the warehouse and the customer from disputed deliveries.",
+      "assessmentQuestion": "When should digital handover be completed?",
+      "answerOptions": [
+        {
+          "id": "after_count_acknowledgement",
+          "label": "After crate count and customer acknowledgement match",
+          "feedback": "Correct. Proof of delivery needs both count and acknowledgement."
+        },
+        {
+          "id": "before_unload",
+          "label": "Before unloading starts",
+          "feedback": "The receiver must confirm actual delivered crates."
+        },
+        {
+          "id": "without_customer",
+          "label": "Without customer acknowledgement",
+          "feedback": "That weakens proof of delivery."
+        }
+      ],
+      "correctAnswer": "after_count_acknowledgement",
+      "scoringRules": {
+        "maxPoints": 10,
+        "correctAnswerPoints": 10,
+        "evidenceSource": "systemObserved",
+        "technicalFailuresScoreable": false
+      },
+      "auditEvents": [
+        {
+          "eventType": "clipStarted",
+          "when": "onPlaybackStart",
+          "payload": {
+            "mode": "assessment"
+          }
+        },
+        {
+          "eventType": "clipAnswerSubmitted",
+          "when": "onAnswerSubmit",
+          "payload": {
+            "scoreable": true
+          }
+        }
+      ],
+      "cloudflareVideoPath": "micro-lessons/warehouse/v1/dispatch/06-clip_delivery_handover_001/delivery_restaurant_handover_scan.mp4",
+      "fallbackVideoUrl": null
+    },
+    {
+      "id": "clip_returns_driver_settlement_001",
+      "title": "Driver empty-crate and cash settlement",
+      "module": "dispatch",
+      "sequenceNumber": 7,
+      "domain": "supervisor",
+      "role": "Route Settlement Associate",
+      "processArea": "Returns and Settlement Counter",
+      "temperatureZone": "mixed",
+      "durationSeconds": 10,
+      "videoUrl": "asset://assets/micro_lessons/videos/returns_driver_empty_crates_cash_submission.mp4",
+      "thumbnailUrl": "asset://assets/micro_lessons/thumbnails/returns_driver_empty_crates_cash_submission.jpg",
+      "transcript": "A driver returns after deliveries with empty crates, totes, ice boxes and a cash pouch. Staff count assets, scan returns and receive the collection at the counter.",
+      "description": "Post-route settlement reconciles physical returnable assets and cash collection before the route is closed.",
+      "expectedObservation": "Empty crates, totes, ice boxes and cash must be counted, scanned and submitted at the settlement counter.",
+      "expectedDecision": "Reconcile returned assets and collections before closing the delivery route.",
+      "competencyTags": [
+        "route_settlement_control",
+        "returnable_asset_reconciliation",
+        "cash_submission_control"
+      ],
+      "lessonContent": "A route is not complete when the delivery vehicle returns. Empty crates, totes, ice boxes and collections must be reconciled so asset losses and cash exceptions are visible.",
+      "assessmentQuestion": "What must happen before the driver route is closed?",
+      "answerOptions": [
+        {
+          "id": "reconcile_assets_and_cash",
+          "label": "Reconcile returned assets and cash collection",
+          "feedback": "Correct. Both asset and collection settlement are route-close controls."
+        },
+        {
+          "id": "park_vehicle_only",
+          "label": "Only park the vehicle at the dock",
+          "feedback": "Parking the vehicle does not close the route."
+        },
+        {
+          "id": "count_crates_later",
+          "label": "Count empty crates later without the driver",
+          "feedback": "Delayed counting weakens accountability for returnable assets."
+        }
+      ],
+      "correctAnswer": "reconcile_assets_and_cash",
+      "scoringRules": {
+        "maxPoints": 10,
+        "correctAnswerPoints": 10,
+        "evidenceSource": "systemObserved",
+        "technicalFailuresScoreable": false
+      },
+      "auditEvents": [
+        {
+          "eventType": "clipStarted",
+          "when": "onPlaybackStart",
+          "payload": {
+            "mode": "assessment"
+          }
+        },
+        {
+          "eventType": "clipAnswerSubmitted",
+          "when": "onAnswerSubmit",
+          "payload": {
+            "scoreable": true
+          }
+        }
+      ],
+      "cloudflareVideoPath": "micro-lessons/warehouse/v1/dispatch/07-clip_returns_driver_settlement_001/returns_driver_empty_crates_cash_submission.mp4",
+      "fallbackVideoUrl": null
     },
     {
       "id": "clip_returns_quarantine_001",
       "title": "Returned goods quarantine",
+      "module": "dispatch",
+      "sequenceNumber": 8,
       "domain": "supervisor",
       "role": "Hub Supervisor",
       "processArea": "Returns and Quarantine",
@@ -433,7 +1118,9 @@
             "scoreable": true
           }
         }
-      ]
+      ],
+      "cloudflareVideoPath": null,
+      "fallbackVideoUrl": null
     }
   ]
 }

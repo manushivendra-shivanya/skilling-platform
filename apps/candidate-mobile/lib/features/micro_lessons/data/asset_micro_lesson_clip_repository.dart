@@ -12,10 +12,12 @@ class AssetMicroLessonClipRepository implements MicroLessonClipRepository {
   const AssetMicroLessonClipRepository({
     this.assetBundle,
     this.assetPath = 'assets/micro_lessons/warehouse_clips.json',
+    this.cdnBaseUrl = '',
   });
 
   final AssetBundle? assetBundle;
   final String assetPath;
+  final String cdnBaseUrl;
 
   AssetBundle get _effectiveBundle => assetBundle ?? rootBundle;
 
@@ -26,6 +28,7 @@ class AssetMicroLessonClipRepository implements MicroLessonClipRepository {
       final decoded = jsonDecode(raw) as Map<String, Object?>;
       final clips = (decoded['clips'] as List<Object?>)
           .map((item) => MicroLessonClip.fromJson(item as Map<String, Object?>))
+          .map(_resolveRemoteVideoUrl)
           .toList(growable: false);
       final errors = validateMicroLessonClipCatalogue(clips);
       if (errors.isNotEmpty) {
@@ -53,5 +56,24 @@ class AssetMicroLessonClipRepository implements MicroLessonClipRepository {
         ),
       );
     }
+  }
+
+  MicroLessonClip _resolveRemoteVideoUrl(MicroLessonClip clip) {
+    final path = clip.cloudflareVideoPath?.trim();
+    if (path == null || path.isEmpty) {
+      return clip;
+    }
+
+    final baseUri = Uri.tryParse(cdnBaseUrl.trim());
+    if (baseUri == null || !baseUri.hasScheme) {
+      return clip;
+    }
+
+    final normalizedBase = cdnBaseUrl.trim().replaceFirst(RegExp(r'/+$'), '');
+    final normalizedPath = path.replaceFirst(RegExp(r'^/+'), '');
+    return clip.copyWith(
+      videoUrl: '$normalizedBase/$normalizedPath',
+      fallbackVideoUrl: clip.videoUrl,
+    );
   }
 }
