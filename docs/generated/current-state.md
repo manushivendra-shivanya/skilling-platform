@@ -2541,9 +2541,33 @@ shaped to serve this purpose too (`purpose = 'employer_review'`,
   not exist." Fixed by adding `--remote`; all 20 video-backed clips are
   now genuinely uploaded to the real `flora-micro-lessons` R2 bucket
   (verified by round-tripping a downloaded object against its local
-  source, byte-for-byte identical). The bucket is not yet publicly
-  accessible -- no custom domain attached -- so `MICRO_LESSON_CDN_BASE_URL`
-  remains unset and the app still serves bundled local assets.
+  source, byte-for-byte identical).
+- Public access enabled on the bucket via `wrangler r2 bucket dev-url
+  enable` (`https://pub-968107cb08f34b87b748a3700b60843e.r2.dev`),
+  verified reachable with a real `curl -I` 200 + correct content-type.
+  `build-apk.yml` now passes `--dart-define=MICRO_LESSON_CDN_BASE_URL=...`
+  with that URL, so CI-built APKs actually resolve CDN clips instead of
+  the dart-define being dead config. Not a secret -- meant to be public,
+  hardcoded directly in the workflow.
+- **Product decision: clips added from here on are CDN-only, never
+  bundled into `assets/micro_lessons/videos/`.** Keeps app size flat as
+  the catalogue grows (was 200MB+ and rising ~2.5MB per bundled clip).
+  First batch under this policy: 5 new clips (`clip_processing_vegetable_staging_001`,
+  `clip_processing_sack_weight_check_001`,
+  `clip_picking_forklift_aisle_awareness_001` -- first clip in the
+  `picking` domain outside the original ambient/frozen pair,
+  `clip_safety_ppe_entry_001` -- first-ever clip in the `safety` domain,
+  `clip_processing_produce_bagging_001`). For these: `videoUrl` is `null`
+  in the source JSON (only `cloudflareVideoPath` + a bundled thumbnail),
+  uploaded straight to R2 via direct `wrangler r2 object put --remote`
+  rather than the local-asset-driven `upload_micro_lessons_to_r2.js` /
+  manifest path (there's no local master to put in the manifest). They
+  only resolve once `MICRO_LESSON_CDN_BASE_URL` is configured -- under
+  the default no-CDN repository they report `hasVideoAsset: false`, same
+  as the still-pending `clip_returns_quarantine_001` placeholder, and
+  have no `fallbackVideoUrl` since there was never a bundled copy.
+  Catalogue is now 26 clips, 20 with a bundled local asset (unchanged
+  from before) + 5 CDN-only + 1 still-pending placeholder.
 
 ## Target product architecture proposal
 

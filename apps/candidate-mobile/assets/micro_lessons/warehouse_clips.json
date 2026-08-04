@@ -1381,6 +1381,331 @@
         "practice",
         "assessment"
       ]
+    },
+    {
+      "id": "clip_processing_vegetable_staging_001",
+      "title": "Staging vegetables for processing",
+      "module": "processing",
+      "sequenceNumber": 4,
+      "domain": "processing",
+      "role": "Warehouse Operations Associate",
+      "processArea": "Vegetable Processing Floor",
+      "temperatureZone": "ambient",
+      "durationSeconds": 10,
+      "transcript": "Associates move trolleys of produce from storage racks toward the processing tables, keeping to the marked aisle lane.",
+      "description": "Multiple associates stage vegetables from storage into the processing area using trolleys. The learner must decide how to move through a shared aisle safely.",
+      "expectedObservation": "Trolleys stay within the yellow lane markings on the floor as they move between the storage racks and the processing tables.",
+      "expectedDecision": "Keep trolleys within the marked lane so the aisle stays clear for cross traffic.",
+      "competencyTags": [
+        "aisle_lane_discipline",
+        "vegetable_staging"
+      ],
+      "lessonContent": "Marked floor lanes exist so multiple associates can move produce through the same aisle without blocking each other or cross traffic. Straying outside the lane -- even briefly -- creates a collision risk in a busy processing floor.",
+      "assessmentQuestion": "Where should a trolley stay while moving produce through a shared aisle?",
+      "answerOptions": [
+        {
+          "id": "in_lane",
+          "label": "Within the marked yellow lane",
+          "feedback": "Correct -- keeps the aisle clear and predictable for everyone else moving through it."
+        },
+        {
+          "id": "wherever_faster",
+          "label": "Wherever is fastest at the time",
+          "feedback": "This creates unpredictable collision risk for other associates and cross traffic."
+        }
+      ],
+      "correctAnswer": "in_lane",
+      "videoUrl": null,
+      "thumbnailUrl": "asset://assets/micro_lessons/thumbnails/processing_vegetable_staging.jpg",
+      "cloudflareVideoPath": "micro-lessons/warehouse/v1/processing/04-clip_processing_vegetable_staging_001/processing_vegetable_staging.mp4",
+      "fallbackVideoUrl": null,
+      "scoringRules": {
+        "maxPoints": 10,
+        "correctAnswerPoints": 10,
+        "evidenceSource": "systemObserved",
+        "technicalFailuresScoreable": false
+      },
+      "auditEvents": [
+        {
+          "eventType": "clipStarted",
+          "when": "onPlaybackStart",
+          "payload": {
+            "mode": "assessment"
+          }
+        },
+        {
+          "eventType": "clipAnswerSubmitted",
+          "when": "onAnswerSubmit",
+          "payload": {
+            "scoreable": true
+          }
+        }
+      ],
+      "modes": [
+        "lesson",
+        "practice",
+        "assessment"
+      ]
+    },
+    {
+      "id": "clip_processing_sack_weight_check_001",
+      "title": "Verifying sack weight before sealing",
+      "module": "processing",
+      "sequenceNumber": 5,
+      "domain": "processing",
+      "role": "Warehouse Operations Associate",
+      "processArea": "Weighing Station",
+      "temperatureZone": "ambient",
+      "durationSeconds": 10,
+      "transcript": "An associate places a produce sack on a digital scale and checks the reading before sealing it.",
+      "description": "A 50kg produce sack is weighed before sealing. The learner must decide when to confirm the weight against the target.",
+      "expectedObservation": "The digital scale display is checked while the sack sits on the platform, before it is sealed.",
+      "expectedDecision": "Confirm the scale reading matches the target weight before sealing the sack, not after.",
+      "competencyTags": [
+        "weight_verification_discipline",
+        "sack_sealing_accuracy"
+      ],
+      "lessonContent": "Sealing a sack before confirming its weight means any shortfall or overfill only gets caught later, if at all -- after it's harder to correct. The scale reading has to be checked while the sack is still open.",
+      "assessmentQuestion": "When should the associate check the scale reading?",
+      "answerOptions": [
+        {
+          "id": "before_sealing",
+          "label": "Before sealing the sack",
+          "feedback": "Correct -- lets a shortfall or overfill be corrected while the sack is still open."
+        },
+        {
+          "id": "after_sealing",
+          "label": "After sealing, as a final check",
+          "feedback": "By then the sack is harder to correct -- always confirm weight before sealing."
+        }
+      ],
+      "correctAnswer": "before_sealing",
+      "videoUrl": null,
+      "thumbnailUrl": "asset://assets/micro_lessons/thumbnails/processing_sack_weight_check.jpg",
+      "cloudflareVideoPath": "micro-lessons/warehouse/v1/processing/05-clip_processing_sack_weight_check_001/processing_sack_weight_check.mp4",
+      "fallbackVideoUrl": null,
+      "scoringRules": {
+        "maxPoints": 10,
+        "correctAnswerPoints": 10,
+        "evidenceSource": "systemObserved",
+        "technicalFailuresScoreable": false
+      },
+      "auditEvents": [
+        {
+          "eventType": "clipStarted",
+          "when": "onPlaybackStart",
+          "payload": {
+            "mode": "assessment"
+          }
+        },
+        {
+          "eventType": "clipAnswerSubmitted",
+          "when": "onAnswerSubmit",
+          "payload": {
+            "scoreable": true
+          }
+        }
+      ],
+      "modes": [
+        "lesson",
+        "practice",
+        "assessment"
+      ]
+    },
+    {
+      "id": "clip_picking_forklift_aisle_awareness_001",
+      "title": "Staying alert to forklift traffic while picking",
+      "module": "dispatch",
+      "sequenceNumber": 9,
+      "domain": "picking",
+      "role": "Warehouse Operations Associate",
+      "processArea": "Ambient Storage Aisle",
+      "temperatureZone": "ambient",
+      "durationSeconds": 10,
+      "transcript": "A forklift operates in the same tall-racking aisle an associate is walking through to pick items.",
+      "description": "A forklift shares the picking aisle with a pedestrian associate. The learner must decide how to behave when a forklift is operating nearby.",
+      "expectedObservation": "The forklift is active in the same aisle the associate needs to walk through.",
+      "expectedDecision": "Stay visible, make eye contact with the operator, and let the forklift complete its move before crossing its path.",
+      "competencyTags": [
+        "forklift_pedestrian_safety",
+        "picking_aisle_awareness"
+      ],
+      "lessonContent": "Forklifts have significant blind spots and stopping distance. A pedestrian who assumes the operator has seen them, or tries to slip past while the forklift is moving, is taking on real risk that's entirely avoidable by waiting.",
+      "assessmentQuestion": "What should the associate do when a forklift is active in the same aisle?",
+      "answerOptions": [
+        {
+          "id": "wait_and_confirm",
+          "label": "Stay visible and wait for the forklift to finish its move",
+          "feedback": "Correct -- forklifts have blind spots; never assume the operator has seen you."
+        },
+        {
+          "id": "slip_past",
+          "label": "Move past quickly while there's a gap",
+          "feedback": "This risks a collision -- always wait for confirmed clearance, not just a gap."
+        }
+      ],
+      "correctAnswer": "wait_and_confirm",
+      "videoUrl": null,
+      "thumbnailUrl": "asset://assets/micro_lessons/thumbnails/picking_forklift_aisle_awareness.jpg",
+      "cloudflareVideoPath": "micro-lessons/warehouse/v1/dispatch/09-clip_picking_forklift_aisle_awareness_001/picking_forklift_aisle_awareness.mp4",
+      "fallbackVideoUrl": null,
+      "scoringRules": {
+        "maxPoints": 10,
+        "correctAnswerPoints": 10,
+        "evidenceSource": "systemObserved",
+        "technicalFailuresScoreable": false
+      },
+      "auditEvents": [
+        {
+          "eventType": "clipStarted",
+          "when": "onPlaybackStart",
+          "payload": {
+            "mode": "assessment"
+          }
+        },
+        {
+          "eventType": "clipAnswerSubmitted",
+          "when": "onAnswerSubmit",
+          "payload": {
+            "scoreable": true
+          }
+        }
+      ],
+      "modes": [
+        "lesson",
+        "practice",
+        "assessment"
+      ]
+    },
+    {
+      "id": "clip_safety_ppe_entry_001",
+      "title": "PPE check before entering the processing area",
+      "module": "processing",
+      "sequenceNumber": 6,
+      "domain": "safety",
+      "role": "Warehouse Operations Associate",
+      "processArea": "Processing Area Entry",
+      "temperatureZone": "ambient",
+      "durationSeconds": 10,
+      "transcript": "Associates put on hairnets and aprons at the handwashing station before passing through the strip curtain into the processing area.",
+      "description": "Associates prepare to enter a food processing area through a strip-curtain doorway. The learner must decide when required PPE should go on.",
+      "expectedObservation": "Hairnets and aprons are already on before the associates step through the strip curtain.",
+      "expectedDecision": "Put on all required PPE at the entry station before entering, not after stepping inside.",
+      "competencyTags": [
+        "ppe_compliance",
+        "hygiene_entry_discipline"
+      ],
+      "lessonContent": "Food-processing PPE exists to keep contaminants out of the product area. Putting it on after entering defeats the purpose -- gowning and hairnets go on at the entry station, every time, before crossing the threshold.",
+      "assessmentQuestion": "When should hairnets and aprons be put on?",
+      "answerOptions": [
+        {
+          "id": "before_entry",
+          "label": "At the entry station, before stepping inside",
+          "feedback": "Correct -- PPE only protects the processing area if it's on before you cross the threshold."
+        },
+        {
+          "id": "after_entry",
+          "label": "Just inside, once through the curtain",
+          "feedback": "This lets contamination in during the gap -- PPE goes on before entry, not after."
+        }
+      ],
+      "correctAnswer": "before_entry",
+      "videoUrl": null,
+      "thumbnailUrl": "asset://assets/micro_lessons/thumbnails/safety_ppe_entry_check.jpg",
+      "cloudflareVideoPath": "micro-lessons/warehouse/v1/processing/06-clip_safety_ppe_entry_001/safety_ppe_entry_check.mp4",
+      "fallbackVideoUrl": null,
+      "scoringRules": {
+        "maxPoints": 10,
+        "correctAnswerPoints": 10,
+        "evidenceSource": "systemObserved",
+        "technicalFailuresScoreable": false
+      },
+      "auditEvents": [
+        {
+          "eventType": "clipStarted",
+          "when": "onPlaybackStart",
+          "payload": {
+            "mode": "assessment"
+          }
+        },
+        {
+          "eventType": "clipAnswerSubmitted",
+          "when": "onAnswerSubmit",
+          "payload": {
+            "scoreable": true
+          }
+        }
+      ],
+      "modes": [
+        "lesson",
+        "practice",
+        "assessment"
+      ]
+    },
+    {
+      "id": "clip_processing_produce_bagging_001",
+      "title": "Weighing and bagging produce for orders",
+      "module": "processing",
+      "sequenceNumber": 7,
+      "domain": "processing",
+      "role": "Warehouse Operations Associate",
+      "processArea": "Produce Bagging Line",
+      "temperatureZone": "ambient",
+      "durationSeconds": 10,
+      "transcript": "Associates portion carrots and cucumbers onto a scale before bagging them into paper bags for outbound orders.",
+      "description": "A team portions produce into bags at a bagging line. The learner must decide whether to rely on the scale or estimate quantities by eye.",
+      "expectedObservation": "Each portion is weighed on the scale before it goes into the bag.",
+      "expectedDecision": "Confirm the scale reading for every bag rather than estimating the quantity by eye.",
+      "competencyTags": [
+        "weight_accuracy",
+        "produce_bagging"
+      ],
+      "lessonContent": "Eyeballing produce quantities to save time is a common shortcut that produces inconsistent bag weights -- some short, some over. Checking the scale for every bag is what keeps orders accurate and consistent.",
+      "assessmentQuestion": "Should each bag's quantity be estimated by eye or confirmed on the scale?",
+      "answerOptions": [
+        {
+          "id": "confirm_scale",
+          "label": "Confirmed on the scale every time",
+          "feedback": "Correct -- keeps bag weights consistent instead of drifting short or over."
+        },
+        {
+          "id": "estimate_eye",
+          "label": "Estimated by eye to save time",
+          "feedback": "This produces inconsistent bag weights -- always confirm on the scale."
+        }
+      ],
+      "correctAnswer": "confirm_scale",
+      "videoUrl": null,
+      "thumbnailUrl": "asset://assets/micro_lessons/thumbnails/processing_produce_bagging.jpg",
+      "cloudflareVideoPath": "micro-lessons/warehouse/v1/processing/07-clip_processing_produce_bagging_001/processing_produce_bagging.mp4",
+      "fallbackVideoUrl": null,
+      "scoringRules": {
+        "maxPoints": 10,
+        "correctAnswerPoints": 10,
+        "evidenceSource": "systemObserved",
+        "technicalFailuresScoreable": false
+      },
+      "auditEvents": [
+        {
+          "eventType": "clipStarted",
+          "when": "onPlaybackStart",
+          "payload": {
+            "mode": "assessment"
+          }
+        },
+        {
+          "eventType": "clipAnswerSubmitted",
+          "when": "onAnswerSubmit",
+          "payload": {
+            "scoreable": true
+          }
+        }
+      ],
+      "modes": [
+        "lesson",
+        "practice",
+        "assessment"
+      ]
     }
   ]
 }
