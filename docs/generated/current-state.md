@@ -2592,6 +2592,27 @@ shaped to serve this purpose too (`purpose = 'employer_review'`,
   load against the manifest before the vehicle departs, not after). All
   CDN-only, same as the previous batch.
   Catalogue is now 29 clips: 20 bundled, 8 CDN-only, 1 still-pending
+  placeholder.
+- **3 more new clips added, positioned logically rather than appended,
+  requiring 5 existing R2 paths to shift.** `clip_inspection_carton_damage_001`
+  (check each carton for damage at the point of unloading, not later)
+  slots into inward between the existing inspection clips and put-away,
+  pushing `clip_putaway_dairy_001`, `clip_putaway_dairy_002` and
+  `clip_putaway_ambient_001` one sequence position later.
+  `clip_supervisor_bag_quality_check_001` (a supervisor spot-checks
+  finished bags directly rather than only observing from a distance) is
+  the first `supervisor`-domain clip in the `processing` module, appended
+  at the end of that module. `clip_dispatch_missing_item_check_001`
+  (flag and escalate a missing item on the sortation line before the
+  order continues) lands in dispatch between manifest verification and
+  departure, pushing `clip_delivery_handover_001` and
+  `clip_returns_driver_settlement_001` one position later. All 3 new
+  clips are CDN-only, same as the previous two batches. Same upload-new-
+  verify-delete-old protocol as the full re-sequencing: all 5 shifted
+  clips were re-uploaded to their new R2 key and the 3 new clips uploaded
+  fresh (8 uploads total), each verified reachable with `curl -I` before
+  the corresponding stale old-path object (5 of them) was deleted.
+  Catalogue is now 32 clips: 20 bundled, 11 CDN-only, 1 still-pending
   placeholder (`clip_returns_quarantine_001`, still the only truly empty
   slot).
 
