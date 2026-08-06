@@ -1,6 +1,9 @@
 import { createHash } from 'crypto';
 import { ExternalJobListing, JobSourceAdapter } from './job-source-adapter';
 import { HttpFetcher } from './http-fetcher';
+import { fetchAllQueries } from './multi-query';
+import { parsePostedAt } from './parse-posted-at';
+import { SEARCH_QUERIES } from './search-queries.config';
 
 interface CareerjetJob {
   title?: string;
@@ -8,6 +11,7 @@ interface CareerjetJob {
   locations?: string;
   description?: string;
   url?: string;
+  date?: string;
 }
 
 interface CareerjetResponse {
@@ -29,6 +33,8 @@ interface CareerjetResponse {
  * scheduled background sync; a generic service identity is sent instead
  * since there's no real end-user request to attribute this to.
  *
+ * Runs one request per term in `SEARCH_QUERIES` (see that file's comment
+ * for why it's a short, curated list rather than one fixed phrase).
  * Careerjet job objects carry no stable id in the documented schema, so
  * `externalId` is derived from a hash of the listing URL. A "location
  * mode" response (`type: 'LOCATIONS'`, no `jobs` array) is possible if
@@ -45,10 +51,13 @@ export class CareerjetAdapter implements JobSourceAdapter {
 
   async fetchJobs(): Promise<ExternalJobListing[]> {
     if (!this.apiKey) return [];
+    return fetchAllQueries(SEARCH_QUERIES, (query) => this.fetchOneQuery(query));
+  }
 
+  private async fetchOneQuery(query: string): Promise<ExternalJobListing[]> {
     const url =
       'https://search.api.careerjet.net/v4/query' +
-      '?keywords=warehouse%20logistics' +
+      `?keywords=${encodeURIComponent(query)}` +
       '&location=India' +
       '&locale_code=en_IN' +
       '&page_size=50' +
@@ -77,6 +86,7 @@ export class CareerjetAdapter implements JobSourceAdapter {
         location: job.locations ?? 'Location not specified',
         description: job.description ?? '',
         applyUrl: job.url,
+        postedAt: parsePostedAt(job.date),
       });
     }
     return listings;

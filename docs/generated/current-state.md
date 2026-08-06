@@ -2883,10 +2883,10 @@ shaped to serve this purpose too (`purpose = 'employer_review'`,
   the fetch/upsert and the audit-row write are caught internally per
   adapter, so one source erroring (or a `job_sync_runs` insert itself
   failing) never drops another adapter's already-computed result out of
-  the `Promise.all`. Scheduled via `@nestjs/schedule` (new dependency)
-  every 6 hours; a manual trigger (`POST /v1/dev/job-sync?source=`) was
-  added to the existing internal-only `DevController`, same
-  `NODE_ENV=production` 404 guard as the employer-review harness.
+  the `Promise.all`. Scheduled via `@nestjs/schedule` (new dependency); a
+  manual trigger (`POST /v1/dev/job-sync?source=`) was added to the
+  existing internal-only `DevController`, same `NODE_ENV=production` 404
+  guard as the employer-review harness.
 - **Direct employer job posting** (`POST /v1/employer/jobs`, `POST
   /v1/employer/jobs/:id/publish`, `GET /v1/employer/jobs`) added to the
   existing `employer/` module, guarded by the existing
@@ -2911,6 +2911,86 @@ shaped to serve this purpose too (`purpose = 'employer_review'`,
 - Zoho Recruit integration and National Career Service/government feeds
   remain explicitly deferred (see the linked plan doc for why) -- not
   part of this phase.
+
+### Phase H follow-ups: live-verified fixes and query breadth
+
+Three follow-up changes shipped after live-verifying Phase H against real
+credentials for Adzuna, Jooble, and Careerjet:
+
+- **`JobSyncService` preserved `jobsSeen` on a partial failure.** Found
+  live: when `adapter.fetchJobs()` succeeded but the Supabase upsert
+  failed, the catch block was resetting `jobsSeen` to 0, hiding how many
+  jobs a source actually returned during a DB outage. Fixed by capturing
+  `jobsSeen` immediately after `fetchJobs()` resolves, outside the
+  upsert's own try scope.
+- **`CareerjetAdapter` rewritten for the real v4 API.** The legacy
+  `affid` query-param scheme guessed at build time doesn't exist --
+  Careerjet's current API is `search.api.careerjet.net/v4/query`, HTTP
+  Basic auth (API key as username, empty password), with required
+  `user_ip`/`user_agent` params. `CAREERJET_AFFILIATE_ID` renamed to
+  `CAREERJET_API_KEY` throughout. Verified live end-to-end (correct
+  endpoint, auth, request shape); the only remaining blocker is
+  account-side -- Careerjet requires the calling server's IP to be
+  pre-registered in their dashboard, confirmed by a live `401 Unauthorized
+  access from IP ...` response and a screenshot of their mandatory
+  "Server IP addresses" allowlist tab.
+- **Real posting dates + multi-query breadth**, per explicit user
+  direction ("posting date is extremely important... even 1 extra job is
+  important"):
+  - `ExternalJobListing` gained `postedAt`. All 5 adapters now map their
+    source's real date field (Adzuna `created`, Jooble `updated`,
+    Careerjet `date`, Greenhouse `first_published`/`updated_at`, Lever
+    `createdAt` -- all confirmed live) via a shared `parsePostedAt()`
+    helper, normalized to ISO 8601. `JobSyncService` now writes
+    `jobs.published_at` from `listing.postedAt`, not the sync timestamp,
+    so freshness reflects when a job was actually posted. One real
+    parsing bug caught by the adapter's own test: Jooble's dates carry no
+    timezone marker, which the JS `Date` constructor otherwise
+    interprets as the server's local time rather than UTC --
+    `parsePostedAt` now normalizes a bare `YYYY-MM-DDTHH:mm:ss(.sss)`
+    string to UTC explicitly.
+  - New `SEARCH_QUERIES` config (`search-queries.config.ts`) and a
+    shared `fetchAllQueries()` helper (`multi-query.ts`, per-query
+    failure tolerance + externalId dedup) -- Adzuna/Jooble/Careerjet now
+    run one request per query term instead of a single fixed phrase.
+    Verified live: Adzuna went from 50 jobs (one query) to **231 jobs**
+    (8-query set); Jooble from 30 to **109**. Confirmed the single-query
+    approach was genuinely missing real listings -- e.g. Delhivery's
+    actual ops postings ("Director - Hub Operations", "Vendor
+    Coordinator") only surfaced under a company-name query, not the
+    generic "warehouse logistics" phrase, since Adzuna ranks by
+    relevance to the literal query and only page 1 was being fetched.
+  - Auto-sync moved from every 6 hours to roughly monthly
+    (`@Cron(EVERY_1ST_DAY_OF_MONTH_AT_MIDNIGHT)`), per explicit user
+    direction, both to respect Jooble's 500-total-request cap and
+    because job listings don't change fast enough to justify 6-hourly
+    polling. A real bug surfaced while building this: an
+    `@Interval(30 * 24 * 60 * 60 * 1000)` was tried first and silently
+    broke -- Node's timer APIs overflow past the 32-bit signed integer
+    max (~24.8 days), so a 30-day interval got clamped to 1ms instead of
+    throwing, confirmed live via a `TimeoutOverflowWarning` on boot
+    (which would have fired the sync almost continuously, not monthly).
+    `@Cron` doesn't share that ceiling since it's evaluated by a real
+    cron scheduler, not a raw JS timer. The manual `POST
+    /v1/dev/job-sync` trigger remains the expected way to force an
+    immediate fresh refresh between auto-syncs.
+- Research (2 background agents) also confirmed: the real Indian
+  warehouse/logistics/fulfillment employers (Delhivery, Porter, Tata
+  1mg, likely BigBasket) all use Darwinbox, which has no public
+  job-board API equivalent to Greenhouse/Lever -- but this turned out not
+  to matter, since Adzuna/Jooble/Careerjet already independently index
+  their listings regardless of the employer's underlying ATS (confirmed
+  live: 109 real Delhivery listings on Adzuna via a company-name query).
+  Meesho (Lever, verified) was the one named-company find with genuine
+  fulfillment/warehouse roles. NCS/NSDC confirmed to have no open API for
+  vacancy data -- only a formal partner-integration path (the same track
+  Amazon/Swiggy/Rapido used), not an engineering task.
+- Not yet built, explicitly deferred pending further direction: job
+  `category` tagging, personalized default-feed matching against a
+  candidate's Role Readiness/evidence (the "Identifying" pipeline stage),
+  and training-content expansion into the market-research-ranked sectors
+  (retail floor ops, BPO/customer service, manufacturing line ops,
+  hospitality frontline, BFSI agent roles).
 
 ## Target product architecture proposal
 

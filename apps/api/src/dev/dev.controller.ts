@@ -33,9 +33,10 @@ export class DevController {
 
   /**
    * Triggers a job source sync on demand, without waiting for the
-   * `@Cron(EVERY_6_HOURS)` schedule -- e.g. `POST /v1/dev/job-sync` (all
-   * sources) or `POST /v1/dev/job-sync?source=adzuna` (one source), for
-   * quick local/staging verification once a source's credentials are set.
+   * ~30-day auto-sync interval -- e.g. `POST /v1/dev/job-sync` (all
+   * sources) or `POST /v1/dev/job-sync?source=adzuna` (one source). This
+   * is the expected way to force a fresh refresh; the auto-sync is kept
+   * infrequent on purpose (see JobSyncScheduler's comment).
    */
   @Post('job-sync')
   async triggerJobSync(@Query('source') source?: string) {

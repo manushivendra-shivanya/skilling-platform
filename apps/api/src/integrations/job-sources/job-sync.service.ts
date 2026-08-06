@@ -73,6 +73,10 @@ export class JobSyncService {
       jobsSeen = listings.length;
       let jobsUpserted = 0;
       if (listings.length > 0) {
+        // published_at is the source's own original posting date
+        // (listing.postedAt), not this sync's timestamp -- a job posted
+        // weeks ago doesn't look freshly posted just because Flora
+        // happened to sync it today.
         const rows = listings.map((listing) => ({
           source: adapter.key,
           external_id: listing.externalId,
@@ -82,7 +86,7 @@ export class JobSyncService {
           description: listing.description,
           apply_url: listing.applyUrl,
           status: 'published',
-          published_at: new Date().toISOString(),
+          published_at: listing.postedAt,
         }));
         const { error } = await this.supabase.admin
           .from('jobs')

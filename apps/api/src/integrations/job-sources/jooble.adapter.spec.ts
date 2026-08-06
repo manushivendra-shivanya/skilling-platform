@@ -1,5 +1,6 @@
 import { JoobleAdapter } from './jooble.adapter';
 import { HttpFetcher } from './http-fetcher';
+import { SEARCH_QUERIES } from './search-queries.config';
 
 function fakeFetcher(body: unknown, ok = true, status = 200): HttpFetcher {
   return async () =>
@@ -23,7 +24,21 @@ describe('JoobleAdapter', () => {
     expect(called).toBe(false);
   });
 
-  it('maps a successful response, using the provided id when present', async () => {
+  it('runs one request per SEARCH_QUERIES entry, sending the term as "keywords"', async () => {
+    const seenKeywords: string[] = [];
+    const fetcher: HttpFetcher = async (_url, init) => {
+      const body = JSON.parse((init?.body as string) ?? '{}');
+      seenKeywords.push(body.keywords);
+      return { ok: true, status: 200, json: async () => ({ jobs: [] }) } as Response;
+    };
+    const adapter = new JoobleAdapter('api-key', fetcher);
+
+    await adapter.fetchJobs();
+
+    expect(seenKeywords).toEqual(SEARCH_QUERIES);
+  });
+
+  it('maps a successful response, using the provided id and parsing the real posting date', async () => {
     const fetcher = fakeFetcher({
       jobs: [
         {
@@ -33,6 +48,7 @@ describe('JoobleAdapter', () => {
           location: 'Gurugram, Haryana',
           snippet: 'Cycle counts and stock accuracy.',
           link: 'https://jooble.example/jobs/42',
+          updated: '2026-07-08T02:57:29.460',
         },
       ],
     });
@@ -48,6 +64,7 @@ describe('JoobleAdapter', () => {
         location: 'Gurugram, Haryana',
         description: 'Cycle counts and stock accuracy.',
         applyUrl: 'https://jooble.example/jobs/42',
+        postedAt: '2026-07-08T02:57:29.460Z',
       },
     ]);
   });
@@ -75,10 +92,10 @@ describe('JoobleAdapter', () => {
     expect(await adapter.fetchJobs()).toEqual([]);
   });
 
-  it('throws on a non-ok response', async () => {
+  it('throws when every query gets a non-ok response', async () => {
     const fetcher = fakeFetcher({}, false, 503);
     const adapter = new JoobleAdapter('api-key', fetcher);
 
-    await expect(adapter.fetchJobs()).rejects.toThrow(/status 503/);
+    await expect(adapter.fetchJobs()).rejects.toThrow(/All queries failed/);
   });
 });

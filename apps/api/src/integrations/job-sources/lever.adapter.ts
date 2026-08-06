@@ -1,6 +1,7 @@
 import { ExternalJobListing, JobSourceAdapter } from './job-source-adapter';
 import { HttpFetcher } from './http-fetcher';
 import { NamedCompanyConfig } from './named-companies.config';
+import { parsePostedAt } from './parse-posted-at';
 import { stripHtml } from './strip-html';
 
 interface LeverPosting {
@@ -10,13 +11,15 @@ interface LeverPosting {
   descriptionPlain?: string;
   description?: string;
   hostedUrl?: string;
+  createdAt?: number;
 }
 
 /**
  * Lever's public postings API (https://api.lever.co/v0/postings/{company})
  * -- no auth needed, returns a bare array, only for one named company's
  * board at a time. Same empty-by-default company-list and namespaced-id
- * treatment as GreenhouseAdapter -- see that file's comment.
+ * treatment as GreenhouseAdapter -- see that file's comment. `createdAt`
+ * is a Unix millisecond timestamp, confirmed via a live response.
  */
 export class LeverAdapter implements JobSourceAdapter {
   readonly key = 'lever';
@@ -49,6 +52,7 @@ export class LeverAdapter implements JobSourceAdapter {
           description:
             posting.descriptionPlain ?? stripHtml(posting.description),
           applyUrl: posting.hostedUrl,
+          postedAt: parsePostedAt(posting.createdAt),
         });
       }
     }

@@ -1,6 +1,7 @@
 import { ExternalJobListing, JobSourceAdapter } from './job-source-adapter';
 import { HttpFetcher } from './http-fetcher';
 import { NamedCompanyConfig } from './named-companies.config';
+import { parsePostedAt } from './parse-posted-at';
 import { stripHtml } from './strip-html';
 
 interface GreenhouseJob {
@@ -9,6 +10,8 @@ interface GreenhouseJob {
   location?: { name?: string };
   content?: string;
   absolute_url?: string;
+  first_published?: string;
+  updated_at?: string;
 }
 
 interface GreenhouseResponse {
@@ -22,7 +25,10 @@ interface GreenhouseResponse {
  * named-companies.config.ts) and namespaces `externalId` as
  * `${token}:${remoteId}` since Greenhouse ids are only unique within one
  * company's board, and every company synced through this adapter shares
- * the same `source` value.
+ * the same `source` value. Prefers `first_published` (the true original
+ * posting date) over `updated_at` (last-modified, confirmed via a live
+ * response to sometimes reflect same-day sync noise rather than a real
+ * repost) for `postedAt`.
  */
 export class GreenhouseAdapter implements JobSourceAdapter {
   readonly key = 'greenhouse';
@@ -54,6 +60,7 @@ export class GreenhouseAdapter implements JobSourceAdapter {
           location: job.location?.name ?? 'Location not specified',
           description: stripHtml(job.content),
           applyUrl: job.absolute_url,
+          postedAt: parsePostedAt(job.first_published ?? job.updated_at),
         });
       }
     }
