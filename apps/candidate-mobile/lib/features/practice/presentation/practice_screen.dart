@@ -174,6 +174,92 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
               },
             ),
         const SizedBox(height: AppSpacing.md),
+        ref
+            .watch(
+              workplaceSimulationControllerProvider(
+                WorkplaceSimulationController.processingMissionId,
+              ),
+            )
+            .when(
+              loading: () => const _WorkplaceSimulationCard(
+                title: 'Workplace Simulation',
+                missionSummary:
+                    'Process Incoming Batch\n'
+                    'Logistics • Warehouse Associate • Intermediate • Approximately 22 minutes',
+                actionLabel: 'Loading simulation',
+              ),
+              error: (error, stackTrace) => const _WorkplaceSimulationCard(
+                title: 'Workplace Simulation',
+                missionSummary:
+                    'Process Incoming Batch\n'
+                    'Logistics • Warehouse Associate • Intermediate • Approximately 22 minutes',
+                actionLabel: 'Simulation unavailable',
+                unavailable: true,
+              ),
+              data: (state) {
+                final attempt = state.attempt;
+                final actionLabel = attempt == null
+                    ? 'Start Simulation'
+                    : attempt.state == MissionState.completed ||
+                          attempt.state == MissionState.failed
+                    ? 'Retry Simulation'
+                    : 'Continue Simulation';
+                return _WorkplaceSimulationCard(
+                  title: 'Workplace Simulation',
+                  missionSummary:
+                      'Process Incoming Batch\n'
+                      'Logistics • Warehouse Associate • Intermediate • Approximately 22 minutes',
+                  actionLabel: actionLabel,
+                  onPressed: () => widget.onOpenWorkplaceSimulation(
+                    WorkplaceSimulationController.processingMissionId,
+                  ),
+                );
+              },
+            ),
+        const SizedBox(height: AppSpacing.md),
+        ref
+            .watch(
+              workplaceSimulationControllerProvider(
+                WorkplaceSimulationController.dispatchMissionId,
+              ),
+            )
+            .when(
+              loading: () => const _WorkplaceSimulationCard(
+                title: 'Workplace Simulation',
+                missionSummary:
+                    'Dispatch Delivery Route\n'
+                    'Logistics • Warehouse Associate • Intermediate • Approximately 24 minutes',
+                actionLabel: 'Loading simulation',
+              ),
+              error: (error, stackTrace) => const _WorkplaceSimulationCard(
+                title: 'Workplace Simulation',
+                missionSummary:
+                    'Dispatch Delivery Route\n'
+                    'Logistics • Warehouse Associate • Intermediate • Approximately 24 minutes',
+                actionLabel: 'Simulation unavailable',
+                unavailable: true,
+              ),
+              data: (state) {
+                final attempt = state.attempt;
+                final actionLabel = attempt == null
+                    ? 'Start Simulation'
+                    : attempt.state == MissionState.completed ||
+                          attempt.state == MissionState.failed
+                    ? 'Retry Simulation'
+                    : 'Continue Simulation';
+                return _WorkplaceSimulationCard(
+                  title: 'Workplace Simulation',
+                  missionSummary:
+                      'Dispatch Delivery Route\n'
+                      'Logistics • Warehouse Associate • Intermediate • Approximately 24 minutes',
+                  actionLabel: actionLabel,
+                  onPressed: () => widget.onOpenWorkplaceSimulation(
+                    WorkplaceSimulationController.dispatchMissionId,
+                  ),
+                );
+              },
+            ),
+        const SizedBox(height: AppSpacing.md),
         Text(
           'Recommended practice',
           style: Theme.of(context).textTheme.headlineSmall,

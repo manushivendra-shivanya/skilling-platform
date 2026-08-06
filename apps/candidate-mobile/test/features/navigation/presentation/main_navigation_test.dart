@@ -72,6 +72,13 @@ void main() {
 
     await tester.tap(find.text('Practise'));
     await tester.pumpAndSettle();
+    // Four Workplace Simulation cards (Receiving, Put Away, Processing,
+    // Dispatch) now push this section below the fold.
+    await tester.scrollUntilVisible(
+      find.text('Recommended practice'),
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
     expect(find.text('Recommended practice'), findsOneWidget);
 
     await tester.tap(find.text('Me'));

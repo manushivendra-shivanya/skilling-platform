@@ -53,7 +53,8 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Workplace Simulation'), findsNWidgets(2));
+    // One card per mission: Receiving, Put Away, Processing, Dispatch.
+    expect(find.text('Workplace Simulation'), findsNWidgets(4));
     expect(find.textContaining('Receive an Incoming Shipment'), findsOneWidget);
     expect(find.textContaining('Put Away Incoming Stock'), findsOneWidget);
     await tester.ensureVisible(find.text('Start Simulation').first);

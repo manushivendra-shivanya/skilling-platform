@@ -43,6 +43,14 @@ import '../../features/workplace_simulation_3d/presentation/workplace_3d_preview
 import '../../features/workplace_simulation/presentation/location_planning_screen.dart';
 import '../../features/workplace_simulation/presentation/transport_placement_screen.dart';
 import '../../features/workplace_simulation/presentation/putaway_office_screen.dart';
+import '../../features/workplace_simulation/presentation/processing_entry_screen.dart';
+import '../../features/workplace_simulation/presentation/packing_station_screen.dart';
+import '../../features/workplace_simulation/presentation/quality_check_screen.dart';
+import '../../features/workplace_simulation/presentation/processing_office_screen.dart';
+import '../../features/workplace_simulation/presentation/picking_station_screen.dart';
+import '../../features/workplace_simulation/presentation/consolidation_bay_screen.dart';
+import '../../features/workplace_simulation/presentation/vehicle_check_screen.dart';
+import '../../features/workplace_simulation/presentation/dispatch_gate_screen.dart';
 import '../../features/workplace_simulation/presentation/workplace_overview_screen.dart';
 import '../dependencies.dart';
 
@@ -148,6 +156,33 @@ const workplaceTransportPlacementRoutePattern =
 const workplacePutawayOfficeRouteName = 'workplace-simulation-putaway-office';
 const workplacePutawayOfficeRoutePattern =
     '/practise/workplace-simulation/:missionId/putaway-office';
+const workplaceProcessingEntryRouteName =
+    'workplace-simulation-processing-entry';
+const workplaceProcessingEntryRoutePattern =
+    '/practise/workplace-simulation/:missionId/processing-entry';
+const workplacePackingStationRouteName = 'workplace-simulation-packing-station';
+const workplacePackingStationRoutePattern =
+    '/practise/workplace-simulation/:missionId/packing-station';
+const workplaceQualityCheckRouteName = 'workplace-simulation-quality-check';
+const workplaceQualityCheckRoutePattern =
+    '/practise/workplace-simulation/:missionId/quality-check';
+const workplaceProcessingOfficeRouteName =
+    'workplace-simulation-processing-office';
+const workplaceProcessingOfficeRoutePattern =
+    '/practise/workplace-simulation/:missionId/processing-office';
+const workplacePickingStationRouteName = 'workplace-simulation-picking-station';
+const workplacePickingStationRoutePattern =
+    '/practise/workplace-simulation/:missionId/picking-station';
+const workplaceConsolidationBayRouteName =
+    'workplace-simulation-consolidation-bay';
+const workplaceConsolidationBayRoutePattern =
+    '/practise/workplace-simulation/:missionId/consolidation-bay';
+const workplaceVehicleCheckRouteName = 'workplace-simulation-vehicle-check';
+const workplaceVehicleCheckRoutePattern =
+    '/practise/workplace-simulation/:missionId/vehicle-check';
+const workplaceDispatchGateRouteName = 'workplace-simulation-dispatch-gate';
+const workplaceDispatchGateRoutePattern =
+    '/practise/workplace-simulation/:missionId/dispatch-gate';
 const designSystemGalleryRoutePath = '/dev/design-system';
 const designSystemGalleryRouteName = 'design-system-gallery';
 const wms3dPreviewRoutePath = '/dev/wms-3d-preview';
@@ -181,6 +216,22 @@ String workplaceTransportPlacementPath(String missionId) =>
     '${workplaceSimulationPath(missionId)}/transport-placement';
 String workplacePutawayOfficePath(String missionId) =>
     '${workplaceSimulationPath(missionId)}/putaway-office';
+String workplaceProcessingEntryPath(String missionId) =>
+    '${workplaceSimulationPath(missionId)}/processing-entry';
+String workplacePackingStationPath(String missionId) =>
+    '${workplaceSimulationPath(missionId)}/packing-station';
+String workplaceQualityCheckPath(String missionId) =>
+    '${workplaceSimulationPath(missionId)}/quality-check';
+String workplaceProcessingOfficePath(String missionId) =>
+    '${workplaceSimulationPath(missionId)}/processing-office';
+String workplacePickingStationPath(String missionId) =>
+    '${workplaceSimulationPath(missionId)}/picking-station';
+String workplaceConsolidationBayPath(String missionId) =>
+    '${workplaceSimulationPath(missionId)}/consolidation-bay';
+String workplaceVehicleCheckPath(String missionId) =>
+    '${workplaceSimulationPath(missionId)}/vehicle-check';
+String workplaceDispatchGatePath(String missionId) =>
+    '${workplaceSimulationPath(missionId)}/dispatch-gate';
 
 /// Maps a workstation id from mission content to its screen route. New
 /// workstations only need an entry here plus a GoRoute below — the overview
@@ -197,6 +248,14 @@ String workstationPath(String workstationId, String missionId) =>
       'location-planning' => workplaceLocationPlanningPath(missionId),
       'transport-placement' => workplaceTransportPlacementPath(missionId),
       'putaway-office' => workplacePutawayOfficePath(missionId),
+      'processing-entry' => workplaceProcessingEntryPath(missionId),
+      'packing-station' => workplacePackingStationPath(missionId),
+      'quality-check' => workplaceQualityCheckPath(missionId),
+      'processing-office' => workplaceProcessingOfficePath(missionId),
+      'picking-station' => workplacePickingStationPath(missionId),
+      'consolidation-bay' => workplaceConsolidationBayPath(missionId),
+      'vehicle-check' => workplaceVehicleCheckPath(missionId),
+      'dispatch-gate' => workplaceDispatchGatePath(missionId),
       _ => workplaceOverviewPath(missionId),
     };
 
@@ -593,6 +652,118 @@ GoRouter createAppRouter({
         builder: (context, state) {
           final missionId = state.pathParameters['missionId']!;
           return PutawayOfficeScreen(
+            missionId: missionId,
+            onBack: () => context.go(workplaceOverviewPath(missionId)),
+            onMissionComplete: () =>
+                context.go(workplacePerformanceFeedbackPath(missionId)),
+          );
+        },
+      ),
+      GoRoute(
+        parentNavigatorKey: rootNavigatorKey,
+        path: workplaceProcessingEntryRoutePattern,
+        name: workplaceProcessingEntryRouteName,
+        builder: (context, state) {
+          final missionId = state.pathParameters['missionId']!;
+          return ProcessingEntryScreen(
+            missionId: missionId,
+            onBack: () => context.go(workplaceOverviewPath(missionId)),
+            onOpenPackingStation: () =>
+                context.go(workplacePackingStationPath(missionId)),
+          );
+        },
+      ),
+      GoRoute(
+        parentNavigatorKey: rootNavigatorKey,
+        path: workplacePackingStationRoutePattern,
+        name: workplacePackingStationRouteName,
+        builder: (context, state) {
+          final missionId = state.pathParameters['missionId']!;
+          return PackingStationScreen(
+            missionId: missionId,
+            onBack: () => context.go(workplaceOverviewPath(missionId)),
+            onOpenQualityCheck: () =>
+                context.go(workplaceQualityCheckPath(missionId)),
+          );
+        },
+      ),
+      GoRoute(
+        parentNavigatorKey: rootNavigatorKey,
+        path: workplaceQualityCheckRoutePattern,
+        name: workplaceQualityCheckRouteName,
+        builder: (context, state) {
+          final missionId = state.pathParameters['missionId']!;
+          return QualityCheckScreen(
+            missionId: missionId,
+            onBack: () => context.go(workplaceOverviewPath(missionId)),
+            onOpenProcessingOffice: () =>
+                context.go(workplaceProcessingOfficePath(missionId)),
+          );
+        },
+      ),
+      GoRoute(
+        parentNavigatorKey: rootNavigatorKey,
+        path: workplaceProcessingOfficeRoutePattern,
+        name: workplaceProcessingOfficeRouteName,
+        builder: (context, state) {
+          final missionId = state.pathParameters['missionId']!;
+          return ProcessingOfficeScreen(
+            missionId: missionId,
+            onBack: () => context.go(workplaceOverviewPath(missionId)),
+            onMissionComplete: () =>
+                context.go(workplacePerformanceFeedbackPath(missionId)),
+          );
+        },
+      ),
+      GoRoute(
+        parentNavigatorKey: rootNavigatorKey,
+        path: workplacePickingStationRoutePattern,
+        name: workplacePickingStationRouteName,
+        builder: (context, state) {
+          final missionId = state.pathParameters['missionId']!;
+          return PickingStationScreen(
+            missionId: missionId,
+            onBack: () => context.go(workplaceOverviewPath(missionId)),
+            onOpenConsolidationBay: () =>
+                context.go(workplaceConsolidationBayPath(missionId)),
+          );
+        },
+      ),
+      GoRoute(
+        parentNavigatorKey: rootNavigatorKey,
+        path: workplaceConsolidationBayRoutePattern,
+        name: workplaceConsolidationBayRouteName,
+        builder: (context, state) {
+          final missionId = state.pathParameters['missionId']!;
+          return ConsolidationBayScreen(
+            missionId: missionId,
+            onBack: () => context.go(workplaceOverviewPath(missionId)),
+            onOpenVehicleCheck: () =>
+                context.go(workplaceVehicleCheckPath(missionId)),
+          );
+        },
+      ),
+      GoRoute(
+        parentNavigatorKey: rootNavigatorKey,
+        path: workplaceVehicleCheckRoutePattern,
+        name: workplaceVehicleCheckRouteName,
+        builder: (context, state) {
+          final missionId = state.pathParameters['missionId']!;
+          return VehicleCheckScreen(
+            missionId: missionId,
+            onBack: () => context.go(workplaceOverviewPath(missionId)),
+            onOpenDispatchGate: () =>
+                context.go(workplaceDispatchGatePath(missionId)),
+          );
+        },
+      ),
+      GoRoute(
+        parentNavigatorKey: rootNavigatorKey,
+        path: workplaceDispatchGateRoutePattern,
+        name: workplaceDispatchGateRouteName,
+        builder: (context, state) {
+          final missionId = state.pathParameters['missionId']!;
+          return DispatchGateScreen(
             missionId: missionId,
             onBack: () => context.go(workplaceOverviewPath(missionId)),
             onMissionComplete: () =>

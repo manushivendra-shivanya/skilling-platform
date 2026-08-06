@@ -266,6 +266,8 @@ enum ActionType {
   completeForm('complete_form'),
   makeDecision('make_decision'),
   confirmAction('confirm_action'),
+  recordWeight('record_weight'),
+  recordTemperatureReading('record_temperature_reading'),
   speak('speak'),
   technicalFailure('technical_failure');
 

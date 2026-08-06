@@ -16,6 +16,8 @@ class AssetSimulationContentRepository implements SimulationContentRepository {
   static const _missionFiles = {
     'receive-incoming-shipment-01': 'receive_shipment_mission.json',
     'put-away-incoming-stock-01': 'put_away_mission.json',
+    'process-batch-01': 'processing_mission.json',
+    'dispatch-orders-01': 'dispatch_mission.json',
   };
 
   final AssetBundle _bundle;

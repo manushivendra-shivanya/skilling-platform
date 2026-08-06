@@ -1,0 +1,955 @@
+{
+  "id": "process-batch-01",
+  "version": "1.0.0",
+  "packId": "logistics-foundation",
+  "workplaceId": "central-distribution-centre",
+  "departmentId": "processing",
+  "processId": "batch-processing",
+  "role": {
+    "id": "warehouse-associate-trainee",
+    "industry": "logistics_supply_chain",
+    "title": "Warehouse Associate",
+    "level": "trainee",
+    "departmentIds": [
+      "receiving",
+      "put-away",
+      "processing"
+    ],
+    "requiredCompetencies": [
+      "hygiene-discipline",
+      "pack-weight-control",
+      "batch-traceability",
+      "quality-exception-handling"
+    ],
+    "promotionTargetRoleId": "warehouse-associate-junior"
+  },
+  "title": "Process Incoming Batch",
+  "difficulty": "intermediate",
+  "estimatedDurationMinutes": 22,
+  "missionType": "guided_shift",
+  "briefing": {
+    "supervisorTitle": "Processing Supervisor",
+    "message": "Six batches have arrived from Put Away and need to move through hygiene, packing, weight and label checks before they're released to Dispatch. Confirm your own hygiene status honestly, then process every batch carefully.",
+    "shiftName": "Morning Shift",
+    "supplier": "Internal Handoff \u2014 Put Away Department",
+    "purchaseOrderNumber": "PO-2026-006",
+    "deliveryReference": "PROC-2026-006",
+    "deliveryType": "Internal processing handoff",
+    "responsibilities": [
+      "Confirm your pre-shift hygiene status honestly",
+      "Scan every batch onto the processing line",
+      "Pack every batch and record its weight accurately",
+      "Verify every batch's label and traceability code",
+      "Complete the supervisor sample review",
+      "Classify any exception and hold affected batches",
+      "Complete the processing report and notify the supervisor"
+    ],
+    "workplaceRules": [
+      "A real hygiene gap must always be reported, never confirmed as compliant.",
+      "An off-weight batch must never be released without being held for verification.",
+      "A batch missing its traceability code must never be accepted.",
+      "A label mismatch must always be held, never waved through."
+    ],
+    "rulesVersion": "1.0.0"
+  },
+  "objectives": [
+    "Confirm hygiene compliance honestly",
+    "Scan, pack and weigh every batch accurately",
+    "Verify every batch's label and traceability code",
+    "Complete the supervisor sample review",
+    "Classify any batch exception correctly",
+    "Complete the processing report and decision"
+  ],
+  "startingWorkstationId": "processing-entry",
+  "stages": [
+    "hygiene-and-scan",
+    "packing",
+    "quality-and-sample",
+    "processing-decision"
+  ],
+  "stageDefinitions": [
+    {
+      "id": "hygiene-and-scan",
+      "missionId": "process-batch-01",
+      "sequence": 1,
+      "title": "Hygiene Check and Batch Scan",
+      "workstationId": "processing-entry",
+      "instructions": "Confirm your pre-shift hygiene status, then scan every batch onto the processing line.",
+      "taskIds": [
+        "confirm-hygiene-compliance",
+        "scan-processing-batches"
+      ],
+      "completionMode": "all_mandatory_tasks"
+    },
+    {
+      "id": "packing",
+      "missionId": "process-batch-01",
+      "sequence": 2,
+      "title": "Pack and Weigh",
+      "workstationId": "packing-station",
+      "instructions": "Pack every batch, then record the weight shown on the scale accurately.",
+      "taskIds": [
+        "pack-batch-items",
+        "record-batch-weight"
+      ],
+      "completionMode": "all_mandatory_tasks"
+    },
+    {
+      "id": "quality-and-sample",
+      "missionId": "process-batch-01",
+      "sequence": 3,
+      "title": "Label Check and Supervisor Sample",
+      "workstationId": "quality-check",
+      "instructions": "Verify every batch's label and traceability code, then complete the supervisor sample review.",
+      "taskIds": [
+        "verify-batch-labels",
+        "supervisor-sample-check"
+      ],
+      "completionMode": "all_mandatory_tasks"
+    },
+    {
+      "id": "processing-decision",
+      "missionId": "process-batch-01",
+      "sequence": 4,
+      "title": "Complete Processing Batch",
+      "workstationId": "processing-office",
+      "instructions": "Classify every batch exception, complete the report, confirm the outcome, and notify the supervisor.",
+      "taskIds": [
+        "classify-batch-exceptions",
+        "complete-processing-report",
+        "make-processing-decision",
+        "notify-supervisor"
+      ],
+      "completionMode": "correct_decision"
+    }
+  ],
+  "taskDefinitions": [
+    {
+      "id": "confirm-hygiene-compliance",
+      "stageId": "hygiene-and-scan",
+      "taskType": "confirm_action",
+      "title": "Confirm Pre-Shift Hygiene Compliance",
+      "instructions": "Review the hygiene checklist and confirm your actual compliance status honestly.",
+      "mandatory": true,
+      "repeatable": false,
+      "availableActions": [
+        "confirm_action"
+      ],
+      "targetResourceIds": [
+        "hygiene-checklist"
+      ],
+      "competencyMappings": [
+        {
+          "competencyId": "hygiene-discipline",
+          "weight": 1.0
+        }
+      ],
+      "maximumPoints": 15,
+      "scoreCategoryId": "hygiene-compliance",
+      "evaluationRules": [
+        {
+          "actionType": "confirm_action",
+          "requiredPayload": {
+            "compliant": false
+          },
+          "targetHasIssue": "hygiene_missed",
+          "outcomeType": "correct",
+          "pointsAwarded": 15,
+          "feedbackCode": "hygiene_gap_reported",
+          "correctActionLabel": "Reported the hygiene compliance gap honestly",
+          "missedIssueCode": "hygiene_missed"
+        },
+        {
+          "actionType": "confirm_action",
+          "requiredPayload": {
+            "compliant": true
+          },
+          "targetMustBeCompliant": true,
+          "outcomeType": "correct",
+          "pointsAwarded": 15,
+          "feedbackCode": "hygiene_confirmed",
+          "correctActionLabel": "Confirmed hygiene compliance"
+        }
+      ]
+    },
+    {
+      "id": "scan-processing-batches",
+      "stageId": "hygiene-and-scan",
+      "taskType": "scan_barcode",
+      "title": "Scan Every Batch onto the Line",
+      "instructions": "Scan each batch to confirm it has entered the processing line.",
+      "mandatory": true,
+      "repeatable": true,
+      "availableActions": [
+        "scan_barcode"
+      ],
+      "targetResourceIds": [
+        "proc-batch-001",
+        "proc-batch-002",
+        "proc-batch-003",
+        "proc-batch-004",
+        "proc-batch-005",
+        "proc-batch-006"
+      ],
+      "competencyMappings": [
+        {
+          "competencyId": "batch-traceability",
+          "weight": 1.0
+        }
+      ],
+      "maximumPoints": 12,
+      "scoreCategoryId": "scan-and-pack-accuracy",
+      "evaluationRules": [
+        {
+          "actionType": "scan_barcode",
+          "requiredPayload": {
+            "scanStatus": "matched"
+          },
+          "outcomeType": "correct",
+          "pointsAwarded": 2,
+          "feedbackCode": "batch_scan_confirmed",
+          "correctActionLabel": "Scanned the batch onto the line"
+        }
+      ]
+    },
+    {
+      "id": "pack-batch-items",
+      "stageId": "packing",
+      "taskType": "move_item",
+      "title": "Pack Every Batch",
+      "instructions": "Pack each batch for dispatch to the quality check.",
+      "mandatory": true,
+      "repeatable": true,
+      "availableActions": [
+        "move_item"
+      ],
+      "targetResourceIds": [
+        "proc-batch-001",
+        "proc-batch-002",
+        "proc-batch-003",
+        "proc-batch-004",
+        "proc-batch-005",
+        "proc-batch-006"
+      ],
+      "competencyMappings": [
+        {
+          "competencyId": "batch-traceability",
+          "weight": 1.0
+        }
+      ],
+      "maximumPoints": 12,
+      "scoreCategoryId": "scan-and-pack-accuracy",
+      "evaluationRules": [
+        {
+          "actionType": "move_item",
+          "requiredPayload": {
+            "packed": true
+          },
+          "outcomeType": "correct",
+          "pointsAwarded": 2,
+          "feedbackCode": "batch_packed",
+          "correctActionLabel": "Packed the batch"
+        }
+      ]
+    },
+    {
+      "id": "record-batch-weight",
+      "stageId": "packing",
+      "taskType": "count_quantity",
+      "title": "Record Every Batch's Weight",
+      "instructions": "Read the scale and record the weight shown for each batch accurately.",
+      "mandatory": true,
+      "repeatable": true,
+      "availableActions": [
+        "record_weight"
+      ],
+      "targetResourceIds": [
+        "proc-batch-001",
+        "proc-batch-002",
+        "proc-batch-003",
+        "proc-batch-004",
+        "proc-batch-005",
+        "proc-batch-006"
+      ],
+      "competencyMappings": [
+        {
+          "competencyId": "pack-weight-control",
+          "weight": 1.0
+        }
+      ],
+      "maximumPoints": 18,
+      "scoreCategoryId": "weight-accuracy",
+      "evaluationRules": [
+        {
+          "actionType": "record_weight",
+          "payloadMatchesTargetContent": {
+            "recordedWeightKg": "packedWeightKg"
+          },
+          "outcomeType": "correct",
+          "pointsAwarded": 3,
+          "feedbackCode": "weight_recorded_accurately",
+          "correctActionLabel": "Recorded the batch weight accurately"
+        }
+      ]
+    },
+    {
+      "id": "verify-batch-labels",
+      "stageId": "quality-and-sample",
+      "taskType": "inspect_item",
+      "title": "Verify Every Batch's Label and Traceability Code",
+      "instructions": "Check each batch's label and traceability code against its record.",
+      "mandatory": true,
+      "repeatable": true,
+      "availableActions": [
+        "inspect_item"
+      ],
+      "targetResourceIds": [
+        "proc-batch-001",
+        "proc-batch-002",
+        "proc-batch-003",
+        "proc-batch-004",
+        "proc-batch-005",
+        "proc-batch-006"
+      ],
+      "competencyMappings": [
+        {
+          "competencyId": "batch-traceability",
+          "weight": 1.0
+        }
+      ],
+      "maximumPoints": 18,
+      "scoreCategoryId": "traceability-and-labeling",
+      "evaluationRules": [
+        {
+          "actionType": "inspect_item",
+          "requiredPayload": {
+            "labelVerified": true
+          },
+          "outcomeType": "correct",
+          "pointsAwarded": 3,
+          "feedbackCode": "label_verified",
+          "correctActionLabel": "Verified the batch label and traceability code"
+        }
+      ]
+    },
+    {
+      "id": "supervisor-sample-check",
+      "stageId": "quality-and-sample",
+      "taskType": "confirm_action",
+      "title": "Complete the Supervisor Sample Review",
+      "instructions": "Confirm the supervisor's sample review of the batch line.",
+      "mandatory": true,
+      "repeatable": false,
+      "availableActions": [
+        "confirm_action"
+      ],
+      "targetResourceIds": [
+        "supervisor-sample"
+      ],
+      "competencyMappings": [
+        {
+          "competencyId": "quality-exception-handling",
+          "weight": 1.0
+        }
+      ],
+      "maximumPoints": 10,
+      "scoreCategoryId": "process-accuracy",
+      "evaluationRules": [
+        {
+          "actionType": "confirm_action",
+          "requiredPayload": {
+            "sampleReviewed": true
+          },
+          "outcomeType": "correct",
+          "pointsAwarded": 10,
+          "feedbackCode": "sample_reviewed",
+          "correctActionLabel": "Completed the supervisor sample review"
+        }
+      ]
+    },
+    {
+      "id": "classify-batch-exceptions",
+      "stageId": "processing-decision",
+      "taskType": "select_disposition",
+      "title": "Classify Every Batch Exception",
+      "instructions": "Choose the correct disposition for every batch based on what was found.",
+      "mandatory": true,
+      "repeatable": true,
+      "availableActions": [
+        "select_disposition"
+      ],
+      "targetResourceIds": [
+        "proc-batch-001",
+        "proc-batch-002",
+        "proc-batch-003",
+        "proc-batch-004",
+        "proc-batch-005",
+        "proc-batch-006"
+      ],
+      "competencyMappings": [
+        {
+          "competencyId": "quality-exception-handling",
+          "weight": 1.0
+        }
+      ],
+      "maximumPoints": 24,
+      "scoreCategoryId": "process-accuracy",
+      "evaluationRules": [
+        {
+          "actionType": "select_disposition",
+          "requiredPayload": {
+            "disposition": "hold_for_verification"
+          },
+          "targetHasIssue": "wrong_weight",
+          "outcomeType": "correct",
+          "pointsAwarded": 4,
+          "feedbackCode": "wrong_weight_held",
+          "correctActionLabel": "Held the off-weight batch for verification",
+          "missedIssueCode": "wrong_weight"
+        },
+        {
+          "actionType": "select_disposition",
+          "requiredPayload": {
+            "disposition": "hold_for_verification"
+          },
+          "targetHasIssue": "missing_traceability",
+          "outcomeType": "correct",
+          "pointsAwarded": 4,
+          "feedbackCode": "missing_traceability_held",
+          "correctActionLabel": "Held the batch missing traceability",
+          "missedIssueCode": "missing_traceability"
+        },
+        {
+          "actionType": "select_disposition",
+          "requiredPayload": {
+            "disposition": "hold_for_verification"
+          },
+          "targetHasIssue": "label_mismatch",
+          "outcomeType": "correct",
+          "pointsAwarded": 4,
+          "feedbackCode": "label_mismatch_held",
+          "correctActionLabel": "Held the batch with a label mismatch",
+          "missedIssueCode": "label_mismatch"
+        },
+        {
+          "actionType": "select_disposition",
+          "requiredPayload": {
+            "disposition": "accept"
+          },
+          "targetMustBeCompliant": true,
+          "outcomeType": "correct",
+          "pointsAwarded": 4,
+          "feedbackCode": "compliant_batch_accepted",
+          "correctActionLabel": "Accepted the compliant batch"
+        }
+      ]
+    },
+    {
+      "id": "complete-processing-report",
+      "stageId": "processing-decision",
+      "taskType": "complete_form",
+      "title": "Complete the Processing Report",
+      "instructions": "Record that every batch was processed and every exception was recorded.",
+      "mandatory": true,
+      "repeatable": false,
+      "availableActions": [
+        "complete_form"
+      ],
+      "targetResourceIds": [
+        "processing-report"
+      ],
+      "competencyMappings": [
+        {
+          "competencyId": "quality-exception-handling",
+          "weight": 1.0
+        }
+      ],
+      "maximumPoints": 15,
+      "scoreCategoryId": "process-accuracy",
+      "evaluationRules": [
+        {
+          "actionType": "complete_form",
+          "requiredPayload": {
+            "allBatchesProcessed": true,
+            "exceptionsRecorded": true
+          },
+          "outcomeType": "correct",
+          "pointsAwarded": 15,
+          "feedbackCode": "processing_report_completed",
+          "correctActionLabel": "Completed the processing report",
+          "missedIssueCode": "processing_report"
+        }
+      ]
+    },
+    {
+      "id": "make-processing-decision",
+      "stageId": "processing-decision",
+      "taskType": "make_decision",
+      "title": "Confirm Processing Outcome",
+      "instructions": "Select the outcome that matches the completed batch processing and any exceptions.",
+      "mandatory": true,
+      "repeatable": false,
+      "availableActions": [
+        "make_decision"
+      ],
+      "targetResourceIds": [
+        "processing-report"
+      ],
+      "competencyMappings": [
+        {
+          "competencyId": "quality-exception-handling",
+          "weight": 1.0
+        }
+      ],
+      "maximumPoints": 15,
+      "scoreCategoryId": "decision-quality",
+      "evaluationRules": [
+        {
+          "actionType": "make_decision",
+          "requiredPayload": {
+            "decision": "processing_complete"
+          },
+          "outcomeType": "correct",
+          "pointsAwarded": 15,
+          "feedbackCode": "processing_complete_selected",
+          "correctActionLabel": "Confirmed processing complete"
+        }
+      ]
+    },
+    {
+      "id": "notify-supervisor",
+      "stageId": "processing-decision",
+      "taskType": "confirm_action",
+      "title": "Notify Warehouse Supervisor",
+      "instructions": "Share facts, exceptions and outstanding risks with the supervisor.",
+      "mandatory": true,
+      "repeatable": false,
+      "availableActions": [
+        "confirm_action"
+      ],
+      "targetResourceIds": [
+        "supervisor-notification"
+      ],
+      "competencyMappings": [
+        {
+          "competencyId": "quality-exception-handling",
+          "weight": 1.0
+        }
+      ],
+      "maximumPoints": 10,
+      "scoreCategoryId": "process-accuracy",
+      "evaluationRules": [
+        {
+          "actionType": "confirm_action",
+          "requiredPayload": {
+            "supervisorNotified": true,
+            "exceptionsIncluded": true
+          },
+          "outcomeType": "correct",
+          "pointsAwarded": 10,
+          "feedbackCode": "supervisor_notified",
+          "correctActionLabel": "Notified the supervisor with exceptions included"
+        }
+      ]
+    }
+  ],
+  "resources": [
+    {
+      "id": "processing-batch-list",
+      "missionId": "process-batch-01",
+      "resourceType": "document",
+      "title": "Processing Batch List PROC-2026-006",
+      "content": {
+        "reference": "PROC-2026-006",
+        "sourceProcess": "putaway-to-processing-handoff",
+        "items": [
+          {
+            "sku": "SKU-3001",
+            "name": "Chilled Paneer Cubes 200g",
+            "batchCode": "PROC-BATCH-001"
+          },
+          {
+            "sku": "SKU-3002",
+            "name": "Frozen Mixed Vegetables 1kg",
+            "batchCode": "PROC-BATCH-002"
+          },
+          {
+            "sku": "SKU-3003",
+            "name": "Ambient Rice Sacks 25kg",
+            "batchCode": "PROC-BATCH-003"
+          },
+          {
+            "sku": "SKU-3004",
+            "name": "Chilled Yoghurt Cups 100g",
+            "batchCode": "PROC-BATCH-004"
+          },
+          {
+            "sku": "SKU-3005",
+            "name": "Frozen Chicken Nuggets 1kg",
+            "batchCode": "PROC-BATCH-005"
+          },
+          {
+            "sku": "SKU-3006",
+            "name": "Ambient Spice Packets 500g",
+            "batchCode": "PROC-BATCH-006"
+          }
+        ]
+      }
+    },
+    {
+      "id": "hygiene-checklist",
+      "missionId": "process-batch-01",
+      "resourceType": "form",
+      "title": "Pre-Shift Hygiene Checklist",
+      "content": {
+        "reference": "HYG-2026-006",
+        "status": "pending"
+      }
+    },
+    {
+      "id": "proc-batch-001",
+      "missionId": "process-batch-01",
+      "resourceType": "carton",
+      "title": "Chilled Paneer Cubes 200g",
+      "content": {
+        "sku": "SKU-3001",
+        "batchCode": "PROC-BATCH-001",
+        "targetWeightKg": 20.0,
+        "packedWeightKg": 20.0,
+        "traceabilityCode": "TRC-3001",
+        "labelCode": "LBL-3001"
+      }
+    },
+    {
+      "id": "proc-batch-002",
+      "missionId": "process-batch-01",
+      "resourceType": "carton",
+      "title": "Frozen Mixed Vegetables 1kg",
+      "content": {
+        "sku": "SKU-3002",
+        "batchCode": "PROC-BATCH-002",
+        "targetWeightKg": 25.0,
+        "packedWeightKg": 25.0,
+        "traceabilityCode": "TRC-3002",
+        "labelCode": "LBL-3002"
+      }
+    },
+    {
+      "id": "proc-batch-003",
+      "missionId": "process-batch-01",
+      "resourceType": "carton",
+      "title": "Ambient Rice Sacks 25kg",
+      "content": {
+        "sku": "SKU-3003",
+        "batchCode": "PROC-BATCH-003",
+        "targetWeightKg": 25.0,
+        "packedWeightKg": 25.0,
+        "traceabilityCode": "TRC-3003",
+        "labelCode": "LBL-3003"
+      }
+    },
+    {
+      "id": "proc-batch-004",
+      "missionId": "process-batch-01",
+      "resourceType": "carton",
+      "title": "Chilled Yoghurt Cups 100g",
+      "content": {
+        "sku": "SKU-3004",
+        "batchCode": "PROC-BATCH-004",
+        "targetWeightKg": 18.0,
+        "packedWeightKg": 18.0,
+        "traceabilityCode": "TRC-3004",
+        "labelCode": "LBL-3004"
+      }
+    },
+    {
+      "id": "proc-batch-005",
+      "missionId": "process-batch-01",
+      "resourceType": "carton",
+      "title": "Frozen Chicken Nuggets 1kg",
+      "content": {
+        "sku": "SKU-3005",
+        "batchCode": "PROC-BATCH-005",
+        "targetWeightKg": 22.0,
+        "packedWeightKg": 22.0,
+        "traceabilityCode": "TRC-3005",
+        "labelCode": "LBL-3005"
+      }
+    },
+    {
+      "id": "proc-batch-006",
+      "missionId": "process-batch-01",
+      "resourceType": "carton",
+      "title": "Ambient Spice Packets 500g",
+      "content": {
+        "sku": "SKU-3006",
+        "batchCode": "PROC-BATCH-006",
+        "targetWeightKg": 15.0,
+        "packedWeightKg": 15.0,
+        "traceabilityCode": "TRC-3006",
+        "labelCode": "LBL-3006"
+      }
+    },
+    {
+      "id": "supervisor-sample",
+      "missionId": "process-batch-01",
+      "resourceType": "person",
+      "title": "Shift Supervisor Sample Review",
+      "content": {
+        "reviewer": "Shift Supervisor"
+      }
+    },
+    {
+      "id": "processing-report",
+      "missionId": "process-batch-01",
+      "resourceType": "form",
+      "title": "Processing Batch Completion Report",
+      "content": {
+        "reference": "PROC-2026-006"
+      }
+    },
+    {
+      "id": "supervisor-notification",
+      "missionId": "process-batch-01",
+      "resourceType": "message",
+      "title": "Warehouse Supervisor Notification",
+      "content": {
+        "requiresExceptionSummary": true
+      }
+    }
+  ],
+  "scenario": {
+    "defaultSeed": 63910,
+    "variationRules": [
+      {
+        "type": "assign_issue",
+        "issue": "wrong_weight",
+        "severity": "major",
+        "eligibleTargets": [
+          "proc-batch-001",
+          "proc-batch-002",
+          "proc-batch-003",
+          "proc-batch-004",
+          "proc-batch-005",
+          "proc-batch-006"
+        ],
+        "count": 1
+      },
+      {
+        "type": "assign_issue",
+        "issue": "missing_traceability",
+        "severity": "major",
+        "eligibleTargets": [
+          "proc-batch-001",
+          "proc-batch-002",
+          "proc-batch-003",
+          "proc-batch-004",
+          "proc-batch-005",
+          "proc-batch-006"
+        ],
+        "count": 1
+      },
+      {
+        "type": "assign_issue",
+        "issue": "hygiene_missed",
+        "severity": "critical",
+        "eligibleTargets": [
+          "hygiene-checklist"
+        ],
+        "count": 1
+      },
+      {
+        "type": "assign_issue",
+        "issue": "label_mismatch",
+        "severity": "major",
+        "eligibleTargets": [
+          "proc-batch-001",
+          "proc-batch-002",
+          "proc-batch-003",
+          "proc-batch-004",
+          "proc-batch-005",
+          "proc-batch-006"
+        ],
+        "count": 1
+      }
+    ]
+  },
+  "scenarios": [
+    {
+      "id": "perfect-batch",
+      "name": "Perfect Processing Batch",
+      "variationRules": [],
+      "pedagogicalIntent": "A clean run with no issues, to confirm baseline process discipline."
+    },
+    {
+      "id": "wrong-weight-batch",
+      "name": "Wrong-Weight Pack",
+      "variationRules": [
+        {
+          "type": "assign_issue",
+          "issue": "wrong_weight",
+          "severity": "major",
+          "eligibleTargets": [
+            "proc-batch-001",
+            "proc-batch-002",
+            "proc-batch-003",
+            "proc-batch-004",
+            "proc-batch-005",
+            "proc-batch-006"
+          ],
+          "count": 1
+        }
+      ],
+      "pedagogicalIntent": "Tests whether an off-weight pack is caught and held rather than released."
+    },
+    {
+      "id": "missing-batch-traceability",
+      "name": "Missing Batch Traceability",
+      "variationRules": [
+        {
+          "type": "assign_issue",
+          "issue": "missing_traceability",
+          "severity": "major",
+          "eligibleTargets": [
+            "proc-batch-001",
+            "proc-batch-002",
+            "proc-batch-003",
+            "proc-batch-004",
+            "proc-batch-005",
+            "proc-batch-006"
+          ],
+          "count": 1
+        }
+      ],
+      "pedagogicalIntent": "Tests whether a batch missing its traceability code is held, not released."
+    },
+    {
+      "id": "hygiene-missed",
+      "name": "Hygiene Missed",
+      "variationRules": [
+        {
+          "type": "assign_issue",
+          "issue": "hygiene_missed",
+          "severity": "critical",
+          "eligibleTargets": [
+            "hygiene-checklist"
+          ],
+          "count": 1
+        }
+      ],
+      "pedagogicalIntent": "Tests whether a real hygiene gap is reported honestly rather than confirmed as compliant."
+    },
+    {
+      "id": "label-mismatch",
+      "name": "Label Mismatch",
+      "variationRules": [
+        {
+          "type": "assign_issue",
+          "issue": "label_mismatch",
+          "severity": "major",
+          "eligibleTargets": [
+            "proc-batch-001",
+            "proc-batch-002",
+            "proc-batch-003",
+            "proc-batch-004",
+            "proc-batch-005",
+            "proc-batch-006"
+          ],
+          "count": 1
+        }
+      ],
+      "pedagogicalIntent": "Tests whether a label/traceability mismatch is held for verification, not accepted."
+    }
+  ],
+  "scoringRule": {
+    "minimumScore": 70,
+    "allMandatoryTasksRequired": true,
+    "criticalErrorsAllowed": 0,
+    "scoreCategories": [
+      {
+        "id": "hygiene-compliance",
+        "weight": 0.15
+      },
+      {
+        "id": "scan-and-pack-accuracy",
+        "weight": 0.25
+      },
+      {
+        "id": "weight-accuracy",
+        "weight": 0.2
+      },
+      {
+        "id": "traceability-and-labeling",
+        "weight": 0.2
+      },
+      {
+        "id": "process-accuracy",
+        "weight": 0.1
+      },
+      {
+        "id": "decision-quality",
+        "weight": 0.1
+      }
+    ]
+  },
+  "criticalErrorRules": [
+    {
+      "id": "processed-without-hygiene",
+      "title": "Proceeded Without Reporting a Hygiene Gap",
+      "description": "Confirmed hygiene compliance despite a real gap in the pre-shift checklist.",
+      "severity": "critical",
+      "trigger": {
+        "actionType": "confirm_action",
+        "requiredPayload": {
+          "compliant": true
+        },
+        "targetHasIssue": "hygiene_missed"
+      },
+      "scorePenalty": 25,
+      "preventsPassing": true,
+      "feedback": "A real hygiene gap must always be reported honestly, never confirmed as compliant."
+    },
+    {
+      "id": "packed-wrong-weight-released",
+      "title": "Released an Off-Weight Batch",
+      "description": "An off-weight batch was accepted and released instead of held for verification.",
+      "severity": "critical",
+      "trigger": {
+        "actionType": "select_disposition",
+        "targetHasIssue": "wrong_weight",
+        "selectedDisposition": "accept"
+      },
+      "scorePenalty": 25,
+      "preventsPassing": true,
+      "feedback": "An off-weight batch must be held for verification, never released."
+    },
+    {
+      "id": "lost-batch-traceability",
+      "title": "Released a Batch Missing Traceability",
+      "description": "A batch missing its traceability code was accepted instead of held.",
+      "severity": "critical",
+      "trigger": {
+        "actionType": "select_disposition",
+        "targetHasIssue": "missing_traceability",
+        "selectedDisposition": "accept"
+      },
+      "scorePenalty": 25,
+      "preventsPassing": true,
+      "feedback": "A batch missing its traceability code must always be held, never accepted."
+    },
+    {
+      "id": "ignored-quality-hold",
+      "title": "Ignored a Label Mismatch",
+      "description": "A batch with a label mismatch was accepted instead of held for verification.",
+      "severity": "critical",
+      "trigger": {
+        "actionType": "select_disposition",
+        "targetHasIssue": "label_mismatch",
+        "selectedDisposition": "accept"
+      },
+      "scorePenalty": 20,
+      "preventsPassing": true,
+      "feedback": "A label mismatch must always be held, never waved through."
+    }
+  ]
+}
