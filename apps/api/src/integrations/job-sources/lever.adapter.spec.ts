@@ -23,7 +23,7 @@ describe('LeverAdapter', () => {
     expect(called).toBe(false);
   });
 
-  it('maps a successful response (a bare array) and namespaces externalId', async () => {
+  it('maps a successful response (a bare array), namespaces externalId, and converts the Unix-ms createdAt to ISO', async () => {
     const fetcher = fakeFetcher([
       {
         id: 'posting-1',
@@ -31,6 +31,7 @@ describe('LeverAdapter', () => {
         categories: { location: 'Gurugram, Haryana' },
         descriptionPlain: 'Cycle counts and reconciliation.',
         hostedUrl: 'https://jobs.lever.co/acme/posting-1',
+        createdAt: 1757916149833,
       },
     ]);
     const adapter = new LeverAdapter(
@@ -48,6 +49,7 @@ describe('LeverAdapter', () => {
         location: 'Gurugram, Haryana',
         description: 'Cycle counts and reconciliation.',
         applyUrl: 'https://jobs.lever.co/acme/posting-1',
+        postedAt: new Date(1757916149833).toISOString(),
       },
     ]);
   });

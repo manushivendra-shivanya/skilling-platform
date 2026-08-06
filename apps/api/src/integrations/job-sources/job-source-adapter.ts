@@ -6,6 +6,13 @@
  * URL); Flora-native jobs created via `POST /employer/jobs` never go
  * through an adapter at all, so `jobs.apply_url` stays null for those --
  * see the Phase H migration's column comment.
+ *
+ * `postedAt` is the source's own original posting date (Adzuna `created`,
+ * Jooble `updated`, Careerjet `date`, Greenhouse `first_published`/
+ * `updated_at`, Lever `createdAt`) -- all 5 sources were confirmed live to
+ * carry a real date field. `JobSyncService` uses this for `jobs.published_at`
+ * instead of the sync timestamp, so a job's freshness reflects when it was
+ * actually posted, not when Flora happened to sync it.
  */
 export interface ExternalJobListing {
   externalId: string;
@@ -14,6 +21,9 @@ export interface ExternalJobListing {
   location: string;
   description: string;
   applyUrl: string;
+  /** ISO 8601. Falls back to the sync time if the source's own date is
+   * missing or unparseable -- see each adapter's date-mapping helper. */
+  postedAt: string;
 }
 
 /**

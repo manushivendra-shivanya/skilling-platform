@@ -79,6 +79,7 @@ function listing(externalId: string): ExternalJobListing {
     location: 'Bhiwandi, Maharashtra',
     description: 'Receiving and put-away.',
     applyUrl: `https://example.com/jobs/${externalId}`,
+    postedAt: '2026-08-01T00:00:00.000Z',
   };
 }
 

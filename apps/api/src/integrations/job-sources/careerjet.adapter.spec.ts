@@ -1,5 +1,6 @@
 import { CareerjetAdapter } from './careerjet.adapter';
 import { HttpFetcher } from './http-fetcher';
+import { SEARCH_QUERIES } from './search-queries.config';
 
 function fakeFetcher(body: unknown, ok = true, status = 200): HttpFetcher {
   return async () =>
@@ -42,7 +43,29 @@ describe('CareerjetAdapter', () => {
     expect(seenAuthHeader).toBe(expected);
   });
 
-  it('maps a successful response, deriving externalId from the listing url', async () => {
+  it('runs one request per SEARCH_QUERIES entry, sending the term as "keywords"', async () => {
+    const seenUrls: string[] = [];
+    const fetcher: HttpFetcher = async (url) => {
+      seenUrls.push(url as string);
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({ type: 'JOBS', jobs: [] }),
+      } as Response;
+    };
+    const adapter = new CareerjetAdapter('api-key-1', fetcher);
+
+    await adapter.fetchJobs();
+
+    expect(seenUrls).toHaveLength(SEARCH_QUERIES.length);
+    for (const query of SEARCH_QUERIES) {
+      expect(
+        seenUrls.some((url) => url.includes(`keywords=${encodeURIComponent(query)}`)),
+      ).toBe(true);
+    }
+  });
+
+  it('maps a successful response, deriving externalId from the listing url and parsing the real posting date', async () => {
     const fetcher = fakeFetcher({
       type: 'JOBS',
       jobs: [
@@ -52,6 +75,7 @@ describe('CareerjetAdapter', () => {
           locations: 'Pune, Maharashtra',
           description: 'Prioritise outbound dispatch against SLAs.',
           url: 'https://careerjet.example/jobs/1',
+          date: 'Wed,15 Nov 2025 19:13:43 GMT',
         },
       ],
     });
@@ -66,6 +90,7 @@ describe('CareerjetAdapter', () => {
       location: 'Pune, Maharashtra',
       description: 'Prioritise outbound dispatch against SLAs.',
       applyUrl: 'https://careerjet.example/jobs/1',
+      postedAt: '2025-11-15T19:13:43.000Z',
     });
     expect(listings[0].externalId).toMatch(/^[a-f0-9]{64}$/);
   });
@@ -91,10 +116,10 @@ describe('CareerjetAdapter', () => {
     expect(await adapter.fetchJobs()).toEqual([]);
   });
 
-  it('throws on a non-ok response', async () => {
+  it('throws when every query gets a non-ok response', async () => {
     const fetcher = fakeFetcher({}, false, 502);
     const adapter = new CareerjetAdapter('api-key-1', fetcher);
 
-    await expect(adapter.fetchJobs()).rejects.toThrow(/status 502/);
+    await expect(adapter.fetchJobs()).rejects.toThrow(/All queries failed/);
   });
 });

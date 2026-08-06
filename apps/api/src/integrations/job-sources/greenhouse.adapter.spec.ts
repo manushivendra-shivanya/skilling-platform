@@ -23,7 +23,7 @@ describe('GreenhouseAdapter', () => {
     expect(called).toBe(false);
   });
 
-  it('maps a successful response and namespaces externalId with the board token', async () => {
+  it('maps a successful response, namespaces externalId with the board token, and prefers first_published for the posting date', async () => {
     const fetcher = fakeFetcher({
       jobs: [
         {
@@ -32,6 +32,8 @@ describe('GreenhouseAdapter', () => {
           location: { name: 'Bhiwandi, Maharashtra' },
           content: '<p>Receiving and <b>put-away</b>.</p>',
           absolute_url: 'https://boards.greenhouse.io/acme/jobs/12345',
+          first_published: '2026-07-01T00:00:00-04:00',
+          updated_at: '2026-08-06T04:44:11-04:00',
         },
       ],
     });
@@ -53,8 +55,30 @@ describe('GreenhouseAdapter', () => {
         location: 'Bhiwandi, Maharashtra',
         description: 'Receiving and put-away .',
         applyUrl: 'https://boards.greenhouse.io/acme/jobs/12345',
+        postedAt: '2026-07-01T04:00:00.000Z',
       },
     ]);
+  });
+
+  it('falls back to updated_at when first_published is absent', async () => {
+    const fetcher = fakeFetcher({
+      jobs: [
+        {
+          id: 12345,
+          title: 'Warehouse Associate',
+          absolute_url: 'https://boards.greenhouse.io/acme/jobs/12345',
+          updated_at: '2026-08-06T04:44:11-04:00',
+        },
+      ],
+    });
+    const adapter = new GreenhouseAdapter(
+      [{ displayName: 'Acme Corp', token: 'acme' }],
+      fetcher,
+    );
+
+    const [listing] = await adapter.fetchJobs();
+
+    expect(listing.postedAt).toBe('2026-08-06T08:44:11.000Z');
   });
 
   it('queries every configured company and skips malformed entries', async () => {

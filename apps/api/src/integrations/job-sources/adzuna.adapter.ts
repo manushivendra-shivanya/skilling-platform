@@ -1,5 +1,8 @@
 import { ExternalJobListing, JobSourceAdapter } from './job-source-adapter';
 import { HttpFetcher } from './http-fetcher';
+import { fetchAllQueries } from './multi-query';
+import { parsePostedAt } from './parse-posted-at';
+import { SEARCH_QUERIES } from './search-queries.config';
 
 interface AdzunaResult {
   id?: string;
@@ -8,6 +11,7 @@ interface AdzunaResult {
   location?: { display_name?: string };
   description?: string;
   redirect_url?: string;
+  created?: string;
 }
 
 interface AdzunaResponse {
@@ -16,12 +20,13 @@ interface AdzunaResponse {
 
 /**
  * Adzuna Job Search API (https://developer.adzuna.com/) -- self-serve
- * app_id/app_key, India index, warehouse/logistics keyword search.
- * Exact category taxonomy for logistics/warehouse roles was not verified
- * against current Adzuna docs at implementation time (see
- * docs/25-job-sourcing-voice-ai-career-progression-plan.md's flagged
- * uncertainty) -- this uses a plain free-text `what` query, which is
- * always supported, rather than assuming a specific category slug.
+ * app_id/app_key, India index. Runs one request per term in
+ * `SEARCH_QUERIES` (see that file for why it's a curated list, not one
+ * fixed phrase) -- confirmed live that a single generic "warehouse
+ * logistics" query missed genuine listings from real logistics employers
+ * (e.g. Delhivery's "Director - Hub Operations") that only surfaced under
+ * a company-name query, since Adzuna ranks by relevance to the literal
+ * query text and only the first page was being fetched.
  */
 export class AdzunaAdapter implements JobSourceAdapter {
   readonly key = 'adzuna';
@@ -34,13 +39,16 @@ export class AdzunaAdapter implements JobSourceAdapter {
 
   async fetchJobs(): Promise<ExternalJobListing[]> {
     if (!this.appId || !this.appKey) return [];
+    return fetchAllQueries(SEARCH_QUERIES, (query) => this.fetchOneQuery(query));
+  }
 
+  private async fetchOneQuery(query: string): Promise<ExternalJobListing[]> {
     const url =
       'https://api.adzuna.com/v1/api/jobs/in/search/1' +
-      `?app_id=${encodeURIComponent(this.appId)}` +
-      `&app_key=${encodeURIComponent(this.appKey)}` +
+      `?app_id=${encodeURIComponent(this.appId!)}` +
+      `&app_key=${encodeURIComponent(this.appKey!)}` +
       '&results_per_page=50' +
-      '&what=warehouse%20logistics' +
+      `&what=${encodeURIComponent(query)}` +
       '&content-type=application/json';
 
     const response = await this.fetcher(url);
@@ -59,6 +67,7 @@ export class AdzunaAdapter implements JobSourceAdapter {
         location: result.location?.display_name ?? 'Location not specified',
         description: result.description ?? '',
         applyUrl: result.redirect_url,
+        postedAt: parsePostedAt(result.created),
       });
     }
     return listings;
