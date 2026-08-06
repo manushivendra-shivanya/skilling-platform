@@ -46,10 +46,7 @@ import {
     {
       provide: CareerjetAdapter,
       useFactory: (config: ConfigService, http: HttpFetcher) =>
-        new CareerjetAdapter(
-          config.get<string>('CAREERJET_AFFILIATE_ID'),
-          http,
-        ),
+        new CareerjetAdapter(config.get<string>('CAREERJET_API_KEY'), http),
       inject: [ConfigService, HTTP_FETCHER],
     },
     {
