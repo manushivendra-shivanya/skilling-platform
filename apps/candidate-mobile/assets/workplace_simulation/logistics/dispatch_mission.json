@@ -1,0 +1,1000 @@
+{
+  "id": "dispatch-orders-01",
+  "version": "1.0.0",
+  "packId": "logistics-foundation",
+  "workplaceId": "central-distribution-centre",
+  "departmentId": "dispatch",
+  "processId": "route-dispatch",
+  "role": {
+    "id": "warehouse-associate-trainee",
+    "industry": "logistics_supply_chain",
+    "title": "Warehouse Associate",
+    "level": "trainee",
+    "departmentIds": [
+      "receiving",
+      "put-away",
+      "processing",
+      "dispatch"
+    ],
+    "requiredCompetencies": [
+      "route-verification",
+      "scan-discipline",
+      "loading-sequence-control",
+      "exception-escalation",
+      "route-settlement-control"
+    ],
+    "promotionTargetRoleId": "warehouse-associate-junior"
+  },
+  "title": "Dispatch Delivery Route",
+  "difficulty": "intermediate",
+  "estimatedDurationMinutes": 24,
+  "missionType": "guided_shift",
+  "briefing": {
+    "supervisorTitle": "Dispatch Supervisor",
+    "message": "Six crates across three routes need to be picked, staged, loaded and dispatched today. Check the vehicle before loading, load in sequence, and resolve every exception before the route closes.",
+    "shiftName": "Morning Shift",
+    "supplier": "Internal Handoff \u2014 Processing Department",
+    "purchaseOrderNumber": "PO-2026-009",
+    "deliveryReference": "DISP-2026-009",
+    "deliveryType": "Internal dispatch handoff",
+    "responsibilities": [
+      "Scan every crate and flag anything on the wrong route",
+      "Consolidate and stage every crate for its route",
+      "Verify the vehicle reaches temperature before loading",
+      "Load every crate in the correct sequence",
+      "Scan the manifest at the gate before departure",
+      "Classify any exception and escalate customer disputes",
+      "Resolve any cash/crate mismatch before closing the route",
+      "Complete the report and notify the supervisor"
+    ],
+    "workplaceRules": [
+      "A wrong-route crate must never be loaded onto the wrong vehicle.",
+      "A vehicle that hasn't reached the required temperature must never be loaded.",
+      "A route must never be closed with an unresolved cash or crate mismatch.",
+      "A customer shortage dispute must always be escalated, never ignored."
+    ],
+    "rulesVersion": "1.0.0"
+  },
+  "objectives": [
+    "Scan and flag crates accurately",
+    "Consolidate and stage every route",
+    "Verify vehicle temperature before loading",
+    "Load every crate in sequence",
+    "Scan the manifest at the gate",
+    "Classify exceptions and escalate disputes correctly",
+    "Complete the route settlement report and decision"
+  ],
+  "startingWorkstationId": "picking-station",
+  "stages": [
+    "picking",
+    "consolidation-and-staging",
+    "vehicle-verification",
+    "gate-and-exceptions"
+  ],
+  "stageDefinitions": [
+    {
+      "id": "picking",
+      "missionId": "dispatch-orders-01",
+      "sequence": 1,
+      "title": "Pick Order Items",
+      "workstationId": "picking-station",
+      "instructions": "Scan every crate to confirm it belongs on today's routes.",
+      "taskIds": [
+        "pick-order-items"
+      ],
+      "completionMode": "all_mandatory_tasks"
+    },
+    {
+      "id": "consolidation-and-staging",
+      "missionId": "dispatch-orders-01",
+      "sequence": 2,
+      "title": "Consolidate and Stage",
+      "workstationId": "consolidation-bay",
+      "instructions": "Consolidate every crate into its route and stage it for loading.",
+      "taskIds": [
+        "consolidate-order-items",
+        "stage-route-crates"
+      ],
+      "completionMode": "all_mandatory_tasks"
+    },
+    {
+      "id": "vehicle-verification",
+      "missionId": "dispatch-orders-01",
+      "sequence": 3,
+      "title": "Verify Vehicle and Load",
+      "workstationId": "vehicle-check",
+      "instructions": "Check the vehicle temperature before loading, then load every crate in sequence.",
+      "taskIds": [
+        "verify-vehicle-temperature",
+        "confirm-load-sequence"
+      ],
+      "completionMode": "all_mandatory_tasks"
+    },
+    {
+      "id": "gate-and-exceptions",
+      "missionId": "dispatch-orders-01",
+      "sequence": 4,
+      "title": "Gate Check and Exceptions",
+      "workstationId": "dispatch-gate",
+      "instructions": "Scan the manifest at the gate, classify any exception, complete the report, and notify the supervisor.",
+      "taskIds": [
+        "final-gate-scan",
+        "handle-dispatch-exceptions",
+        "complete-dispatch-report",
+        "make-dispatch-decision",
+        "notify-supervisor"
+      ],
+      "completionMode": "correct_decision"
+    }
+  ],
+  "taskDefinitions": [
+    {
+      "id": "pick-order-items",
+      "stageId": "picking",
+      "taskType": "scan_barcode",
+      "title": "Scan Every Crate for Its Route",
+      "instructions": "Scan each crate. Flag any crate on the wrong route and rescan any failed read rather than forcing it through.",
+      "mandatory": true,
+      "repeatable": true,
+      "availableActions": [
+        "scan_barcode"
+      ],
+      "targetResourceIds": [
+        "dispatch-crate-001",
+        "dispatch-crate-002",
+        "dispatch-crate-003",
+        "dispatch-crate-004",
+        "dispatch-crate-005",
+        "dispatch-crate-006"
+      ],
+      "competencyMappings": [
+        {
+          "competencyId": "scan-discipline",
+          "weight": 1.0
+        }
+      ],
+      "maximumPoints": 18,
+      "scoreCategoryId": "picking-accuracy",
+      "evaluationRules": [
+        {
+          "actionType": "scan_barcode",
+          "requiredPayload": {
+            "flagged": true
+          },
+          "targetHasIssue": "wrong_route",
+          "outcomeType": "correct",
+          "pointsAwarded": 3,
+          "feedbackCode": "wrong_route_flagged",
+          "correctActionLabel": "Flagged the wrong-route crate instead of picking it",
+          "missedIssueCode": "wrong_route"
+        },
+        {
+          "actionType": "scan_barcode",
+          "requiredPayload": {
+            "rescanned": true
+          },
+          "targetHasIssue": "failed_scan",
+          "outcomeType": "correct",
+          "pointsAwarded": 3,
+          "feedbackCode": "failed_scan_rescanned",
+          "correctActionLabel": "Rescanned the crate instead of forcing it through",
+          "missedIssueCode": "failed_scan"
+        },
+        {
+          "actionType": "scan_barcode",
+          "requiredPayload": {
+            "scanStatus": "matched"
+          },
+          "targetMustBeCompliant": true,
+          "outcomeType": "correct",
+          "pointsAwarded": 3,
+          "feedbackCode": "crate_scan_confirmed",
+          "correctActionLabel": "Scanned the crate for its route"
+        }
+      ]
+    },
+    {
+      "id": "consolidate-order-items",
+      "stageId": "consolidation-and-staging",
+      "taskType": "move_item",
+      "title": "Consolidate Every Crate",
+      "instructions": "Group every crate with the rest of its route.",
+      "mandatory": true,
+      "repeatable": true,
+      "availableActions": [
+        "move_item"
+      ],
+      "targetResourceIds": [
+        "dispatch-crate-001",
+        "dispatch-crate-002",
+        "dispatch-crate-003",
+        "dispatch-crate-004",
+        "dispatch-crate-005",
+        "dispatch-crate-006"
+      ],
+      "competencyMappings": [
+        {
+          "competencyId": "loading-sequence-control",
+          "weight": 1.0
+        }
+      ],
+      "maximumPoints": 12,
+      "scoreCategoryId": "consolidation-and-staging",
+      "evaluationRules": [
+        {
+          "actionType": "move_item",
+          "requiredPayload": {
+            "consolidated": true
+          },
+          "outcomeType": "correct",
+          "pointsAwarded": 2,
+          "feedbackCode": "crate_consolidated",
+          "correctActionLabel": "Consolidated the crate into its route"
+        }
+      ]
+    },
+    {
+      "id": "stage-route-crates",
+      "stageId": "consolidation-and-staging",
+      "taskType": "confirm_action",
+      "title": "Stage Every Crate for Loading",
+      "instructions": "Confirm every crate is staged in its route lane, ready for loading.",
+      "mandatory": true,
+      "repeatable": true,
+      "availableActions": [
+        "confirm_action"
+      ],
+      "targetResourceIds": [
+        "dispatch-crate-001",
+        "dispatch-crate-002",
+        "dispatch-crate-003",
+        "dispatch-crate-004",
+        "dispatch-crate-005",
+        "dispatch-crate-006"
+      ],
+      "competencyMappings": [
+        {
+          "competencyId": "route-verification",
+          "weight": 1.0
+        }
+      ],
+      "maximumPoints": 12,
+      "scoreCategoryId": "consolidation-and-staging",
+      "evaluationRules": [
+        {
+          "actionType": "confirm_action",
+          "requiredPayload": {
+            "staged": true
+          },
+          "outcomeType": "correct",
+          "pointsAwarded": 2,
+          "feedbackCode": "crate_staged",
+          "correctActionLabel": "Staged the crate for loading"
+        }
+      ]
+    },
+    {
+      "id": "verify-vehicle-temperature",
+      "stageId": "vehicle-verification",
+      "taskType": "inspect_item",
+      "title": "Verify Vehicle Temperature Before Loading",
+      "instructions": "Record the vehicle's temperature reading. Hold the vehicle for a recheck if it hasn't reached the required temperature.",
+      "mandatory": true,
+      "repeatable": false,
+      "availableActions": [
+        "record_temperature_reading"
+      ],
+      "targetResourceIds": [
+        "dispatch-vehicle"
+      ],
+      "competencyMappings": [
+        {
+          "competencyId": "route-verification",
+          "weight": 1.0
+        }
+      ],
+      "maximumPoints": 15,
+      "scoreCategoryId": "vehicle-verification",
+      "evaluationRules": [
+        {
+          "actionType": "record_temperature_reading",
+          "requiredPayload": {
+            "heldForRecheck": true
+          },
+          "targetHasIssue": "vehicle_temp_failure",
+          "outcomeType": "correct",
+          "pointsAwarded": 15,
+          "feedbackCode": "vehicle_temp_held",
+          "correctActionLabel": "Held the vehicle for a temperature recheck",
+          "missedIssueCode": "vehicle_temp_failure"
+        },
+        {
+          "actionType": "record_temperature_reading",
+          "requiredPayload": {
+            "heldForRecheck": false
+          },
+          "targetMustBeCompliant": true,
+          "outcomeType": "correct",
+          "pointsAwarded": 15,
+          "feedbackCode": "vehicle_temp_confirmed",
+          "correctActionLabel": "Confirmed the vehicle reached the required temperature"
+        }
+      ]
+    },
+    {
+      "id": "confirm-load-sequence",
+      "stageId": "vehicle-verification",
+      "taskType": "move_item",
+      "title": "Load Every Crate in Sequence",
+      "instructions": "Load every crate into the vehicle in the correct route sequence.",
+      "mandatory": true,
+      "repeatable": true,
+      "availableActions": [
+        "move_item"
+      ],
+      "targetResourceIds": [
+        "dispatch-crate-001",
+        "dispatch-crate-002",
+        "dispatch-crate-003",
+        "dispatch-crate-004",
+        "dispatch-crate-005",
+        "dispatch-crate-006"
+      ],
+      "competencyMappings": [
+        {
+          "competencyId": "loading-sequence-control",
+          "weight": 1.0
+        }
+      ],
+      "maximumPoints": 18,
+      "scoreCategoryId": "loading-sequence",
+      "evaluationRules": [
+        {
+          "actionType": "move_item",
+          "requiredPayload": {
+            "loadedInSequence": true
+          },
+          "outcomeType": "correct",
+          "pointsAwarded": 3,
+          "feedbackCode": "crate_loaded_in_sequence",
+          "correctActionLabel": "Loaded the crate in the correct sequence"
+        }
+      ]
+    },
+    {
+      "id": "final-gate-scan",
+      "stageId": "gate-and-exceptions",
+      "taskType": "scan_barcode",
+      "title": "Scan the Manifest at the Gate",
+      "instructions": "Scan the dispatch manifest at the gate before the vehicle departs.",
+      "mandatory": true,
+      "repeatable": false,
+      "availableActions": [
+        "scan_barcode"
+      ],
+      "targetResourceIds": [
+        "dispatch-manifest"
+      ],
+      "competencyMappings": [
+        {
+          "competencyId": "scan-discipline",
+          "weight": 1.0
+        }
+      ],
+      "maximumPoints": 10,
+      "scoreCategoryId": "gate-and-exception-handling",
+      "evaluationRules": [
+        {
+          "actionType": "scan_barcode",
+          "requiredPayload": {
+            "gateScanStatus": "matched"
+          },
+          "outcomeType": "correct",
+          "pointsAwarded": 10,
+          "feedbackCode": "gate_scan_confirmed",
+          "correctActionLabel": "Scanned the manifest at the gate"
+        }
+      ]
+    },
+    {
+      "id": "handle-dispatch-exceptions",
+      "stageId": "gate-and-exceptions",
+      "taskType": "select_disposition",
+      "title": "Classify Every Crate Exception",
+      "instructions": "Choose the correct disposition for every crate based on what was found.",
+      "mandatory": true,
+      "repeatable": true,
+      "availableActions": [
+        "select_disposition"
+      ],
+      "targetResourceIds": [
+        "dispatch-crate-001",
+        "dispatch-crate-002",
+        "dispatch-crate-003",
+        "dispatch-crate-004",
+        "dispatch-crate-005",
+        "dispatch-crate-006"
+      ],
+      "competencyMappings": [
+        {
+          "competencyId": "exception-escalation",
+          "weight": 1.0
+        }
+      ],
+      "maximumPoints": 18,
+      "scoreCategoryId": "gate-and-exception-handling",
+      "evaluationRules": [
+        {
+          "actionType": "select_disposition",
+          "requiredPayload": {
+            "disposition": "hold_for_verification"
+          },
+          "targetHasIssue": "wrong_route",
+          "outcomeType": "correct",
+          "pointsAwarded": 3,
+          "feedbackCode": "wrong_route_held",
+          "correctActionLabel": "Held the wrong-route crate instead of loading it",
+          "missedIssueCode": "wrong_route"
+        },
+        {
+          "actionType": "select_disposition",
+          "requiredPayload": {
+            "disposition": "hold_for_verification"
+          },
+          "targetHasIssue": "partial_hold",
+          "outcomeType": "correct",
+          "pointsAwarded": 3,
+          "feedbackCode": "shortage_dispute_escalated",
+          "correctActionLabel": "Escalated the customer shortage dispute instead of ignoring it",
+          "missedIssueCode": "partial_hold"
+        },
+        {
+          "actionType": "select_disposition",
+          "requiredPayload": {
+            "disposition": "accept"
+          },
+          "targetHasIssue": "failed_scan",
+          "outcomeType": "correct",
+          "pointsAwarded": 3,
+          "feedbackCode": "failed_scan_crate_accepted",
+          "correctActionLabel": "Accepted the crate after its scan was successfully retried"
+        },
+        {
+          "actionType": "select_disposition",
+          "requiredPayload": {
+            "disposition": "accept"
+          },
+          "targetMustBeCompliant": true,
+          "outcomeType": "correct",
+          "pointsAwarded": 3,
+          "feedbackCode": "compliant_crate_accepted",
+          "correctActionLabel": "Accepted the compliant crate"
+        }
+      ]
+    },
+    {
+      "id": "complete-dispatch-report",
+      "stageId": "gate-and-exceptions",
+      "taskType": "complete_form",
+      "title": "Complete the Route Settlement Report",
+      "instructions": "Record that every crate was loaded and resolve any cash or crate mismatch before closing the route.",
+      "mandatory": true,
+      "repeatable": false,
+      "availableActions": [
+        "complete_form"
+      ],
+      "targetResourceIds": [
+        "dispatch-report"
+      ],
+      "competencyMappings": [
+        {
+          "competencyId": "route-settlement-control",
+          "weight": 1.0
+        }
+      ],
+      "maximumPoints": 15,
+      "scoreCategoryId": "process-and-decision",
+      "evaluationRules": [
+        {
+          "actionType": "complete_form",
+          "requiredPayload": {
+            "allCratesLoaded": true,
+            "exceptionsRecorded": true,
+            "mismatchResolved": true
+          },
+          "targetHasIssue": "route_close_exception",
+          "outcomeType": "correct",
+          "pointsAwarded": 15,
+          "feedbackCode": "mismatch_resolved_before_close",
+          "correctActionLabel": "Resolved the cash/crate mismatch before closing the route",
+          "missedIssueCode": "route_close_exception"
+        },
+        {
+          "actionType": "complete_form",
+          "requiredPayload": {
+            "allCratesLoaded": true,
+            "exceptionsRecorded": true
+          },
+          "targetMustBeCompliant": true,
+          "outcomeType": "correct",
+          "pointsAwarded": 15,
+          "feedbackCode": "dispatch_report_completed",
+          "correctActionLabel": "Completed the route settlement report"
+        }
+      ]
+    },
+    {
+      "id": "make-dispatch-decision",
+      "stageId": "gate-and-exceptions",
+      "taskType": "make_decision",
+      "title": "Confirm Dispatch Outcome",
+      "instructions": "Select the outcome that matches the completed dispatch and any exceptions.",
+      "mandatory": true,
+      "repeatable": false,
+      "availableActions": [
+        "make_decision"
+      ],
+      "targetResourceIds": [
+        "dispatch-report"
+      ],
+      "competencyMappings": [
+        {
+          "competencyId": "route-settlement-control",
+          "weight": 1.0
+        }
+      ],
+      "maximumPoints": 15,
+      "scoreCategoryId": "process-and-decision",
+      "evaluationRules": [
+        {
+          "actionType": "make_decision",
+          "requiredPayload": {
+            "decision": "dispatch_complete"
+          },
+          "outcomeType": "correct",
+          "pointsAwarded": 15,
+          "feedbackCode": "dispatch_complete_selected",
+          "correctActionLabel": "Confirmed dispatch complete"
+        }
+      ]
+    },
+    {
+      "id": "notify-supervisor",
+      "stageId": "gate-and-exceptions",
+      "taskType": "confirm_action",
+      "title": "Notify Warehouse Supervisor",
+      "instructions": "Share facts, exceptions and outstanding risks with the supervisor.",
+      "mandatory": true,
+      "repeatable": false,
+      "availableActions": [
+        "confirm_action"
+      ],
+      "targetResourceIds": [
+        "supervisor-notification"
+      ],
+      "competencyMappings": [
+        {
+          "competencyId": "exception-escalation",
+          "weight": 1.0
+        }
+      ],
+      "maximumPoints": 10,
+      "scoreCategoryId": "process-and-decision",
+      "evaluationRules": [
+        {
+          "actionType": "confirm_action",
+          "requiredPayload": {
+            "supervisorNotified": true,
+            "exceptionsIncluded": true
+          },
+          "outcomeType": "correct",
+          "pointsAwarded": 10,
+          "feedbackCode": "supervisor_notified",
+          "correctActionLabel": "Notified the supervisor with exceptions included"
+        }
+      ]
+    }
+  ],
+  "resources": [
+    {
+      "id": "dispatch-order-list",
+      "missionId": "dispatch-orders-01",
+      "resourceType": "document",
+      "title": "Dispatch Order List DISP-2026-009",
+      "content": {
+        "reference": "DISP-2026-009",
+        "sourceProcess": "batch-processing-handoff",
+        "items": [
+          {
+            "routeId": "ROUTE-A1",
+            "destination": "Greenview Superstore",
+            "crateCode": "DISPATCH-CRATE-001"
+          },
+          {
+            "routeId": "ROUTE-A1",
+            "destination": "Lakeside Grocers",
+            "crateCode": "DISPATCH-CRATE-002"
+          },
+          {
+            "routeId": "ROUTE-A2",
+            "destination": "Hilltop Restaurant",
+            "crateCode": "DISPATCH-CRATE-003"
+          },
+          {
+            "routeId": "ROUTE-A2",
+            "destination": "Riverside Cafe",
+            "crateCode": "DISPATCH-CRATE-004"
+          },
+          {
+            "routeId": "ROUTE-A3",
+            "destination": "Sunrise Mart",
+            "crateCode": "DISPATCH-CRATE-005"
+          },
+          {
+            "routeId": "ROUTE-A3",
+            "destination": "Northgate Bistro",
+            "crateCode": "DISPATCH-CRATE-006"
+          }
+        ]
+      }
+    },
+    {
+      "id": "dispatch-crate-001",
+      "missionId": "dispatch-orders-01",
+      "resourceType": "carton",
+      "title": "Crate for Greenview Superstore",
+      "content": {
+        "routeId": "ROUTE-A1",
+        "destination": "Greenview Superstore",
+        "crateWeightKg": 12.0,
+        "scanStatus": "pending"
+      }
+    },
+    {
+      "id": "dispatch-crate-002",
+      "missionId": "dispatch-orders-01",
+      "resourceType": "carton",
+      "title": "Crate for Lakeside Grocers",
+      "content": {
+        "routeId": "ROUTE-A1",
+        "destination": "Lakeside Grocers",
+        "crateWeightKg": 10.0,
+        "scanStatus": "pending"
+      }
+    },
+    {
+      "id": "dispatch-crate-003",
+      "missionId": "dispatch-orders-01",
+      "resourceType": "carton",
+      "title": "Crate for Hilltop Restaurant",
+      "content": {
+        "routeId": "ROUTE-A2",
+        "destination": "Hilltop Restaurant",
+        "crateWeightKg": 8.0,
+        "scanStatus": "pending"
+      }
+    },
+    {
+      "id": "dispatch-crate-004",
+      "missionId": "dispatch-orders-01",
+      "resourceType": "carton",
+      "title": "Crate for Riverside Cafe",
+      "content": {
+        "routeId": "ROUTE-A2",
+        "destination": "Riverside Cafe",
+        "crateWeightKg": 9.0,
+        "scanStatus": "pending"
+      }
+    },
+    {
+      "id": "dispatch-crate-005",
+      "missionId": "dispatch-orders-01",
+      "resourceType": "carton",
+      "title": "Crate for Sunrise Mart",
+      "content": {
+        "routeId": "ROUTE-A3",
+        "destination": "Sunrise Mart",
+        "crateWeightKg": 14.0,
+        "scanStatus": "pending"
+      }
+    },
+    {
+      "id": "dispatch-crate-006",
+      "missionId": "dispatch-orders-01",
+      "resourceType": "carton",
+      "title": "Crate for Northgate Bistro",
+      "content": {
+        "routeId": "ROUTE-A3",
+        "destination": "Northgate Bistro",
+        "crateWeightKg": 11.0,
+        "scanStatus": "pending"
+      }
+    },
+    {
+      "id": "dispatch-vehicle",
+      "missionId": "dispatch-orders-01",
+      "resourceType": "equipment",
+      "title": "Refrigerated Delivery Vehicle DV-118",
+      "content": {
+        "vehicleId": "DV-118",
+        "requiredTempC": 4,
+        "vehicleTempC": 4
+      }
+    },
+    {
+      "id": "dispatch-manifest",
+      "missionId": "dispatch-orders-01",
+      "resourceType": "document",
+      "title": "Dispatch Gate Manifest DISP-2026-009",
+      "content": {
+        "reference": "DISP-2026-009",
+        "gateScanStatus": "pending"
+      }
+    },
+    {
+      "id": "dispatch-report",
+      "missionId": "dispatch-orders-01",
+      "resourceType": "form",
+      "title": "Dispatch Route Settlement Report",
+      "content": {
+        "reference": "DISP-2026-009"
+      }
+    },
+    {
+      "id": "supervisor-notification",
+      "missionId": "dispatch-orders-01",
+      "resourceType": "message",
+      "title": "Warehouse Supervisor Notification",
+      "content": {
+        "requiresExceptionSummary": true
+      }
+    }
+  ],
+  "scenario": {
+    "defaultSeed": 82441,
+    "variationRules": [
+      {
+        "type": "assign_issue",
+        "issue": "wrong_route",
+        "severity": "major",
+        "eligibleTargets": [
+          "dispatch-crate-001",
+          "dispatch-crate-002",
+          "dispatch-crate-003",
+          "dispatch-crate-004",
+          "dispatch-crate-005",
+          "dispatch-crate-006"
+        ],
+        "count": 1
+      },
+      {
+        "type": "assign_issue",
+        "issue": "failed_scan",
+        "severity": "major",
+        "eligibleTargets": [
+          "dispatch-crate-001",
+          "dispatch-crate-002",
+          "dispatch-crate-003",
+          "dispatch-crate-004",
+          "dispatch-crate-005",
+          "dispatch-crate-006"
+        ],
+        "count": 1
+      },
+      {
+        "type": "assign_issue",
+        "issue": "vehicle_temp_failure",
+        "severity": "critical",
+        "eligibleTargets": [
+          "dispatch-vehicle"
+        ],
+        "count": 1
+      },
+      {
+        "type": "assign_issue",
+        "issue": "route_close_exception",
+        "severity": "major",
+        "eligibleTargets": [
+          "dispatch-report"
+        ],
+        "count": 1
+      }
+    ]
+  },
+  "scenarios": [
+    {
+      "id": "perfect-route",
+      "name": "Perfect Dispatch Route",
+      "variationRules": [],
+      "pedagogicalIntent": "A clean run with no issues, to confirm baseline dispatch discipline."
+    },
+    {
+      "id": "wrong-route-crate",
+      "name": "Wrong-Route Crate",
+      "variationRules": [
+        {
+          "type": "assign_issue",
+          "issue": "wrong_route",
+          "severity": "major",
+          "eligibleTargets": [
+            "dispatch-crate-001",
+            "dispatch-crate-002",
+            "dispatch-crate-003",
+            "dispatch-crate-004",
+            "dispatch-crate-005",
+            "dispatch-crate-006"
+          ],
+          "count": 1
+        }
+      ],
+      "pedagogicalIntent": "Tests whether a crate on the wrong route is caught before it's loaded."
+    },
+    {
+      "id": "failed-scan",
+      "name": "Failed Scan",
+      "variationRules": [
+        {
+          "type": "assign_issue",
+          "issue": "failed_scan",
+          "severity": "major",
+          "eligibleTargets": [
+            "dispatch-crate-001",
+            "dispatch-crate-002",
+            "dispatch-crate-003",
+            "dispatch-crate-004",
+            "dispatch-crate-005",
+            "dispatch-crate-006"
+          ],
+          "count": 1
+        }
+      ],
+      "pedagogicalIntent": "Tests whether a failed scan is rescanned rather than forced through."
+    },
+    {
+      "id": "partial-order-hold",
+      "name": "Partial Order Hold",
+      "variationRules": [
+        {
+          "type": "assign_issue",
+          "issue": "partial_hold",
+          "severity": "major",
+          "eligibleTargets": [
+            "dispatch-crate-001",
+            "dispatch-crate-002",
+            "dispatch-crate-003",
+            "dispatch-crate-004",
+            "dispatch-crate-005",
+            "dispatch-crate-006"
+          ],
+          "count": 1
+        }
+      ],
+      "pedagogicalIntent": "Tests whether a customer shortage dispute is escalated rather than ignored."
+    },
+    {
+      "id": "vehicle-temperature-precheck-failure",
+      "name": "Vehicle Temperature Pre-Check Failure",
+      "variationRules": [
+        {
+          "type": "assign_issue",
+          "issue": "vehicle_temp_failure",
+          "severity": "critical",
+          "eligibleTargets": [
+            "dispatch-vehicle"
+          ],
+          "count": 1
+        }
+      ],
+      "pedagogicalIntent": "Tests whether loading is held until the vehicle reaches the required temperature."
+    },
+    {
+      "id": "route-close-exception",
+      "name": "Route Close Exception",
+      "variationRules": [
+        {
+          "type": "assign_issue",
+          "issue": "route_close_exception",
+          "severity": "major",
+          "eligibleTargets": [
+            "dispatch-report"
+          ],
+          "count": 1
+        }
+      ],
+      "pedagogicalIntent": "Tests whether a cash/crate mismatch is resolved before the route is closed."
+    }
+  ],
+  "scoringRule": {
+    "minimumScore": 70,
+    "allMandatoryTasksRequired": true,
+    "criticalErrorsAllowed": 0,
+    "scoreCategories": [
+      {
+        "id": "picking-accuracy",
+        "weight": 0.2
+      },
+      {
+        "id": "consolidation-and-staging",
+        "weight": 0.15
+      },
+      {
+        "id": "vehicle-verification",
+        "weight": 0.2
+      },
+      {
+        "id": "loading-sequence",
+        "weight": 0.15
+      },
+      {
+        "id": "gate-and-exception-handling",
+        "weight": 0.2
+      },
+      {
+        "id": "process-and-decision",
+        "weight": 0.1
+      }
+    ]
+  },
+  "criticalErrorRules": [
+    {
+      "id": "loaded-wrong-route-crate",
+      "title": "Loaded a Wrong-Route Crate",
+      "description": "A crate on the wrong route was accepted and loaded instead of held.",
+      "severity": "critical",
+      "trigger": {
+        "actionType": "select_disposition",
+        "targetHasIssue": "wrong_route",
+        "selectedDisposition": "accept"
+      },
+      "scorePenalty": 25,
+      "preventsPassing": true,
+      "feedback": "A wrong-route crate must always be held, never loaded onto the wrong vehicle."
+    },
+    {
+      "id": "skipped-vehicle-temp-precheck",
+      "title": "Skipped the Vehicle Temperature Pre-Check",
+      "description": "Loading proceeded despite the vehicle not reaching the required temperature.",
+      "severity": "critical",
+      "trigger": {
+        "actionType": "record_temperature_reading",
+        "requiredPayload": {
+          "proceededWithoutHold": true
+        },
+        "targetHasIssue": "vehicle_temp_failure"
+      },
+      "scorePenalty": 25,
+      "preventsPassing": true,
+      "feedback": "A vehicle that hasn't reached the required temperature must never be loaded."
+    },
+    {
+      "id": "closed-route-unresolved-mismatch",
+      "title": "Closed the Route With an Unresolved Mismatch",
+      "description": "The route was closed without resolving a cash or crate mismatch.",
+      "severity": "critical",
+      "trigger": {
+        "actionType": "complete_form",
+        "requiredPayload": {
+          "mismatchResolved": false
+        },
+        "targetHasIssue": "route_close_exception"
+      },
+      "scorePenalty": 25,
+      "preventsPassing": true,
+      "feedback": "A route must never be closed with an unresolved cash or crate mismatch."
+    },
+    {
+      "id": "ignored-shortage-dispute",
+      "title": "Ignored a Customer Shortage Dispute",
+      "description": "A customer shortage dispute was accepted and dismissed instead of escalated.",
+      "severity": "critical",
+      "trigger": {
+        "actionType": "select_disposition",
+        "targetHasIssue": "partial_hold",
+        "selectedDisposition": "accept"
+      },
+      "scorePenalty": 20,
+      "preventsPassing": true,
+      "feedback": "A customer shortage dispute must always be escalated, never ignored."
+    }
+  ]
+}

@@ -4,7 +4,12 @@
   "name": "Central Distribution Centre",
   "workplaceType": "warehouse",
   "description": "A regional warehouse receiving, storing and dispatching consumer products.",
-  "departments": ["receiving", "put-away"],
+  "departments": [
+    "receiving",
+    "put-away",
+    "processing",
+    "dispatch"
+  ],
   "operationalRules": [
     "All incoming shipments require document verification.",
     "Damaged goods cannot enter available inventory.",
@@ -25,7 +30,9 @@
         "quarantine-zone",
         "receiving-office"
       ],
-      "processes": ["incoming-shipment-receipt"],
+      "processes": [
+        "incoming-shipment-receipt"
+      ],
       "shiftPattern": "Two shifts per day (06:00-14:00, 14:00-22:00), one Receiving Supervisor and 2-4 Warehouse Associates per shift depending on scheduled deliveries.",
       "escalationPath": "Warehouse Associate -> Receiving Supervisor -> Warehouse Manager. Associates escalate any exception they cannot resolve against SOP-RCV-001 without waiting for supervisor approval to quarantine or hold stock.",
       "keyPerformanceIndicators": [
@@ -45,7 +52,53 @@
         "transport-placement",
         "putaway-office"
       ],
-      "processes": ["putaway-storage-allocation"]
+      "processes": [
+        "putaway-storage-allocation"
+      ]
+    },
+    {
+      "id": "processing",
+      "workplaceId": "central-distribution-centre",
+      "name": "Processing Department",
+      "description": "Processes batches from Put Away into hygiene-checked, weighed and labeled units ready for Dispatch.",
+      "workstations": [
+        "processing-entry",
+        "packing-station",
+        "quality-check",
+        "processing-office"
+      ],
+      "processes": [
+        "batch-processing"
+      ],
+      "shiftPattern": "Two shifts per day (06:00-14:00, 14:00-22:00), one Processing Supervisor and 2-4 Warehouse Associates per shift.",
+      "escalationPath": "Warehouse Associate -> Processing Supervisor -> Warehouse Manager. Associates escalate any hygiene, weight, traceability or label exception they cannot resolve without waiting for approval to hold a batch.",
+      "keyPerformanceIndicators": [
+        "Batch cycle time (minutes from line entry to processing decision)",
+        "Hygiene compliance rate (honest gap reports / real gaps present)",
+        "Non-compliant batch leakage (compliant-marked batches later found off-weight, mislabeled, or untraceable)"
+      ]
+    },
+    {
+      "id": "dispatch",
+      "workplaceId": "central-distribution-centre",
+      "name": "Dispatch Department",
+      "description": "Picks, consolidates, loads and dispatches processed stock onto delivery routes.",
+      "workstations": [
+        "picking-station",
+        "consolidation-bay",
+        "vehicle-check",
+        "dispatch-gate"
+      ],
+      "processes": [
+        "route-dispatch"
+      ],
+      "shiftPattern": "Two shifts per day (06:00-14:00, 14:00-22:00), one Dispatch Supervisor and 2-4 Warehouse Associates per shift.",
+      "escalationPath": "Warehouse Associate -> Dispatch Supervisor -> Warehouse Manager. Associates escalate any route, vehicle temperature, or settlement exception they cannot resolve without waiting for approval to hold a route.",
+      "keyPerformanceIndicators": [
+        "Route dispatch time (minutes from gate scan to vehicle departure)",
+        "Cold-chain pre-check compliance (vehicles held for recheck / vehicles below required temperature)",
+        "Route settlement accuracy (routes closed with a resolved cash/crate match)"
+      ]
     }
   ],
   "workstationDefinitions": [
@@ -56,19 +109,36 @@
       "workstationType": "receiving",
       "description": "Roll-up dock door 3, one bay. A pallet truck and a wrapped delivery wait just inside; the driver is parked at the yellow line until the shipment is confirmed against paperwork.",
       "icon": "receiving_dock",
-      "position": {"x": 0.12, "y": 0.22},
-      "capabilities": ["count_quantity", "inspect_item"],
-      "unlockRequirements": [{"type": "task_completed", "referenceId": "verify-documents"}]
+      "position": {
+        "x": 0.12,
+        "y": 0.22
+      },
+      "capabilities": [
+        "count_quantity",
+        "inspect_item"
+      ],
+      "unlockRequirements": [
+        {
+          "type": "task_completed",
+          "referenceId": "verify-documents"
+        }
+      ]
     },
     {
       "id": "document-desk",
       "departmentId": "receiving",
       "name": "Document Desk",
       "workstationType": "documents",
-      "description": "A single desk just inside the dock office, purchase orders and delivery notes filed by supplier. This is where every shipment starts — nothing moves to the dock until the paperwork has been compared.",
+      "description": "A single desk just inside the dock office, purchase orders and delivery notes filed by supplier. This is where every shipment starts \u2014 nothing moves to the dock until the paperwork has been compared.",
       "icon": "document",
-      "position": {"x": 0.12, "y": 0.74},
-      "capabilities": ["read_document", "document_comparison"],
+      "position": {
+        "x": 0.12,
+        "y": 0.74
+      },
+      "capabilities": [
+        "read_document",
+        "document_comparison"
+      ],
       "unlockRequirements": []
     },
     {
@@ -78,11 +148,24 @@
       "workstationType": "inspection",
       "description": "A stainless steel table under bright task lighting, positioned so cartons come straight off the dock trolley. Damage tags, a tape measure and a digital scale sit within reach; nothing inspected here re-enters the flow without a recorded finding.",
       "icon": "inspection",
-      "position": {"x": 0.48, "y": 0.22},
-      "capabilities": ["inspect_item", "record_damage", "check_expiry"],
+      "position": {
+        "x": 0.48,
+        "y": 0.22
+      },
+      "capabilities": [
+        "inspect_item",
+        "record_damage",
+        "check_expiry"
+      ],
       "unlockRequirements": [
-        {"type": "task_completed", "referenceId": "confirm-delivery-identity"},
-        {"type": "task_completed", "referenceId": "confirm-received-counts"}
+        {
+          "type": "task_completed",
+          "referenceId": "confirm-delivery-identity"
+        },
+        {
+          "type": "task_completed",
+          "referenceId": "confirm-received-counts"
+        }
       ]
     },
     {
@@ -92,9 +175,19 @@
       "workstationType": "barcode",
       "description": "A fixed-mount scanner and a small screen bolted beside the inspection table. Every carton passes under the scanner exactly once before it can move on.",
       "icon": "barcode",
-      "position": {"x": 0.48, "y": 0.74},
-      "capabilities": ["scan_barcode"],
-      "unlockRequirements": [{"type": "task_completed", "referenceId": "inspect-cartons"}]
+      "position": {
+        "x": 0.48,
+        "y": 0.74
+      },
+      "capabilities": [
+        "scan_barcode"
+      ],
+      "unlockRequirements": [
+        {
+          "type": "task_completed",
+          "referenceId": "inspect-cartons"
+        }
+      ]
     },
     {
       "id": "quarantine-zone",
@@ -103,20 +196,43 @@
       "workstationType": "quarantine",
       "description": "A caged, clearly marked holding area beside the dock, separated from the general aisle by a painted red line. Nothing in this cage counts as available stock until a disposition is confirmed and logged.",
       "icon": "quarantine",
-      "position": {"x": 0.84, "y": 0.22},
-      "capabilities": ["select_disposition", "move_item"],
-      "unlockRequirements": [{"type": "task_completed", "referenceId": "scan-barcodes"}]
+      "position": {
+        "x": 0.84,
+        "y": 0.22
+      },
+      "capabilities": [
+        "select_disposition",
+        "move_item"
+      ],
+      "unlockRequirements": [
+        {
+          "type": "task_completed",
+          "referenceId": "scan-barcodes"
+        }
+      ]
     },
     {
       "id": "receiving-office",
       "departmentId": "receiving",
       "name": "Receiving Office",
       "workstationType": "office",
-      "description": "A small glass-walled office overlooking the dock. This is where the shift's paper trail becomes a decision — the discrepancy report, the accept/reject call, and the note to the supervisor all happen at this one desk.",
+      "description": "A small glass-walled office overlooking the dock. This is where the shift's paper trail becomes a decision \u2014 the discrepancy report, the accept/reject call, and the note to the supervisor all happen at this one desk.",
       "icon": "office",
-      "position": {"x": 0.84, "y": 0.74},
-      "capabilities": ["complete_form", "make_decision", "confirm_action"],
-      "unlockRequirements": [{"type": "task_completed", "referenceId": "request-quarantine-release"}]
+      "position": {
+        "x": 0.84,
+        "y": 0.74
+      },
+      "capabilities": [
+        "complete_form",
+        "make_decision",
+        "confirm_action"
+      ],
+      "unlockRequirements": [
+        {
+          "type": "task_completed",
+          "referenceId": "request-quarantine-release"
+        }
+      ]
     },
     {
       "id": "staging-area",
@@ -125,8 +241,13 @@
       "workstationType": "staging",
       "description": "Accepted stock from Receiving waits here for a storage assignment.",
       "icon": "staging",
-      "position": {"x": 0.15, "y": 0.5},
-      "capabilities": ["read_document"],
+      "position": {
+        "x": 0.15,
+        "y": 0.5
+      },
+      "capabilities": [
+        "read_document"
+      ],
       "unlockRequirements": []
     },
     {
@@ -136,9 +257,19 @@
       "workstationType": "planning",
       "description": "Assign every item to its correct storage zone.",
       "icon": "planning",
-      "position": {"x": 0.4, "y": 0.5},
-      "capabilities": ["classify_issue"],
-      "unlockRequirements": [{"type": "task_completed", "referenceId": "open-putaway-list"}]
+      "position": {
+        "x": 0.4,
+        "y": 0.5
+      },
+      "capabilities": [
+        "classify_issue"
+      ],
+      "unlockRequirements": [
+        {
+          "type": "task_completed",
+          "referenceId": "open-putaway-list"
+        }
+      ]
     },
     {
       "id": "transport-placement",
@@ -147,9 +278,21 @@
       "workstationType": "transport",
       "description": "Move and place every item, then scan to confirm.",
       "icon": "transport",
-      "position": {"x": 0.65, "y": 0.5},
-      "capabilities": ["move_item", "scan_barcode", "count_quantity"],
-      "unlockRequirements": [{"type": "task_completed", "referenceId": "assign-storage-zone"}]
+      "position": {
+        "x": 0.65,
+        "y": 0.5
+      },
+      "capabilities": [
+        "move_item",
+        "scan_barcode",
+        "count_quantity"
+      ],
+      "unlockRequirements": [
+        {
+          "type": "task_completed",
+          "referenceId": "assign-storage-zone"
+        }
+      ]
     },
     {
       "id": "putaway-office",
@@ -158,11 +301,198 @@
       "workstationType": "office",
       "description": "Complete the putaway report and notify the supervisor.",
       "icon": "office",
-      "position": {"x": 0.9, "y": 0.5},
-      "capabilities": ["complete_form", "make_decision", "confirm_action"],
+      "position": {
+        "x": 0.9,
+        "y": 0.5
+      },
+      "capabilities": [
+        "complete_form",
+        "make_decision",
+        "confirm_action"
+      ],
       "unlockRequirements": [
-        {"type": "task_completed", "referenceId": "scan-items-to-bins"},
-        {"type": "task_completed", "referenceId": "confirm-quantities-placed"}
+        {
+          "type": "task_completed",
+          "referenceId": "scan-items-to-bins"
+        },
+        {
+          "type": "task_completed",
+          "referenceId": "confirm-quantities-placed"
+        }
+      ]
+    },
+    {
+      "id": "processing-entry",
+      "departmentId": "processing",
+      "name": "Processing Entry",
+      "workstationType": "entry",
+      "description": "Hygiene checkpoint and batch scan-in for the processing line.",
+      "icon": "hygiene",
+      "position": {
+        "x": 0.15,
+        "y": 0.3
+      },
+      "capabilities": [
+        "confirm_action",
+        "scan_barcode"
+      ],
+      "unlockRequirements": []
+    },
+    {
+      "id": "packing-station",
+      "departmentId": "processing",
+      "name": "Packing Station",
+      "workstationType": "packing",
+      "description": "Where batches are packed and weighed.",
+      "icon": "packing",
+      "position": {
+        "x": 0.4,
+        "y": 0.3
+      },
+      "capabilities": [
+        "move_item",
+        "record_weight"
+      ],
+      "unlockRequirements": [
+        {
+          "type": "task_completed",
+          "referenceId": "scan-processing-batches"
+        }
+      ]
+    },
+    {
+      "id": "quality-check",
+      "departmentId": "processing",
+      "name": "Quality Check",
+      "workstationType": "inspection",
+      "description": "Label and traceability verification, plus supervisor sample review.",
+      "icon": "quality",
+      "position": {
+        "x": 0.65,
+        "y": 0.3
+      },
+      "capabilities": [
+        "inspect_item",
+        "confirm_action"
+      ],
+      "unlockRequirements": [
+        {
+          "type": "task_completed",
+          "referenceId": "record-batch-weight"
+        }
+      ]
+    },
+    {
+      "id": "processing-office",
+      "departmentId": "processing",
+      "name": "Processing Office",
+      "workstationType": "office",
+      "description": "Batch exception classification, reporting and sign-off.",
+      "icon": "office",
+      "position": {
+        "x": 0.9,
+        "y": 0.3
+      },
+      "capabilities": [
+        "select_disposition",
+        "complete_form",
+        "make_decision",
+        "confirm_action"
+      ],
+      "unlockRequirements": [
+        {
+          "type": "task_completed",
+          "referenceId": "verify-batch-labels"
+        },
+        {
+          "type": "task_completed",
+          "referenceId": "supervisor-sample-check"
+        }
+      ]
+    },
+    {
+      "id": "picking-station",
+      "departmentId": "dispatch",
+      "name": "Picking Station",
+      "workstationType": "picking",
+      "description": "Crate scan and route verification for outgoing orders.",
+      "icon": "picking",
+      "position": {
+        "x": 0.15,
+        "y": 0.7
+      },
+      "capabilities": [
+        "scan_barcode"
+      ],
+      "unlockRequirements": []
+    },
+    {
+      "id": "consolidation-bay",
+      "departmentId": "dispatch",
+      "name": "Consolidation Bay",
+      "workstationType": "staging",
+      "description": "Where crates are consolidated and staged by route.",
+      "icon": "staging",
+      "position": {
+        "x": 0.4,
+        "y": 0.7
+      },
+      "capabilities": [
+        "move_item",
+        "confirm_action"
+      ],
+      "unlockRequirements": [
+        {
+          "type": "task_completed",
+          "referenceId": "pick-order-items"
+        }
+      ]
+    },
+    {
+      "id": "vehicle-check",
+      "departmentId": "dispatch",
+      "name": "Vehicle Check",
+      "workstationType": "inspection",
+      "description": "Vehicle temperature verification and in-sequence loading.",
+      "icon": "vehicle",
+      "position": {
+        "x": 0.65,
+        "y": 0.7
+      },
+      "capabilities": [
+        "inspect_item",
+        "move_item"
+      ],
+      "unlockRequirements": [
+        {
+          "type": "task_completed",
+          "referenceId": "stage-route-crates"
+        }
+      ]
+    },
+    {
+      "id": "dispatch-gate",
+      "departmentId": "dispatch",
+      "name": "Dispatch Gate",
+      "workstationType": "office",
+      "description": "Final gate scan, exception handling, route settlement and sign-off.",
+      "icon": "gate",
+      "position": {
+        "x": 0.9,
+        "y": 0.7
+      },
+      "capabilities": [
+        "scan_barcode",
+        "select_disposition",
+        "complete_form",
+        "make_decision",
+        "confirm_action"
+      ],
+      "unlockRequirements": [
+        {
+          "type": "task_completed",
+          "referenceId": "confirm-load-sequence"
+        }
       ]
     }
   ]

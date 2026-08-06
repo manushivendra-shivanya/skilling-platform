@@ -4,13 +4,38 @@
     "name": "Document Verification",
     "description": "Compares supplier and internal records to identify discrepancies.",
     "category": "operational",
-    "observableBehaviours": ["Checks the PO number", "Matches SKUs", "Compares quantities", "Records discrepancies"],
+    "observableBehaviours": [
+      "Checks the PO number",
+      "Matches SKUs",
+      "Compares quantities",
+      "Records discrepancies"
+    ],
     "proficiencyLevels": [
-      {"level": 1, "name": "Aware", "minimumScore": 0},
-      {"level": 2, "name": "Developing", "minimumScore": 50},
-      {"level": 3, "name": "Competent", "minimumScore": 70},
-      {"level": 4, "name": "Proficient", "minimumScore": 85},
-      {"level": 5, "name": "Advanced", "minimumScore": 95}
+      {
+        "level": 1,
+        "name": "Aware",
+        "minimumScore": 0
+      },
+      {
+        "level": 2,
+        "name": "Developing",
+        "minimumScore": 50
+      },
+      {
+        "level": 3,
+        "name": "Competent",
+        "minimumScore": 70
+      },
+      {
+        "level": 4,
+        "name": "Proficient",
+        "minimumScore": 85
+      },
+      {
+        "level": 5,
+        "name": "Advanced",
+        "minimumScore": 95
+      }
     ]
   },
   {
@@ -18,13 +43,37 @@
     "name": "Inventory Accuracy",
     "description": "Records the quantity and identity of received goods accurately.",
     "category": "operational",
-    "observableBehaviours": ["Counts received goods", "Records shortages", "Preserves source records"],
+    "observableBehaviours": [
+      "Counts received goods",
+      "Records shortages",
+      "Preserves source records"
+    ],
     "proficiencyLevels": [
-      {"level": 1, "name": "Aware", "minimumScore": 0},
-      {"level": 2, "name": "Developing", "minimumScore": 50},
-      {"level": 3, "name": "Competent", "minimumScore": 70},
-      {"level": 4, "name": "Proficient", "minimumScore": 85},
-      {"level": 5, "name": "Advanced", "minimumScore": 95}
+      {
+        "level": 1,
+        "name": "Aware",
+        "minimumScore": 0
+      },
+      {
+        "level": 2,
+        "name": "Developing",
+        "minimumScore": 50
+      },
+      {
+        "level": 3,
+        "name": "Competent",
+        "minimumScore": 70
+      },
+      {
+        "level": 4,
+        "name": "Proficient",
+        "minimumScore": 85
+      },
+      {
+        "level": 5,
+        "name": "Advanced",
+        "minimumScore": 95
+      }
     ]
   },
   {
@@ -32,13 +81,37 @@
     "name": "Goods Inspection",
     "description": "Inspects packaging, labels, batch, barcode and shelf life.",
     "category": "operational",
-    "observableBehaviours": ["Finds damage", "Checks barcode", "Checks expiry"],
+    "observableBehaviours": [
+      "Finds damage",
+      "Checks barcode",
+      "Checks expiry"
+    ],
     "proficiencyLevels": [
-      {"level": 1, "name": "Aware", "minimumScore": 0},
-      {"level": 2, "name": "Developing", "minimumScore": 50},
-      {"level": 3, "name": "Competent", "minimumScore": 70},
-      {"level": 4, "name": "Proficient", "minimumScore": 85},
-      {"level": 5, "name": "Advanced", "minimumScore": 95}
+      {
+        "level": 1,
+        "name": "Aware",
+        "minimumScore": 0
+      },
+      {
+        "level": 2,
+        "name": "Developing",
+        "minimumScore": 50
+      },
+      {
+        "level": 3,
+        "name": "Competent",
+        "minimumScore": 70
+      },
+      {
+        "level": 4,
+        "name": "Proficient",
+        "minimumScore": 85
+      },
+      {
+        "level": 5,
+        "name": "Advanced",
+        "minimumScore": 95
+      }
     ]
   },
   {
@@ -46,13 +119,37 @@
     "name": "Warehouse Compliance",
     "description": "Keeps damaged, unauthorised and unverified goods out of available inventory.",
     "category": "safety",
-    "observableBehaviours": ["Uses quarantine", "Uses verification hold", "Escalates exceptions"],
+    "observableBehaviours": [
+      "Uses quarantine",
+      "Uses verification hold",
+      "Escalates exceptions"
+    ],
     "proficiencyLevels": [
-      {"level": 1, "name": "Aware", "minimumScore": 0},
-      {"level": 2, "name": "Developing", "minimumScore": 50},
-      {"level": 3, "name": "Competent", "minimumScore": 70},
-      {"level": 4, "name": "Proficient", "minimumScore": 85},
-      {"level": 5, "name": "Advanced", "minimumScore": 95}
+      {
+        "level": 1,
+        "name": "Aware",
+        "minimumScore": 0
+      },
+      {
+        "level": 2,
+        "name": "Developing",
+        "minimumScore": 50
+      },
+      {
+        "level": 3,
+        "name": "Competent",
+        "minimumScore": 70
+      },
+      {
+        "level": 4,
+        "name": "Proficient",
+        "minimumScore": 85
+      },
+      {
+        "level": 5,
+        "name": "Advanced",
+        "minimumScore": 95
+      }
     ]
   },
   {
@@ -60,13 +157,37 @@
     "name": "Receiving Decisions",
     "description": "Selects a safe, documented receiving decision and communicates it.",
     "category": "judgement",
-    "observableBehaviours": ["Partially accepts compliant stock", "Completes report", "Notifies supervisor"],
+    "observableBehaviours": [
+      "Partially accepts compliant stock",
+      "Completes report",
+      "Notifies supervisor"
+    ],
     "proficiencyLevels": [
-      {"level": 1, "name": "Aware", "minimumScore": 0},
-      {"level": 2, "name": "Developing", "minimumScore": 50},
-      {"level": 3, "name": "Competent", "minimumScore": 70},
-      {"level": 4, "name": "Proficient", "minimumScore": 85},
-      {"level": 5, "name": "Advanced", "minimumScore": 95}
+      {
+        "level": 1,
+        "name": "Aware",
+        "minimumScore": 0
+      },
+      {
+        "level": 2,
+        "name": "Developing",
+        "minimumScore": 50
+      },
+      {
+        "level": 3,
+        "name": "Competent",
+        "minimumScore": 70
+      },
+      {
+        "level": 4,
+        "name": "Proficient",
+        "minimumScore": 85
+      },
+      {
+        "level": 5,
+        "name": "Advanced",
+        "minimumScore": 95
+      }
     ]
   },
   {
@@ -74,13 +195,38 @@
     "name": "Storage Location Accuracy",
     "description": "Assigns and confirms the correct storage zone for every item based on its handling requirements.",
     "category": "operational",
-    "observableBehaviours": ["Assigns hazmat items to the hazmat locker", "Assigns cold-chain items to cold storage", "Confirms scans match assigned zones", "Reports capacity exceptions"],
+    "observableBehaviours": [
+      "Assigns hazmat items to the hazmat locker",
+      "Assigns cold-chain items to cold storage",
+      "Confirms scans match assigned zones",
+      "Reports capacity exceptions"
+    ],
     "proficiencyLevels": [
-      {"level": 1, "name": "Aware", "minimumScore": 0},
-      {"level": 2, "name": "Developing", "minimumScore": 50},
-      {"level": 3, "name": "Competent", "minimumScore": 70},
-      {"level": 4, "name": "Proficient", "minimumScore": 85},
-      {"level": 5, "name": "Advanced", "minimumScore": 95}
+      {
+        "level": 1,
+        "name": "Aware",
+        "minimumScore": 0
+      },
+      {
+        "level": 2,
+        "name": "Developing",
+        "minimumScore": 50
+      },
+      {
+        "level": 3,
+        "name": "Competent",
+        "minimumScore": 70
+      },
+      {
+        "level": 4,
+        "name": "Proficient",
+        "minimumScore": 85
+      },
+      {
+        "level": 5,
+        "name": "Advanced",
+        "minimumScore": 95
+      }
     ]
   },
   {
@@ -88,13 +234,36 @@
     "name": "Safe Material Handling",
     "description": "Moves and places goods using safe handling practices.",
     "category": "safety",
-    "observableBehaviours": ["Confirms safe handling before placement", "Uses correct equipment for the load"],
+    "observableBehaviours": [
+      "Confirms safe handling before placement",
+      "Uses correct equipment for the load"
+    ],
     "proficiencyLevels": [
-      {"level": 1, "name": "Aware", "minimumScore": 0},
-      {"level": 2, "name": "Developing", "minimumScore": 50},
-      {"level": 3, "name": "Competent", "minimumScore": 70},
-      {"level": 4, "name": "Proficient", "minimumScore": 85},
-      {"level": 5, "name": "Advanced", "minimumScore": 95}
+      {
+        "level": 1,
+        "name": "Aware",
+        "minimumScore": 0
+      },
+      {
+        "level": 2,
+        "name": "Developing",
+        "minimumScore": 50
+      },
+      {
+        "level": 3,
+        "name": "Competent",
+        "minimumScore": 70
+      },
+      {
+        "level": 4,
+        "name": "Proficient",
+        "minimumScore": 85
+      },
+      {
+        "level": 5,
+        "name": "Advanced",
+        "minimumScore": 95
+      }
     ]
   },
   {
@@ -102,13 +271,378 @@
     "name": "Putaway Decisions",
     "description": "Completes the putaway report accurately and communicates the outcome.",
     "category": "judgement",
-    "observableBehaviours": ["Completes the putaway report", "Confirms putaway outcome", "Notifies supervisor with exceptions included"],
+    "observableBehaviours": [
+      "Completes the putaway report",
+      "Confirms putaway outcome",
+      "Notifies supervisor with exceptions included"
+    ],
     "proficiencyLevels": [
-      {"level": 1, "name": "Aware", "minimumScore": 0},
-      {"level": 2, "name": "Developing", "minimumScore": 50},
-      {"level": 3, "name": "Competent", "minimumScore": 70},
-      {"level": 4, "name": "Proficient", "minimumScore": 85},
-      {"level": 5, "name": "Advanced", "minimumScore": 95}
+      {
+        "level": 1,
+        "name": "Aware",
+        "minimumScore": 0
+      },
+      {
+        "level": 2,
+        "name": "Developing",
+        "minimumScore": 50
+      },
+      {
+        "level": 3,
+        "name": "Competent",
+        "minimumScore": 70
+      },
+      {
+        "level": 4,
+        "name": "Proficient",
+        "minimumScore": 85
+      },
+      {
+        "level": 5,
+        "name": "Advanced",
+        "minimumScore": 95
+      }
+    ]
+  },
+  {
+    "id": "hygiene-discipline",
+    "name": "Hygiene Discipline",
+    "description": "Reports actual pre-shift hygiene compliance honestly rather than confirming it as a formality.",
+    "category": "operational",
+    "observableBehaviours": [
+      "Reviews the hygiene checklist",
+      "Reports a real gap",
+      "Never confirms compliance falsely"
+    ],
+    "proficiencyLevels": [
+      {
+        "level": 1,
+        "name": "Aware",
+        "minimumScore": 0
+      },
+      {
+        "level": 2,
+        "name": "Developing",
+        "minimumScore": 50
+      },
+      {
+        "level": 3,
+        "name": "Competent",
+        "minimumScore": 70
+      },
+      {
+        "level": 4,
+        "name": "Proficient",
+        "minimumScore": 85
+      },
+      {
+        "level": 5,
+        "name": "Advanced",
+        "minimumScore": 95
+      }
+    ]
+  },
+  {
+    "id": "pack-weight-control",
+    "name": "Pack Weight Control",
+    "description": "Records packed weights accurately and holds off-weight batches for verification.",
+    "category": "operational",
+    "observableBehaviours": [
+      "Reads the scale accurately",
+      "Records the actual weight",
+      "Holds off-weight batches"
+    ],
+    "proficiencyLevels": [
+      {
+        "level": 1,
+        "name": "Aware",
+        "minimumScore": 0
+      },
+      {
+        "level": 2,
+        "name": "Developing",
+        "minimumScore": 50
+      },
+      {
+        "level": 3,
+        "name": "Competent",
+        "minimumScore": 70
+      },
+      {
+        "level": 4,
+        "name": "Proficient",
+        "minimumScore": 85
+      },
+      {
+        "level": 5,
+        "name": "Advanced",
+        "minimumScore": 95
+      }
+    ]
+  },
+  {
+    "id": "batch-traceability",
+    "name": "Batch Traceability",
+    "description": "Maintains and verifies batch traceability codes and labels through processing.",
+    "category": "operational",
+    "observableBehaviours": [
+      "Scans batches onto the line",
+      "Packs batches correctly",
+      "Verifies labels and traceability codes"
+    ],
+    "proficiencyLevels": [
+      {
+        "level": 1,
+        "name": "Aware",
+        "minimumScore": 0
+      },
+      {
+        "level": 2,
+        "name": "Developing",
+        "minimumScore": 50
+      },
+      {
+        "level": 3,
+        "name": "Competent",
+        "minimumScore": 70
+      },
+      {
+        "level": 4,
+        "name": "Proficient",
+        "minimumScore": 85
+      },
+      {
+        "level": 5,
+        "name": "Advanced",
+        "minimumScore": 95
+      }
+    ]
+  },
+  {
+    "id": "quality-exception-handling",
+    "name": "Quality Exception Handling",
+    "description": "Classifies processing exceptions correctly and completes sign-off accurately.",
+    "category": "operational",
+    "observableBehaviours": [
+      "Classifies batch exceptions",
+      "Completes the processing report",
+      "Notifies the supervisor with exceptions included"
+    ],
+    "proficiencyLevels": [
+      {
+        "level": 1,
+        "name": "Aware",
+        "minimumScore": 0
+      },
+      {
+        "level": 2,
+        "name": "Developing",
+        "minimumScore": 50
+      },
+      {
+        "level": 3,
+        "name": "Competent",
+        "minimumScore": 70
+      },
+      {
+        "level": 4,
+        "name": "Proficient",
+        "minimumScore": 85
+      },
+      {
+        "level": 5,
+        "name": "Advanced",
+        "minimumScore": 95
+      }
+    ]
+  },
+  {
+    "id": "route-verification",
+    "name": "Route Verification",
+    "description": "Verifies routes, staging and vehicle readiness before departure.",
+    "category": "operational",
+    "observableBehaviours": [
+      "Stages crates by route",
+      "Verifies vehicle temperature",
+      "Confirms readiness before loading"
+    ],
+    "proficiencyLevels": [
+      {
+        "level": 1,
+        "name": "Aware",
+        "minimumScore": 0
+      },
+      {
+        "level": 2,
+        "name": "Developing",
+        "minimumScore": 50
+      },
+      {
+        "level": 3,
+        "name": "Competent",
+        "minimumScore": 70
+      },
+      {
+        "level": 4,
+        "name": "Proficient",
+        "minimumScore": 85
+      },
+      {
+        "level": 5,
+        "name": "Advanced",
+        "minimumScore": 95
+      }
+    ]
+  },
+  {
+    "id": "scan-discipline",
+    "name": "Scan Discipline",
+    "description": "Scans accurately and handles flagged or failed scans correctly rather than forcing them through.",
+    "category": "operational",
+    "observableBehaviours": [
+      "Scans every crate",
+      "Flags wrong-route crates",
+      "Rescans failed reads"
+    ],
+    "proficiencyLevels": [
+      {
+        "level": 1,
+        "name": "Aware",
+        "minimumScore": 0
+      },
+      {
+        "level": 2,
+        "name": "Developing",
+        "minimumScore": 50
+      },
+      {
+        "level": 3,
+        "name": "Competent",
+        "minimumScore": 70
+      },
+      {
+        "level": 4,
+        "name": "Proficient",
+        "minimumScore": 85
+      },
+      {
+        "level": 5,
+        "name": "Advanced",
+        "minimumScore": 95
+      }
+    ]
+  },
+  {
+    "id": "loading-sequence-control",
+    "name": "Loading Sequence Control",
+    "description": "Consolidates and loads crates in the correct sequence for safe, accurate delivery.",
+    "category": "operational",
+    "observableBehaviours": [
+      "Consolidates crates by route",
+      "Loads crates in sequence"
+    ],
+    "proficiencyLevels": [
+      {
+        "level": 1,
+        "name": "Aware",
+        "minimumScore": 0
+      },
+      {
+        "level": 2,
+        "name": "Developing",
+        "minimumScore": 50
+      },
+      {
+        "level": 3,
+        "name": "Competent",
+        "minimumScore": 70
+      },
+      {
+        "level": 4,
+        "name": "Proficient",
+        "minimumScore": 85
+      },
+      {
+        "level": 5,
+        "name": "Advanced",
+        "minimumScore": 95
+      }
+    ]
+  },
+  {
+    "id": "exception-escalation",
+    "name": "Exception Escalation",
+    "description": "Escalates dispatch exceptions and customer disputes rather than accepting them.",
+    "category": "operational",
+    "observableBehaviours": [
+      "Holds flagged crates",
+      "Escalates shortage disputes",
+      "Notifies the supervisor with exceptions included"
+    ],
+    "proficiencyLevels": [
+      {
+        "level": 1,
+        "name": "Aware",
+        "minimumScore": 0
+      },
+      {
+        "level": 2,
+        "name": "Developing",
+        "minimumScore": 50
+      },
+      {
+        "level": 3,
+        "name": "Competent",
+        "minimumScore": 70
+      },
+      {
+        "level": 4,
+        "name": "Proficient",
+        "minimumScore": 85
+      },
+      {
+        "level": 5,
+        "name": "Advanced",
+        "minimumScore": 95
+      }
+    ]
+  },
+  {
+    "id": "route-settlement-control",
+    "name": "Route Settlement Control",
+    "description": "Resolves cash and crate mismatches before closing out a route.",
+    "category": "operational",
+    "observableBehaviours": [
+      "Reviews the route settlement report",
+      "Resolves cash/crate mismatches",
+      "Confirms dispatch outcome accurately"
+    ],
+    "proficiencyLevels": [
+      {
+        "level": 1,
+        "name": "Aware",
+        "minimumScore": 0
+      },
+      {
+        "level": 2,
+        "name": "Developing",
+        "minimumScore": 50
+      },
+      {
+        "level": 3,
+        "name": "Competent",
+        "minimumScore": 70
+      },
+      {
+        "level": 4,
+        "name": "Proficient",
+        "minimumScore": 85
+      },
+      {
+        "level": 5,
+        "name": "Advanced",
+        "minimumScore": 95
+      }
     ]
   }
 ]

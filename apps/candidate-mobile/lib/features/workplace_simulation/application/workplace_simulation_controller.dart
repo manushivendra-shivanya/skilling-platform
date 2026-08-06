@@ -43,6 +43,8 @@ class WorkplaceSimulationController
   static const workplaceId = 'central-distribution-centre';
   static const missionId = 'receive-incoming-shipment-01';
   static const putAwayMissionId = 'put-away-incoming-stock-01';
+  static const processingMissionId = 'process-batch-01';
+  static const dispatchMissionId = 'dispatch-orders-01';
 
   final _stateService = const MissionStateService();
   final _scenarioGenerator = const ScenarioGenerator();

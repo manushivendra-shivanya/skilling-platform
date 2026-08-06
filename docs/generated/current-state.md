@@ -2717,6 +2717,74 @@ shaped to serve this purpose too (`purpose = 'employer_review'`,
   no-evidence-on-fail). Catalogue total now 181 tests, all passing.
   `flutter analyze` clean, debug APK builds successfully.
 
+## Phase F: Processing + Dispatch WMS simulations
+
+- Two new WMS simulation missions -- `process-batch-01` (departmentId
+  `processing`) and `dispatch-orders-01` (departmentId `dispatch`) --
+  added alongside the existing Receiving and Put Away missions, using
+  the domain/scoring engine completely unchanged except for two new
+  additive `ActionType` values (`recordWeight`,
+  `recordTemperatureReading`). Chosen over Phase G (Role Readiness
+  Dashboard) first, per explicit user direction: the dashboard needs
+  real evidence across departments to aggregate, so it comes after
+  Processing/Dispatch exist rather than before.
+- Both missions follow the Put Away mission's `recordAction()`-only
+  pattern throughout (see the "Put Away mission" entry above) --
+  **not** Receiving's older ~15-method-per-workstation wrapper
+  pattern. No new controller methods were added; all 8 new workstation
+  screens call `WorkplaceSimulationController.recordAction()` directly,
+  exactly like Put Away's 4 screens.
+- **Processing**: 4 workstations (`processing-entry` -- hygiene check +
+  batch scan; `packing-station` -- pack + record weight;
+  `quality-check` -- label/traceability verification + supervisor
+  sample; `processing-office` -- exception classification, report,
+  decision, notify), 10 tasks, 6 batch resources, 5 named scenarios
+  (perfect batch, wrong-weight pack, missing batch traceability,
+  hygiene missed, label mismatch), 4 critical error rules
+  (`processed-without-hygiene`, `packed-wrong-weight-released`,
+  `lost-batch-traceability`, `ignored-quality-hold`), 4 new
+  competencies (`hygiene-discipline`, `pack-weight-control`,
+  `batch-traceability`, `quality-exception-handling`).
+- **Dispatch**: 4 workstations (`picking-station` -- crate scan;
+  `consolidation-bay` -- consolidate + stage; `vehicle-check` --
+  temperature pre-check + load sequence; `dispatch-gate` -- gate scan,
+  exception classification, route settlement report, decision,
+  notify), 10 tasks, 6 crate resources + a vehicle + a manifest + a
+  settlement report, 6 named scenarios (perfect route, wrong-route
+  crate, failed scan, partial order hold, vehicle temperature
+  pre-check failure, route close exception), 4 critical error rules
+  (`loaded-wrong-route-crate`, `skipped-vehicle-temp-precheck`,
+  `closed-route-unresolved-mismatch`, `ignored-shortage-dispute`), 5
+  new competencies (`route-verification`, `scan-discipline`,
+  `loading-sequence-control`, `exception-escalation`,
+  `route-settlement-control`).
+- Content-authoring gotcha worth recording: `select_disposition`
+  actions use payload key `disposition` (not `selectedDisposition`),
+  and `TaskValidationService` requires a non-empty `reason` payload
+  key whenever the disposition isn't `accept` -- both screens and
+  content were fixed to match after the first test run caught the
+  mismatch via `FormatException: A valid disposition is required`.
+  `CriticalErrorRule.selectedDisposition` is a **top-level trigger
+  field**, separate from `requiredPayload`, matched against
+  `action.payload['disposition']` by `CriticalErrorService`.
+- 8 new `workplace.json` workstation definitions across 2 new
+  departments, 9 new `competencies.json` entries, 2 new
+  `_applyIssue()` cases in `ScenarioGenerator` (`wrong_weight`
+  deviates the packed weight from target; `vehicle_temp_failure` sets
+  a below-threshold reading) -- every other new issue type is pure
+  `targetHasIssue` metadata with no content mutation needed, matching
+  most of Put Away's issue types.
+- Practice tab now shows 4 Workplace Simulation cards (Receiving, Put
+  Away, Processing, Dispatch).
+- Tests: 14 new, mirroring the Put Away 3-file trio per mission
+  (content-schema validation + scoring, real family-provider
+  playthrough, workstation-screen widget test) x2. Catalogue total now
+  195 tests, all passing. `flutter analyze` clean, debug APK builds
+  successfully. Two pre-existing tests
+  (`practice_workplace_entry_card_test.dart`,
+  `main_navigation_test.dart`) updated for the 2 additional simulation
+  cards now present in the Practise tab.
+
 ## Target product architecture proposal
 
 - Added the proposed Flora AI Employability Infrastructure architecture in

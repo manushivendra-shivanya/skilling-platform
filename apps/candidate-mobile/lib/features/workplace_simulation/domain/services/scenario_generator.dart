@@ -92,6 +92,20 @@ class ScenarioGenerator {
         next['temperatureStatus'] = 'breached';
       case 'tamper_evidence':
         next['sealStatus'] = 'broken';
+      case 'wrong_weight':
+        // Deviates the packed weight from target so a recordWeight action
+        // has a genuinely different number to read and record -- other
+        // issue types below are pure targetHasIssue metadata (no visible
+        // content needs to change for those tasks to be evaluable), same
+        // as most of Put Away's issue types.
+        final targetWeight = content['targetWeightKg'];
+        if (targetWeight is num) {
+          next['packedWeightKg'] = double.parse(
+            (targetWeight * 0.85).toStringAsFixed(2),
+          );
+        }
+      case 'vehicle_temp_failure':
+        next['vehicleTempC'] = 4;
       default:
         break;
     }
