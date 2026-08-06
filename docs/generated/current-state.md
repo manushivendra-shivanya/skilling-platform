@@ -2843,6 +2843,75 @@ shaped to serve this purpose too (`purpose = 'employer_review'`,
   the certification exam, and now a readiness summary aggregating all
   three evidence sources into one candidate-facing signal.
 
+## Phase H: Multi-source job sourcing
+
+- First phase past the A-G roadmap. The Jobs tab previously showed only
+  3 seeded rows in `public.jobs` with no employer posting path and no
+  external source of listings. Full detailed plan in
+  `docs/25-job-sourcing-voice-ai-career-progression-plan.md`. Scraping
+  was explicitly ruled out (the target architecture doc
+  (`docs/23-...md:752`) prohibits it without official partner access);
+  this phase uses only legitimate, self-serve, or public APIs.
+- **`JobSourceAdapter` interface**
+  (`apps/api/src/integrations/job-sources/`), 5 implementations: Adzuna
+  (self-serve app_id/app_key), Jooble (self-serve API key), Careerjet
+  (self-serve affiliate id), Greenhouse and Lever public job-board APIs
+  (no auth, but only return jobs for named companies -- both lists are
+  empty by default in `named-companies.config.ts` pending a target
+  employer list). Every adapter takes an injected `HttpFetcher` (backed
+  by Node's built-in global `fetch`, no new HTTP dependency) so it's
+  trivially fakeable in tests, and treats missing config as `return []`
+  rather than an error -- a sync with nothing configured yet is a
+  harmless no-op, not a crash.
+- **`jobs` table gained 3 columns**: `source` (default `'flora'`, check
+  constraint across all 6 sources), `external_id` (nullable, unique
+  together with `source`, namespaced `${companyToken}:${remoteId}` for
+  Greenhouse/Lever since their ids are only unique per company board),
+  `apply_url` (nullable -- null for Flora-native/employer-posted jobs,
+  set for every aggregator-sourced job). New `job_sync_runs` audit table
+  (one row per adapter per sync run, service-role-only RLS, same posture
+  as `employer_evidence_access_log`).
+- **Product decision surfaced during planning**: aggregator-sourced jobs
+  have no real Flora employer behind them (`employer_id: null`), so an
+  internal one-click "Apply" would silently go nowhere -- no employer
+  would ever see it via `GET /employer/applicants`. Resolved with the
+  user: those listings show "View & apply on {source}" and open the real
+  listing externally via `url_launcher` (newly added dependency,
+  previously only transitive); only Flora-native jobs use the existing
+  internal share-and-submit apply flow.
+- **`JobSyncService.syncAll()`** isolates per-adapter failures -- both
+  the fetch/upsert and the audit-row write are caught internally per
+  adapter, so one source erroring (or a `job_sync_runs` insert itself
+  failing) never drops another adapter's already-computed result out of
+  the `Promise.all`. Scheduled via `@nestjs/schedule` (new dependency)
+  every 6 hours; a manual trigger (`POST /v1/dev/job-sync?source=`) was
+  added to the existing internal-only `DevController`, same
+  `NODE_ENV=production` 404 guard as the employer-review harness.
+- **Direct employer job posting** (`POST /v1/employer/jobs`, `POST
+  /v1/employer/jobs/:id/publish`, `GET /v1/employer/jobs`) added to the
+  existing `employer/` module, guarded by the existing
+  `EmployerAuthGuard` -- no new employer identity system. Authorization
+  mirrors `EmployerService`'s existing pattern exactly: every read/write
+  scoped by `.eq('employer_id', employerId)`, so a job belonging to
+  another employer is indistinguishable from a nonexistent one.
+- Mobile: `JobOpportunity` gained `source`/`applyUrl` fields plus a
+  `jobSourceCaption`/`jobSourceDisplayName` helper pair; the Jobs list
+  and detail sheet show a small "via {source}" provenance caption for
+  non-Flora listings.
+- Tests: 15 new (5 adapter spec files, `job-sync.service.spec.ts`,
+  `employer-jobs.service.spec.ts`, plus mobile domain + widget tests).
+  API: 69 tests, `eslint`/`tsc --noEmit`/`nest build` all clean. Mobile:
+  catalogue total now 217 tests, all passing, `flutter analyze` clean,
+  debug APK builds successfully. Verified live: booted the API with
+  placeholder Supabase credentials (no live database is connected in
+  this dev environment) and confirmed every new route registers
+  correctly and `POST /dev/job-sync` returns `jobsSeen: 0` for all 5
+  sources without crashing when nothing is configured -- exactly the
+  behaviour the unit tests already predicted.
+- Zoho Recruit integration and National Career Service/government feeds
+  remain explicitly deferred (see the linked plan doc for why) -- not
+  part of this phase.
+
 ## Target product architecture proposal
 
 - Added the proposed Flora AI Employability Infrastructure architecture in

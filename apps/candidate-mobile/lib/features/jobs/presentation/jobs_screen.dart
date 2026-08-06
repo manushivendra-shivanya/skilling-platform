@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_spacing.dart';
@@ -95,6 +96,16 @@ class _JobsContent extends ConsumerWidget {
                   ),
                   const SizedBox(height: AppSpacing.xxs),
                   Text('${job.employer} • ${job.location}'),
+                  if (jobSourceCaption(job.source) != null) ...[
+                    const SizedBox(height: AppSpacing.xxs),
+                    Text(
+                      jobSourceCaption(job.source)!,
+                      style: const TextStyle(
+                        color: AppColors.inkMuted,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: AppSpacing.sm),
                   AppStatusChip(
                     label: state.appliedJobIds.contains(job.id)
@@ -159,18 +170,56 @@ class _JobDetailsState extends State<_JobDetails> {
 
   @override
   Widget build(BuildContext context) {
+    final sourceName = jobSourceDisplayName(widget.job.source);
+    final header = <Widget>[
+      Text('${widget.job.employer} • ${widget.job.location}'),
+      if (sourceName != null) ...[
+        const SizedBox(height: AppSpacing.xxs),
+        Text(
+          'via $sourceName',
+          style: const TextStyle(color: AppColors.inkMuted, fontSize: 12),
+        ),
+      ],
+      const SizedBox(height: AppSpacing.md),
+      Text(
+        widget.isLiveData ? 'About this role' : 'Why this may match',
+        style: Theme.of(context).textTheme.titleMedium,
+      ),
+      const SizedBox(height: AppSpacing.xs),
+      Text(widget.job.description),
+      const SizedBox(height: AppSpacing.md),
+    ];
+
+    final applyUrl = widget.job.applyUrl;
+    if (applyUrl != null) {
+      // Aggregator-sourced listing -- there is no real Flora employer
+      // behind it to receive an internal application, so the candidate is
+      // sent to the real listing instead of the usual share-and-submit
+      // flow below.
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          ...header,
+          Text(
+            'This listing is sourced from $sourceName. Flora cannot submit '
+            'an application on your behalf for it -- continue on the '
+            'original listing to apply.',
+          ),
+          const SizedBox(height: AppSpacing.md),
+          FilledButton(
+            onPressed: () => _openExternalListing(context, applyUrl),
+            child: Text('View & apply on $sourceName'),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          const AppBottomSheetCloseButton(),
+        ],
+      );
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text('${widget.job.employer} • ${widget.job.location}'),
-        const SizedBox(height: AppSpacing.md),
-        Text(
-          widget.isLiveData ? 'About this role' : 'Why this may match',
-          style: Theme.of(context).textTheme.titleMedium,
-        ),
-        const SizedBox(height: AppSpacing.xs),
-        Text(widget.job.description),
-        const SizedBox(height: AppSpacing.md),
+        ...header,
         if (!widget.isLiveData)
           const Text(
             'Eligibility, salary, shifts, and employer verification are not available in this mock feed.',
@@ -229,6 +278,20 @@ class _JobDetailsState extends State<_JobDetails> {
         _saving = false;
         _error = failure.message;
       });
+    }
+  }
+
+  Future<void> _openExternalListing(BuildContext context, String url) async {
+    final uri = Uri.tryParse(url);
+    final opened =
+        uri != null &&
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (!opened && context.mounted) {
+      showAppSnackBar(
+        context: context,
+        message: 'This listing could not be opened.',
+        tone: AppMessageTone.error,
+      );
     }
   }
 }
