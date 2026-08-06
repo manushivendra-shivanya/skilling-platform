@@ -2785,6 +2785,64 @@ shaped to serve this purpose too (`purpose = 'employer_review'`,
   `main_navigation_test.dart`) updated for the 2 additional simulation
   cards now present in the Practise tab.
 
+## Phase G: Role Readiness Dashboard
+
+- Final phase of the A-G roadmap. A pure-derivation summary layered on
+  top of Career Passport's existing evidence -- no new evidence source,
+  no new repository call, no new route. `RoleReadinessSection` sits
+  directly above `CareerPassportSection` on the Profile ("Me") tab,
+  reading the same `careerPassportControllerProvider` state.
+- Four readiness categories -- **Receiving, Processing, Dispatch,
+  Supervisor** -- each Ready / Developing / Needs practice / Unknown,
+  with the disclaimer "Flora provides evidence and readiness signals,
+  not certification." (deliberately distinct from Career Passport's own
+  "Flora provides evidence, not certification.").
+- New `competencyReadinessCategories` map
+  (`career_passport/domain/role_readiness.dart`) -- the first mapping
+  anywhere in the codebase linking the two previously disjoint
+  competency-id spaces: 17 WMS simulation ids (kebab-case, e.g.
+  `document-verification`) grouped by mission `departmentId`
+  (`receiving`/`put-away`->Receiving, `processing`->Processing,
+  `dispatch`->Dispatch), and 83 micro-lesson/certification-exam tags
+  (snake_case, e.g. `cold_chain_receiving_check`) grouped by clip
+  `domain` (`receiving`/`inspection`/`putAway`->Receiving,
+  `safety`/`processing`->Processing,
+  `picking`/`dispatch`/`delivery`->Dispatch, `supervisor`->Supervisor).
+  100 unique ids total, zero string overlap between the two spaces. 3
+  tags span more than one domain and needed an explicit single-category
+  override, each with an inline comment recording the reasoning:
+  `food_safety_compliance`->Receiving (majority position),
+  `inventory_location_control`->Receiving (established at put-away),
+  `order_quantity_control`->Processing (first appears on MOQ
+  preparation). Worth noting: `dispatch_route_assignment`'s `domain` is
+  `supervisor`, not `dispatch`, despite the name -- it maps to
+  Supervisor.
+- `deriveRoleReadiness(entries)` averages the `score` of every
+  `active`/`stale` (not `superseded`) `CareerPassportEntry` per
+  category, then reuses `competencies.json`'s existing proficiency
+  ladder as the level thresholds rather than inventing new numbers:
+  average >= 70 (Competent+) -> Ready, >= 50 (Developing+) ->
+  Developing, else -> Needs practice; zero mapped evidence at all ->
+  Unknown. Always returns exactly 4 summaries, one per category, in
+  enum order. Competency ids absent from the map are silently ignored
+  (forward-compatible with future content, same maintenance model as
+  `competencies.json` itself).
+- `CareerPassportState` gained a `readiness: List<RoleReadinessSummary>`
+  field, computed in `CareerPassportController.build()` immediately
+  after `entries` is derived -- one extra pure function call, no new
+  I/O.
+- Tests: 13 new (11 domain-derivation cases in `role_readiness_test.dart`
+  covering each threshold boundary, staleness, superseding, an
+  unmapped id, and each of the 3 documented overrides; 2 widget tests
+  in `role_readiness_section_test.dart` covering a populated mix of
+  categories and the all-`Unknown` empty state). Catalogue total now
+  208 tests, all passing. `flutter analyze` clean, debug APK builds
+  successfully.
+- This closes the full A-G roadmap: micro-lesson catalogue and clip
+  assessment engine, WMS simulation evidence across all 4 departments,
+  the certification exam, and now a readiness summary aggregating all
+  three evidence sources into one candidate-facing signal.
+
 ## Target product architecture proposal
 
 - Added the proposed Flora AI Employability Infrastructure architecture in
