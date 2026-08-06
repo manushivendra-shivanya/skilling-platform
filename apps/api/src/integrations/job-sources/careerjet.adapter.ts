@@ -11,44 +11,61 @@ interface CareerjetJob {
 }
 
 interface CareerjetResponse {
+  type?: string; // 'JOBS' | 'LOCATIONS'
   jobs?: CareerjetJob[];
 }
 
 /**
- * Careerjet public API (https://www.careerjet.com/partners/api/) --
- * self-serve affiliate id, GET search. Careerjet results don't carry a
- * stable numeric id in the documented schema, so `externalId` is derived
- * from a hash of the listing URL (stable across syncs as long as the URL
- * doesn't change). The exact `locale_code` for India (`en_IN` vs. a
- * regional fallback) was not verified against current Careerjet docs at
- * implementation time -- see docs/25's flagged uncertainty.
+ * Careerjet API v4 (https://search.api.careerjet.net/v4/query) --
+ * confirmed against Careerjet's own current documentation (an earlier
+ * guess at the legacy `affid` query-param scheme returned `401 Unknown
+ * publisher site` with an explicit "use the new endpoint" message; this
+ * is that new endpoint).
+ *
+ * Auth is HTTP Basic: username is the API key, password is empty --
+ * `Authorization: Basic base64(apiKey + ':')`. `user_ip`/`user_agent` are
+ * both required by Careerjet (403 if missing) -- the API is designed
+ * around a real visitor's search action, which doesn't quite fit a
+ * scheduled background sync; a generic service identity is sent instead
+ * since there's no real end-user request to attribute this to.
+ *
+ * Careerjet job objects carry no stable id in the documented schema, so
+ * `externalId` is derived from a hash of the listing URL. A "location
+ * mode" response (`type: 'LOCATIONS'`, no `jobs` array) is possible if
+ * the location parameter is ambiguous/unmatched -- treated the same as
+ * an empty result set, not an error.
  */
 export class CareerjetAdapter implements JobSourceAdapter {
   readonly key = 'careerjet';
 
   constructor(
-    private readonly affiliateId: string | undefined,
+    private readonly apiKey: string | undefined,
     private readonly fetcher: HttpFetcher,
   ) {}
 
   async fetchJobs(): Promise<ExternalJobListing[]> {
-    if (!this.affiliateId) return [];
+    if (!this.apiKey) return [];
 
     const url =
-      'https://public-api.careerjet.net/search' +
-      `?affid=${encodeURIComponent(this.affiliateId)}` +
-      '&keywords=warehouse+logistics' +
+      'https://search.api.careerjet.net/v4/query' +
+      '?keywords=warehouse%20logistics' +
       '&location=India' +
       '&locale_code=en_IN' +
-      '&pagesize=50';
+      '&page_size=50' +
+      '&user_ip=0.0.0.0' +
+      '&user_agent=FloraJobSync%2F1.0';
 
-    const response = await this.fetcher(url);
+    const credentials = Buffer.from(`${this.apiKey}:`).toString('base64');
+    const response = await this.fetcher(url, {
+      headers: { Authorization: `Basic ${credentials}` },
+    });
     if (!response.ok) {
       throw new Error(
         `Careerjet request failed with status ${response.status}`,
       );
     }
     const body = (await response.json()) as CareerjetResponse;
+    if (body.type !== 'JOBS') return [];
 
     const listings: ExternalJobListing[] = [];
     for (const job of body.jobs ?? []) {
