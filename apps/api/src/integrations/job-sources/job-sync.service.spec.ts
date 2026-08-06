@@ -12,6 +12,9 @@ import { SupabaseService } from '../../supabase/supabase.service';
 class FakeSupabaseAdmin {
   jobs: Record<string, unknown>[] = [];
   jobSyncRuns: Record<string, unknown>[] = [];
+  /** Simulates a DB outage on the upsert call itself, independent of
+   * whatever the adapter fetched. */
+  failUpsert = false;
 
   from(table: string) {
     if (table === 'jobs') return this.jobsTable();
@@ -22,6 +25,9 @@ class FakeSupabaseAdmin {
   private jobsTable() {
     return {
       upsert: async (rows: Record<string, unknown>[]) => {
+        if (this.failUpsert) {
+          return { error: { message: 'connection refused' } };
+        }
         for (const row of rows) {
           const index = this.jobs.findIndex(
             (existing) =>
@@ -131,6 +137,32 @@ describe('JobSyncService', () => {
     );
     expect(failedRun?.error).toBe('boom');
   });
+
+  it(
+    'preserves the real jobsSeen count when the adapter fetch succeeds ' +
+      'but the DB write fails, instead of masking it as 0',
+    async () => {
+      const admin = new FakeSupabaseAdmin();
+      admin.failUpsert = true;
+      const service = buildService(admin, [
+        fakeAdapter('adzuna', [listing('a-1'), listing('a-2')]),
+      ]);
+
+      const results = await service.syncAll('cron');
+
+      expect(results).toEqual([
+        {
+          source: 'adzuna',
+          ok: false,
+          jobsSeen: 2,
+          jobsUpserted: 0,
+          error: expect.stringContaining('connection refused'),
+        },
+      ]);
+      expect(admin.jobs).toHaveLength(0);
+      expect(admin.jobSyncRuns[0]).toMatchObject({ jobs_seen: 2 });
+    },
+  );
 
   it('re-syncing identical fixture data does not duplicate jobs rows (idempotent upsert)', async () => {
     const admin = new FakeSupabaseAdmin();

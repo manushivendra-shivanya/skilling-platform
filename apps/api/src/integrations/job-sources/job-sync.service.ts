@@ -60,9 +60,17 @@ export class JobSyncService {
     triggeredBy: TriggeredBy,
   ): Promise<JobSyncRunResult> {
     const startedAt = new Date();
+    // Captured outside the try block and only overwritten once fetchJobs()
+    // actually resolves -- if the fetch itself throws, this correctly
+    // stays 0 (we never learned a count); if the fetch succeeds but the
+    // Supabase upsert below fails, this preserves the real count instead
+    // of the catch block silently resetting it to 0, which would hide how
+    // many jobs a source actually returned during a real DB outage.
+    let jobsSeen = 0;
     let result: JobSyncRunResult;
     try {
       const listings = await adapter.fetchJobs();
+      jobsSeen = listings.length;
       let jobsUpserted = 0;
       if (listings.length > 0) {
         const rows = listings.map((listing) => ({
@@ -89,14 +97,14 @@ export class JobSyncService {
       result = {
         source: adapter.key,
         ok: true,
-        jobsSeen: listings.length,
+        jobsSeen,
         jobsUpserted,
       };
     } catch (error) {
       result = {
         source: adapter.key,
         ok: false,
-        jobsSeen: 0,
+        jobsSeen,
         jobsUpserted: 0,
         error: error instanceof Error ? error.message : String(error),
       };
