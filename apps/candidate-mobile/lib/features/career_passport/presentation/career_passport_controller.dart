@@ -4,10 +4,12 @@ import '../../../app/dependencies.dart';
 import '../../../core/errors/app_failure.dart';
 import '../domain/career_passport.dart';
 import '../domain/career_passport_repository.dart';
+import '../domain/role_readiness.dart';
 
 class CareerPassportState {
   const CareerPassportState({
     required this.entries,
+    required this.readiness,
     required this.shareLink,
     required this.canManageShareLink,
     required this.employerAccess,
@@ -15,6 +17,7 @@ class CareerPassportState {
   });
 
   final List<CareerPassportEntry> entries;
+  final List<RoleReadinessSummary> readiness;
   final ShareLink? shareLink;
   final bool canManageShareLink;
   final List<EmployerAccessEntry> employerAccess;
@@ -25,6 +28,7 @@ class CareerPassportState {
     List<EmployerAccessEntry>? employerAccess,
   }) => CareerPassportState(
     entries: entries,
+    readiness: readiness,
     shareLink: identical(shareLink, _unset)
         ? this.shareLink
         : shareLink as ShareLink?,
@@ -73,8 +77,10 @@ class CareerPassportController extends AsyncNotifier<CareerPassportState> {
             failure: (failure) => throw failure,
           )
         : const <EmployerAccessEntry>[];
+    final entries = deriveCareerPassportEntries(evidence, now: DateTime.now());
     return CareerPassportState(
-      entries: deriveCareerPassportEntries(evidence, now: DateTime.now()),
+      entries: entries,
+      readiness: deriveRoleReadiness(entries),
       shareLink: shareLink,
       canManageShareLink: repository.canManageShareLink,
       employerAccess: employerAccess,
