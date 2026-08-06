@@ -161,6 +161,8 @@ class ApiJobsRepository implements JobsRepository {
       location: json['location'] as String? ?? '',
       isSupervisorRole: jobTitleLooksLikeSupervisorRole(title),
       description: json['description'] as String? ?? '',
+      source: json['source'] as String? ?? 'flora',
+      applyUrl: json['apply_url'] as String?,
     );
   }
 

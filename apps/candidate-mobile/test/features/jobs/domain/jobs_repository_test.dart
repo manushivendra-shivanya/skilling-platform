@@ -21,4 +21,37 @@ void main() {
       expect(jobTitleLooksLikeSupervisorRole('Inventory Executive'), isFalse);
     });
   });
+
+  group('jobSourceDisplayName', () {
+    test('returns the human-readable name for a known aggregator source', () {
+      expect(jobSourceDisplayName('adzuna'), 'Adzuna');
+      expect(jobSourceDisplayName('jooble'), 'Jooble');
+      expect(jobSourceDisplayName('careerjet'), 'Careerjet');
+      expect(jobSourceDisplayName('greenhouse'), 'Employer careers page');
+      expect(jobSourceDisplayName('lever'), 'Employer careers page');
+    });
+
+    test('is null for flora (Flora-native listings)', () {
+      expect(jobSourceDisplayName('flora'), isNull);
+    });
+
+    test('is null for an unrecognised source', () {
+      expect(jobSourceDisplayName('not-a-real-source'), isNull);
+    });
+  });
+
+  group('jobSourceCaption', () {
+    test('is null for flora, since it needs no provenance caption', () {
+      expect(jobSourceCaption('flora'), isNull);
+    });
+
+    test('is "via {name}" for a known aggregator source', () {
+      expect(jobSourceCaption('adzuna'), 'via Adzuna');
+      expect(jobSourceCaption('jooble'), 'via Jooble');
+    });
+
+    test('is null for an unrecognised source', () {
+      expect(jobSourceCaption('not-a-real-source'), isNull);
+    });
+  });
 }

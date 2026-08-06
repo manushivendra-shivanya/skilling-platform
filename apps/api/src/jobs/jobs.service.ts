@@ -8,6 +8,8 @@ export interface Job {
   title: string;
   location: string;
   description: string;
+  source: string;
+  apply_url: string | null;
 }
 
 export interface JobApplication {
@@ -27,7 +29,7 @@ export class JobsService {
   async listPublishedJobs(): Promise<Job[]> {
     const { data, error } = await this.supabase.admin
       .from('jobs')
-      .select('id, employer_name, title, location, description')
+      .select('id, employer_name, title, location, description, source, apply_url')
       .eq('status', 'published')
       .order('published_at', { ascending: false });
     if (error) {

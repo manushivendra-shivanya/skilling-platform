@@ -26,6 +26,7 @@ class LocalMockJobsRepository implements JobsRepository {
         isSupervisorRole: false,
         description:
             'Matches your interest in warehouse operations. This explanation is mock data.',
+        source: 'flora',
       ),
       JobOpportunity(
         id: 'inventory-noida',
@@ -35,6 +36,7 @@ class LocalMockJobsRepository implements JobsRepository {
         isSupervisorRole: false,
         description:
             'Inventory learning can support this role. No eligibility decision has been made.',
+        source: 'flora',
       ),
       JobOpportunity(
         id: 'shift-delhi',
@@ -44,6 +46,7 @@ class LocalMockJobsRepository implements JobsRepository {
         isSupervisorRole: true,
         description:
             'Shown as a progression option. Experience requirements are not verified in this demo.',
+        source: 'flora',
       ),
     ]);
   }
