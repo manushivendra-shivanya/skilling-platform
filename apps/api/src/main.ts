@@ -16,7 +16,12 @@ import { RequestIdMiddleware } from './common/request-id.middleware';
  * reverted back to the inline form the detector expects.
  */
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  // rawBody: true -- populates request.rawBody (a Buffer) alongside the
+  // normal parsed request.body, needed by AuthHooksController to verify
+  // Supabase's Standard Webhooks HMAC signature against the exact bytes
+  // that were signed. Re-serializing the parsed body would not
+  // necessarily match byte-for-byte and would break verification.
+  const app = await NestFactory.create(AppModule, { rawBody: true });
   app.use(new RequestIdMiddleware().use);
   app.useGlobalFilters(new AppExceptionFilter());
   app.setGlobalPrefix('v1');
