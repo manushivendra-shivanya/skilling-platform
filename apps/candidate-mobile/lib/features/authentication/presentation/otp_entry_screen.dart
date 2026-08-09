@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../app/dependencies.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../core/widgets/app_button.dart';
@@ -86,6 +87,14 @@ class _OtpEntryScreenState extends ConsumerState<OtpEntryScreen> {
     final authState = ref.watch(developmentAuthControllerProvider);
     _syncChallenge(authState);
     final challenge = authState.challenge;
+    // The hardcoded "123456" code only ever worked against the local mock
+    // repository. Once real Supabase configuration is active,
+    // developmentAuthRepositoryProvider swaps in SupabasePhoneAuthRepository,
+    // which requires a genuine SMS round-trip -- showing the old dev-code
+    // hint there would be actively misleading.
+    final isRealBackend = ref.watch(
+      appConfigProvider.select((config) => config.hasSupabaseConfiguration),
+    );
 
     if (challenge == null) {
       return Scaffold(
@@ -124,19 +133,35 @@ class _OtpEntryScreenState extends ConsumerState<OtpEntryScreen> {
               ),
               const SizedBox(height: AppSpacing.sm),
               Text(
-                'Development code for +91 $maskedPhone',
+                isRealBackend
+                    ? 'Code sent for +91 $maskedPhone'
+                    : 'Development code for +91 $maskedPhone',
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: AppSpacing.xl),
-              const AppCard(
-                backgroundColor: AppColors.warningSoft,
-                semanticLabel:
-                    'Development OTP is 123456. No SMS has been sent.',
-                child: Text(
-                  'Development OTP: 123456\nNo SMS has been sent.',
-                  textAlign: TextAlign.center,
+              if (isRealBackend)
+                const AppCard(
+                  backgroundColor: AppColors.warningSoft,
+                  semanticLabel:
+                      'Phone sign-in requires a real SMS provider to be '
+                      'enabled on the backend. Use Google sign-in instead if '
+                      'this code never arrives.',
+                  child: Text(
+                    'We texted you a 6-digit code. If it does not arrive, '
+                    'use Google sign-in instead.',
+                    textAlign: TextAlign.center,
+                  ),
+                )
+              else
+                const AppCard(
+                  backgroundColor: AppColors.warningSoft,
+                  semanticLabel:
+                      'Development OTP is 123456. No SMS has been sent.',
+                  child: Text(
+                    'Development OTP: 123456\nNo SMS has been sent.',
+                    textAlign: TextAlign.center,
+                  ),
                 ),
-              ),
               const SizedBox(height: AppSpacing.xl),
               AppTextField(
                 label: 'OTP',

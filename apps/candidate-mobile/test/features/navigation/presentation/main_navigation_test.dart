@@ -35,7 +35,10 @@ void main() {
   testWidgets('completed candidate enters all five persistent destinations', (
     tester,
   ) async {
-    await tester.binding.setSurfaceSize(const Size(800, 1000));
+    // The "Today's services" rail + journey/readiness cards push "Today's
+    // mission" out of ListView's default build extent at 800x1000 -- same
+    // reasoning as phase_one_shells_test.dart's Home test.
+    await tester.binding.setSurfaceSize(const Size(800, 1400));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     final analytics = InMemoryAnalyticsTracker();
     await tester.pumpCandidateApp(
@@ -70,6 +73,8 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Mark incomplete'), findsOneWidget);
 
+    // Practise now lives as a sub-tab inside Learn rather than its own
+    // bottom-nav destination.
     await tester.tap(find.text('Practise'));
     await tester.pumpAndSettle();
     // Four Workplace Simulation cards (Receiving, Put Away, Processing,
@@ -81,7 +86,14 @@ void main() {
     );
     expect(find.text('Recommended practice'), findsOneWidget);
 
-    await tester.tap(find.text('Me'));
+    await tester.tap(find.text('Shift'));
+    await tester.pumpAndSettle();
+    // The former placeholder text ("On-demand shifts are coming soon") is
+    // gone now that the real Phase OD-1 Shift feature replaced it --
+    // LocalMockShiftsRepository's one demo shift is real content instead.
+    expect(find.text('My Shift'), findsOneWidget);
+
+    await tester.tap(find.text('My Profile'));
     await tester.pumpAndSettle();
     await tester.scrollUntilVisible(
       find.text('Privacy and consent'),
@@ -226,7 +238,7 @@ void main() {
 
     expect(tester.takeException(), isNull);
     expect(find.text('Home'), findsOneWidget);
-    expect(find.text('Practise'), findsOneWidget);
+    expect(find.text('Shift'), findsOneWidget);
     expect(find.text('AI Coach'), findsOneWidget);
   });
 }

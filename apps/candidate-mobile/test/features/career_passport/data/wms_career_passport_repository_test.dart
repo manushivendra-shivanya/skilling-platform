@@ -7,6 +7,7 @@ import 'package:candidate_mobile/features/certification_exam/domain/certificatio
 import 'package:candidate_mobile/features/certification_exam/domain/certification_exam_repository.dart';
 import 'package:candidate_mobile/features/micro_lessons/data/secure_micro_lesson_assessment_repository.dart';
 import 'package:candidate_mobile/features/micro_lessons/domain/micro_lesson_clip.dart';
+import 'package:candidate_mobile/features/shifts/domain/shifts_repository.dart';
 import 'package:candidate_mobile/features/workplace_simulation/application/workplace_simulation_controller.dart';
 import 'package:candidate_mobile/features/workplace_simulation/data/local_simulation_attempt_repository.dart';
 import 'package:candidate_mobile/features/workplace_simulation/domain/simulation_enums.dart';
@@ -296,6 +297,92 @@ void main() {
     );
   });
 
+  test(
+    'merges shift-completion evidence alongside WMS simulation evidence',
+    () async {
+      final store = InMemorySecureKeyValueStore();
+      final attempts = LocalSimulationAttemptRepository(
+        store,
+        clock: () => fixedTime,
+      );
+      final shifts = _FakeShiftsRepository([
+        _completedShiftApplication,
+      ], _shiftForCompletedApplication);
+      final repository = WmsCareerPassportRepository(
+        attemptRepository: attempts,
+        shiftsRepository: shifts,
+      );
+
+      final wmsAttempt = await attempts.createAttempt(
+        candidateId: candidateId,
+        missionId: WorkplaceSimulationController.missionId,
+        missionVersion: '1.0.0',
+        scenarioSeed: 1,
+      );
+      await attempts.saveAttempt(
+        wmsAttempt.copyWith(state: MissionState.completed),
+      );
+      await attempts.saveResult(candidateId, _result(wmsAttempt, score: 80));
+
+      final result = await repository.loadEvidence(candidateId);
+
+      result.when(
+        success: (evidence) {
+          expect(evidence, hasLength(2));
+          expect(
+            evidence.map((e) => e.evidenceType),
+            containsAll([
+              EvidenceType.simulationObservation,
+              EvidenceType.shiftCompletion,
+            ]),
+          );
+          final shiftEvidence = evidence.singleWhere(
+            (e) => e.evidenceType == EvidenceType.shiftCompletion,
+          );
+          expect(shiftEvidence.competencyId, 'document-verification');
+          expect(shiftEvidence.score, 100);
+          expect(
+            shiftEvidence.verificationStatus,
+            EvidenceVerificationStatus.partnerAttested,
+          );
+        },
+        failure: (failure) => fail('expected success, got $failure'),
+      );
+    },
+  );
+
+  test(
+    'a shift application that is not yet completed contributes no evidence',
+    () async {
+      final store = InMemorySecureKeyValueStore();
+      final attempts = LocalSimulationAttemptRepository(
+        store,
+        clock: () => fixedTime,
+      );
+      final shifts = _FakeShiftsRepository([
+        ShiftApplication(
+          id: 'app-1',
+          shiftId: 'shift-1',
+          status: ShiftApplicationStatus.checkedIn,
+          checkedInAt: fixedTime,
+          checkedOutAt: null,
+          createdAt: fixedTime,
+        ),
+      ], _shiftForCompletedApplication);
+      final repository = WmsCareerPassportRepository(
+        attemptRepository: attempts,
+        shiftsRepository: shifts,
+      );
+
+      final result = await repository.loadEvidence(candidateId);
+
+      result.when(
+        success: (evidence) => expect(evidence, isEmpty),
+        failure: (failure) => fail('expected success, got $failure'),
+      );
+    },
+  );
+
   test('local-only repository cannot manage employer access', () async {
     final store = InMemorySecureKeyValueStore();
     final attempts = LocalSimulationAttemptRepository(
@@ -443,6 +530,78 @@ CertificationExam _exam() {
 class _FakeCertificationExamRepository implements CertificationExamRepository {
   @override
   Future<Result<CertificationExam>> loadExam() async => Success(_exam());
+}
+
+final _completedShiftApplication = ShiftApplication(
+  id: 'app-1',
+  shiftId: 'shift-1',
+  status: ShiftApplicationStatus.completed,
+  checkedInAt: DateTime.utc(2026, 8, 1, 18),
+  checkedOutAt: DateTime.utc(2026, 8, 1, 23),
+  createdAt: DateTime.utc(2026, 8, 1, 9),
+);
+
+final _shiftForCompletedApplication = Shift(
+  id: 'shift-1',
+  roleTitle: 'Picker / Packer',
+  siteName: 'Dark store',
+  siteAddress: 'Andheri East',
+  city: 'Mumbai',
+  startsAt: DateTime.utc(2026, 8, 1, 18),
+  endsAt: DateTime.utc(2026, 8, 1, 23),
+  reportingTime: DateTime.utc(2026, 8, 1, 18),
+  headcount: 5,
+  payAmount: 650,
+  payCurrency: 'INR',
+  requiredCompetencyIds: const ['document-verification'],
+  description: null,
+  supervisorName: null,
+  supervisorContact: null,
+  cancellationPolicy: null,
+);
+
+/// Only implements what `_loadShiftEvidence` actually calls
+/// (`loadMyApplications`/`loadShiftDetail`) -- the rest throw, matching
+/// this file's other fakes' minimal-surface style.
+class _FakeShiftsRepository implements ShiftsRepository {
+  _FakeShiftsRepository(this._applications, this._shift);
+
+  final List<ShiftApplication> _applications;
+  final Shift _shift;
+
+  @override
+  bool get isLiveData => true;
+
+  @override
+  Future<Result<List<ShiftApplication>>> loadMyApplications(
+    String candidateId,
+  ) async => Success(_applications);
+
+  @override
+  Future<Result<Shift>> loadShiftDetail(String shiftId) async =>
+      Success(_shift);
+
+  @override
+  Future<Result<List<Shift>>> loadPublishedShifts() async =>
+      throw UnimplementedError('Not used by Career Passport evidence load.');
+
+  @override
+  Future<Result<ShiftApplication>> acceptShift(
+    String candidateId,
+    String shiftId,
+  ) async =>
+      throw UnimplementedError('Not used by Career Passport evidence load.');
+
+  @override
+  Future<Result<ShiftApplication>> checkIn(
+    String applicationId,
+    String code,
+  ) async =>
+      throw UnimplementedError('Not used by Career Passport evidence load.');
+
+  @override
+  Future<Result<ShiftApplication>> checkOut(String applicationId) async =>
+      throw UnimplementedError('Not used by Career Passport evidence load.');
 }
 
 MicroLessonClip _microLessonClip() {

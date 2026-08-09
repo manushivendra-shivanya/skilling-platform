@@ -40,6 +40,10 @@ void main() {
   testWidgets(
     'shows clips grouped by domain with the not-employer-evidence disclaimer',
     (tester) async {
+      // The merged Learn/Practise tab adds a sub-tab bar above the content,
+      // which the default 800x600 test surface no longer has room for.
+      await tester.binding.setSurfaceSize(const Size(800, 1200));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
       await tester.pumpCandidateApp(
         candidateSessionRepository: sessions,
         candidateOnboardingRepository: onboarding,
@@ -187,6 +191,10 @@ void main() {
   testWidgets('shows an empty state when the catalogue has no clips', (
     tester,
   ) async {
+    // The merged Learn/Practise tab adds a sub-tab bar above the content,
+    // which the default 800x600 test surface no longer has room for.
+    await tester.binding.setSurfaceSize(const Size(800, 1200));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
     await tester.pumpCandidateApp(
       candidateSessionRepository: sessions,
       candidateOnboardingRepository: onboarding,
@@ -209,6 +217,10 @@ void main() {
   testWidgets(
     'shows a recoverable error state when the catalogue fails to load',
     (tester) async {
+      // The merged Learn/Practise tab adds a sub-tab bar above the content,
+      // which the default 800x600 test surface no longer has room for.
+      await tester.binding.setSurfaceSize(const Size(800, 1200));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
       await tester.pumpCandidateApp(
         candidateSessionRepository: sessions,
         candidateOnboardingRepository: onboarding,

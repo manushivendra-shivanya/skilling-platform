@@ -32,6 +32,14 @@ void main() {
   testWidgets('Home supports populated, empty, and recoverable error states', (
     tester,
   ) async {
+    // The "Today's services" rail + journey/readiness cards push "Open
+    // career diagnostic" out of ListView's default build extent at the
+    // default 800x600 test surface -- it's not just off-screen, it's
+    // genuinely unbuilt, so find.text finds nothing rather than something
+    // untappable. A taller surface keeps it (and everything after it)
+    // built without needing to scroll first.
+    await tester.binding.setSurfaceSize(const Size(800, 1400));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
     final repository = MockHomeDashboardRepository();
     await tester.pumpCandidateApp(
       candidateSessionRepository: sessions,
@@ -42,10 +50,10 @@ void main() {
     expect(find.text('Open career diagnostic'), findsOneWidget);
 
     repository.setResponse(const Success(null));
-    await tester.drag(
-      find.text('Open career diagnostic'),
-      const Offset(0, 500),
-    );
+    // Drag from the always-visible greeting rather than "Open career
+    // diagnostic" -- the new "Today's services" rail above it can push that
+    // button below the fold at the default test surface size.
+    await tester.drag(find.text('Namaste!'), const Offset(0, 500));
     await tester.pump();
     await tester.pumpAndSettle();
     expect(find.text('Your journey starts here'), findsOneWidget);
@@ -143,6 +151,10 @@ void main() {
       candidateOnboardingRepository: onboarding,
     );
     await tester.pumpAndSettle();
+    // Practise now lives as a sub-tab inside Learn rather than its own
+    // bottom-nav destination.
+    await tester.tap(find.text('Learn'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Practise'));
     await tester.pumpAndSettle();
 
@@ -234,7 +246,7 @@ void main() {
       candidateOnboardingRepository: onboarding,
     );
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Me'));
+    await tester.tap(find.text('My Profile'));
     await tester.pumpAndSettle();
     await tester.scrollUntilVisible(
       find.text('Employer sharing'),

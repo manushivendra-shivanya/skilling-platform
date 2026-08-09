@@ -10,6 +10,8 @@ import '../../certification_exam/domain/certification_exam_evidence_generation_s
 import '../../certification_exam/domain/certification_exam_repository.dart';
 import '../../micro_lessons/domain/micro_lesson_assessment_repository.dart';
 import '../../micro_lessons/domain/micro_lesson_evidence_generation_service.dart';
+import '../../shifts/domain/shift_evidence_generation_service.dart';
+import '../../shifts/domain/shifts_repository.dart';
 import '../../workplace_simulation/application/workplace_simulation_controller.dart';
 import '../../workplace_simulation/domain/simulation_repositories.dart';
 import '../../workplace_simulation/domain/simulation_runtime.dart';
@@ -37,6 +39,7 @@ class WmsCareerPassportRepository implements CareerPassportRepository {
     MicroLessonAssessmentRepository? microLessonAssessmentRepository,
     CertificationExamRepository? certificationExamRepository,
     CertificationExamAttemptRepository? certificationExamAttemptRepository,
+    ShiftsRepository? shiftsRepository,
     SupabaseClient? supabaseClient,
     String? apiBaseUrl,
     Dio? dio,
@@ -44,6 +47,7 @@ class WmsCareerPassportRepository implements CareerPassportRepository {
        _microLessonAssessmentRepository = microLessonAssessmentRepository,
        _certificationExamRepository = certificationExamRepository,
        _certificationExamAttemptRepository = certificationExamAttemptRepository,
+       _shiftsRepository = shiftsRepository,
        _supabaseClient = supabaseClient,
        _apiBaseUrl = apiBaseUrl,
        _dio = dio ?? Dio();
@@ -52,6 +56,7 @@ class WmsCareerPassportRepository implements CareerPassportRepository {
   final MicroLessonAssessmentRepository? _microLessonAssessmentRepository;
   final CertificationExamRepository? _certificationExamRepository;
   final CertificationExamAttemptRepository? _certificationExamAttemptRepository;
+  final ShiftsRepository? _shiftsRepository;
   final SupabaseClient? _supabaseClient;
   final String? _apiBaseUrl;
   final Dio _dio;
@@ -59,6 +64,7 @@ class WmsCareerPassportRepository implements CareerPassportRepository {
       MicroLessonEvidenceGenerationService();
   static const _certificationExamEvidenceService =
       CertificationExamEvidenceGenerationService();
+  static const _shiftEvidenceService = ShiftEvidenceGenerationService();
 
   @override
   bool get canManageShareLink =>
@@ -79,6 +85,7 @@ class WmsCareerPassportRepository implements CareerPassportRepository {
         ...wmsEvidence,
         ...await _loadMicroLessonEvidence(candidateId),
         ...await _loadCertificationExamEvidence(candidateId),
+        ...await _loadShiftEvidence(candidateId),
       ]),
     };
   }
@@ -154,6 +161,39 @@ class WmsCareerPassportRepository implements CareerPassportRepository {
           ],
           failure: (_) => const <EvidenceRecord>[],
         );
+      },
+      failure: (_) async => const <EvidenceRecord>[],
+    );
+  }
+
+  /// Shift-completion evidence, same "supplementary, fails quietly" posture
+  /// as [_loadMicroLessonEvidence]/[_loadCertificationExamEvidence]. Fetches
+  /// each completed application's shift detail sequentially (the number of
+  /// completed shifts a candidate has is expected to be small) rather than
+  /// in parallel, keeping this consistent with the rest of this method's
+  /// straightforward sequential style.
+  Future<List<EvidenceRecord>> _loadShiftEvidence(String candidateId) async {
+    final repository = _shiftsRepository;
+    if (repository == null) return const [];
+    final applicationsResult = await repository.loadMyApplications(candidateId);
+    return applicationsResult.when(
+      success: (applications) async {
+        final evidence = <EvidenceRecord>[];
+        for (final application in applications) {
+          if (application.status != ShiftApplicationStatus.completed) {
+            continue;
+          }
+          final shiftResult = await repository.loadShiftDetail(
+            application.shiftId,
+          );
+          shiftResult.when(
+            success: (shift) => evidence.addAll(
+              _shiftEvidenceService.generate(candidateId, application, shift),
+            ),
+            failure: (_) {},
+          );
+        }
+        return evidence;
       },
       failure: (_) async => const <EvidenceRecord>[],
     );

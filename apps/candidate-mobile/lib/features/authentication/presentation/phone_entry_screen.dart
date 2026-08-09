@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../app/dependencies.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_icons.dart';
 import '../../../app/theme/app_spacing.dart';
@@ -39,6 +40,9 @@ class _PhoneEntryScreenState extends ConsumerState<PhoneEntryScreen> {
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(developmentAuthControllerProvider);
+    final isRealBackend = ref.watch(
+      appConfigProvider.select((config) => config.hasSupabaseConfiguration),
+    );
 
     return Scaffold(
       appBar: AppBar(title: const Text('Phone sign-in')),
@@ -57,30 +61,53 @@ class _PhoneEntryScreenState extends ConsumerState<PhoneEntryScreen> {
               ),
               const SizedBox(height: AppSpacing.sm),
               Text(
-                'We will use this only to demonstrate the development OTP flow.',
+                isRealBackend
+                    ? 'We will text a one-time code to verify this number.'
+                    : 'We will use this only to demonstrate the development OTP flow.',
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: AppSpacing.xl),
-              const AppCard(
-                semanticLabel:
-                    'Development mode. No SMS is sent and no production authentication service is connected.',
-                backgroundColor: AppColors.infoSoft,
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Icon(AppIcons.info, color: AppColors.info),
-                    SizedBox(width: AppSpacing.sm),
-                    Expanded(
-                      child: Text(
-                        'Development mode: no SMS is sent. This flow works without a network connection.',
+              if (isRealBackend)
+                const AppCard(
+                  semanticLabel:
+                      'Phone sign-in requires SMS delivery to be enabled on '
+                      'the backend. If no code arrives, use Google sign-in '
+                      'instead.',
+                  backgroundColor: AppColors.infoSoft,
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(AppIcons.info, color: AppColors.info),
+                      SizedBox(width: AppSpacing.sm),
+                      Expanded(
+                        child: Text(
+                          'If your code never arrives, go back and use Google sign-in instead.',
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
+                )
+              else
+                const AppCard(
+                  semanticLabel:
+                      'Development mode. No SMS is sent and no production authentication service is connected.',
+                  backgroundColor: AppColors.infoSoft,
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(AppIcons.info, color: AppColors.info),
+                      SizedBox(width: AppSpacing.sm),
+                      Expanded(
+                        child: Text(
+                          'Development mode: no SMS is sent. This flow works without a network connection.',
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
               const SizedBox(height: AppSpacing.xl),
               AppTextField(
                 label: '10-digit mobile number',

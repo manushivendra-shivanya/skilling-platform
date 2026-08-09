@@ -16,7 +16,7 @@ class MainNavigationShell extends StatelessWidget {
     super.key,
   });
 
-  static const destinationNames = ['home', 'learn', 'practise', 'jobs', 'me'];
+  static const destinationNames = ['home', 'learn', 'jobs', 'shift', 'me'];
 
   final StatefulNavigationShell navigationShell;
   final AnalyticsTracker analyticsTracker;
@@ -74,12 +74,12 @@ class MainNavigationShell extends StatelessWidget {
           destinations: const [
             NavigationDestination(icon: Icon(AppIcons.home), label: 'Home'),
             NavigationDestination(icon: Icon(AppIcons.learn), label: 'Learn'),
-            NavigationDestination(
-              icon: Icon(AppIcons.practise),
-              label: 'Practise',
-            ),
             NavigationDestination(icon: Icon(AppIcons.jobs), label: 'Jobs'),
-            NavigationDestination(icon: Icon(AppIcons.profile), label: 'Me'),
+            NavigationDestination(icon: Icon(AppIcons.shift), label: 'Shift'),
+            NavigationDestination(
+              icon: Icon(AppIcons.profile),
+              label: 'My Profile',
+            ),
           ],
         ),
       ),
@@ -101,9 +101,9 @@ class MainNavigationShell extends StatelessWidget {
   String _titleFor(int index) => switch (index) {
     0 => 'Saksham',
     1 => 'Learn',
-    2 => 'Practise',
-    3 => 'Jobs',
-    4 => 'Me',
+    2 => 'Jobs',
+    3 => 'Shift',
+    4 => 'My Profile',
     _ => 'Saksham',
   };
 }

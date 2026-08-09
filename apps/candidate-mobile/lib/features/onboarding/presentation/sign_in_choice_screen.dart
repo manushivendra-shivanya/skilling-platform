@@ -1,19 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../app/dependencies.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_icons.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_feedback.dart';
 import '../../../core/widgets/app_state_view.dart';
+import '../../authentication/presentation/development_auth_controller.dart';
 import '../domain/candidate_language.dart';
 import 'language_selection_controller.dart';
 
 class SignInChoiceScreen extends ConsumerWidget {
-  const SignInChoiceScreen({required this.onContinueWithPhone, super.key});
+  const SignInChoiceScreen({
+    required this.onContinueWithPhone,
+    required this.onGoogleAuthenticated,
+    super.key,
+  });
 
   final VoidCallback onContinueWithPhone;
+  final VoidCallback onGoogleAuthenticated;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -42,6 +49,7 @@ class SignInChoiceScreen extends ConsumerWidget {
             return _SignInChoiceContent(
               language: language,
               onContinueWithPhone: onContinueWithPhone,
+              onGoogleAuthenticated: onGoogleAuthenticated,
             );
           },
         ),
@@ -50,18 +58,36 @@ class SignInChoiceScreen extends ConsumerWidget {
   }
 }
 
-class _SignInChoiceContent extends StatelessWidget {
+class _SignInChoiceContent extends ConsumerWidget {
   const _SignInChoiceContent({
     required this.language,
     required this.onContinueWithPhone,
+    required this.onGoogleAuthenticated,
   });
 
   final CandidateLanguage language;
   final VoidCallback onContinueWithPhone;
+  final VoidCallback onGoogleAuthenticated;
+
+  Future<void> _signInWithGoogle(BuildContext context, WidgetRef ref) async {
+    final succeeded = await ref
+        .read(developmentAuthControllerProvider.notifier)
+        .signInWithGoogle();
+    if (succeeded && context.mounted) {
+      onGoogleAuthenticated();
+    }
+  }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final copy = SignInCopy.forLanguage(language);
+    final isGoogleConfigured = ref.watch(
+      appConfigProvider.select((config) => config.hasGoogleSignInConfiguration),
+    );
+    final authState = ref.watch(developmentAuthControllerProvider);
+    final googleStatus = isGoogleConfigured
+        ? authState.failure?.message
+        : copy.googleStatus;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(
@@ -99,17 +125,26 @@ class _SignInChoiceContent extends StatelessWidget {
             label: copy.googleLabel,
             leadingIcon: Icons.account_circle_outlined,
             variant: AppButtonVariant.secondary,
-            onPressed: null,
-            semanticLabel: '${copy.googleLabel}. ${copy.googleStatus}',
+            isLoading: authState.isVerifying,
+            onPressed: isGoogleConfigured
+                ? () => _signInWithGoogle(context, ref)
+                : null,
+            semanticLabel: isGoogleConfigured
+                ? copy.googleLabel
+                : '${copy.googleLabel}. ${copy.googleStatus}',
           ),
-          const SizedBox(height: AppSpacing.xs),
-          Text(
-            copy.googleStatus,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
+          if (googleStatus != null) ...[
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              googleStatus,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: isGoogleConfigured
+                    ? AppColors.error
+                    : Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+              textAlign: TextAlign.center,
             ),
-            textAlign: TextAlign.center,
-          ),
+          ],
           const SizedBox(height: AppSpacing.xxl),
           Wrap(
             alignment: WrapAlignment.center,

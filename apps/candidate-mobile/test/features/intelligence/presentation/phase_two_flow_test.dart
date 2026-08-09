@@ -18,6 +18,12 @@ void main() {
   testWidgets('candidate completes and persists an explainable diagnostic', (
     tester,
   ) async {
+    // ensureVisible needs the target actually built first -- at the
+    // default 800x600 surface, "Open career diagnostic" is now pushed
+    // beyond ListView's build extent by the Home content above it, so
+    // find.text matches nothing at all (not just off-screen).
+    await tester.binding.setSurfaceSize(const Size(800, 1400));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
     final analytics = InMemoryAnalyticsTracker();
     await tester.pumpCandidateApp(
       candidateSessionRepository: InMemoryCandidateSessionRepository(
@@ -37,6 +43,10 @@ void main() {
     );
     await tester.pumpAndSettle();
 
+    // The Home "today's services" rail now sits above this card, pushing it
+    // below the fold at the default test surface size.
+    await tester.ensureVisible(find.text('Open career diagnostic'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Open career diagnostic'));
     await tester.pumpAndSettle();
     expect(find.text('Find your logistics pathway'), findsOneWidget);
@@ -79,6 +89,10 @@ void main() {
   testWidgets('scored simulation persists evidence and an explanation', (
     tester,
   ) async {
+    // The merged Learn/Practise tab adds a sub-tab bar above the content,
+    // which the default 800x600 test surface no longer has room for.
+    await tester.binding.setSurfaceSize(const Size(800, 1200));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
     await tester.pumpCandidateApp(
       candidateSessionRepository: InMemoryCandidateSessionRepository(
         session: const CandidateSession(
@@ -94,6 +108,10 @@ void main() {
       ),
       candidateIntelligenceRepository: intelligence,
     );
+    await tester.pumpAndSettle();
+    // Practise now lives as a sub-tab inside Learn rather than its own
+    // bottom-nav destination.
+    await tester.tap(find.text('Learn'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Practise'));
     await tester.pumpAndSettle();

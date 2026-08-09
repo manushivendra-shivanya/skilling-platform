@@ -16,7 +16,7 @@ import '../../features/dev_tools/presentation/design_system_gallery_screen.dart'
 import '../../features/home/presentation/home_dashboard_screen.dart';
 import '../../features/jobs/presentation/jobs_screen.dart';
 import '../../features/intelligence/presentation/diagnostic_screen.dart';
-import '../../features/learning/presentation/learning_screen.dart';
+import '../../features/navigation/presentation/learn_and_practice_screen.dart';
 import '../../features/navigation/presentation/global_placeholder_screen.dart';
 import '../../features/navigation/presentation/main_navigation_shell.dart';
 import '../../features/onboarding/domain/candidate_onboarding_draft.dart';
@@ -25,7 +25,11 @@ import '../../features/onboarding/presentation/candidate_onboarding_screen.dart'
 import '../../features/onboarding/presentation/language_selection_screen.dart';
 import '../../features/onboarding/presentation/sign_in_choice_screen.dart';
 import '../../features/onboarding/presentation/welcome_screen.dart';
-import '../../features/practice/presentation/practice_screen.dart';
+import '../../features/shifts/presentation/my_shifts_screen.dart';
+import '../../features/shifts/presentation/shift_availability_screen.dart';
+import '../../features/shifts/presentation/shift_grievance_screen.dart';
+import '../../features/shifts/presentation/shift_payout_screen.dart';
+import '../../features/shifts/presentation/shift_screen.dart';
 import '../../features/profile/presentation/profile_screen.dart';
 import '../../features/splash/presentation/app_startup_screen.dart';
 import '../../features/voice/presentation/voice_interview_screen.dart';
@@ -74,10 +78,18 @@ const homeRoutePath = '/home';
 const homeRouteName = 'home';
 const learnRoutePath = '/learn';
 const learnRouteName = 'learn';
-const practiseRoutePath = '/practise';
-const practiseRouteName = 'practise';
 const jobsRoutePath = '/jobs';
 const jobsRouteName = 'jobs';
+const shiftRoutePath = '/shift';
+const shiftRouteName = 'shift';
+const shiftAvailabilityRoutePath = '/shift/availability';
+const shiftAvailabilityRouteName = 'shift-availability';
+const myShiftsRoutePath = '/shift/my-shifts';
+const myShiftsRouteName = 'my-shifts';
+const shiftPayoutRoutePath = '/shift/payouts';
+const shiftPayoutRouteName = 'shift-payouts';
+const shiftGrievanceRoutePath = '/shift/support';
+const shiftGrievanceRouteName = 'shift-support';
 const profileRoutePath = '/me';
 const profileRouteName = 'me';
 const aiCoachRoutePath = '/coach';
@@ -267,6 +279,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       candidateOnboardingRepositoryProvider,
     ),
     showDevelopmentTools: !ref.watch(appConfigProvider).isProduction,
+    // The dev-skip flow writes a fake, non-UUID candidate id, which always
+    // fails Postgres's UUID check and RLS against a real Supabase backend
+    // (see _skipToHomeForDev's doc comment). Once real Supabase
+    // configuration is active, Google sign-in is the real way to reach
+    // Home -- keep the button only for the pure-mock build.
+    allowDevSkipToHome: !ref.watch(appConfigProvider).hasSupabaseConfiguration,
   );
   ref.onDispose(router.dispose);
   return router;
@@ -277,6 +295,7 @@ GoRouter createAppRouter({
   required CandidateSessionRepository candidateSessionRepository,
   required CandidateOnboardingRepository candidateOnboardingRepository,
   required bool showDevelopmentTools,
+  bool allowDevSkipToHome = true,
   String? initialLocation,
 }) {
   final rootNavigatorKey = GlobalKey<NavigatorState>(
@@ -315,7 +334,7 @@ GoRouter createAppRouter({
           onOpenWms3dPreview: showDevelopmentTools
               ? () => context.push(wms3dPreviewRoutePath)
               : null,
-          onSkipToHome: showDevelopmentTools
+          onSkipToHome: showDevelopmentTools && allowDevSkipToHome
               ? () => _skipToHomeForDev(
                   context: context,
                   candidateSessionRepository: candidateSessionRepository,
@@ -336,6 +355,7 @@ GoRouter createAppRouter({
         name: signInChoiceRouteName,
         builder: (context, state) => SignInChoiceScreen(
           onContinueWithPhone: () => context.push(phoneEntryRoutePath),
+          onGoogleAuthenticated: () => context.go(authenticatedRoutePath),
         ),
       ),
       GoRoute(
@@ -387,6 +407,9 @@ GoRouter createAppRouter({
                   onOpenDiagnostic: () => context.push(diagnosticRoutePath),
                   onOpenVoiceInterview: () =>
                       context.push(voiceInterviewRoutePath),
+                  onOpenCareerPassport: () => context.go(profileRoutePath),
+                  onOpenJobs: () => context.go(jobsRoutePath),
+                  onOpenPathway: () => context.go(learnRoutePath),
                 ),
               ),
             ],
@@ -396,16 +419,8 @@ GoRouter createAppRouter({
               GoRoute(
                 path: learnRoutePath,
                 name: learnRouteName,
-                builder: (context, state) => const LearningScreen(),
-              ),
-            ],
-          ),
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: practiseRoutePath,
-                name: practiseRouteName,
-                builder: (context, state) => PracticeScreen(
+                builder: (context, state) => LearnAndPracticeScreen(
+                  startOnPractice: (state.extra as Map?)?['tab'] == 'practise',
                   onOpenWorkplaceSimulation: (missionId) =>
                       context.push(workplaceSimulationPath(missionId)),
                 ),
@@ -418,6 +433,22 @@ GoRouter createAppRouter({
                 path: jobsRoutePath,
                 name: jobsRouteName,
                 builder: (context, state) => const JobsScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: shiftRoutePath,
+                name: shiftRouteName,
+                builder: (context, state) => ShiftScreen(
+                  onOpenAvailability: () =>
+                      context.push(shiftAvailabilityRoutePath),
+                  onOpenMyShifts: () => context.push(myShiftsRoutePath),
+                  onOpenPayouts: () => context.push(shiftPayoutRoutePath),
+                  onOpenGrievances: () => context.push(shiftGrievanceRoutePath),
+                  onOpenSkillGap: () => context.go(learnRoutePath),
+                ),
               ),
             ],
           ),
@@ -466,6 +497,30 @@ GoRouter createAppRouter({
       ),
       GoRoute(
         parentNavigatorKey: rootNavigatorKey,
+        path: shiftAvailabilityRoutePath,
+        name: shiftAvailabilityRouteName,
+        builder: (context, state) => const ShiftAvailabilityScreen(),
+      ),
+      GoRoute(
+        parentNavigatorKey: rootNavigatorKey,
+        path: myShiftsRoutePath,
+        name: myShiftsRouteName,
+        builder: (context, state) => const MyShiftsScreen(),
+      ),
+      GoRoute(
+        parentNavigatorKey: rootNavigatorKey,
+        path: shiftPayoutRoutePath,
+        name: shiftPayoutRouteName,
+        builder: (context, state) => const ShiftPayoutScreen(),
+      ),
+      GoRoute(
+        parentNavigatorKey: rootNavigatorKey,
+        path: shiftGrievanceRoutePath,
+        name: shiftGrievanceRouteName,
+        builder: (context, state) => const ShiftGrievanceScreen(),
+      ),
+      GoRoute(
+        parentNavigatorKey: rootNavigatorKey,
         path: workplaceSimulationRoutePattern,
         name: workplaceSimulationRouteName,
         builder: (context, state) {
@@ -476,7 +531,8 @@ GoRouter createAppRouter({
                 context.push(workplaceBriefingPath(missionId)),
             onContinueWorkplace: () =>
                 context.go(workplaceOverviewPath(missionId)),
-            onExit: () => context.go(practiseRoutePath),
+            onExit: () =>
+                context.go(learnRoutePath, extra: const {'tab': 'practise'}),
           );
         },
       ),
@@ -503,7 +559,8 @@ GoRouter createAppRouter({
             missionId: missionId,
             onOpenWorkstation: (workstationId) =>
                 context.go(workstationPath(workstationId, missionId)),
-            onReturnToPractice: () => context.go(practiseRoutePath),
+            onReturnToPractice: () =>
+                context.go(learnRoutePath, extra: const {'tab': 'practise'}),
           );
         },
       ),
@@ -599,7 +656,8 @@ GoRouter createAppRouter({
           final missionId = state.pathParameters['missionId']!;
           return PerformanceFeedbackScreen(
             missionId: missionId,
-            onReturnToPractice: () => context.go(practiseRoutePath),
+            onReturnToPractice: () =>
+                context.go(learnRoutePath, extra: const {'tab': 'practise'}),
           );
         },
       ),
@@ -883,13 +941,17 @@ Future<String?> _redirectForCandidateState({
 const _mainAndGlobalRoutePaths = {
   homeRoutePath,
   learnRoutePath,
-  practiseRoutePath,
   jobsRoutePath,
+  shiftRoutePath,
   profileRoutePath,
   aiCoachRoutePath,
   notificationsRoutePath,
   diagnosticRoutePath,
   voiceInterviewRoutePath,
+  shiftAvailabilityRoutePath,
+  myShiftsRoutePath,
+  shiftPayoutRoutePath,
+  shiftGrievanceRoutePath,
   workplaceSimulationHubRoutePath,
   workplaceSimulationRoutePath,
   workplaceBriefingRoutePath,
