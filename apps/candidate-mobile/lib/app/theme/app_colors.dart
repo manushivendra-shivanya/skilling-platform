@@ -22,4 +22,15 @@ abstract final class AppColors {
   static const Color errorSoft = Color(0xFFFFDAD6);
   static const Color info = Color(0xFF075A83);
   static const Color infoSoft = Color(0xFFD6EFFF);
+
+  // A 7th tile tone for the Home "today services" rail -- distinct from the
+  // 6 above (success/info/accent/warning/brand/ink) so every service card
+  // reads as its own color, not a repeat.
+  static const Color teal = Color(0xFF0F6E6E);
+  static const Color tealSoft = Color(0xFFD7F0EE);
+
+  // Bright accent reserved for "this is the active step" indicators on the
+  // dark ink background (journey stepper, readiness ring) -- warning/accent
+  // are both too close in value to ink to read clearly there.
+  static const Color highlight = Color(0xFFFFC933);
 }

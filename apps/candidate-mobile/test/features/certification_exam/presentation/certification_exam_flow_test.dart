@@ -80,6 +80,10 @@ void main() {
   });
 
   testWidgets('shows the exam card in the Learn tab', (tester) async {
+    // The merged Learn/Practise tab adds a sub-tab bar above the content,
+    // which the default 800x600 test surface no longer has room for.
+    await tester.binding.setSurfaceSize(const Size(800, 1200));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
     await tester.pumpCandidateApp(
       candidateSessionRepository: sessions,
       candidateOnboardingRepository: onboarding,

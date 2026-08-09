@@ -8,6 +8,7 @@ class AppConfig {
     this.supabasePublishableKey = '',
     this.apiBaseUrl = '',
     this.microLessonCdnBaseUrl = '',
+    this.googleWebClientId = '',
   });
 
   const AppConfig.development()
@@ -16,7 +17,8 @@ class AppConfig {
       supabaseUrl = '',
       supabasePublishableKey = '',
       apiBaseUrl = '',
-      microLessonCdnBaseUrl = '';
+      microLessonCdnBaseUrl = '',
+      googleWebClientId = '';
 
   factory AppConfig.fromDartDefines() {
     const configuredEnvironment = String.fromEnvironment(
@@ -44,6 +46,7 @@ class AppConfig {
       microLessonCdnBaseUrl: const String.fromEnvironment(
         'MICRO_LESSON_CDN_BASE_URL',
       ),
+      googleWebClientId: const String.fromEnvironment('GOOGLE_WEB_CLIENT_ID'),
     );
   }
 
@@ -53,6 +56,11 @@ class AppConfig {
   final String supabasePublishableKey;
   final String apiBaseUrl;
   final String microLessonCdnBaseUrl;
+  // The OAuth "Web application" client ID from Google Cloud Console. This is
+  // a public identifier (not a secret -- the matching client secret lives
+  // only in Supabase's Google provider config) that google_sign_in uses as
+  // its serverClientId to request a Supabase-verifiable ID token.
+  final String googleWebClientId;
 
   bool get isProduction => environment == AppEnvironment.production;
 
@@ -64,4 +72,7 @@ class AppConfig {
 
   bool get hasMicroLessonCdnConfiguration =>
       Uri.tryParse(microLessonCdnBaseUrl)?.hasScheme == true;
+
+  bool get hasGoogleSignInConfiguration =>
+      hasSupabaseConfiguration && googleWebClientId.isNotEmpty;
 }

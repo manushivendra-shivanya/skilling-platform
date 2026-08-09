@@ -116,6 +116,48 @@ class DevelopmentAuthController extends Notifier<DevelopmentAuthState> {
     );
   }
 
+  Future<bool> signInWithGoogle() async {
+    final repository = ref.read(googleAuthRepositoryProvider);
+    if (repository == null) {
+      state = state.copyWith(
+        failure: const AuthenticationFailure(
+          'Google sign-in is not configured for this build.',
+        ),
+      );
+      return false;
+    }
+
+    state = state.copyWith(isVerifying: true, clearFailure: true);
+    final result = await repository.signIn();
+    return result.when<Future<bool>>(
+      success: (session) async {
+        final saveResult = await ref
+            .read(candidateSessionRepositoryProvider)
+            .saveSession(session);
+        return saveResult.when(
+          success: (_) {
+            ref.invalidate(candidateSessionControllerProvider);
+            state = state.copyWith(isVerifying: false, clearFailure: true);
+            unawaited(
+              ref
+                  .read(analyticsTrackerProvider)
+                  .track(AnalyticsEvent.developmentLoginCompleted()),
+            );
+            return true;
+          },
+          failure: (failure) {
+            state = state.copyWith(failure: failure, isVerifying: false);
+            return false;
+          },
+        );
+      },
+      failure: (failure) {
+        state = state.copyWith(failure: failure, isVerifying: false);
+        return Future.value(false);
+      },
+    );
+  }
+
   Future<bool> resendOtp() {
     final phoneNumber = state.challenge?.phoneNumber;
     if (phoneNumber == null) {

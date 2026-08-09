@@ -14,3 +14,6 @@ npm-debug.log*
 
 # Wrangler local dev state (created by `wrangler r2 object put` etc.)
 .wrangler/
+
+# Supabase CLI local project-link state
+supabase/.temp/

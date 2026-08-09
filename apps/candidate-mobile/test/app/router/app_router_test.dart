@@ -5,7 +5,7 @@ import '../../helpers/pump_app.dart';
 
 void main() {
   test('workplace simulation routes stay under the Practice hierarchy', () {
-    expect(workplaceSimulationHubRoutePath, startsWith('$practiseRoutePath/'));
+    expect(workplaceSimulationHubRoutePath, startsWith('/practise/'));
     expect(
       workplaceSimulationRoutePath,
       startsWith('$workplaceSimulationHubRoutePath/'),

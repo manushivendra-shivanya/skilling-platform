@@ -7,6 +7,7 @@ import { DevModule } from './dev/dev.module';
 import { EmployerModule } from './employer/employer.module';
 import { JobSourcesModule } from './integrations/job-sources/job-sources.module';
 import { JobsModule } from './jobs/jobs.module';
+import { ShiftsModule } from './shifts/shifts.module';
 import { WorkplaceSimulationModule } from './workplace-simulation/workplace-simulation.module';
 
 @Module({
@@ -19,6 +20,7 @@ import { WorkplaceSimulationModule } from './workplace-simulation/workplace-simu
     EmployerModule,
     JobSourcesModule,
     JobsModule,
+    ShiftsModule,
     WorkplaceSimulationModule,
   ],
 })

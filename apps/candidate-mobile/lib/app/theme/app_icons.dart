@@ -9,6 +9,7 @@ abstract final class AppIcons {
   static const IconData learn = Icons.menu_book_outlined;
   static const IconData practise = Icons.inventory_2_outlined;
   static const IconData jobs = Icons.work_outline;
+  static const IconData shift = Icons.bolt_outlined;
   static const IconData profile = Icons.person_outline;
   static const IconData coach = Icons.auto_awesome_outlined;
 

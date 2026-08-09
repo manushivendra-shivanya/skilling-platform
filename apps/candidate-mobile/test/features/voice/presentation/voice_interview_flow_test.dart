@@ -13,7 +13,7 @@ void main() {
   testWidgets(
     'candidate records turns, reviews transcripts and requests human review',
     (tester) async {
-      await tester.binding.setSurfaceSize(const Size(800, 1100));
+      await tester.binding.setSurfaceSize(const Size(800, 1400));
       addTearDown(() => tester.binding.setSurfaceSize(null));
       final analytics = InMemoryAnalyticsTracker();
       final voice = InMemoryVoiceInterviewRepository();
@@ -37,10 +37,14 @@ void main() {
         voiceCaptureRepository: capture,
       );
       await tester.pumpAndSettle();
+      // .first, not .last -- the new horizontal "Today's services" rail
+      // adds a second Scrollable to Home's tree; .first is the main
+      // vertical list this button actually lives in, matching the
+      // pattern used everywhere else in this codebase.
       await tester.scrollUntilVisible(
         find.text('Start voice practice'),
         300,
-        scrollable: find.byType(Scrollable).last,
+        scrollable: find.byType(Scrollable).first,
       );
       await tester.tap(find.text('Start voice practice'));
       await tester.pumpAndSettle();
