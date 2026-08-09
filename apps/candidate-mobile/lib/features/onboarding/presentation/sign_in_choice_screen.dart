@@ -8,6 +8,7 @@ import '../../../app/theme/app_spacing.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_feedback.dart';
 import '../../../core/widgets/app_state_view.dart';
+import '../../../core/widgets/backend_warmup_banner.dart';
 import '../../authentication/presentation/development_auth_controller.dart';
 import '../domain/candidate_language.dart';
 import 'language_selection_controller.dart';
@@ -99,6 +100,10 @@ class _SignInChoiceContent extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          // Watching this fires the backend wake-up ping right as sign-in
+          // starts, well before the first real request Home/Jobs/Shift
+          // will make once the candidate is in.
+          const BackendWarmupBanner(),
           const Icon(AppIcons.coach, size: 56, color: AppColors.brand),
           const SizedBox(height: AppSpacing.xl),
           Text(
