@@ -1,7 +1,7 @@
 import { ZavudevService } from './zavudev.service';
 
 describe('ZavudevService', () => {
-  it('always sends via WhatsApp with SMS fallback explicitly, never auto-routing', async () => {
+  it('always sends via SMS explicitly, never auto-routing', async () => {
     const send = jest.fn().mockResolvedValue({ message: { id: 'msg-1' } });
     const client = { messages: { send } };
     const service = new ZavudevService(client as never, 'real-api-key');
@@ -15,8 +15,7 @@ describe('ZavudevService', () => {
     expect(send).toHaveBeenCalledWith({
       to: '+911234567890',
       text: 'Your code is 123456',
-      channel: 'whatsapp',
-      fallbackEnabled: true,
+      channel: 'sms',
       idempotencyKey: 'webhook-id-1',
     });
   });

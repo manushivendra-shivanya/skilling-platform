@@ -11,18 +11,18 @@ export class ZavudevService {
   ) {}
 
   /**
-   * `channel: 'whatsapp'` with `fallbackEnabled: true` -- WhatsApp is
-   * free under the account's monthly app-message quota, while SMS is
-   * billed per-message from the pay-as-you-go credit balance, and
-   * WhatsApp penetration is high for this app's audience. `fallbackEnabled`
-   * (the SDK defaults this to true; set explicitly here so the choice is
-   * visible, not implicit) means Zavu automatically retries via SMS if
-   * the recipient has no WhatsApp or the WhatsApp send fails, so OTP
-   * delivery never silently depends on WhatsApp alone. `channel` is
-   * always explicit, never omitted/`'auto'` -- `to` here is always a
-   * phone number (from Supabase's Send SMS hook payload), and being
-   * explicit keeps this behavior an intentional choice rather than
-   * whatever Zavu's auto-routing happens to decide.
+   * `channel: 'sms'`, always explicit, never omitted/`'auto'` -- this was
+   * originally WhatsApp-with-SMS-fallback (free under the account's
+   * monthly quota, vs. SMS billed per-message from the pay-as-you-go
+   * balance), but the account only has an SMS sender connected today, not
+   * a WhatsApp one (that needs a full Meta Business/WABA verification,
+   * not a quick dashboard toggle). Sending via 'whatsapp' with zero
+   * WhatsApp senders configured is not the same situation
+   * `fallbackEnabled` covers (a specific recipient lacking WhatsApp) and
+   * was likely to just fail outright. `to` here is always a phone number
+   * (from Supabase's Send SMS hook payload), so there is no legitimate
+   * case for auto-routing regardless. Revisit once a WhatsApp sender is
+   * connected in Zavu.
    *
    * `idempotencyKey` is the Send SMS hook's own `webhook-id` header value
    * (the caller passes it through) -- Supabase, like most webhook
@@ -45,8 +45,7 @@ export class ZavudevService {
     await this.client.messages.send({
       to: params.to,
       text: params.text,
-      channel: 'whatsapp',
-      fallbackEnabled: true,
+      channel: 'sms',
       idempotencyKey: params.idempotencyKey,
     });
   }
