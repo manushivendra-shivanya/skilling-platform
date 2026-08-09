@@ -1,0 +1,17 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "npm run build",
+  "rewrites": [{ "source": "/(.*)", "destination": "/api" }],
+  "functions": {
+    "api/index.js": {
+      "maxDuration": 60
+    }
+  },
+  "fluid": true,
+  "crons": [
+    {
+      "path": "/v1/internal/cron/job-sync",
+      "schedule": "0 0 1 * *"
+    }
+  ]
+}

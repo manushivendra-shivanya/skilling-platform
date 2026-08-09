@@ -32,11 +32,13 @@ export class DevController {
   }
 
   /**
-   * Triggers a job source sync on demand, without waiting for the
-   * ~30-day auto-sync interval -- e.g. `POST /v1/dev/job-sync` (all
-   * sources) or `POST /v1/dev/job-sync?source=adzuna` (one source). This
-   * is the expected way to force a fresh refresh; the auto-sync is kept
-   * infrequent on purpose (see JobSyncScheduler's comment).
+   * Triggers a job source sync on demand in development, without waiting
+   * for the scheduled sync -- e.g. `POST /v1/dev/job-sync` (all sources)
+   * or `POST /v1/dev/job-sync?source=adzuna` (one source). This route
+   * 404s in production like every other route in this controller; the
+   * production schedule is a Vercel Cron Job calling
+   * `POST /v1/internal/cron/job-sync` (see `JobSyncCronController` and
+   * `vercel.json`), not this route.
    */
   @Post('job-sync')
   async triggerJobSync(@Query('source') source?: string) {

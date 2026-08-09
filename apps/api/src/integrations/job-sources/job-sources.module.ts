@@ -6,7 +6,7 @@ import { GreenhouseAdapter } from './greenhouse.adapter';
 import { HTTP_FETCHER, HttpFetcher } from './http-fetcher';
 import { JobSourceAdapter } from './job-source-adapter';
 import { JOB_SOURCE_ADAPTERS } from './job-source-adapters.token';
-import { JobSyncScheduler } from './job-sync.scheduler';
+import { JobSyncCronController } from './job-sync.controller';
 import { JobSyncService } from './job-sync.service';
 import { JoobleAdapter } from './jooble.adapter';
 import { LeverAdapter } from './lever.adapter';
@@ -79,8 +79,8 @@ import {
       ],
     },
     JobSyncService,
-    JobSyncScheduler,
   ],
+  controllers: [JobSyncCronController],
   exports: [JobSyncService],
 })
 export class JobSourcesModule {}
