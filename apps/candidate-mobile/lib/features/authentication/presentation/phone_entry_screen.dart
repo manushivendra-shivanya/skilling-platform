@@ -124,7 +124,11 @@ class _PhoneEntryScreenState extends ConsumerState<PhoneEntryScreen> {
               ),
               const SizedBox(height: AppSpacing.xl),
               AppButton(
-                label: 'Send development OTP',
+                // Every other string on this screen already branches on
+                // isRealBackend; this one did not, so a build wired to a
+                // real Supabase project told the candidate it was sending
+                // a "development OTP" while sending them a real one.
+                label: isRealBackend ? 'Send OTP' : 'Send development OTP',
                 isLoading: authState.isRequesting,
                 onPressed: _requestOtp,
               ),
