@@ -2,11 +2,15 @@ import 'package:candidate_mobile/app/dependencies.dart';
 import 'package:candidate_mobile/app/theme/app_theme.dart';
 import 'package:candidate_mobile/core/errors/result.dart';
 import 'package:candidate_mobile/core/repositories/candidate_session_repository.dart';
+import 'package:candidate_mobile/core/storage/secure_key_value_store.dart';
+import 'package:candidate_mobile/features/jobs/data/secure_saved_jobs_repository.dart';
 import 'package:candidate_mobile/features/jobs/domain/jobs_repository.dart';
 import 'package:candidate_mobile/features/jobs/presentation/jobs_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+import '../../../helpers/fake_career_passport_repository.dart';
 
 /// Proves the source provenance caption and the external-apply button
 /// render correctly per `JobOpportunity.source`, end to end against
@@ -133,6 +137,17 @@ ProviderContainer _buildContainer(JobsRepository repository) =>
           ),
         ),
         jobsRepositoryProvider.overrideWithValue(repository),
+        // JobsController reads both of these to compute match scores --
+        // always overridden here (same rationale as pump_app.dart's
+        // unconditional overrides) so neither falls through to a real
+        // secure-storage-backed provider that hangs on the unmocked
+        // platform channel in this bare-ProviderContainer harness.
+        savedJobsRepositoryProvider.overrideWithValue(
+          SecureSavedJobsRepository(InMemorySecureKeyValueStore()),
+        ),
+        careerPassportRepositoryProvider.overrideWithValue(
+          const NoEvidenceCareerPassportRepository(),
+        ),
       ],
     );
 

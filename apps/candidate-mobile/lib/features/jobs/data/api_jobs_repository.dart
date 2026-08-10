@@ -154,6 +154,7 @@ class ApiJobsRepository implements JobsRepository {
 
   JobOpportunity _fromJson(Map<String, Object?> json) {
     final title = json['title'] as String? ?? '';
+    final publishedAtRaw = json['published_at'] as String?;
     return JobOpportunity(
       id: json['id'] as String? ?? '',
       title: title,
@@ -163,6 +164,9 @@ class ApiJobsRepository implements JobsRepository {
       description: json['description'] as String? ?? '',
       source: json['source'] as String? ?? 'flora',
       applyUrl: json['apply_url'] as String?,
+      publishedAt: publishedAtRaw == null
+          ? null
+          : DateTime.tryParse(publishedAtRaw),
     );
   }
 

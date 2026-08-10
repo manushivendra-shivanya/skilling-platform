@@ -10,6 +10,7 @@ export interface Job {
   description: string;
   source: string;
   apply_url: string | null;
+  published_at: string | null;
 }
 
 export interface JobApplication {
@@ -29,7 +30,9 @@ export class JobsService {
   async listPublishedJobs(): Promise<Job[]> {
     const { data, error } = await this.supabase.admin
       .from('jobs')
-      .select('id, employer_name, title, location, description, source, apply_url')
+      .select(
+        'id, employer_name, title, location, description, source, apply_url, published_at',
+      )
       .eq('status', 'published')
       .order('published_at', { ascending: false });
     if (error) {

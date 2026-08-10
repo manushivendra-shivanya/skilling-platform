@@ -112,6 +112,22 @@ describe('JobsService', () => {
     expect(jobs.map((job) => job.id)).toEqual(['job-1']);
   });
 
+  it('passes through published_at so the mobile client can show/filter by posting date', async () => {
+    const admin = new FakeSupabaseAdmin();
+    admin.jobs = [
+      {
+        id: 'job-1',
+        status: 'published',
+        published_at: '2026-08-05T14:47:59+00:00',
+      } as unknown as { id: string; status: string },
+    ];
+    const service = buildService(admin);
+
+    const jobs = await service.listPublishedJobs();
+
+    expect(jobs[0].published_at).toBe('2026-08-05T14:47:59+00:00');
+  });
+
   it('rejects applying to a job that is not published', async () => {
     const admin = new FakeSupabaseAdmin();
     admin.jobs = [{ id: 'job-1', status: 'draft' }];

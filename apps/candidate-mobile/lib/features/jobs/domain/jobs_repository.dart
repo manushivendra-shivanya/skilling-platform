@@ -10,6 +10,7 @@ class JobOpportunity {
     required this.description,
     required this.source,
     this.applyUrl,
+    this.publishedAt,
   });
 
   final String id;
@@ -33,6 +34,56 @@ class JobOpportunity {
   /// Flora employer behind those listings to receive an internal
   /// application, so the candidate is sent to the real listing instead.
   final String? applyUrl;
+
+  /// Null for the local demo catalogue and for any real row that somehow
+  /// has no `published_at` (treated as "unknown recency", never as "just
+  /// posted") -- see [jobPostedLabel] and the "Date posted" filter.
+  final DateTime? publishedAt;
+}
+
+/// Coarse, keyword-derived grouping used for the "Role type" filter and for
+/// [deriveJobMatch]'s fit-against-evidence signal. Mirrors
+/// [jobTitleLooksLikeSupervisorRole]'s own reasoning: there is no role-level
+/// field in the `jobs` schema today, so this reads the title the same way a
+/// human scanning the list would, rather than claiming a precise taxonomy.
+enum JobRoleBucket { warehouse, dispatch, inventory, other }
+
+const _roleBucketKeywords = {
+  JobRoleBucket.dispatch: ['dispatch', 'delivery', 'logistics', 'route'],
+  JobRoleBucket.inventory: ['inventory', 'stock'],
+  JobRoleBucket.warehouse: ['warehouse', 'receiving', 'put-away', 'putaway'],
+};
+
+/// Checked in the order dispatch -> inventory -> warehouse so a title
+/// mentioning both ("Warehouse & Logistics In-Charge") lands on the more
+/// specific operational area (dispatch/logistics) rather than the generic
+/// "warehouse" catch-all.
+JobRoleBucket jobRoleBucket(String title) {
+  final normalized = title.toLowerCase();
+  for (final bucket in [
+    JobRoleBucket.dispatch,
+    JobRoleBucket.inventory,
+    JobRoleBucket.warehouse,
+  ]) {
+    if (_roleBucketKeywords[bucket]!.any(normalized.contains)) return bucket;
+  }
+  return JobRoleBucket.other;
+}
+
+/// "12d ago" / "5w ago" / "3mo ago" style label, matching the density a
+/// scannable job list needs (not a full date). Null [publishedAt] reads as
+/// "Recently listed" rather than a blank -- this app never fabricates a
+/// posting date it doesn't have.
+String jobPostedLabel(DateTime? publishedAt, {DateTime? now}) {
+  if (publishedAt == null) return 'Recently listed';
+  final reference = now ?? DateTime.now();
+  final days = reference.difference(publishedAt).inDays;
+  if (days <= 0) return 'Today';
+  if (days == 1) return '1d ago';
+  if (days < 7) return '${days}d ago';
+  if (days < 30) return '${(days / 7).floor()}w ago';
+  if (days < 365) return '${(days / 30).floor()}mo ago';
+  return '${(days / 365).floor()}y ago';
 }
 
 /// Consent purposes/versions the Jobs feature grants directly against

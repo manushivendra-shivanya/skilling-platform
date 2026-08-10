@@ -27,7 +27,9 @@ import '../features/intelligence/data/secure_candidate_intelligence_repository.d
 import '../features/intelligence/domain/candidate_intelligence_repository.dart';
 import '../features/jobs/data/api_jobs_repository.dart';
 import '../features/jobs/data/local_mock_jobs_repository.dart';
+import '../features/jobs/data/secure_saved_jobs_repository.dart';
 import '../features/jobs/domain/jobs_repository.dart';
+import '../features/jobs/domain/saved_jobs_repository.dart';
 import '../features/learning/data/mock_learning_repository.dart';
 import '../features/learning/domain/learning_repository.dart';
 import '../features/micro_lessons/data/asset_micro_lesson_clip_repository.dart';
@@ -177,6 +179,13 @@ final jobsRepositoryProvider = Provider<JobsRepository>((ref) {
   }
   return LocalMockJobsRepository(ref.watch(secureKeyValueStoreProvider));
 });
+
+// On-device only regardless of backend configuration -- there is no
+// `saved_jobs` table, this is a bookmark list scoped to this device, same
+// posture as micro-lesson/certification-exam attempt storage.
+final savedJobsRepositoryProvider = Provider<SavedJobsRepository>(
+  (ref) => SecureSavedJobsRepository(ref.watch(secureKeyValueStoreProvider)),
+);
 
 final shiftsRepositoryProvider = Provider<ShiftsRepository>((ref) {
   final config = ref.watch(appConfigProvider);
