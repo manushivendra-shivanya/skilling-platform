@@ -33,7 +33,7 @@ class SignInCopy {
   const SignInCopy({
     required this.title,
     required this.message,
-    required this.phoneLabel,
+    required this.emailLabel,
     required this.googleLabel,
     required this.googleStatus,
     required this.privacyLead,
@@ -46,8 +46,8 @@ class SignInCopy {
     return switch (language) {
       CandidateLanguage.english => const SignInCopy(
         title: 'How would you like to continue?',
-        message: 'Use your mobile number to create or resume your profile.',
-        phoneLabel: 'Continue with phone',
+        message: 'Use your email to create or resume your profile.',
+        emailLabel: 'Continue with email',
         googleLabel: 'Continue with Google',
         googleStatus: 'Planned — not configured yet',
         privacyLead: 'By continuing, you agree to our',
@@ -57,9 +57,8 @@ class SignInCopy {
       ),
       CandidateLanguage.hindi => const SignInCopy(
         title: 'आप कैसे आगे बढ़ना चाहेंगे?',
-        message:
-            'अपनी प्रोफ़ाइल बनाने या जारी रखने के लिए मोबाइल नंबर इस्तेमाल करें।',
-        phoneLabel: 'फ़ोन नंबर से आगे बढ़ें',
+        message: 'अपनी प्रोफ़ाइल बनाने या जारी रखने के लिए ईमेल इस्तेमाल करें।',
+        emailLabel: 'ईमेल से आगे बढ़ें',
         googleLabel: 'Google से आगे बढ़ें',
         googleStatus: 'जल्द उपलब्ध होगा — अभी सेट अप नहीं है',
         privacyLead: 'आगे बढ़कर आप हमारी',
@@ -69,9 +68,8 @@ class SignInCopy {
       ),
       CandidateLanguage.hinglish => const SignInCopy(
         title: 'Aap kaise continue karna chahenge?',
-        message:
-            'Profile banane ya resume karne ke liye mobile number use karein.',
-        phoneLabel: 'Phone se continue karein',
+        message: 'Profile banane ya resume karne ke liye email use karein.',
+        emailLabel: 'Email se continue karein',
         googleLabel: 'Google se continue karein',
         googleStatus: 'Jald aa raha hai — abhi setup nahi hai',
         privacyLead: 'Continue karke aap hamari',
@@ -84,7 +82,7 @@ class SignInCopy {
 
   final String title;
   final String message;
-  final String phoneLabel;
+  final String emailLabel;
   final String googleLabel;
   final String googleStatus;
   final String privacyLead;

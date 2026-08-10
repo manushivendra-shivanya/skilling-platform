@@ -9,24 +9,26 @@ class MockDevelopmentAuthRepository implements DevelopmentAuthRepository {
 
   static const developmentOtp = '123456';
 
+  static final _emailPattern = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
+
   final bool _enabled;
   final DateTime Function() _clock;
   int _challengeSequence = 0;
 
   @override
-  Future<Result<OtpChallenge>> requestOtp(String phoneNumber) async {
+  Future<Result<OtpChallenge>> requestOtp(String email) async {
     if (!_enabled) {
       return const ResultFailure(
         AuthenticationFailure(
-          'Development phone sign-in is unavailable in production builds.',
+          'Development email sign-in is unavailable in production builds.',
         ),
       );
     }
 
-    final normalizedPhone = phoneNumber.replaceAll(RegExp(r'\D'), '');
-    if (!RegExp(r'^[6-9]\d{9}$').hasMatch(normalizedPhone)) {
+    final normalized = email.trim().toLowerCase();
+    if (!_emailPattern.hasMatch(normalized)) {
       return const ResultFailure(
-        ValidationFailure('Enter a valid 10-digit Indian mobile number.'),
+        ValidationFailure('Enter a valid email address.'),
       );
     }
 
@@ -35,7 +37,7 @@ class MockDevelopmentAuthRepository implements DevelopmentAuthRepository {
     return Success(
       OtpChallenge(
         id: 'dev-otp-$_challengeSequence',
-        phoneNumber: normalizedPhone,
+        contact: normalized,
         expiresAt: now.add(const Duration(minutes: 2)),
         resendAvailableAt: now.add(const Duration(seconds: 30)),
       ),
@@ -50,25 +52,24 @@ class MockDevelopmentAuthRepository implements DevelopmentAuthRepository {
     if (!_enabled) {
       return const ResultFailure(
         AuthenticationFailure(
-          'Development phone sign-in is unavailable in production builds.',
+          'Development email sign-in is unavailable in production builds.',
         ),
       );
     }
     if (!_clock().isBefore(challenge.expiresAt)) {
       return const ResultFailure(
-        TimeoutFailure('This OTP has expired. Request a new code.'),
+        TimeoutFailure('This code has expired. Request a new one.'),
       );
     }
     if (otp != developmentOtp) {
       return const ResultFailure(
-        AuthenticationFailure('That OTP is incorrect. Try 123456.'),
+        AuthenticationFailure('That code is incorrect. Try 123456.'),
       );
     }
 
-    final lastFourDigits = challenge.phoneNumber.substring(6);
     return Success(
       CandidateSession(
-        candidateId: 'dev-candidate-$lastFourDigits',
+        candidateId: 'dev-candidate-${challenge.contact.split('@').first}',
         isAuthenticated: true,
       ),
     );

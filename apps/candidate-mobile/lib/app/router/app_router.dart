@@ -9,8 +9,8 @@ import '../../core/analytics/analytics_tracker.dart';
 import '../../core/repositories/candidate_session_repository.dart';
 import '../../core/widgets/app_error_boundary.dart';
 import '../../features/authentication/presentation/authenticated_placeholder_screen.dart';
+import '../../features/authentication/presentation/email_entry_screen.dart';
 import '../../features/authentication/presentation/otp_entry_screen.dart';
-import '../../features/authentication/presentation/phone_entry_screen.dart';
 import '../../features/coach/presentation/coach_screen.dart';
 import '../../features/dev_tools/presentation/design_system_gallery_screen.dart';
 import '../../features/home/presentation/home_dashboard_screen.dart';
@@ -66,8 +66,8 @@ const languageSelectionRoutePath = '/welcome/language';
 const languageSelectionRouteName = 'language-selection';
 const signInChoiceRoutePath = '/welcome/sign-in';
 const signInChoiceRouteName = 'sign-in-choice';
-const phoneEntryRoutePath = '/auth/phone';
-const phoneEntryRouteName = 'phone-entry';
+const emailEntryRoutePath = '/auth/email';
+const emailEntryRouteName = 'email-entry';
 const otpEntryRoutePath = '/auth/otp';
 const otpEntryRouteName = 'otp-entry';
 const authenticatedRoutePath = '/auth/success';
@@ -356,14 +356,14 @@ GoRouter createAppRouter({
         path: signInChoiceRoutePath,
         name: signInChoiceRouteName,
         builder: (context, state) => SignInChoiceScreen(
-          onContinueWithPhone: () => context.push(phoneEntryRoutePath),
+          onContinueWithEmail: () => context.push(emailEntryRoutePath),
           onGoogleAuthenticated: () => context.go(authenticatedRoutePath),
         ),
       ),
       GoRoute(
-        path: phoneEntryRoutePath,
-        name: phoneEntryRouteName,
-        builder: (context, state) => PhoneEntryScreen(
+        path: emailEntryRoutePath,
+        name: emailEntryRouteName,
+        builder: (context, state) => EmailEntryScreen(
           onOtpRequested: () => context.push(otpEntryRoutePath),
         ),
       ),
@@ -372,7 +372,7 @@ GoRouter createAppRouter({
         name: otpEntryRouteName,
         builder: (context, state) => OtpEntryScreen(
           onAuthenticated: () => context.go(authenticatedRoutePath),
-          onRequestNewOtp: () => context.go(phoneEntryRoutePath),
+          onRequestNewOtp: () => context.go(emailEntryRoutePath),
         ),
       ),
       GoRoute(

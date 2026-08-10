@@ -5,28 +5,42 @@ import '../../../core/errors/result.dart';
 import '../../../core/repositories/candidate_session_repository.dart';
 import '../domain/development_auth_repository.dart';
 
-class SupabasePhoneAuthRepository implements DevelopmentAuthRepository {
-  SupabasePhoneAuthRepository(this._client, {DateTime Function()? clock})
+/// Email delivers through Supabase's own mail sender (or a configured SMTP
+/// relay) rather than a third-party SMS gateway. Phone OTP was dropped as
+/// the primary channel because sending SMS to Indian numbers requires DLT
+/// registration (a TRAI-mandated process, independent of any SMS vendor)
+/// that stays outside this app's control; email and Google Sign-In need no
+/// equivalent per-message gate.
+class SupabaseEmailAuthRepository implements DevelopmentAuthRepository {
+  SupabaseEmailAuthRepository(this._client, {DateTime Function()? clock})
     : _clock = clock ?? DateTime.now;
 
   final SupabaseClient _client;
   final DateTime Function() _clock;
 
+  static final _emailPattern = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
+
   @override
-  Future<Result<OtpChallenge>> requestOtp(String phoneNumber) async {
-    final normalizedPhone = phoneNumber.replaceAll(RegExp(r'\D'), '');
-    if (!RegExp(r'^[6-9]\d{9}$').hasMatch(normalizedPhone)) {
+  Future<Result<OtpChallenge>> requestOtp(String email) async {
+    final normalized = email.trim().toLowerCase();
+    if (!_emailPattern.hasMatch(normalized)) {
       return const ResultFailure(
-        ValidationFailure('Enter a valid 10-digit Indian mobile number.'),
+        ValidationFailure('Enter a valid email address.'),
       );
     }
     try {
-      await _client.auth.signInWithOtp(phone: '+91$normalizedPhone');
+      // shouldCreateUser: true -- this is sign-up-or-sign-in in one step,
+      // matching how the phone flow always treated a new number as a new
+      // candidate. There is no separate registration screen.
+      await _client.auth.signInWithOtp(
+        email: normalized,
+        shouldCreateUser: true,
+      );
       final now = _clock();
       return Success(
         OtpChallenge(
-          id: 'supabase-phone-otp',
-          phoneNumber: normalizedPhone,
+          id: 'supabase-email-otp',
+          contact: normalized,
           expiresAt: now.add(const Duration(minutes: 5)),
           resendAvailableAt: now.add(const Duration(seconds: 60)),
         ),
@@ -34,7 +48,7 @@ class SupabasePhoneAuthRepository implements DevelopmentAuthRepository {
     } on AuthException catch (error, stackTrace) {
       return ResultFailure(
         AuthenticationFailure(
-          'We could not send the OTP. Please wait and try again.',
+          'We could not send the code. Please wait and try again.',
           cause: error,
           stackTrace: stackTrace,
         ),
@@ -49,19 +63,19 @@ class SupabasePhoneAuthRepository implements DevelopmentAuthRepository {
   }) async {
     if (!_clock().isBefore(challenge.expiresAt)) {
       return const ResultFailure(
-        TimeoutFailure('This OTP has expired. Request a new code.'),
+        TimeoutFailure('This code has expired. Request a new one.'),
       );
     }
     try {
       final response = await _client.auth.verifyOTP(
-        type: OtpType.sms,
+        type: OtpType.email,
         token: otp,
-        phone: '+91${challenge.phoneNumber}',
+        email: challenge.contact,
       );
       final user = response.user;
       if (user == null || response.session == null) {
         return const ResultFailure(
-          AuthenticationFailure('OTP verification did not create a session.'),
+          AuthenticationFailure('Code verification did not create a session.'),
         );
       }
       return Success(
@@ -70,7 +84,7 @@ class SupabasePhoneAuthRepository implements DevelopmentAuthRepository {
     } on AuthException catch (error, stackTrace) {
       return ResultFailure(
         AuthenticationFailure(
-          'That OTP could not be verified. Check the code and try again.',
+          'That code could not be verified. Check it and try again.',
           cause: error,
           stackTrace: stackTrace,
         ),

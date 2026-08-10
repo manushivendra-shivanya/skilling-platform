@@ -54,11 +54,11 @@ class DevelopmentAuthController extends Notifier<DevelopmentAuthState> {
     state = state.copyWith(clearFailure: true);
   }
 
-  Future<bool> requestOtp(String phoneNumber) async {
+  Future<bool> requestOtp(String email) async {
     state = state.copyWith(isRequesting: true, clearFailure: true);
     final result = await ref
         .read(developmentAuthRepositoryProvider)
-        .requestOtp(phoneNumber);
+        .requestOtp(email);
     return result.when(
       success: (challenge) {
         state = DevelopmentAuthState(challenge: challenge);
@@ -167,16 +167,16 @@ class DevelopmentAuthController extends Notifier<DevelopmentAuthState> {
   }
 
   Future<bool> resendOtp() {
-    final phoneNumber = state.challenge?.phoneNumber;
-    if (phoneNumber == null) {
+    final contact = state.challenge?.contact;
+    if (contact == null) {
       state = state.copyWith(
         failure: const AuthenticationFailure(
-          'Enter your phone number again to request an OTP.',
+          'Enter your email again to request a code.',
         ),
       );
       return Future.value(false);
     }
-    return requestOtp(phoneNumber);
+    return requestOtp(contact);
   }
 
   void clear() {

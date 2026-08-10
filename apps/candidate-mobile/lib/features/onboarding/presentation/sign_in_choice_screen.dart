@@ -15,12 +15,12 @@ import 'language_selection_controller.dart';
 
 class SignInChoiceScreen extends ConsumerWidget {
   const SignInChoiceScreen({
-    required this.onContinueWithPhone,
+    required this.onContinueWithEmail,
     required this.onGoogleAuthenticated,
     super.key,
   });
 
-  final VoidCallback onContinueWithPhone;
+  final VoidCallback onContinueWithEmail;
   final VoidCallback onGoogleAuthenticated;
 
   @override
@@ -49,7 +49,7 @@ class SignInChoiceScreen extends ConsumerWidget {
             }
             return _SignInChoiceContent(
               language: language,
-              onContinueWithPhone: onContinueWithPhone,
+              onContinueWithEmail: onContinueWithEmail,
               onGoogleAuthenticated: onGoogleAuthenticated,
             );
           },
@@ -62,12 +62,12 @@ class SignInChoiceScreen extends ConsumerWidget {
 class _SignInChoiceContent extends ConsumerWidget {
   const _SignInChoiceContent({
     required this.language,
-    required this.onContinueWithPhone,
+    required this.onContinueWithEmail,
     required this.onGoogleAuthenticated,
   });
 
   final CandidateLanguage language;
-  final VoidCallback onContinueWithPhone;
+  final VoidCallback onContinueWithEmail;
   final VoidCallback onGoogleAuthenticated;
 
   Future<void> _signInWithGoogle(BuildContext context, WidgetRef ref) async {
@@ -121,9 +121,9 @@ class _SignInChoiceContent extends ConsumerWidget {
           ),
           const SizedBox(height: AppSpacing.xxl),
           AppButton(
-            label: copy.phoneLabel,
-            leadingIcon: Icons.phone_android,
-            onPressed: onContinueWithPhone,
+            label: copy.emailLabel,
+            leadingIcon: Icons.email_outlined,
+            onPressed: onContinueWithEmail,
           ),
           const SizedBox(height: AppSpacing.sm),
           AppButton(

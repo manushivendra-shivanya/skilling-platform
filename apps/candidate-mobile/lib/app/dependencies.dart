@@ -13,10 +13,10 @@ import '../core/storage/local_key_value_store.dart';
 import '../core/storage/secure_key_value_store.dart';
 import '../features/authentication/data/google_auth_repository.dart';
 import '../features/authentication/data/mock_development_auth_repository.dart';
+import '../features/authentication/data/supabase_email_auth_repository.dart';
 import '../features/certification_exam/data/asset_certification_exam_repository.dart';
 import '../features/certification_exam/data/secure_certification_exam_attempt_repository.dart';
 import '../features/certification_exam/domain/certification_exam_repository.dart';
-import '../features/authentication/data/supabase_phone_auth_repository.dart';
 import '../features/authentication/domain/development_auth_repository.dart';
 import '../features/career_passport/data/wms_career_passport_repository.dart';
 import '../features/career_passport/domain/career_passport_repository.dart';
@@ -97,7 +97,7 @@ final developmentAuthRepositoryProvider = Provider<DevelopmentAuthRepository>((
 ) {
   final config = ref.watch(appConfigProvider);
   if (config.hasSupabaseConfiguration) {
-    return SupabasePhoneAuthRepository(Supabase.instance.client);
+    return SupabaseEmailAuthRepository(Supabase.instance.client);
   }
   return MockDevelopmentAuthRepository(!config.isProduction);
 });
