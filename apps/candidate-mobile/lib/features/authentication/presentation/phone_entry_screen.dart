@@ -120,6 +120,17 @@ class _PhoneEntryScreenState extends ConsumerState<PhoneEntryScreen> {
                 leadingIcon: Icons.phone_outlined,
                 enabled: !authState.isRequesting,
                 semanticLabel: 'Indian mobile number, 10 digits',
+                // The failure only cleared when the next request started, so
+                // a validation error stayed on screen while the candidate
+                // corrected the number -- making a now-valid number look
+                // rejected. Clear it as soon as they edit.
+                onChanged: (_) {
+                  if (authState.failure != null) {
+                    ref
+                        .read(developmentAuthControllerProvider.notifier)
+                        .clearFailure();
+                  }
+                },
                 onSubmitted: (_) => _requestOtp(),
               ),
               const SizedBox(height: AppSpacing.xl),
@@ -134,7 +145,17 @@ class _PhoneEntryScreenState extends ConsumerState<PhoneEntryScreen> {
               ),
               const SizedBox(height: AppSpacing.sm),
               Text(
-                'Your number is kept only in memory for this mock sign-in and is not sent to a server.',
+                // This one was hardcoded too, and unlike the button label it
+                // stated something untrue about data handling: a configured
+                // build does send the number to Supabase, which forwards it
+                // to the SMS provider. Consent copy has to describe what the
+                // build actually does.
+                isRealBackend
+                    ? 'Your number is sent to our servers to text you a '
+                          'one-time code, and is used to create or resume '
+                          'your profile.'
+                    : 'Your number is kept only in memory for this mock '
+                          'sign-in and is not sent to a server.',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),

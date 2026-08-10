@@ -46,6 +46,14 @@ class DevelopmentAuthController extends Notifier<DevelopmentAuthState> {
   @override
   DevelopmentAuthState build() => const DevelopmentAuthState();
 
+  /// Drops a validation or delivery error without starting a new request, so
+  /// a message about the previous attempt stops contradicting what the
+  /// candidate has since typed.
+  void clearFailure() {
+    if (state.failure == null) return;
+    state = state.copyWith(clearFailure: true);
+  }
+
   Future<bool> requestOtp(String phoneNumber) async {
     state = state.copyWith(isRequesting: true, clearFailure: true);
     final result = await ref
