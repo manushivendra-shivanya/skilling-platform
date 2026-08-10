@@ -126,6 +126,37 @@ jobs:
           --dart-define=GOOGLE_WEB_CLIENT_ID="$GOOGLE_WEB_CLIENT_ID"
           --dart-define=MICRO_LESSON_CDN_BASE_URL="$MICRO_LESSON_CDN_BASE_URL"
 
+      # Google checks the signing certificate's SHA-1 against the Android
+      # OAuth client, and Gradle generates a fresh debug keystore on any
+      # machine that lacks one -- so every CI run signs with a different
+      # fingerprint than a developer's laptop does. Print it: when Google
+      # Sign-In fails on a CI build, the first question is always whether
+      # this value is registered, and otherwise there is no way to find out.
+      - name: Report signing fingerprint
+        if: always()
+        run: |
+          set -euo pipefail
+          keystore="$HOME/.android/debug.keystore"
+          if [ ! -f "$keystore" ]; then
+            echo "No debug keystore at $keystore -- build did not reach signing."
+            exit 0
+          fi
+          sha1=$(keytool -list -v -keystore "$keystore" \
+            -alias androiddebugkey -storepass android -keypass android 2>/dev/null \
+            | grep -E '^\s*SHA1:' | head -1 | sed -E 's/.*SHA1:\s*//')
+          {
+            echo "### Signing fingerprint"
+            echo ""
+            echo "Package: \`com.example.candidate_mobile\`"
+            echo "SHA-1: \`${sha1}\`"
+            echo ""
+            echo "Google Sign-In only works if this exact SHA-1 is registered"
+            echo "against that package in an **Android** OAuth client in Google"
+            echo "Cloud Console. This keystore is generated per runner, so the"
+            echo "value changes on every build until a fixed keystore is used."
+          } >> "$GITHUB_STEP_SUMMARY"
+          echo "debug keystore SHA-1: $sha1"
+
       - uses: actions/upload-artifact@v4
         with:
           name: candidate-mobile-debug-apk
