@@ -50,13 +50,58 @@ jobs:
 
       - run: flutter test
 
+      # A build missing these dart-defines still compiles and installs -- it
+      # just silently comes up with no Supabase, no API and no Google Sign-In,
+      # because AppConfig gates each feature on its value being present
+      # (lib/core/config/app_environment.dart). That is exactly how a review
+      # APK shipped with Jobs empty and Google Sign-In hidden. Fail loudly
+      # instead, at least for anything published for someone to install.
+      - name: Check app configuration
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL || vars.SUPABASE_URL }}
+          SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY || vars.SUPABASE_PUBLISHABLE_KEY }}
+          API_BASE_URL: ${{ secrets.API_BASE_URL || vars.API_BASE_URL }}
+          GOOGLE_WEB_CLIENT_ID: ${{ secrets.GOOGLE_WEB_CLIENT_ID || vars.GOOGLE_WEB_CLIENT_ID }}
+          PUBLISHING: ${{ inputs.release_tag != '' }}
+        run: |
+          set -euo pipefail
+          missing=()
+          for var in SUPABASE_URL SUPABASE_PUBLISHABLE_KEY API_BASE_URL GOOGLE_WEB_CLIENT_ID; do
+            [ -z "${!var:-}" ] && missing+=("$var")
+          done
+
+          if [ ${#missing[@]} -eq 0 ]; then
+            echo "All app configuration present."
+            exit 0
+          fi
+
+          echo "Missing configuration: ${missing[*]}" >&2
+          echo "Set them under Settings -> Secrets and variables -> Actions." >&2
+
+          if [ "$PUBLISHING" = "true" ]; then
+            echo "Refusing to publish an installable APK with features silently off." >&2
+            exit 1
+          fi
+          echo "::warning::Building without ${missing[*]} -- those features will be unavailable."
+
       # MICRO_LESSON_CDN_BASE_URL is the public r2.dev URL for the
       # flora-micro-lessons bucket -- not a secret, it's meant to be
       # publicly reachable. Clips with a cloudflareVideoPath resolve to
       # this CDN; clips without one keep using their bundled local asset.
-      - run: >-
+      - name: Build debug APK
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL || vars.SUPABASE_URL }}
+          SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY || vars.SUPABASE_PUBLISHABLE_KEY }}
+          API_BASE_URL: ${{ secrets.API_BASE_URL || vars.API_BASE_URL }}
+          GOOGLE_WEB_CLIENT_ID: ${{ secrets.GOOGLE_WEB_CLIENT_ID || vars.GOOGLE_WEB_CLIENT_ID }}
+          MICRO_LESSON_CDN_BASE_URL: ${{ vars.MICRO_LESSON_CDN_BASE_URL || 'https://pub-968107cb08f34b87b748a3700b60843e.r2.dev' }}
+        run: >-
           flutter build apk --debug
-          --dart-define=MICRO_LESSON_CDN_BASE_URL=https://pub-968107cb08f34b87b748a3700b60843e.r2.dev
+          --dart-define=SUPABASE_URL="$SUPABASE_URL"
+          --dart-define=SUPABASE_PUBLISHABLE_KEY="$SUPABASE_PUBLISHABLE_KEY"
+          --dart-define=API_BASE_URL="$API_BASE_URL"
+          --dart-define=GOOGLE_WEB_CLIENT_ID="$GOOGLE_WEB_CLIENT_ID"
+          --dart-define=MICRO_LESSON_CDN_BASE_URL="$MICRO_LESSON_CDN_BASE_URL"
 
       - uses: actions/upload-artifact@v4
         with:
