@@ -10,14 +10,17 @@ import 'readiness_ring.dart';
 /// working towards, and how much proof they have so far.
 ///
 /// Identity and status share one surface so the scrolling area below can be
-/// reserved for actions. [footer] renders inside the gradient, which is what
-/// makes the mission card read as lifted off the header without a negative
-/// margin or a transform.
+/// reserved for actions.
+///
+/// [bottomInset] is empty gradient left below the content for a card that
+/// straddles the header's bottom edge. Reserving the space here — rather than
+/// nesting the card inside the header — keeps the card a sibling in the scroll
+/// list, so it casts a real shadow onto both the gradient and the page.
 class HomeHeader extends StatelessWidget {
-  const HomeHeader({required this.dashboard, this.footer, super.key});
+  const HomeHeader({required this.dashboard, this.bottomInset = 0, super.key});
 
   final HomeDashboard dashboard;
-  final Widget? footer;
+  final double bottomInset;
 
   @override
   Widget build(BuildContext context) {
@@ -27,11 +30,11 @@ class HomeHeader extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(
+      padding: EdgeInsets.fromLTRB(
         AppSpacing.lg,
         AppSpacing.md,
         AppSpacing.lg,
-        AppSpacing.lg,
+        AppSpacing.lg + bottomInset,
       ),
       decoration: const BoxDecoration(
         gradient: LinearGradient(
@@ -135,10 +138,6 @@ class HomeHeader extends StatelessWidget {
               ),
             ],
           ),
-          if (footer != null) ...[
-            const SizedBox(height: AppSpacing.lg),
-            footer!,
-          ],
         ],
       ),
     );

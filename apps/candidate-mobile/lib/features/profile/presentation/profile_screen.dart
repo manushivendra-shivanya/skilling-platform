@@ -20,9 +20,17 @@ import '../../onboarding/domain/candidate_onboarding_draft.dart';
 import '../../onboarding/presentation/candidate_onboarding_controller.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
-  const ProfileScreen({required this.onLoggedOut, super.key});
+  const ProfileScreen({
+    required this.onLoggedOut,
+    required this.onOpenDiagnostic,
+    super.key,
+  });
 
   final VoidCallback onLoggedOut;
+
+  /// The diagnostic is a one-off setup task that re-scores readiness, so it
+  /// belongs beside the career profile it feeds rather than on Home.
+  final VoidCallback onOpenDiagnostic;
 
   @override
   ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
@@ -96,6 +104,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               value: intelligence == null || intelligence.evidence.isEmpty
                   ? 'No assessed evidence yet'
                   : '${intelligence.evidence.length} explainable records',
+            ),
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.assignment_outlined),
+              title: const Text('Career diagnostic'),
+              subtitle: const Text('Apni taiyari dobara jaanchein'),
+              trailing: const Icon(Icons.arrow_forward_rounded, size: 18),
+              onTap: widget.onOpenDiagnostic,
             ),
           ],
         ),

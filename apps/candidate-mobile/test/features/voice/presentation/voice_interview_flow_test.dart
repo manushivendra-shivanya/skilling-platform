@@ -37,16 +37,15 @@ void main() {
         voiceCaptureRepository: capture,
       );
       await tester.pumpAndSettle();
-      // .first, not .last -- the new horizontal "Today's services" rail
-      // adds a second Scrollable to Home's tree; .first is the main
-      // vertical list this button actually lives in, matching the
+      // .first, not .last -- the shell's own scrollables also match; .first
+      // is the main vertical list this row actually lives in, matching the
       // pattern used everywhere else in this codebase.
       await tester.scrollUntilVisible(
-        find.text('Awaaz practice'),
+        find.text('साक्षात्कार (इंटरव्यू) अभ्यास'),
         300,
         scrollable: find.byType(Scrollable).first,
       );
-      await tester.tap(find.text('Awaaz practice'));
+      await tester.tap(find.text('साक्षात्कार (इंटरव्यू) अभ्यास'));
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('Allow recording for this practice session'));
@@ -58,14 +57,24 @@ void main() {
       await tester.pumpAndSettle();
 
       const transcripts = [
+        // The interview now opens with the introduction, the same as a real
+        // one, so the first turn answers that rather than a scenario.
+        'Mera naam Rahul hai, maine twelfth ke baad logistics ka course kiya '
+            'and I worked in a warehouse for one year.',
         'First I recount and verify the stock then record both values and report the exception.',
         'First I check the SLA and safety risk then prioritise and inform the supervisor.',
         'I document the facts explain the risk and escalate clearly to my supervisor.',
       ];
       for (var index = 0; index < transcripts.length; index++) {
         await tester.tap(find.text('Start recording'));
-        await tester.pumpAndSettle();
-        expect(find.text('Recording…'), findsOneWidget);
+        // Not pumpAndSettle: the answer clock schedules a frame every second
+        // while recording, so "settled" never arrives until it is stopped.
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 200));
+        // The recording screen keeps the question on screen and shows how
+        // long the answer has run against the target window.
+        expect(find.textContaining('REC · '), findsOneWidget);
+        expect(find.text('Thoda aur boliye'), findsOneWidget);
         await tester.tap(find.text('Stop and review transcript'));
         await tester.pumpAndSettle();
         await tester.enterText(find.byType(TextField), transcripts[index]);
@@ -78,9 +87,9 @@ void main() {
 
       expect(find.text('Local coaching estimate'), findsOneWidget);
       expect(find.textContaining('Development coaching only'), findsOneWidget);
-      expect(voice.state.answers, hasLength(3));
+      expect(voice.state.answers, hasLength(4));
       expect(voice.state.evaluation, isNotNull);
-      expect(voice.state.pendingUploadCount, 3);
+      expect(voice.state.pendingUploadCount, 4);
 
       await tester.scrollUntilVisible(
         find.text('Request human review'),

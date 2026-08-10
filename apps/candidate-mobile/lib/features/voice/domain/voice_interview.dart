@@ -50,11 +50,23 @@ class VoiceInterviewQuestion {
     required this.id,
     required this.text,
     required this.competency,
+    required this.category,
+    this.guidance,
   });
 
   final String id;
   final String text;
   final String competency;
+
+  /// Section this question belongs to, shown above the question so the
+  /// candidate knows what kind of answer is being asked for -- an
+  /// introduction and a scenario call for very different things.
+  final String category;
+
+  /// What a good answer covers. Shown with the question rather than withheld:
+  /// a candidate practising alone has no interviewer to read the room from,
+  /// and the point is to build the skill, not to catch them out.
+  final String? guidance;
 }
 
 class VoiceAnswer {
@@ -274,20 +286,33 @@ class VoiceInterviewState {
   }
 }
 
+/// Ordered as a real interview runs: the introduction first, because it is
+/// what every interview opens with and the one answer a candidate can prepare
+/// word for word. Scenario questions follow.
 const voiceInterviewQuestions = [
   VoiceInterviewQuestion(
+    id: 'self-introduction',
+    category: 'सामान्य प्रश्न और परिचय',
+    text: 'अपना परिचय दीजिए।',
+    guidance: 'अपने नाम, पढ़ाई और अनुभवों को 1-2 मिनट में साफ बोलें।',
+    competency: 'communication_clarity',
+  ),
+  VoiceInterviewQuestion(
     id: 'inventory-exception',
+    category: 'काम से जुड़े सवाल',
     text: 'You count 21 units but the system shows 24. What would you do next?',
     competency: 'inventory_accuracy',
   ),
   VoiceInterviewQuestion(
     id: 'dispatch-priority',
+    category: 'काम से जुड़े सवाल',
     text:
         'Two dispatches are delayed and one has a strict SLA. How would you prioritise?',
     competency: 'sla_discipline',
   ),
   VoiceInterviewQuestion(
     id: 'supervisor-escalation',
+    category: 'काम से जुड़े सवाल',
     text:
         'How would you clearly escalate a safety or stock exception to your supervisor?',
     competency: 'safe_escalation',

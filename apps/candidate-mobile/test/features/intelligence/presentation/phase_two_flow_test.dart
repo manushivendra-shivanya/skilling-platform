@@ -43,8 +43,10 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    // The Home "today's services" rail now sits above this card, pushing it
-    // below the fold at the default test surface size.
+    // The diagnostic is a one-off setup task, so it lives on the profile
+    // tab rather than competing with the daily mission on Home.
+    await tester.tap(find.text('My Profile'));
+    await tester.pumpAndSettle();
     await tester.ensureVisible(find.text('Career diagnostic'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Career diagnostic'));

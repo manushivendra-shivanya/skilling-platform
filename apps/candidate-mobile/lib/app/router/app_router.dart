@@ -405,12 +405,9 @@ GoRouter createAppRouter({
                 path: homeRoutePath,
                 name: homeRouteName,
                 builder: (context, state) => HomeDashboardScreen(
-                  onOpenCoach: () => context.push(aiCoachRoutePath),
                   onOpenDiagnostic: () => context.push(diagnosticRoutePath),
                   onOpenVoiceInterview: () =>
                       context.push(voiceInterviewRoutePath),
-                  onOpenCareerPassport: () => context.go(profileRoutePath),
-                  onOpenJobs: () => context.go(jobsRoutePath),
                   onOpenPathway: () => context.go(learnRoutePath),
                 ),
               ),
@@ -461,6 +458,7 @@ GoRouter createAppRouter({
                 name: profileRouteName,
                 builder: (context, state) => ProfileScreen(
                   onLoggedOut: () => context.go(welcomeRoutePath),
+                  onOpenDiagnostic: () => context.push(diagnosticRoutePath),
                 ),
               ),
             ],

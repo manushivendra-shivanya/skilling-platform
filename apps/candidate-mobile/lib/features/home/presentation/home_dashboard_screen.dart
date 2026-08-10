@@ -17,20 +17,14 @@ import 'upcoming_interview_card.dart';
 
 class HomeDashboardScreen extends ConsumerWidget {
   const HomeDashboardScreen({
-    required this.onOpenCoach,
     required this.onOpenDiagnostic,
     required this.onOpenVoiceInterview,
-    required this.onOpenCareerPassport,
-    required this.onOpenJobs,
     required this.onOpenPathway,
     super.key,
   });
 
-  final VoidCallback onOpenCoach;
   final VoidCallback onOpenDiagnostic;
   final VoidCallback onOpenVoiceInterview;
-  final VoidCallback onOpenCareerPassport;
-  final VoidCallback onOpenJobs;
   final VoidCallback onOpenPathway;
 
   @override
@@ -59,11 +53,8 @@ class HomeDashboardScreen extends ConsumerWidget {
         }
         return _HomeContent(
           dashboard: value,
-          onOpenCoach: onOpenCoach,
           onOpenDiagnostic: onOpenDiagnostic,
           onOpenVoiceInterview: onOpenVoiceInterview,
-          onOpenCareerPassport: onOpenCareerPassport,
-          onOpenJobs: onOpenJobs,
           onOpenPathway: onOpenPathway,
           onRefresh: () =>
               ref.read(homeDashboardControllerProvider.notifier).refresh(),
@@ -76,23 +67,23 @@ class HomeDashboardScreen extends ConsumerWidget {
 class _HomeContent extends StatelessWidget {
   const _HomeContent({
     required this.dashboard,
-    required this.onOpenCoach,
     required this.onOpenDiagnostic,
     required this.onOpenVoiceInterview,
-    required this.onOpenCareerPassport,
-    required this.onOpenJobs,
     required this.onOpenPathway,
     required this.onRefresh,
   });
 
   final HomeDashboard dashboard;
-  final VoidCallback onOpenCoach;
   final VoidCallback onOpenDiagnostic;
   final VoidCallback onOpenVoiceInterview;
-  final VoidCallback onOpenCareerPassport;
-  final VoidCallback onOpenJobs;
   final VoidCallback onOpenPathway;
   final Future<void> Function() onRefresh;
+
+  /// How far the mission card rises into the gradient. The header reserves
+  /// [_cardLift] + breathing room below its content, and the card is lifted
+  /// back up by [_cardLift], so it lands half on the brand block and half on
+  /// the page — the overlap the first Home mock had.
+  static const double _cardLift = 28;
 
   @override
   Widget build(BuildContext context) {
@@ -105,18 +96,28 @@ class _HomeContent extends StatelessWidget {
       child: ListView(
         padding: const EdgeInsets.only(bottom: 112),
         children: [
-          // The mission card rides inside the header gradient, so it reads as
-          // lifted off the brand block without a negative margin.
           HomeHeader(
             dashboard: dashboard,
-            footer: mission == null
-                ? null
-                : TodayMissionCard(mission: mission, onStart: onOpenPathway),
+            bottomInset: mission == null ? 0 : _cardLift + AppSpacing.md,
           ),
+          if (mission != null)
+            // Transform, not a negative margin: the card keeps its own slot in
+            // the list, so the space it vacates below becomes the gap to the
+            // next section and nothing overlaps that it shouldn't.
+            Transform.translate(
+              offset: const Offset(0, -_cardLift),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+                child: TodayMissionCard(
+                  mission: mission,
+                  onStart: onOpenPathway,
+                ),
+              ),
+            ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(
+            padding: EdgeInsets.fromLTRB(
               AppSpacing.lg,
-              AppSpacing.md,
+              mission == null ? AppSpacing.md : 0,
               AppSpacing.lg,
               0,
             ),
@@ -136,6 +137,9 @@ class _HomeContent extends StatelessWidget {
                 if (mission == null) ...[
                   AppCard(
                     backgroundColor: AppColors.brandSoft,
+                    onTap: onOpenDiagnostic,
+                    semanticLabel:
+                        'No mission today. Open the career diagnostic.',
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -176,53 +180,17 @@ class _HomeContent extends StatelessWidget {
                   const SizedBox(height: AppSpacing.sm),
                 ],
 
+                // Only two rows, and neither duplicates a bottom-nav tab.
+                // Jobs, Coach, the Career Passport and the diagnostic all
+                // live one tap away in the shell; repeating them here made
+                // Home a menu instead of a next step.
                 _ShortcutRow(
                   icon: Icons.mic_none_outlined,
                   iconBackground: AppColors.infoSoft,
                   iconColor: AppColors.info,
-                  title: 'Awaaz practice',
-                  subtitle: '3 min · ek sawaal',
+                  title: 'साक्षात्कार (इंटरव्यू) अभ्यास',
+                  subtitle: 'पहला सवाल · अपना परिचय',
                   onTap: onOpenVoiceInterview,
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                _ShortcutRow(
-                  icon: Icons.verified_outlined,
-                  iconBackground: AppColors.successSoft,
-                  iconColor: AppColors.success,
-                  title: 'Aapke proof',
-                  subtitle:
-                      '${dashboard.evidence.count} items · Career Passport',
-                  onTap: onOpenCareerPassport,
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                _ShortcutRow(
-                  icon: Icons.work_outline,
-                  iconBackground: AppColors.brandSoft,
-                  iconColor: AppColors.brand,
-                  title: 'Verified naukriyan',
-                  subtitle: 'Aapke role ke liye',
-                  onTap: onOpenJobs,
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                _ShortcutRow(
-                  icon: Icons.chat_bubble_outline,
-                  iconBackground: AppColors.surfaceMuted,
-                  iconColor: AppColors.ink,
-                  title: 'Career Coach se poochein',
-                  subtitle: 'Koi bhi sawaal',
-                  onTap: onOpenCoach,
-                ),
-
-                // Kept reachable but demoted: the diagnostic is a one-off
-                // setup task, not a daily action.
-                const SizedBox(height: AppSpacing.sm),
-                _ShortcutRow(
-                  icon: Icons.assignment_outlined,
-                  iconBackground: AppColors.warningSoft,
-                  iconColor: AppColors.warning,
-                  title: 'Career diagnostic',
-                  subtitle: 'Apni taiyari dobara jaanchein',
-                  onTap: onOpenDiagnostic,
                 ),
               ],
             ),

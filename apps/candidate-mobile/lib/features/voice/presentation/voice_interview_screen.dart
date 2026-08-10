@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/app_colors.dart';
+import '../../../app/theme/app_radius.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../core/errors/app_failure.dart';
 import '../../../core/widgets/app_button.dart';
@@ -11,6 +14,7 @@ import '../../../core/widgets/app_progress.dart';
 import '../../../core/widgets/app_state_view.dart';
 import '../../../core/widgets/app_status_banner.dart';
 import '../domain/voice_interview.dart';
+import 'answer_pacing_track.dart';
 import 'voice_interview_controller.dart';
 
 class VoiceInterviewScreen extends ConsumerStatefulWidget {
@@ -28,10 +32,38 @@ class _VoiceInterviewScreenState extends ConsumerState<VoiceInterviewScreen> {
   bool _evaluationConsent = false;
   bool _employerSharingConsent = false;
   bool _busy = false;
+
+  /// Ticks only while a recording is in flight. The capture layer reports
+  /// duration once, at stop; the candidate needs it continuously, so the
+  /// screen keeps its own clock and the two are reconciled by the repository's
+  /// stopwatch when the answer is saved.
+  ///
+  /// A notifier rather than `setState`: only the gauge changes once a second,
+  /// and rebuilding the whole recording page at 1Hz to move one bar is work
+  /// the cheapest handsets we target can least afford.
+  Timer? _tick;
+  final _elapsed = ValueNotifier<Duration>(Duration.zero);
+
+  void _startTicking() {
+    _tick?.cancel();
+    _elapsed.value = Duration.zero;
+    _tick = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (!mounted) return;
+      _elapsed.value += const Duration(seconds: 1);
+    });
+  }
+
+  void _stopTicking() {
+    _tick?.cancel();
+    _tick = null;
+  }
+
   String? _message;
 
   @override
   void dispose() {
+    _tick?.cancel();
+    _elapsed.dispose();
     _transcriptController.dispose();
     super.dispose();
   }
@@ -202,7 +234,42 @@ class _VoiceInterviewScreenState extends ConsumerState<VoiceInterviewScreen> {
         AppOfflineBanner(message: state.technicalNotice!),
       ],
       const SizedBox(height: AppSpacing.lg),
+      Text(
+        question.category,
+        style: Theme.of(context).textTheme.labelMedium?.copyWith(
+          color: AppColors.brand,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+      const SizedBox(height: AppSpacing.xxs),
       Text(question.text, style: Theme.of(context).textTheme.headlineSmall),
+      if (question.guidance != null) ...[
+        const SizedBox(height: AppSpacing.sm),
+        // Shown, not withheld: someone practising alone has no interviewer to
+        // read, and the point is to build the answer rather than test them.
+        AppCard(
+          backgroundColor: AppColors.infoSoft,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Icon(
+                Icons.lightbulb_outline,
+                size: 18,
+                color: AppColors.info,
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Text(
+                  question.guidance!,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(color: AppColors.info),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
       const SizedBox(height: AppSpacing.sm),
       const Text(
         'Think briefly, then answer naturally. You can cancel and retry without penalty.',
@@ -223,28 +290,80 @@ class _VoiceInterviewScreenState extends ConsumerState<VoiceInterviewScreen> {
   Widget _buildRecording(VoiceInterviewState state) {
     final question = voiceInterviewQuestions[state.currentQuestionIndex];
     return _page([
-      Semantics(
-        liveRegion: true,
-        label: 'Recording is active',
-        child: const AppCard(
-          backgroundColor: AppColors.errorSoft,
-          child: Column(
-            children: [
-              Icon(Icons.mic, color: AppColors.error, size: 48),
-              SizedBox(height: AppSpacing.sm),
-              Text(
-                'Recording…',
-                style: TextStyle(
-                  color: AppColors.error,
-                  fontWeight: FontWeight.bold,
+      // The question stays on screen while they speak. Hiding it is the
+      // commonest flaw in practice tools -- a candidate rehearsing alone
+      // loses the thread and answers a half-remembered question.
+      Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(AppSpacing.md),
+        decoration: BoxDecoration(
+          color: AppColors.surfaceMuted,
+          borderRadius: AppRadius.largeBorder,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                _RecordingDot(active: !_busy),
+                const SizedBox(width: AppSpacing.xs),
+                Text(
+                  'REC · ${question.category}',
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: AppColors.error,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 1.1,
+                  ),
                 ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              question.text,
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+            ),
+            if (question.guidance != null) ...[
+              const SizedBox(height: AppSpacing.xxs),
+              Text(
+                question.guidance!,
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: AppColors.inkMuted),
               ),
             ],
-          ),
+          ],
         ),
       ),
-      const SizedBox(height: AppSpacing.lg),
-      Text(question.text, style: Theme.of(context).textTheme.titleLarge),
+      const SizedBox(height: AppSpacing.xl),
+      ValueListenableBuilder<Duration>(
+        valueListenable: _elapsed,
+        builder: (context, elapsed, _) => AnswerPacingTrack(elapsed: elapsed),
+      ),
+      const SizedBox(height: AppSpacing.xl),
+      // Stated where the candidate is actually speaking, not filed in a
+      // policy page: this is the promise most likely to be doubted at the
+      // moment it matters.
+      AppCard(
+        backgroundColor: AppColors.brandSoft,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Icon(Icons.shield_outlined, size: 18, color: AppColors.brand),
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: Text(
+                'Aapki baat, safai aur dhaancha dekha jaata hai. '
+                'Lehja ya accent kabhi score nahi hota.',
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: AppColors.brandDark),
+              ),
+            ),
+          ],
+        ),
+      ),
       const SizedBox(height: AppSpacing.xl),
       AppButton(
         label: 'Stop and review transcript',
@@ -410,15 +529,20 @@ class _VoiceInterviewScreenState extends ConsumerState<VoiceInterviewScreen> {
 
   Future<void> _startRecording() => _run(
     () => ref.read(voiceInterviewControllerProvider.notifier).startRecording(),
+    onSuccess: _startTicking,
   );
 
   Future<void> _stopRecording() => _run(
     () => ref.read(voiceInterviewControllerProvider.notifier).stopRecording(),
-    onSuccess: _transcriptController.clear,
+    onSuccess: () {
+      _stopTicking();
+      _transcriptController.clear();
+    },
   );
 
   Future<void> _cancelRecording() => _run(
     () => ref.read(voiceInterviewControllerProvider.notifier).cancelRecording(),
+    onSuccess: _stopTicking,
   );
 
   Future<void> _submitTranscript() => _run(
@@ -450,5 +574,58 @@ class _VoiceInterviewScreenState extends ConsumerState<VoiceInterviewScreen> {
             .deleteInterview(),
       );
     }
+  }
+}
+
+/// A quiet pulse, the one piece of motion on this screen. It reports a single
+/// fact -- the microphone is live -- which is exactly the kind of state worth
+/// animating. Held still under prefers-reduced-motion, where the colour and
+/// the REC label still carry the meaning.
+class _RecordingDot extends StatefulWidget {
+  const _RecordingDot({required this.active});
+
+  final bool active;
+
+  @override
+  State<_RecordingDot> createState() => _RecordingDotState();
+}
+
+class _RecordingDotState extends State<_RecordingDot>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1100),
+  )..repeat(reverse: true);
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final still =
+        MediaQuery.maybeDisableAnimationsOf(context) ?? !widget.active;
+    return SizedBox(
+      width: 10,
+      height: 10,
+      child: still
+          ? const DecoratedBox(
+              decoration: BoxDecoration(
+                color: AppColors.error,
+                shape: BoxShape.circle,
+              ),
+            )
+          : FadeTransition(
+              opacity: Tween<double>(begin: 1, end: 0.35).animate(_controller),
+              child: const DecoratedBox(
+                decoration: BoxDecoration(
+                  color: AppColors.error,
+                  shape: BoxShape.circle,
+                ),
+              ),
+            ),
+    );
   }
 }
