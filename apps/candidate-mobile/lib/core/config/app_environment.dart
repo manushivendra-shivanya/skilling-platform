@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 enum AppEnvironment { development, staging, production }
 
 class AppConfig {
@@ -66,7 +68,33 @@ class AppConfig {
 
   bool get hasSupabaseConfiguration =>
       Uri.tryParse(supabaseUrl)?.hasScheme == true &&
-      supabasePublishableKey.startsWith('sb_publishable_');
+      _isPublicClientKey(supabasePublishableKey);
+
+  /// True for either key format Supabase issues that's actually safe to
+  /// embed in a shipped client app: the modern `sb_publishable_...` key,
+  /// or a legacy JWT-format key whose own `role` claim is `anon` --
+  /// checked by decoding the JWT, not by guessing from a prefix. This
+  /// deliberately rejects `sb_secret_...` (modern secret key) and a
+  /// legacy `service_role` JWT just as firmly as it rejects garbage --
+  /// the whole point of this gate is to stop a secret key from ever
+  /// reaching the client bundle, so "looks roughly like a JWT" is not
+  /// enough; the claim itself has to say `anon`.
+  static bool _isPublicClientKey(String key) {
+    if (key.startsWith('sb_publishable_')) return true;
+    return _legacyJwtRole(key) == 'anon';
+  }
+
+  static String? _legacyJwtRole(String key) {
+    final parts = key.split('.');
+    if (parts.length != 3) return null;
+    try {
+      final normalized = base64Url.normalize(parts[1]);
+      final payload = jsonDecode(utf8.decode(base64Url.decode(normalized)));
+      return payload is Map ? payload['role'] as String? : null;
+    } catch (_) {
+      return null;
+    }
+  }
 
   bool get hasApiConfiguration => Uri.tryParse(apiBaseUrl)?.hasScheme == true;
 
