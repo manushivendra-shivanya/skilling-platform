@@ -48,7 +48,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Today’s mission'), findsOneWidget);
+    expect(find.text('नमस्ते'), findsOneWidget);
     await tester.tap(find.text('Learn'));
     await tester.pumpAndSettle();
     expect(find.text('Your logistics pathway'), findsOneWidget);
@@ -122,13 +122,13 @@ void main() {
     await tester.pumpAndSettle();
 
     await tester.scrollUntilVisible(
-      find.text('Today’s mission'),
+      find.text('नमस्ते'),
       200,
       scrollable: find.byType(Scrollable).first,
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Today’s mission'), findsOneWidget);
+    expect(find.text('नमस्ते'), findsOneWidget);
   });
 
   testWidgets('global Coach and notifications routes return to selected tab', (
