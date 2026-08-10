@@ -311,6 +311,7 @@ GoRouter createAppRouter({
       location: state.matchedLocation,
       candidateSessionRepository: candidateSessionRepository,
       candidateOnboardingRepository: candidateOnboardingRepository,
+      allowDevSkipToHome: allowDevSkipToHome,
     ),
     routes: [
       GoRoute(
@@ -850,6 +851,11 @@ GoRouter createAppRouter({
   );
 }
 
+/// The candidate id the dev skip signs in as. Fixed, obviously synthetic, and
+/// hex-valid in every group so it passes Postgres's UUID type check rather
+/// than erroring. The redirect recognises it and treats onboarding as done.
+const devSkipCandidateId = '00000000-0000-4000-8000-00000000dead';
+
 /// Dev-tools-only shortcut: saves a local authenticated session and a
 /// completed onboarding draft directly, then lets the normal redirect
 /// logic carry the router to Home. Exists so screens past onboarding can be
@@ -872,9 +878,7 @@ Future<void> _skipToHomeForDev({
   required CandidateOnboardingRepository candidateOnboardingRepository,
 }) async {
   const session = CandidateSession(
-    // Fixed, obviously-synthetic UUID: hex-valid in every group, so it
-    // passes Postgres's type check, and recognisable in any log it reaches.
-    candidateId: '00000000-0000-4000-8000-00000000dead',
+    candidateId: devSkipCandidateId,
     isAuthenticated: true,
   );
   await candidateSessionRepository.saveSession(session);
@@ -911,10 +915,27 @@ Future<void> _skipToHomeForDev({
   }
 }
 
+/// Test seam for the redirect rule. Driving a full GoRouter to assert one
+/// branch pulls in the whole widget tree; the rule itself is a pure function
+/// of two repositories and a flag, so expose it directly.
+@visibleForTesting
+Future<String?> redirectForCandidateStateForTest({
+  required String location,
+  required CandidateSessionRepository candidateSessionRepository,
+  required CandidateOnboardingRepository candidateOnboardingRepository,
+  bool allowDevSkipToHome = false,
+}) => _redirectForCandidateState(
+  location: location,
+  candidateSessionRepository: candidateSessionRepository,
+  candidateOnboardingRepository: candidateOnboardingRepository,
+  allowDevSkipToHome: allowDevSkipToHome,
+);
+
 Future<String?> _redirectForCandidateState({
   required String location,
   required CandidateSessionRepository candidateSessionRepository,
   required CandidateOnboardingRepository candidateOnboardingRepository,
+  bool allowDevSkipToHome = false,
 }) async {
   final needsCandidateSession =
       location == authenticatedRoutePath ||
@@ -931,6 +952,16 @@ Future<String?> _redirectForCandidateState({
   );
   if (session == null || !session.isAuthenticated) {
     return welcomeRoutePath;
+  }
+
+  // The dev session's onboarding draft lives wherever the configured
+  // onboarding repository put it -- and against a real Supabase project that
+  // is nowhere, because RLS rejects a candidate id with no auth.users row.
+  // Reading it back therefore always reports "onboarding incomplete" and the
+  // redirect bounces to the profile form, which is precisely the screen the
+  // skip exists to get past. Treat this one known id as already onboarded.
+  if (allowDevSkipToHome && session.candidateId == devSkipCandidateId) {
+    return location == authenticatedRoutePath ? homeRoutePath : null;
   }
 
   if (location == candidateOnboardingRoutePath) {
