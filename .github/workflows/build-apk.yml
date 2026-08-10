@@ -107,12 +107,35 @@ jobs:
           fi
           echo "::warning::Building without ${missing[*]} -- those features will be unavailable."
 
+      # Without a fixed keystore every run signs with a different fingerprint,
+      # which can never be registered against the Android OAuth client -- so
+      # Google Sign-In cannot work on a CI build. Decoding this secret gives
+      # review builds one stable identity to register. Optional: absent it the
+      # build still succeeds, just with Google Sign-In unavailable.
+      - name: Restore review signing keystore
+        id: keystore
+        env:
+          KEYSTORE_B64: ${{ secrets.FLORA_REVIEW_KEYSTORE_B64 }}
+        run: |
+          set -euo pipefail
+          if [ -z "${KEYSTORE_B64:-}" ]; then
+            echo "::warning::FLORA_REVIEW_KEYSTORE_B64 not set -- signing with a throwaway debug keystore, so Google Sign-In will not work in this build."
+            exit 0
+          fi
+          path="$RUNNER_TEMP/flora-review.keystore"
+          printf '%s' "$KEYSTORE_B64" | base64 -d > "$path"
+          echo "FLORA_REVIEW_KEYSTORE=$path" >> "$GITHUB_ENV"
+          echo "restored review keystore"
+
       # MICRO_LESSON_CDN_BASE_URL is the public r2.dev URL for the
       # flora-micro-lessons bucket -- not a secret, it's meant to be
       # publicly reachable. Clips with a cloudflareVideoPath resolve to
       # this CDN; clips without one keep using their bundled local asset.
       - name: Build debug APK
         env:
+          FLORA_REVIEW_KEYSTORE_PASSWORD: ${{ secrets.FLORA_REVIEW_KEYSTORE_PASSWORD }}
+          FLORA_REVIEW_KEY_ALIAS: ${{ secrets.FLORA_REVIEW_KEY_ALIAS }}
+          FLORA_REVIEW_KEY_PASSWORD: ${{ secrets.FLORA_REVIEW_KEY_PASSWORD }}
           SUPABASE_URL: ${{ inputs.supabase_url || secrets.SUPABASE_URL || vars.SUPABASE_URL }}
           SUPABASE_PUBLISHABLE_KEY: ${{ inputs.supabase_publishable_key || secrets.SUPABASE_PUBLISHABLE_KEY || vars.SUPABASE_PUBLISHABLE_KEY }}
           API_BASE_URL: ${{ inputs.api_base_url || secrets.API_BASE_URL || vars.API_BASE_URL }}
@@ -134,28 +157,45 @@ jobs:
       # this value is registered, and otherwise there is no way to find out.
       - name: Report signing fingerprint
         if: always()
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.FLORA_REVIEW_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.FLORA_REVIEW_KEY_ALIAS }}
         run: |
           set -euo pipefail
-          keystore="$HOME/.android/debug.keystore"
+          # Report whichever key actually signed this APK: the stable review
+          # keystore when one was restored, otherwise the throwaway debug one.
+          if [ -n "${FLORA_REVIEW_KEYSTORE:-}" ] && [ -f "$FLORA_REVIEW_KEYSTORE" ]; then
+            keystore="$FLORA_REVIEW_KEYSTORE"
+            alias="${KEY_ALIAS:-flora-review}"
+            storepass="${KEYSTORE_PASSWORD:-}"
+            kind="review keystore (stable)"
+          else
+            keystore="$HOME/.android/debug.keystore"
+            alias="androiddebugkey"
+            storepass="android"
+            kind="throwaway debug keystore -- changes every run"
+          fi
           if [ ! -f "$keystore" ]; then
-            echo "No debug keystore at $keystore -- build did not reach signing."
+            echo "No keystore at $keystore -- build did not reach signing."
             exit 0
           fi
           sha1=$(keytool -list -v -keystore "$keystore" \
-            -alias androiddebugkey -storepass android -keypass android 2>/dev/null \
+            -alias "$alias" -storepass "$storepass" 2>/dev/null \
             | grep -E '^\s*SHA1:' | head -1 | sed -E 's/.*SHA1:\s*//')
+          echo "signed with: $kind"
           {
             echo "### Signing fingerprint"
             echo ""
             echo "Package: \`com.example.candidate_mobile\`"
             echo "SHA-1: \`${sha1}\`"
             echo ""
+            echo "Signed with: ${kind}"
+            echo ""
             echo "Google Sign-In only works if this exact SHA-1 is registered"
             echo "against that package in an **Android** OAuth client in Google"
-            echo "Cloud Console. This keystore is generated per runner, so the"
-            echo "value changes on every build until a fixed keystore is used."
+            echo "Cloud Console."
           } >> "$GITHUB_STEP_SUMMARY"
-          echo "debug keystore SHA-1: $sha1"
+          echo "signing SHA-1: $sha1"
 
       - uses: actions/upload-artifact@v4
         with:
