@@ -114,8 +114,8 @@ const _sourceDisplayNames = {
 
 /// The human-readable name for an aggregator [source] (`'Adzuna'`,
 /// `'Jooble'`, ...), or null for `'flora'`/an unrecognised value. Used both
-/// by [jobSourceCaption] and directly by the external-apply button label
-/// ("View & apply on Adzuna").
+/// by [jobSourceCaption] and directly by the "View original listing on
+/// Adzuna" / "Apply on Adzuna" button labels.
 String? jobSourceDisplayName(String source) => _sourceDisplayNames[source];
 
 /// Null for `'flora'` (Flora's own listings -- direct employer postings,

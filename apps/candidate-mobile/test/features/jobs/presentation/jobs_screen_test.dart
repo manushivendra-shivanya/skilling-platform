@@ -83,7 +83,8 @@ void main() {
       await tester.tap(find.text('Inventory Executive'));
       await tester.pumpAndSettle();
 
-      expect(find.text('View & apply on Adzuna'), findsOneWidget);
+      expect(find.text('View original listing on Adzuna'), findsOneWidget);
+      expect(find.text('Apply on Adzuna'), findsOneWidget);
       expect(
         find.text('Share your profile for this application'),
         findsNothing,
@@ -120,7 +121,82 @@ void main() {
         find.text('Share your profile for this application'),
         findsOneWidget,
       );
-      expect(find.textContaining('View & apply on'), findsNothing);
+      expect(find.textContaining('View original listing on'), findsNothing);
+      expect(find.textContaining('Apply on'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'the Location filter drills into a searchable tick-box sub-page and applies',
+    (tester) async {
+      final container = _buildContainer(
+        _FakeJobsRepository([
+          const JobOpportunity(
+            id: 'job-bhiwandi',
+            title: 'Warehouse Operations Associate',
+            employer: 'Apex Consumer Products',
+            location: 'Bhiwandi, Maharashtra',
+            isSupervisorRole: false,
+            description: 'Receiving.',
+            source: 'flora',
+          ),
+          const JobOpportunity(
+            id: 'job-pune',
+            title: 'Dispatch Executive',
+            employer: 'Northstar Freight',
+            location: 'Pune, Maharashtra',
+            isSupervisorRole: false,
+            description: 'Dispatch.',
+            source: 'flora',
+          ),
+        ]),
+      );
+      addTearDown(container.dispose);
+
+      await tester.pumpWidget(_app(container));
+      await tester.pumpAndSettle();
+
+      // Open the filter sheet.
+      await tester.tap(find.byIcon(Icons.tune));
+      await tester.pumpAndSettle();
+
+      // Category list, not a flat wall of chips.
+      expect(find.text('Location'), findsWidgets);
+      // Location + Role type + Company summaries all read "Any" until set;
+      // Date posted reads "Any time" instead, a distinct string.
+      expect(find.text('Any'), findsNWidgets(3));
+
+      // Drill into Location.
+      await tester.tap(find.text('Location'));
+      await tester.pumpAndSettle();
+      expect(find.byType(CheckboxListTile), findsNWidgets(2));
+
+      // Search narrows the tick-box list.
+      await tester.enterText(
+        find.descendant(
+          of: find.byKey(const Key('filterCategorySearchField')),
+          matching: find.byType(TextFormField),
+        ),
+        'bhiw',
+      );
+      await tester.pumpAndSettle();
+      expect(find.byType(CheckboxListTile), findsOneWidget);
+      expect(find.text('Bhiwandi'), findsOneWidget);
+      expect(find.text('Pune'), findsNothing);
+
+      // Tick it, go back, apply.
+      await tester.tap(find.text('Bhiwandi'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byIcon(Icons.arrow_back));
+      await tester.pumpAndSettle();
+      expect(find.text('Bhiwandi'), findsOneWidget); // now the summary line
+
+      await tester.tap(find.text('Show 1 job'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Warehouse Operations Associate'), findsOneWidget);
+      expect(find.text('Dispatch Executive'), findsNothing);
+      expect(find.text('Bhiwandi'), findsOneWidget); // active filter pill
     },
   );
 }
