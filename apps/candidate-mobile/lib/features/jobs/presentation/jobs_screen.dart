@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -135,7 +137,7 @@ class _JobsContent extends ConsumerWidget {
     WidgetRef ref,
     JobOpportunity job,
   ) {
-    return showAppBottomSheet<void>(
+    return showJobDetailsSheet(
       context: context,
       title: job.title,
       child: _JobDetails(
@@ -146,6 +148,70 @@ class _JobsContent extends ConsumerWidget {
       ),
     );
   }
+}
+
+/// Job-detail-specific bottom sheet: a [DraggableScrollableSheet] that
+/// opens large (85% of the screen) by default and can be dragged down to
+/// 50% or up to 95%, rather than [showAppBottomSheet]'s shrink-to-content
+/// sizing. Deliberately its own function, not a change to
+/// [showAppBottomSheet] itself -- that helper is shared by every other
+/// bottom sheet in the app (Career Passport, Shifts, ...), and this is a
+/// Jobs-detail-specific sizing choice, not something those screens asked
+/// for.
+Future<void> showJobDetailsSheet({
+  required BuildContext context,
+  required String title,
+  required Widget child,
+}) {
+  return showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    useRootNavigator: true,
+    useSafeArea: true,
+    backgroundColor: Colors.transparent,
+    builder: (context) => DraggableScrollableSheet(
+      initialChildSize: 0.85,
+      minChildSize: 0.5,
+      maxChildSize: 0.95,
+      expand: false,
+      builder: (context, scrollController) => Material(
+        color: AppColors.surface,
+        borderRadius: const BorderRadius.vertical(
+          top: Radius.circular(AppRadius.extraLarge),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: SingleChildScrollView(
+          controller: scrollController,
+          padding: EdgeInsets.fromLTRB(
+            AppSpacing.xl,
+            AppSpacing.sm,
+            AppSpacing.xl,
+            MediaQuery.viewInsetsOf(context).bottom + AppSpacing.xl,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 36,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceMuted,
+                    borderRadius: AppRadius.smallBorder,
+                  ),
+                ),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              Text(title, style: Theme.of(context).textTheme.titleLarge),
+              const SizedBox(height: AppSpacing.md),
+              child,
+            ],
+          ),
+        ),
+      ),
+    ),
+  );
 }
 
 class _FilterTrigger extends ConsumerWidget {
@@ -264,6 +330,26 @@ String _roleLabel(String role) => switch (role) {
   _ => role,
 };
 
+enum _FilterCategory { location, role, datePosted, company }
+
+const _roleOptions = ['warehouse', 'dispatch', 'inventory', 'supervisor'];
+
+String _datePostedLabel(DatePostedFilter option) => switch (option) {
+  DatePostedFilter.any => 'Any time',
+  DatePostedFilter.pastWeek => 'Past week',
+  DatePostedFilter.pastMonth => 'Past month',
+};
+
+/// A drill-down filter sheet, not a single screen of every option at
+/// once: a category list up front (Location / Role type / Date posted /
+/// Company), each opening its own sub-page with a search field where the
+/// option list can genuinely grow (Location, Company -- built from
+/// whatever's actually in the live catalogue) and a plain tick-box list
+/// where it can't (Role type's 4 fixed buckets, Date posted's 3 fixed
+/// windows). Matches the category-drawer pattern real shopping/job apps
+/// use once there's more than a handful of options to choose from -- a
+/// flat wall of chips stops scaling the moment the catalogue has more
+/// than a few cities or employers in it.
 class _FilterSheetContent extends StatefulWidget {
   const _FilterSheetContent({
     required this.jobs,
@@ -285,109 +371,38 @@ class _FilterSheetContent extends StatefulWidget {
 
 class _FilterSheetContentState extends State<_FilterSheetContent> {
   late JobFilters _draft = widget.initial;
+  _FilterCategory? _activeCategory;
+  String _searchTerm = '';
 
   int get _previewCount {
     final now = DateTime.now();
     return widget.jobs.where((job) => _draft.matches(job, now: now)).length;
   }
 
+  void _openCategory(_FilterCategory category) {
+    setState(() {
+      _activeCategory = category;
+      _searchTerm = '';
+    });
+  }
+
+  void _closeCategory() => setState(() => _activeCategory = null);
+
   @override
   Widget build(BuildContext context) {
+    final active = _activeCategory;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: MainAxisSize.min,
       children: [
-        _FilterSection(
-          title: 'Location',
-          child: Wrap(
-            spacing: AppSpacing.xs,
-            runSpacing: AppSpacing.xs,
-            children: [
-              for (final location in widget.availableLocations)
-                FilterChip(
-                  label: Text(location),
-                  selected: _draft.locations.contains(location),
-                  onSelected: (selected) => setState(() {
-                    final next = _draft.locations.toSet();
-                    selected ? next.add(location) : next.remove(location);
-                    _draft = _draft.copyWith(locations: next);
-                  }),
-                ),
-            ],
-          ),
-        ),
-        const SizedBox(height: AppSpacing.md),
-        _FilterSection(
-          title: 'Role type',
-          child: Wrap(
-            spacing: AppSpacing.xs,
-            runSpacing: AppSpacing.xs,
-            children: [
-              for (final role in const [
-                'warehouse',
-                'dispatch',
-                'inventory',
-                'supervisor',
-              ])
-                FilterChip(
-                  label: Text(_roleLabel(role)),
-                  selected: _draft.roles.contains(role),
-                  onSelected: (selected) => setState(() {
-                    final next = _draft.roles.toSet();
-                    selected ? next.add(role) : next.remove(role);
-                    _draft = _draft.copyWith(roles: next);
-                  }),
-                ),
-            ],
-          ),
-        ),
-        const SizedBox(height: AppSpacing.md),
-        _FilterSection(
-          title: 'Date posted',
-          child: Wrap(
-            spacing: AppSpacing.xs,
-            children: [
-              for (final option in DatePostedFilter.values)
-                ChoiceChip(
-                  label: Text(switch (option) {
-                    DatePostedFilter.any => 'Any time',
-                    DatePostedFilter.pastWeek => 'Past week',
-                    DatePostedFilter.pastMonth => 'Past month',
-                  }),
-                  selected: _draft.datePosted == option,
-                  onSelected: (_) => setState(
-                    () => _draft = _draft.copyWith(datePosted: option),
-                  ),
-                ),
-            ],
-          ),
-        ),
-        const SizedBox(height: AppSpacing.md),
-        _FilterSection(
-          title: 'Company',
-          child: Wrap(
-            spacing: AppSpacing.xs,
-            runSpacing: AppSpacing.xs,
-            children: [
-              for (final company in widget.availableCompanies)
-                FilterChip(
-                  label: Text(company),
-                  selected: _draft.companies.contains(company),
-                  onSelected: (selected) => setState(() {
-                    final next = _draft.companies.toSet();
-                    selected ? next.add(company) : next.remove(company);
-                    _draft = _draft.copyWith(companies: next);
-                  }),
-                ),
-            ],
-          ),
-        ),
+        if (active == null) _buildCategoryList() else _buildSubPage(active),
         const SizedBox(height: AppSpacing.lg),
         Row(
           children: [
             Expanded(
               child: OutlinedButton(
                 onPressed: () => setState(() => _draft = JobFilters.empty),
-                child: const Text('Reset'),
+                child: const Text('Reset all'),
               ),
             ),
             const SizedBox(width: AppSpacing.sm),
@@ -408,31 +423,225 @@ class _FilterSheetContentState extends State<_FilterSheetContent> {
       ],
     );
   }
+
+  Widget _buildCategoryList() {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _CategoryTile(
+          label: 'Location',
+          summary: _draft.locations.isEmpty
+              ? 'Any'
+              : _draft.locations.join(', '),
+          onTap: () => _openCategory(_FilterCategory.location),
+        ),
+        _CategoryTile(
+          label: 'Role type',
+          summary: _draft.roles.isEmpty
+              ? 'Any'
+              : _draft.roles.map(_roleLabel).join(', '),
+          onTap: () => _openCategory(_FilterCategory.role),
+        ),
+        _CategoryTile(
+          label: 'Date posted',
+          summary: _datePostedLabel(_draft.datePosted),
+          onTap: () => _openCategory(_FilterCategory.datePosted),
+        ),
+        _CategoryTile(
+          label: 'Company',
+          summary: _draft.companies.isEmpty
+              ? 'Any'
+              : _draft.companies.join(', '),
+          onTap: () => _openCategory(_FilterCategory.company),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSubPage(_FilterCategory category) {
+    final title = switch (category) {
+      _FilterCategory.location => 'Location',
+      _FilterCategory.role => 'Role type',
+      _FilterCategory.datePosted => 'Date posted',
+      _FilterCategory.company => 'Company',
+    };
+    final hasSearch =
+        category == _FilterCategory.location ||
+        category == _FilterCategory.company;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Row(
+          children: [
+            IconButton(
+              onPressed: _closeCategory,
+              icon: const Icon(Icons.arrow_back),
+              tooltip: 'Back to filters',
+            ),
+            Expanded(
+              child: Text(
+                title,
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+            ),
+            if (_hasSelection(category))
+              TextButton(
+                onPressed: () => setState(() => _draft = _clear(category)),
+                child: const Text('Clear'),
+              ),
+          ],
+        ),
+        if (hasSearch) ...[
+          const SizedBox(height: AppSpacing.xs),
+          AppTextField(
+            key: const Key('filterCategorySearchField'),
+            label: 'Search $title'.toLowerCase(),
+            leadingIcon: Icons.search,
+            onChanged: (value) => setState(() => _searchTerm = value),
+          ),
+        ],
+        const SizedBox(height: AppSpacing.xs),
+        SizedBox(height: 320, child: _buildOptionList(category)),
+      ],
+    );
+  }
+
+  Widget _buildOptionList(_FilterCategory category) {
+    switch (category) {
+      case _FilterCategory.location:
+        return _checklist(
+          options: _filterBySearch(widget.availableLocations),
+          isSelected: _draft.locations.contains,
+          onToggle: (value, selected) => setState(() {
+            final next = _draft.locations.toSet();
+            selected ? next.add(value) : next.remove(value);
+            _draft = _draft.copyWith(locations: next);
+          }),
+          emptyMessage: 'No locations match "$_searchTerm".',
+        );
+      case _FilterCategory.company:
+        return _checklist(
+          options: _filterBySearch(widget.availableCompanies),
+          isSelected: _draft.companies.contains,
+          onToggle: (value, selected) => setState(() {
+            final next = _draft.companies.toSet();
+            selected ? next.add(value) : next.remove(value);
+            _draft = _draft.copyWith(companies: next);
+          }),
+          emptyMessage: 'No companies match "$_searchTerm".',
+        );
+      case _FilterCategory.role:
+        return _checklist(
+          options: _roleOptions,
+          labelFor: _roleLabel,
+          isSelected: _draft.roles.contains,
+          onToggle: (value, selected) => setState(() {
+            final next = _draft.roles.toSet();
+            selected ? next.add(value) : next.remove(value);
+            _draft = _draft.copyWith(roles: next);
+          }),
+        );
+      case _FilterCategory.datePosted:
+        return RadioGroup<DatePostedFilter>(
+          groupValue: _draft.datePosted,
+          onChanged: (value) {
+            if (value != null) {
+              setState(() => _draft = _draft.copyWith(datePosted: value));
+            }
+          },
+          child: ListView(
+            children: [
+              for (final option in DatePostedFilter.values)
+                RadioListTile<DatePostedFilter>(
+                  title: Text(_datePostedLabel(option)),
+                  value: option,
+                ),
+            ],
+          ),
+        );
+    }
+  }
+
+  Widget _checklist({
+    required List<String> options,
+    required bool Function(String) isSelected,
+    required void Function(String value, bool selected) onToggle,
+    String Function(String)? labelFor,
+    String? emptyMessage,
+  }) {
+    if (options.isEmpty) {
+      return Center(
+        child: Text(
+          emptyMessage ?? 'No options available.',
+          style: const TextStyle(color: AppColors.inkMuted),
+        ),
+      );
+    }
+    return ListView(
+      children: [
+        for (final option in options)
+          CheckboxListTile(
+            title: Text(labelFor == null ? option : labelFor(option)),
+            value: isSelected(option),
+            onChanged: (selected) => onToggle(option, selected ?? false),
+            controlAffinity: ListTileControlAffinity.leading,
+            contentPadding: EdgeInsets.zero,
+          ),
+      ],
+    );
+  }
+
+  List<String> _filterBySearch(List<String> options) {
+    if (_searchTerm.trim().isEmpty) return options;
+    final normalized = _searchTerm.trim().toLowerCase();
+    return options
+        .where((option) => option.toLowerCase().contains(normalized))
+        .toList();
+  }
+
+  bool _hasSelection(_FilterCategory category) => switch (category) {
+    _FilterCategory.location => _draft.locations.isNotEmpty,
+    _FilterCategory.role => _draft.roles.isNotEmpty,
+    _FilterCategory.company => _draft.companies.isNotEmpty,
+    _FilterCategory.datePosted => _draft.datePosted != DatePostedFilter.any,
+  };
+
+  JobFilters _clear(_FilterCategory category) => switch (category) {
+    _FilterCategory.location => _draft.copyWith(locations: const {}),
+    _FilterCategory.role => _draft.copyWith(roles: const {}),
+    _FilterCategory.company => _draft.copyWith(companies: const {}),
+    _FilterCategory.datePosted => _draft.copyWith(
+      datePosted: DatePostedFilter.any,
+    ),
+  };
 }
 
-class _FilterSection extends StatelessWidget {
-  const _FilterSection({required this.title, required this.child});
+class _CategoryTile extends StatelessWidget {
+  const _CategoryTile({
+    required this.label,
+    required this.summary,
+    required this.onTap,
+  });
 
-  final String title;
-  final Widget child;
+  final String label;
+  final String summary;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title.toUpperCase(),
-          style: const TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.w700,
-            letterSpacing: 0.6,
-            color: AppColors.inkMuted,
-          ),
-        ),
-        const SizedBox(height: AppSpacing.xs),
-        child,
-      ],
+    return ListTile(
+      onTap: onTap,
+      contentPadding: EdgeInsets.zero,
+      title: Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
+      subtitle: Text(
+        summary,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: const TextStyle(color: AppColors.inkMuted),
+      ),
+      trailing: const Icon(Icons.chevron_right, color: AppColors.inkMuted),
     );
   }
 }
@@ -480,7 +689,7 @@ Future<void> _showSavedJobsSheet(BuildContext context, JobsState state) {
                 AppCard(
                   onTap: () {
                     Navigator.of(context).pop();
-                    showAppBottomSheet<void>(
+                    showJobDetailsSheet(
                       context: context,
                       title: job.title,
                       child: _JobDetails(
@@ -825,9 +1034,15 @@ class _JobDetailsState extends State<_JobDetails> {
             'original listing to apply.',
           ),
           const SizedBox(height: AppSpacing.md),
+          OutlinedButton.icon(
+            onPressed: () => _openExternalListing(context, applyUrl),
+            icon: const Icon(Icons.open_in_new, size: 18),
+            label: Text('View original listing on $sourceName'),
+          ),
+          const SizedBox(height: AppSpacing.sm),
           FilledButton(
             onPressed: () => _openExternalListing(context, applyUrl),
-            child: Text('View & apply on $sourceName'),
+            child: Text('Apply on $sourceName'),
           ),
           const SizedBox(height: AppSpacing.sm),
           const AppBottomSheetCloseButton(),
@@ -915,45 +1130,100 @@ class _JobDetailsState extends State<_JobDetails> {
   }
 }
 
-class _JobsLoadingView extends StatelessWidget {
+/// A linear progress bar up top (the standard Material "the page itself is
+/// loading" signal) plus skeleton cards below. Past a grace period, the
+/// status line starts counting elapsed seconds -- the same reassurance
+/// `BackendWarmupBanner` gives at sign-in, needed here too since a cold
+/// serverless instance can make this screen sit in this state for real
+/// seconds, not milliseconds, and a still shimmer with no elapsed-time cue
+/// reads as frozen rather than working.
+class _JobsLoadingView extends StatefulWidget {
   const _JobsLoadingView();
+
+  static const _gracePeriod = Duration(seconds: 2);
+
+  @override
+  State<_JobsLoadingView> createState() => _JobsLoadingViewState();
+}
+
+class _JobsLoadingViewState extends State<_JobsLoadingView> {
+  // Timer-driven, not Stopwatch/DateTime -- a Stopwatch measures real
+  // wall-clock time, which does not advance together with
+  // `tester.pump(duration)`'s fake-async clock in widget tests, whereas
+  // Timer callbacks do.
+  Timer? _graceTimer;
+  Timer? _ticker;
+  bool _isPastGracePeriod = false;
+  int _elapsedSeconds = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _graceTimer = Timer(_JobsLoadingView._gracePeriod, () {
+      if (mounted) setState(() => _isPastGracePeriod = true);
+    });
+    _ticker = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (mounted) setState(() => _elapsedSeconds++);
+    });
+  }
+
+  @override
+  void dispose() {
+    _graceTimer?.cancel();
+    _ticker?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.all(AppSpacing.xl),
+    return Column(
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: const [
-            SizedBox(
-              width: 16,
-              height: 16,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            ),
-            SizedBox(width: AppSpacing.xs),
-            Text(
-              'Finding jobs for you…',
-              style: TextStyle(color: AppColors.inkMuted, fontSize: 12.5),
-            ),
-          ],
-        ),
-        const SizedBox(height: AppSpacing.lg),
-        const AppSkeletonGroup(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+        const LinearProgressIndicator(minHeight: 3),
+        Expanded(
+          child: ListView(
+            padding: const EdgeInsets.all(AppSpacing.xl),
             children: [
-              AppSkeleton(height: 56),
-              SizedBox(height: AppSpacing.md),
-              AppSkeleton(height: 40),
-              SizedBox(height: AppSpacing.lg),
-              _JobCardSkeleton(),
-              SizedBox(height: AppSpacing.md),
-              _JobCardSkeleton(),
-              SizedBox(height: AppSpacing.md),
-              _JobCardSkeleton(),
-              SizedBox(height: AppSpacing.md),
-              _JobCardSkeleton(),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                  const SizedBox(width: AppSpacing.xs),
+                  Text(
+                    _isPastGracePeriod
+                        ? 'Still finding jobs for you — this can take a '
+                              'moment on a slow connection (${_elapsedSeconds}s)'
+                        : 'Finding jobs for you…',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: AppColors.inkMuted,
+                      fontSize: 12.5,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.lg),
+              const AppSkeletonGroup(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    AppSkeleton(height: 56),
+                    SizedBox(height: AppSpacing.md),
+                    AppSkeleton(height: 40),
+                    SizedBox(height: AppSpacing.lg),
+                    _JobCardSkeleton(),
+                    SizedBox(height: AppSpacing.md),
+                    _JobCardSkeleton(),
+                    SizedBox(height: AppSpacing.md),
+                    _JobCardSkeleton(),
+                    SizedBox(height: AppSpacing.md),
+                    _JobCardSkeleton(),
+                  ],
+                ),
+              ),
             ],
           ),
         ),
