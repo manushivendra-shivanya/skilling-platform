@@ -9,8 +9,8 @@ import '../../core/analytics/analytics_tracker.dart';
 import '../../core/repositories/candidate_session_repository.dart';
 import '../../core/widgets/app_error_boundary.dart';
 import '../../features/authentication/presentation/authenticated_placeholder_screen.dart';
+import '../../features/authentication/presentation/email_entry_screen.dart';
 import '../../features/authentication/presentation/otp_entry_screen.dart';
-import '../../features/authentication/presentation/phone_entry_screen.dart';
 import '../../features/coach/presentation/coach_screen.dart';
 import '../../features/dev_tools/presentation/design_system_gallery_screen.dart';
 import '../../features/home/presentation/home_dashboard_screen.dart';
@@ -66,8 +66,8 @@ const languageSelectionRoutePath = '/welcome/language';
 const languageSelectionRouteName = 'language-selection';
 const signInChoiceRoutePath = '/welcome/sign-in';
 const signInChoiceRouteName = 'sign-in-choice';
-const phoneEntryRoutePath = '/auth/phone';
-const phoneEntryRouteName = 'phone-entry';
+const emailEntryRoutePath = '/auth/email';
+const emailEntryRouteName = 'email-entry';
 const otpEntryRoutePath = '/auth/otp';
 const otpEntryRouteName = 'otp-entry';
 const authenticatedRoutePath = '/auth/success';
@@ -279,12 +279,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       candidateOnboardingRepositoryProvider,
     ),
     showDevelopmentTools: !ref.watch(appConfigProvider).isProduction,
-    // The dev-skip flow writes a fake, non-UUID candidate id, which always
-    // fails Postgres's UUID check and RLS against a real Supabase backend
-    // (see _skipToHomeForDev's doc comment). Once real Supabase
-    // configuration is active, Google sign-in is the real way to reach
-    // Home -- keep the button only for the pure-mock build.
-    allowDevSkipToHome: !ref.watch(appConfigProvider).hasSupabaseConfiguration,
+    // Available in any non-production build, including one wired to a real
+    // Supabase project. It used to be switched off as soon as Supabase was
+    // configured, which meant a correctly configured review build had no way
+    // in at all when sign-in was unavailable -- and reviewing the UI is
+    // exactly what a review build is for. See _skipToHomeForDev for what
+    // does and does not work once inside.
+    allowDevSkipToHome: !ref.watch(appConfigProvider).isProduction,
   );
   ref.onDispose(router.dispose);
   return router;
@@ -310,6 +311,7 @@ GoRouter createAppRouter({
       location: state.matchedLocation,
       candidateSessionRepository: candidateSessionRepository,
       candidateOnboardingRepository: candidateOnboardingRepository,
+      allowDevSkipToHome: allowDevSkipToHome,
     ),
     routes: [
       GoRoute(
@@ -354,14 +356,14 @@ GoRouter createAppRouter({
         path: signInChoiceRoutePath,
         name: signInChoiceRouteName,
         builder: (context, state) => SignInChoiceScreen(
-          onContinueWithPhone: () => context.push(phoneEntryRoutePath),
+          onContinueWithEmail: () => context.push(emailEntryRoutePath),
           onGoogleAuthenticated: () => context.go(authenticatedRoutePath),
         ),
       ),
       GoRoute(
-        path: phoneEntryRoutePath,
-        name: phoneEntryRouteName,
-        builder: (context, state) => PhoneEntryScreen(
+        path: emailEntryRoutePath,
+        name: emailEntryRouteName,
+        builder: (context, state) => EmailEntryScreen(
           onOtpRequested: () => context.push(otpEntryRoutePath),
         ),
       ),
@@ -370,7 +372,7 @@ GoRouter createAppRouter({
         name: otpEntryRouteName,
         builder: (context, state) => OtpEntryScreen(
           onAuthenticated: () => context.go(authenticatedRoutePath),
-          onRequestNewOtp: () => context.go(phoneEntryRoutePath),
+          onRequestNewOtp: () => context.go(emailEntryRoutePath),
         ),
       ),
       GoRoute(
@@ -403,12 +405,9 @@ GoRouter createAppRouter({
                 path: homeRoutePath,
                 name: homeRouteName,
                 builder: (context, state) => HomeDashboardScreen(
-                  onOpenCoach: () => context.push(aiCoachRoutePath),
                   onOpenDiagnostic: () => context.push(diagnosticRoutePath),
                   onOpenVoiceInterview: () =>
                       context.push(voiceInterviewRoutePath),
-                  onOpenCareerPassport: () => context.go(profileRoutePath),
-                  onOpenJobs: () => context.go(jobsRoutePath),
                   onOpenPathway: () => context.go(learnRoutePath),
                 ),
               ),
@@ -459,6 +458,7 @@ GoRouter createAppRouter({
                 name: profileRouteName,
                 builder: (context, state) => ProfileScreen(
                   onLoggedOut: () => context.go(welcomeRoutePath),
+                  onOpenDiagnostic: () => context.push(diagnosticRoutePath),
                 ),
               ),
             ],
@@ -849,18 +849,34 @@ GoRouter createAppRouter({
   );
 }
 
-/// Dev-tools-only shortcut: saves a fake authenticated session and a
+/// The candidate id the dev skip signs in as. Fixed, obviously synthetic, and
+/// hex-valid in every group so it passes Postgres's UUID type check rather
+/// than erroring. The redirect recognises it and treats onboarding as done.
+const devSkipCandidateId = '00000000-0000-4000-8000-00000000dead';
+
+/// Dev-tools-only shortcut: saves a local authenticated session and a
 /// completed onboarding draft directly, then lets the normal redirect
-/// logic carry the router to Home. Exists purely so testing screens past
-/// onboarding (e.g. the Learn tab) doesn't require re-typing the whole
-/// candidate profile form on every fresh install.
+/// logic carry the router to Home. Exists so screens past onboarding can be
+/// reviewed without re-typing the whole candidate profile form, and without
+/// depending on phone OTP or Google sign-in being reachable.
+///
+/// What works after skipping: everything backed locally or by a mock
+/// repository -- Home, the workplace simulation, micro-lessons, the
+/// certification exam, saved jobs, the design system gallery.
+///
+/// What does not: anything that queries Supabase. The id below is a
+/// well-formed UUID so it survives Postgres's type check rather than
+/// erroring, but there is no matching `auth.users` row, so RLS denies the
+/// read and those screens show their empty or error state. That is the
+/// intended, legible failure -- this shortcut reviews the UI, it does not
+/// impersonate a candidate.
 Future<void> _skipToHomeForDev({
   required BuildContext context,
   required CandidateSessionRepository candidateSessionRepository,
   required CandidateOnboardingRepository candidateOnboardingRepository,
 }) async {
   const session = CandidateSession(
-    candidateId: 'dev-skip-candidate',
+    candidateId: devSkipCandidateId,
     isAuthenticated: true,
   );
   await candidateSessionRepository.saveSession(session);
@@ -897,10 +913,27 @@ Future<void> _skipToHomeForDev({
   }
 }
 
+/// Test seam for the redirect rule. Driving a full GoRouter to assert one
+/// branch pulls in the whole widget tree; the rule itself is a pure function
+/// of two repositories and a flag, so expose it directly.
+@visibleForTesting
+Future<String?> redirectForCandidateStateForTest({
+  required String location,
+  required CandidateSessionRepository candidateSessionRepository,
+  required CandidateOnboardingRepository candidateOnboardingRepository,
+  bool allowDevSkipToHome = false,
+}) => _redirectForCandidateState(
+  location: location,
+  candidateSessionRepository: candidateSessionRepository,
+  candidateOnboardingRepository: candidateOnboardingRepository,
+  allowDevSkipToHome: allowDevSkipToHome,
+);
+
 Future<String?> _redirectForCandidateState({
   required String location,
   required CandidateSessionRepository candidateSessionRepository,
   required CandidateOnboardingRepository candidateOnboardingRepository,
+  bool allowDevSkipToHome = false,
 }) async {
   final needsCandidateSession =
       location == authenticatedRoutePath ||
@@ -917,6 +950,16 @@ Future<String?> _redirectForCandidateState({
   );
   if (session == null || !session.isAuthenticated) {
     return welcomeRoutePath;
+  }
+
+  // The dev session's onboarding draft lives wherever the configured
+  // onboarding repository put it -- and against a real Supabase project that
+  // is nowhere, because RLS rejects a candidate id with no auth.users row.
+  // Reading it back therefore always reports "onboarding incomplete" and the
+  // redirect bounces to the profile form, which is precisely the screen the
+  // skip exists to get past. Treat this one known id as already onboarded.
+  if (allowDevSkipToHome && session.candidateId == devSkipCandidateId) {
+    return location == authenticatedRoutePath ? homeRoutePath : null;
   }
 
   if (location == candidateOnboardingRoutePath) {

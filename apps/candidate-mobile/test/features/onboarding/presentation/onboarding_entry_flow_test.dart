@@ -30,7 +30,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('आप कैसे आगे बढ़ना चाहेंगे?'), findsOneWidget);
-      expect(find.text('फ़ोन नंबर से आगे बढ़ें'), findsOneWidget);
+      expect(find.text('ईमेल से आगे बढ़ें'), findsOneWidget);
       expect(
         find.text('जल्द उपलब्ध होगा — अभी सेट अप नहीं है'),
         findsOneWidget,
@@ -55,7 +55,7 @@ void main() {
     },
   );
 
-  testWidgets('opens development phone sign-in and policy summaries', (
+  testWidgets('opens development email sign-in and policy summaries', (
     tester,
   ) async {
     await tester.pumpCandidateApp();
@@ -67,9 +67,9 @@ void main() {
     await tester.tap(find.text('Continue'));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Continue with phone'));
+    await tester.tap(find.text('Continue with email'));
     await tester.pumpAndSettle();
-    expect(find.text('Enter your mobile number'), findsOneWidget);
+    expect(find.text('Enter your email address'), findsOneWidget);
     await tester.pageBack();
     await tester.pumpAndSettle();
 

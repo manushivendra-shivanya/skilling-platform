@@ -32,12 +32,8 @@ void main() {
   testWidgets('Home supports populated, empty, and recoverable error states', (
     tester,
   ) async {
-    // The "Today's services" rail + journey/readiness cards push "Open
-    // career diagnostic" out of ListView's default build extent at the
-    // default 800x600 test surface -- it's not just off-screen, it's
-    // genuinely unbuilt, so find.text finds nothing rather than something
-    // untappable. A taller surface keeps it (and everything after it)
-    // built without needing to scroll first.
+    // Home is short enough to build in one pass now, but the empty and
+    // error states below still need room for the drag.
     await tester.binding.setSurfaceSize(const Size(800, 1400));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     final repository = MockHomeDashboardRepository();
@@ -47,13 +43,13 @@ void main() {
       homeDashboardRepository: repository,
     );
     await tester.pumpAndSettle();
-    expect(find.text('Open career diagnostic'), findsOneWidget);
+    expect(find.text('साक्षात्कार (इंटरव्यू) अभ्यास'), findsOneWidget);
 
     repository.setResponse(const Success(null));
-    // Drag from the always-visible greeting rather than "Open career
-    // diagnostic" -- the new "Today's services" rail above it can push that
-    // button below the fold at the default test surface size.
-    await tester.drag(find.text('Namaste!'), const Offset(0, 500));
+    // Drag from the greeting in the header: it is the one element present
+    // for every dashboard shape, so it cannot be pushed below the fold by
+    // an optional card above it.
+    await tester.drag(find.text('नमस्ते'), const Offset(0, 500));
     await tester.pump();
     await tester.pumpAndSettle();
     expect(find.text('Your journey starts here'), findsOneWidget);

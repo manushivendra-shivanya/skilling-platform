@@ -17,27 +17,24 @@ void main() {
       analyticsTracker: analytics,
     );
     await tester.pumpAndSettle();
-    await _openPhoneEntry(tester);
+    await _openEmailEntry(tester);
 
     await tester.enterText(
-      find.bySemanticsLabel('Indian mobile number, 10 digits'),
-      '9876543210',
+      find.bySemanticsLabel('Email address'),
+      'candidate@example.com',
     );
-    await tester.tap(find.text('Send development OTP'));
+    await tester.tap(find.text('Send development code'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
 
-    expect(
-      find.text('Development OTP: 123456\nNo SMS has been sent.'),
-      findsOneWidget,
-    );
+    expect(find.text('Development code for ca***@example.com'), findsOneWidget);
     await tester.enterText(
       find.bySemanticsLabel('Six digit one time password'),
       '000000',
     );
     await tester.tap(find.text('Verify and continue'));
     await tester.pump();
-    expect(find.textContaining('OTP is incorrect'), findsWidgets);
+    expect(find.textContaining('code is incorrect'), findsWidgets);
 
     await tester.enterText(
       find.bySemanticsLabel('Six digit one time password'),
@@ -66,7 +63,7 @@ void main() {
   ) async {
     final sessions = InMemoryCandidateSessionRepository(
       session: const CandidateSession(
-        candidateId: 'dev-candidate-3210',
+        candidateId: 'dev-candidate-candidate',
         isAuthenticated: true,
       ),
     );
@@ -91,7 +88,7 @@ void main() {
     );
   });
 
-  testWidgets('invalid phone and resend states are explicit', (tester) async {
+  testWidgets('invalid email and resend states are explicit', (tester) async {
     final clock = DateTime.now().subtract(const Duration(seconds: 31));
     await tester.pumpCandidateApp(
       developmentAuthRepository: MockDevelopmentAuthRepository(
@@ -100,44 +97,41 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    await _openPhoneEntry(tester);
+    await _openEmailEntry(tester);
 
     await tester.enterText(
-      find.bySemanticsLabel('Indian mobile number, 10 digits'),
-      '123',
+      find.bySemanticsLabel('Email address'),
+      'not-an-email',
     );
-    await tester.tap(find.text('Send development OTP'));
+    await tester.tap(find.text('Send development code'));
     await tester.pump();
-    expect(find.textContaining('valid 10-digit'), findsOneWidget);
+    expect(find.textContaining('valid email'), findsOneWidget);
 
     await tester.enterText(
-      find.bySemanticsLabel('Indian mobile number, 10 digits'),
-      '9876543210',
+      find.bySemanticsLabel('Email address'),
+      'candidate@example.com',
     );
-    await tester.tap(find.text('Send development OTP'));
+    await tester.tap(find.text('Send development code'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
 
     expect(find.text('Resend OTP'), findsOneWidget);
     await tester.tap(find.text('Resend OTP'));
     await tester.pump();
-    expect(
-      find.text('Development OTP: 123456\nNo SMS has been sent.'),
-      findsOneWidget,
-    );
-    await tester.tap(find.text('Change phone number'));
+    expect(find.text('Development code for ca***@example.com'), findsOneWidget);
+    await tester.tap(find.text('Change email address'));
     await tester.pumpAndSettle();
   });
 }
 
-Future<void> _openPhoneEntry(WidgetTester tester) async {
+Future<void> _openEmailEntry(WidgetTester tester) async {
   await tester.tap(find.text('Choose your language'));
   await tester.pumpAndSettle();
   await tester.tap(find.text('English'));
   await tester.pumpAndSettle();
   await tester.tap(find.text('Continue'));
   await tester.pumpAndSettle();
-  await tester.tap(find.text('Continue with phone'));
+  await tester.tap(find.text('Continue with email'));
   await tester.pumpAndSettle();
-  expect(find.text('Enter your mobile number'), findsOneWidget);
+  expect(find.text('Enter your email address'), findsOneWidget);
 }

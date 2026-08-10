@@ -89,8 +89,8 @@ class _OtpEntryScreenState extends ConsumerState<OtpEntryScreen> {
     final challenge = authState.challenge;
     // The hardcoded "123456" code only ever worked against the local mock
     // repository. Once real Supabase configuration is active,
-    // developmentAuthRepositoryProvider swaps in SupabasePhoneAuthRepository,
-    // which requires a genuine SMS round-trip -- showing the old dev-code
+    // developmentAuthRepositoryProvider swaps in SupabaseEmailAuthRepository,
+    // which requires a genuine email round-trip -- showing the old dev-code
     // hint there would be actively misleading.
     final isRealBackend = ref.watch(
       appConfigProvider.select((config) => config.hasSupabaseConfiguration),
@@ -116,7 +116,7 @@ class _OtpEntryScreenState extends ConsumerState<OtpEntryScreen> {
 
     final resendSeconds = _remainingSeconds(_resendAvailableAt);
     final expirySeconds = _remainingSeconds(_expiresAt);
-    final maskedPhone = '******${challenge.phoneNumber.substring(6)}';
+    final maskedEmail = _maskEmail(challenge.contact);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Verify OTP')),
@@ -134,8 +134,8 @@ class _OtpEntryScreenState extends ConsumerState<OtpEntryScreen> {
               const SizedBox(height: AppSpacing.sm),
               Text(
                 isRealBackend
-                    ? 'Code sent for +91 $maskedPhone'
-                    : 'Development code for +91 $maskedPhone',
+                    ? 'Code sent to $maskedEmail'
+                    : 'Development code for $maskedEmail',
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: AppSpacing.xl),
@@ -143,11 +143,11 @@ class _OtpEntryScreenState extends ConsumerState<OtpEntryScreen> {
                 const AppCard(
                   backgroundColor: AppColors.warningSoft,
                   semanticLabel:
-                      'Phone sign-in requires a real SMS provider to be '
+                      'Email sign-in requires a real mail provider to be '
                       'enabled on the backend. Use Google sign-in instead if '
                       'this code never arrives.',
                   child: Text(
-                    'We texted you a 6-digit code. If it does not arrive, '
+                    'We emailed you a 6-digit code. If it does not arrive, '
                     'use Google sign-in instead.',
                     textAlign: TextAlign.center,
                   ),
@@ -156,9 +156,9 @@ class _OtpEntryScreenState extends ConsumerState<OtpEntryScreen> {
                 const AppCard(
                   backgroundColor: AppColors.warningSoft,
                   semanticLabel:
-                      'Development OTP is 123456. No SMS has been sent.',
+                      'Development code is 123456. No email has been sent.',
                   child: Text(
-                    'Development OTP: 123456\nNo SMS has been sent.',
+                    'Development code: 123456\nNo email has been sent.',
                     textAlign: TextAlign.center,
                   ),
                 ),
@@ -194,7 +194,7 @@ class _OtpEntryScreenState extends ConsumerState<OtpEntryScreen> {
                 onPressed: resendSeconds == 0 ? _resendOtp : null,
               ),
               AppButton(
-                label: 'Change phone number',
+                label: 'Change email address',
                 variant: AppButtonVariant.text,
                 onPressed: widget.onRequestNewOtp,
               ),
@@ -204,4 +204,17 @@ class _OtpEntryScreenState extends ConsumerState<OtpEntryScreen> {
       ),
     );
   }
+}
+
+/// `ab***@example.com` -- keeps the domain, which the candidate needs to
+/// recognise the right inbox, while not putting their full address on
+/// screen. Falls back to masking the whole local part for very short ones
+/// rather than exposing it unmasked.
+String _maskEmail(String email) {
+  final atIndex = email.indexOf('@');
+  if (atIndex <= 0) return email;
+  final localPart = email.substring(0, atIndex);
+  final domain = email.substring(atIndex);
+  final visible = localPart.length <= 2 ? 1 : 2;
+  return '${localPart.substring(0, visible)}***$domain';
 }

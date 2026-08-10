@@ -2,6 +2,41 @@ name: Build Candidate Mobile APK
 
 on:
   workflow_dispatch:
+    inputs:
+      release_tag:
+        description: >-
+          Publish the APK as a GitHub release under this tag
+          (e.g. v0.1.0-home-redesign). Leave blank to only upload a
+          build artifact.
+        required: false
+        default: ''
+      release_name:
+        description: 'Title for the release. Defaults to the tag.'
+        required: false
+        default: ''
+      # One-off overrides for a manual build. Repository variables are the
+      # durable home for these -- anything passed here is recorded in this
+      # run's metadata, and has to be re-entered on every later build. Only
+      # ever pass values that already ship inside the APK and are public by
+      # design: the Supabase publishable key (safe with RLS on, which every
+      # table has), the OAuth *web* client ID, and the two base URLs. Never
+      # an sb_secret_/service_role key or an OAuth client secret.
+      supabase_url:
+        description: 'Override SUPABASE_URL (else repo secret/variable).'
+        required: false
+        default: ''
+      supabase_publishable_key:
+        description: 'Override SUPABASE_PUBLISHABLE_KEY. Publishable/anon key only.'
+        required: false
+        default: ''
+      api_base_url:
+        description: 'Override API_BASE_URL, including /v1.'
+        required: false
+        default: ''
+      google_web_client_id:
+        description: 'Override GOOGLE_WEB_CLIENT_ID. Web application client ID.'
+        required: false
+        default: ''
   push:
     branches:
       - feature/flutter-foundation
@@ -10,6 +45,10 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+
+    # Needed only by the release step below; pushes never reach it.
+    permissions:
+      contents: write
 
     defaults:
       run:
@@ -32,15 +71,166 @@ jobs:
 
       - run: flutter analyze
 
+      - run: flutter test
+
+      # A build missing these dart-defines still compiles and installs -- it
+      # just silently comes up with no Supabase, no API and no Google Sign-In,
+      # because AppConfig gates each feature on its value being present
+      # (lib/core/config/app_environment.dart). That is exactly how a review
+      # APK shipped with Jobs empty and Google Sign-In hidden. Fail loudly
+      # instead, at least for anything published for someone to install.
+      - name: Check app configuration
+        env:
+          SUPABASE_URL: ${{ inputs.supabase_url || secrets.SUPABASE_URL || vars.SUPABASE_URL }}
+          SUPABASE_PUBLISHABLE_KEY: ${{ inputs.supabase_publishable_key || secrets.SUPABASE_PUBLISHABLE_KEY || vars.SUPABASE_PUBLISHABLE_KEY }}
+          API_BASE_URL: ${{ inputs.api_base_url || secrets.API_BASE_URL || vars.API_BASE_URL }}
+          GOOGLE_WEB_CLIENT_ID: ${{ inputs.google_web_client_id || secrets.GOOGLE_WEB_CLIENT_ID || vars.GOOGLE_WEB_CLIENT_ID }}
+          PUBLISHING: ${{ inputs.release_tag != '' }}
+        run: |
+          set -euo pipefail
+          missing=()
+          for var in SUPABASE_URL SUPABASE_PUBLISHABLE_KEY API_BASE_URL GOOGLE_WEB_CLIENT_ID; do
+            [ -z "${!var:-}" ] && missing+=("$var")
+          done
+
+          if [ ${#missing[@]} -eq 0 ]; then
+            echo "All app configuration present."
+            exit 0
+          fi
+
+          echo "Missing configuration: ${missing[*]}" >&2
+          echo "Set them under Settings -> Secrets and variables -> Actions." >&2
+
+          if [ "$PUBLISHING" = "true" ]; then
+            echo "Refusing to publish an installable APK with features silently off." >&2
+            exit 1
+          fi
+          echo "::warning::Building without ${missing[*]} -- those features will be unavailable."
+
+      # Without a fixed keystore every run signs with a different fingerprint,
+      # which can never be registered against the Android OAuth client -- so
+      # Google Sign-In cannot work on a CI build. Decoding this secret gives
+      # review builds one stable identity to register. Optional: absent it the
+      # build still succeeds, just with Google Sign-In unavailable.
+      - name: Restore review signing keystore
+        id: keystore
+        env:
+          KEYSTORE_B64: ${{ secrets.FLORA_REVIEW_KEYSTORE_B64 }}
+        run: |
+          set -euo pipefail
+          if [ -z "${KEYSTORE_B64:-}" ]; then
+            echo "::warning::FLORA_REVIEW_KEYSTORE_B64 not set -- signing with a throwaway debug keystore, so Google Sign-In will not work in this build."
+            exit 0
+          fi
+          path="$RUNNER_TEMP/flora-review.keystore"
+          printf '%s' "$KEYSTORE_B64" | base64 -d > "$path"
+          echo "FLORA_REVIEW_KEYSTORE=$path" >> "$GITHUB_ENV"
+          echo "restored review keystore"
+
       # MICRO_LESSON_CDN_BASE_URL is the public r2.dev URL for the
       # flora-micro-lessons bucket -- not a secret, it's meant to be
       # publicly reachable. Clips with a cloudflareVideoPath resolve to
       # this CDN; clips without one keep using their bundled local asset.
-      - run: >-
+      - name: Build debug APK
+        env:
+          FLORA_REVIEW_KEYSTORE_PASSWORD: ${{ secrets.FLORA_REVIEW_KEYSTORE_PASSWORD }}
+          FLORA_REVIEW_KEY_ALIAS: ${{ secrets.FLORA_REVIEW_KEY_ALIAS }}
+          FLORA_REVIEW_KEY_PASSWORD: ${{ secrets.FLORA_REVIEW_KEY_PASSWORD }}
+          SUPABASE_URL: ${{ inputs.supabase_url || secrets.SUPABASE_URL || vars.SUPABASE_URL }}
+          SUPABASE_PUBLISHABLE_KEY: ${{ inputs.supabase_publishable_key || secrets.SUPABASE_PUBLISHABLE_KEY || vars.SUPABASE_PUBLISHABLE_KEY }}
+          API_BASE_URL: ${{ inputs.api_base_url || secrets.API_BASE_URL || vars.API_BASE_URL }}
+          GOOGLE_WEB_CLIENT_ID: ${{ inputs.google_web_client_id || secrets.GOOGLE_WEB_CLIENT_ID || vars.GOOGLE_WEB_CLIENT_ID }}
+          MICRO_LESSON_CDN_BASE_URL: ${{ vars.MICRO_LESSON_CDN_BASE_URL || 'https://pub-968107cb08f34b87b748a3700b60843e.r2.dev' }}
+        run: >-
           flutter build apk --debug
-          --dart-define=MICRO_LESSON_CDN_BASE_URL=https://pub-968107cb08f34b87b748a3700b60843e.r2.dev
+          --dart-define=SUPABASE_URL="$SUPABASE_URL"
+          --dart-define=SUPABASE_PUBLISHABLE_KEY="$SUPABASE_PUBLISHABLE_KEY"
+          --dart-define=API_BASE_URL="$API_BASE_URL"
+          --dart-define=GOOGLE_WEB_CLIENT_ID="$GOOGLE_WEB_CLIENT_ID"
+          --dart-define=MICRO_LESSON_CDN_BASE_URL="$MICRO_LESSON_CDN_BASE_URL"
+
+      # Google checks the signing certificate's SHA-1 against the Android
+      # OAuth client, and Gradle generates a fresh debug keystore on any
+      # machine that lacks one -- so every CI run signs with a different
+      # fingerprint than a developer's laptop does. Print it: when Google
+      # Sign-In fails on a CI build, the first question is always whether
+      # this value is registered, and otherwise there is no way to find out.
+      - name: Report signing fingerprint
+        if: always()
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.FLORA_REVIEW_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.FLORA_REVIEW_KEY_ALIAS }}
+        run: |
+          set -euo pipefail
+          # Report whichever key actually signed this APK: the stable review
+          # keystore when one was restored, otherwise the throwaway debug one.
+          if [ -n "${FLORA_REVIEW_KEYSTORE:-}" ] && [ -f "$FLORA_REVIEW_KEYSTORE" ]; then
+            keystore="$FLORA_REVIEW_KEYSTORE"
+            alias="${KEY_ALIAS:-flora-review}"
+            storepass="${KEYSTORE_PASSWORD:-}"
+            kind="review keystore (stable)"
+          else
+            keystore="$HOME/.android/debug.keystore"
+            alias="androiddebugkey"
+            storepass="android"
+            kind="throwaway debug keystore -- changes every run"
+          fi
+          if [ ! -f "$keystore" ]; then
+            echo "No keystore at $keystore -- build did not reach signing."
+            exit 0
+          fi
+          sha1=$(keytool -list -v -keystore "$keystore" \
+            -alias "$alias" -storepass "$storepass" 2>/dev/null \
+            | grep -E '^\s*SHA1:' | head -1 | sed -E 's/.*SHA1:\s*//')
+          echo "signed with: $kind"
+          {
+            echo "### Signing fingerprint"
+            echo ""
+            echo "Package: \`com.example.candidate_mobile\`"
+            echo "SHA-1: \`${sha1}\`"
+            echo ""
+            echo "Signed with: ${kind}"
+            echo ""
+            echo "Google Sign-In only works if this exact SHA-1 is registered"
+            echo "against that package in an **Android** OAuth client in Google"
+            echo "Cloud Console."
+          } >> "$GITHUB_STEP_SUMMARY"
+          echo "signing SHA-1: $sha1"
 
       - uses: actions/upload-artifact@v4
         with:
           name: candidate-mobile-debug-apk
           path: apps/candidate-mobile/build/app/outputs/flutter-apk/app-debug.apk
+
+      # An upload-artifact zip needs a GitHub login and expires. A release
+      # asset has a plain download URL a tester can open on their phone,
+      # which is the point of building an APK for review at all.
+      - name: Publish APK as a release asset
+        if: github.event_name == 'workflow_dispatch' && inputs.release_tag != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.release_tag }}
+          TITLE: ${{ inputs.release_name }}
+        run: |
+          set -euo pipefail
+          asset="flora-candidate-app-${TAG}.apk"
+          cp build/app/outputs/flutter-apk/app-debug.apk "$asset"
+
+          # Debug signing keys: installable for review, not Play-ready.
+          notes=$(printf '%s\n' \
+            "Debug APK built from \`${GITHUB_REF_NAME}\` at \`${GITHUB_SHA}\`." \
+            "" \
+            "Signed with debug keys — install for review only, not for distribution." \
+            "Enable \"install from unknown sources\" on the device first.")
+
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" "$asset" --clobber
+          else
+            gh release create "$TAG" "$asset" \
+              --target "$GITHUB_SHA" \
+              --title "${TITLE:-$TAG}" \
+              --notes "$notes" \
+              --prerelease
+          fi
+
+          echo "Release: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/releases/tag/${TAG}" >> "$GITHUB_STEP_SUMMARY"

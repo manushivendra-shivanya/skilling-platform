@@ -46,11 +46,19 @@ class DevelopmentAuthController extends Notifier<DevelopmentAuthState> {
   @override
   DevelopmentAuthState build() => const DevelopmentAuthState();
 
-  Future<bool> requestOtp(String phoneNumber) async {
+  /// Drops a validation or delivery error without starting a new request, so
+  /// a message about the previous attempt stops contradicting what the
+  /// candidate has since typed.
+  void clearFailure() {
+    if (state.failure == null) return;
+    state = state.copyWith(clearFailure: true);
+  }
+
+  Future<bool> requestOtp(String email) async {
     state = state.copyWith(isRequesting: true, clearFailure: true);
     final result = await ref
         .read(developmentAuthRepositoryProvider)
-        .requestOtp(phoneNumber);
+        .requestOtp(email);
     return result.when(
       success: (challenge) {
         state = DevelopmentAuthState(challenge: challenge);
@@ -159,16 +167,16 @@ class DevelopmentAuthController extends Notifier<DevelopmentAuthState> {
   }
 
   Future<bool> resendOtp() {
-    final phoneNumber = state.challenge?.phoneNumber;
-    if (phoneNumber == null) {
+    final contact = state.challenge?.contact;
+    if (contact == null) {
       state = state.copyWith(
         failure: const AuthenticationFailure(
-          'Enter your phone number again to request an OTP.',
+          'Enter your email again to request a code.',
         ),
       );
       return Future.value(false);
     }
-    return requestOtp(phoneNumber);
+    return requestOtp(contact);
   }
 
   void clear() {

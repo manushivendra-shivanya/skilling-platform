@@ -2,36 +2,29 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/app_colors.dart';
-import '../../../app/theme/app_icons.dart';
+import '../../../app/theme/app_radius.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../core/errors/app_failure.dart';
-import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_skeleton.dart';
 import '../../../core/widgets/app_state_view.dart';
 import '../../../core/widgets/app_status_banner.dart';
 import '../domain/home_dashboard_repository.dart';
 import 'home_dashboard_controller.dart';
-import 'journey_step_card.dart';
-import 'readiness_ring_card.dart';
-import 'today_services_carousel.dart';
+import 'home_header.dart';
+import 'today_mission_card.dart';
+import 'upcoming_interview_card.dart';
 
 class HomeDashboardScreen extends ConsumerWidget {
   const HomeDashboardScreen({
-    required this.onOpenCoach,
     required this.onOpenDiagnostic,
     required this.onOpenVoiceInterview,
-    required this.onOpenCareerPassport,
-    required this.onOpenJobs,
     required this.onOpenPathway,
     super.key,
   });
 
-  final VoidCallback onOpenCoach;
   final VoidCallback onOpenDiagnostic;
   final VoidCallback onOpenVoiceInterview;
-  final VoidCallback onOpenCareerPassport;
-  final VoidCallback onOpenJobs;
   final VoidCallback onOpenPathway;
 
   @override
@@ -60,11 +53,8 @@ class HomeDashboardScreen extends ConsumerWidget {
         }
         return _HomeContent(
           dashboard: value,
-          onOpenCoach: onOpenCoach,
           onOpenDiagnostic: onOpenDiagnostic,
           onOpenVoiceInterview: onOpenVoiceInterview,
-          onOpenCareerPassport: onOpenCareerPassport,
-          onOpenJobs: onOpenJobs,
           onOpenPathway: onOpenPathway,
           onRefresh: () =>
               ref.read(homeDashboardControllerProvider.notifier).refresh(),
@@ -77,188 +67,132 @@ class HomeDashboardScreen extends ConsumerWidget {
 class _HomeContent extends StatelessWidget {
   const _HomeContent({
     required this.dashboard,
-    required this.onOpenCoach,
     required this.onOpenDiagnostic,
     required this.onOpenVoiceInterview,
-    required this.onOpenCareerPassport,
-    required this.onOpenJobs,
     required this.onOpenPathway,
     required this.onRefresh,
   });
 
   final HomeDashboard dashboard;
-  final VoidCallback onOpenCoach;
   final VoidCallback onOpenDiagnostic;
   final VoidCallback onOpenVoiceInterview;
-  final VoidCallback onOpenCareerPassport;
-  final VoidCallback onOpenJobs;
   final VoidCallback onOpenPathway;
   final Future<void> Function() onRefresh;
 
+  /// How far the mission card rises into the gradient. The header reserves
+  /// [_cardLift] + breathing room below its content, and the card is lifted
+  /// back up by [_cardLift], so it lands half on the brand block and half on
+  /// the page — the overlap the first Home mock had.
+  static const double _cardLift = 28;
+
   @override
   Widget build(BuildContext context) {
+    final mission = dashboard.todayMission;
+    final interview = dashboard.nextInterview;
+    final pathway = dashboard.pathway;
+
     return RefreshIndicator(
       onRefresh: onRefresh,
       child: ListView(
-        padding: const EdgeInsets.fromLTRB(
-          AppSpacing.xl,
-          AppSpacing.md,
-          AppSpacing.xl,
-          112,
-        ),
+        padding: const EdgeInsets.only(bottom: 112),
         children: [
-          Text('Namaste!', style: Theme.of(context).textTheme.headlineMedium),
-          const SizedBox(height: AppSpacing.xs),
-          const Text('One practical step at a time.'),
-          if (dashboard.pendingSyncCount > 0) ...[
-            const SizedBox(height: AppSpacing.md),
-            AppPendingSyncBanner(pendingCount: dashboard.pendingSyncCount),
-          ],
-          const SizedBox(height: AppSpacing.lg),
-          Text(
-            'Today’s services',
-            style: Theme.of(context).textTheme.titleMedium,
+          HomeHeader(
+            dashboard: dashboard,
+            bottomInset: mission == null ? 0 : _cardLift + AppSpacing.md,
           ),
-          const SizedBox(height: AppSpacing.sm),
-          TodayServicesCarousel(
-            services: [
-              TodayService(
-                label: 'Proof',
-                icon: Icons.verified_outlined,
-                background: AppColors.successSoft,
-                foreground: AppColors.success,
-                onTap: onOpenCareerPassport,
+          if (mission != null)
+            // Transform, not a negative margin: the card keeps its own slot in
+            // the list, so the space it vacates below becomes the gap to the
+            // next section and nothing overlaps that it shouldn't.
+            Transform.translate(
+              offset: const Offset(0, -_cardLift),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+                child: TodayMissionCard(
+                  mission: mission,
+                  onStart: onOpenPathway,
+                ),
               ),
-              TodayService(
-                label: 'Verified Jobs',
-                icon: Icons.work_outline,
-                background: AppColors.infoSoft,
-                foreground: AppColors.info,
-                onTap: onOpenJobs,
-              ),
-              TodayService(
-                label: 'Book Consultation',
-                icon: Icons.event_available_outlined,
-                background: AppColors.accentSoft,
-                foreground: AppColors.accent,
-              ),
-              TodayService(
-                label: 'Book Mock Interview',
-                icon: Icons.groups_outlined,
-                background: AppColors.surfaceMuted,
-                foreground: AppColors.ink,
-              ),
-              TodayService(
-                label: 'Your Career Pathway',
-                icon: Icons.route_outlined,
-                background: AppColors.brandSoft,
-                foreground: AppColors.brand,
-                onTap: onOpenPathway,
-              ),
-              TodayService(
-                label: 'Voice Interview Practice',
-                icon: Icons.record_voice_over_outlined,
-                background: AppColors.warningSoft,
-                foreground: AppColors.warning,
-                onTap: onOpenVoiceInterview,
-              ),
-              TodayService(
-                label: 'Interview Lineup',
-                icon: Icons.event_note_outlined,
-                background: AppColors.tealSoft,
-                foreground: AppColors.teal,
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.lg),
-          JourneyStepCard(currentStep: _journeyStepFor(dashboard)),
-          const SizedBox(height: AppSpacing.md),
-          ReadinessRingCard(
-            readinessProgress: dashboard.readinessProgress,
-            learningProgress: dashboard.learningProgress,
-            onOpenDiagnostic: onOpenDiagnostic,
-          ),
-          const SizedBox(height: AppSpacing.md),
-          AppCard(
-            backgroundColor: AppColors.infoSoft,
+            ),
+          Padding(
+            padding: EdgeInsets.fromLTRB(
+              AppSpacing.lg,
+              mission == null ? AppSpacing.md : 0,
+              AppSpacing.lg,
+              0,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const Icon(
-                  Icons.record_voice_over_outlined,
-                  size: 40,
-                  color: AppColors.brand,
-                ),
-                const SizedBox(height: AppSpacing.sm),
+                if (dashboard.pendingSyncCount > 0) ...[
+                  AppPendingSyncBanner(
+                    pendingCount: dashboard.pendingSyncCount,
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                ],
+
+                // Nothing to do today: the pathway is finished or not yet
+                // assigned. Say so and offer the diagnostic, rather than
+                // showing a disabled button.
+                if (mission == null) ...[
+                  AppCard(
+                    backgroundColor: AppColors.brandSoft,
+                    onTap: onOpenDiagnostic,
+                    semanticLabel:
+                        'No mission today. Open the career diagnostic.',
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Aaj koi mission nahi',
+                          style: Theme.of(context).textTheme.titleSmall
+                              ?.copyWith(fontWeight: FontWeight.w700),
+                        ),
+                        const SizedBox(height: AppSpacing.xxs),
+                        const Text(
+                          'Apna career diagnostic poora karein, hum aapke '
+                          'liye agla step chunenge.',
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                ],
+
+                if (interview != null) ...[
+                  UpcomingInterviewCard(
+                    interview: interview,
+                    onPrepare: onOpenVoiceInterview,
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                ],
+
                 Text(
-                  'Voice interview practice',
-                  style: Theme.of(context).textTheme.titleLarge,
-                  textAlign: TextAlign.center,
+                  'Jaari rakhein',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
                 ),
                 const SizedBox(height: AppSpacing.xs),
-                const Text(
-                  'Record three logistics answers, review the transcript, and receive transparent development feedback.',
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: AppSpacing.md),
-                AppButton(
-                  label: 'Start voice practice',
-                  leadingIcon: Icons.mic_none_outlined,
-                  onPressed: onOpenVoiceInterview,
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          AppCard(
-            backgroundColor: AppColors.brandSoft,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(
-                  'Today’s mission',
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
-                const SizedBox(height: AppSpacing.xs),
-                const Text(
-                  'Learn how to report an inventory mismatch clearly.',
-                ),
-                const SizedBox(height: AppSpacing.md),
-                const AppButton(
-                  label: 'Mission arrives in Learning',
-                  onPressed: null,
-                  semanticLabel:
-                      'Mission action. Available in the Learning pathway.',
+
+                if (pathway != null) ...[
+                  _PathwayRow(pathway: pathway, onTap: onOpenPathway),
+                  const SizedBox(height: AppSpacing.sm),
+                ],
+
+                // Only two rows, and neither duplicates a bottom-nav tab.
+                // Jobs, Coach, the Career Passport and the diagnostic all
+                // live one tap away in the shell; repeating them here made
+                // Home a menu instead of a next step.
+                _ShortcutRow(
+                  icon: Icons.mic_none_outlined,
+                  iconBackground: AppColors.infoSoft,
+                  iconColor: AppColors.info,
+                  title: 'साक्षात्कार (इंटरव्यू) अभ्यास',
+                  subtitle: 'पहला सवाल · अपना परिचय',
+                  onTap: onOpenVoiceInterview,
                 ),
               ],
-            ),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          AppCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const Icon(AppIcons.coach, size: 40, color: AppColors.brand),
-                const SizedBox(height: AppSpacing.sm),
-                Text(
-                  'Ask your Career Coach',
-                  style: Theme.of(context).textTheme.titleMedium,
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                AppButton(label: 'Open AI Coach', onPressed: onOpenCoach),
-              ],
-            ),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          const AppCard(
-            child: ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: Icon(Icons.work_outline),
-              title: Text('Job matches'),
-              subtitle: Text(
-                'Three transparent demo opportunities are available in Jobs.',
-              ),
             ),
           ),
         ],
@@ -267,15 +201,152 @@ class _HomeContent extends StatelessWidget {
   }
 }
 
-/// Derives which journey stage reads as "current" from the two real
-/// progress signals the dashboard already tracks. Deliberately coarse
-/// (4 reachable states, not a precise per-stage tracker) rather than
-/// inventing granularity the backend doesn't actually measure.
-JourneyStep _journeyStepFor(HomeDashboard dashboard) {
-  if (dashboard.learningProgress < 0.34) return JourneyStep.learn;
-  if (dashboard.learningProgress < 1.0) return JourneyStep.practise;
-  if (dashboard.readinessProgress < 1.0) return JourneyStep.assess;
-  return JourneyStep.apply;
+class _PathwayRow extends StatelessWidget {
+  const _PathwayRow({required this.pathway, required this.onTap});
+
+  final PathwayProgress pathway;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return AppCard(
+      onTap: onTap,
+      semanticLabel:
+          'Continue pathway ${pathway.title}. '
+          '${pathway.completedUnits} of ${pathway.totalUnits} lessons done.',
+      child: Column(
+        children: [
+          Row(
+            children: [
+              _IconPlate(
+                icon: Icons.route_outlined,
+                background: AppColors.brandSoft,
+                color: AppColors.brand,
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      pathway.title,
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    Text(
+                      '${pathway.completedUnits} / ${pathway.totalUnits} lessons',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: AppColors.inkMuted,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(
+                Icons.arrow_forward_rounded,
+                size: 18,
+                color: AppColors.brand,
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(AppRadius.pill),
+            child: LinearProgressIndicator(
+              value: pathway.fraction,
+              minHeight: 6,
+              backgroundColor: AppColors.surfaceMuted,
+              color: AppColors.brand,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// A single tappable destination. Every row on Home is one of these, so no
+/// secondary action can be mistaken for the primary one.
+class _ShortcutRow extends StatelessWidget {
+  const _ShortcutRow({
+    required this.icon,
+    required this.iconBackground,
+    required this.iconColor,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final Color iconBackground;
+  final Color iconColor;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return AppCard(
+      onTap: onTap,
+      semanticLabel: '$title. $subtitle',
+      child: Row(
+        children: [
+          _IconPlate(icon: icon, background: iconBackground, color: iconColor),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+                ),
+                Text(
+                  subtitle,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(color: AppColors.inkMuted),
+                ),
+              ],
+            ),
+          ),
+          const Icon(
+            Icons.arrow_forward_rounded,
+            size: 18,
+            color: AppColors.brand,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _IconPlate extends StatelessWidget {
+  const _IconPlate({
+    required this.icon,
+    required this.background,
+    required this.color,
+  });
+
+  final IconData icon;
+  final Color background;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 40,
+      height: 40,
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: AppRadius.mediumBorder,
+      ),
+      child: Icon(icon, size: 20, color: color),
+    );
+  }
 }
 
 class _HomeLoadingView extends StatelessWidget {

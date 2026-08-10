@@ -4,7 +4,9 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   test('valid development OTP creates an authenticated session', () async {
     final repository = MockDevelopmentAuthRepository(true);
-    final challengeResult = await repository.requestOtp('98765 43210');
+    final challengeResult = await repository.requestOtp(
+      'Candidate@Example.com',
+    );
     final challenge = challengeResult.when(
       success: (value) => value,
       failure: (failure) => throw failure,
@@ -24,19 +26,19 @@ void main() {
     );
   });
 
-  test('invalid phone and incorrect OTP return clear failures', () async {
+  test('invalid email and incorrect OTP return clear failures', () async {
     final repository = MockDevelopmentAuthRepository(true);
-    final invalidPhoneResult = await repository.requestOtp('123');
+    final invalidEmailResult = await repository.requestOtp('not-an-email');
     expect(
-      invalidPhoneResult.when(
+      invalidEmailResult.when(
         success: (_) => null,
         failure: (failure) => failure.message,
       ),
-      contains('valid 10-digit'),
+      contains('valid email'),
     );
 
     final challenge = (await repository.requestOtp(
-      '9876543210',
+      'candidate@example.com',
     )).when(success: (value) => value, failure: (failure) => throw failure);
     final invalidOtpResult = await repository.verifyOtp(
       challenge: challenge,
@@ -55,7 +57,7 @@ void main() {
     var now = DateTime(2026, 7, 27, 12);
     final repository = MockDevelopmentAuthRepository(true, clock: () => now);
     final challenge = (await repository.requestOtp(
-      '9876543210',
+      'candidate@example.com',
     )).when(success: (value) => value, failure: (failure) => throw failure);
 
     now = now.add(const Duration(minutes: 3));
@@ -73,7 +75,7 @@ void main() {
 
     final disabledResult = await MockDevelopmentAuthRepository(
       false,
-    ).requestOtp('9876543210');
+    ).requestOtp('candidate@example.com');
     expect(
       disabledResult.when(
         success: (_) => null,

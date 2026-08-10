@@ -10,28 +10,28 @@ import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_text_field.dart';
 import 'development_auth_controller.dart';
 
-class PhoneEntryScreen extends ConsumerStatefulWidget {
-  const PhoneEntryScreen({required this.onOtpRequested, super.key});
+class EmailEntryScreen extends ConsumerStatefulWidget {
+  const EmailEntryScreen({required this.onOtpRequested, super.key});
 
   final VoidCallback onOtpRequested;
 
   @override
-  ConsumerState<PhoneEntryScreen> createState() => _PhoneEntryScreenState();
+  ConsumerState<EmailEntryScreen> createState() => _EmailEntryScreenState();
 }
 
-class _PhoneEntryScreenState extends ConsumerState<PhoneEntryScreen> {
-  final _phoneController = TextEditingController();
+class _EmailEntryScreenState extends ConsumerState<EmailEntryScreen> {
+  final _emailController = TextEditingController();
 
   @override
   void dispose() {
-    _phoneController.dispose();
+    _emailController.dispose();
     super.dispose();
   }
 
   Future<void> _requestOtp() async {
     final succeeded = await ref
         .read(developmentAuthControllerProvider.notifier)
-        .requestOtp(_phoneController.text);
+        .requestOtp(_emailController.text);
     if (succeeded && mounted) {
       widget.onOtpRequested();
     }
@@ -45,24 +45,28 @@ class _PhoneEntryScreenState extends ConsumerState<PhoneEntryScreen> {
     );
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Phone sign-in')),
+      appBar: AppBar(title: const Text('Email sign-in')),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(AppSpacing.xl),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Icon(Icons.phone_android, size: 56, color: AppColors.brand),
+              const Icon(
+                Icons.email_outlined,
+                size: 56,
+                color: AppColors.brand,
+              ),
               const SizedBox(height: AppSpacing.lg),
               Text(
-                'Enter your mobile number',
+                'Enter your email address',
                 style: Theme.of(context).textTheme.headlineSmall,
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: AppSpacing.sm),
               Text(
                 isRealBackend
-                    ? 'We will text a one-time code to verify this number.'
+                    ? 'We will email a one-time code to verify this address.'
                     : 'We will use this only to demonstrate the development OTP flow.',
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -73,7 +77,7 @@ class _PhoneEntryScreenState extends ConsumerState<PhoneEntryScreen> {
               if (isRealBackend)
                 const AppCard(
                   semanticLabel:
-                      'Phone sign-in requires SMS delivery to be enabled on '
+                      'Email sign-in requires mail delivery to be enabled on '
                       'the backend. If no code arrives, use Google sign-in '
                       'instead.',
                   backgroundColor: AppColors.infoSoft,
@@ -93,7 +97,7 @@ class _PhoneEntryScreenState extends ConsumerState<PhoneEntryScreen> {
               else
                 const AppCard(
                   semanticLabel:
-                      'Development mode. No SMS is sent and no production authentication service is connected.',
+                      'Development mode. No email is sent and no production authentication service is connected.',
                   backgroundColor: AppColors.infoSoft,
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -102,7 +106,7 @@ class _PhoneEntryScreenState extends ConsumerState<PhoneEntryScreen> {
                       SizedBox(width: AppSpacing.sm),
                       Expanded(
                         child: Text(
-                          'Development mode: no SMS is sent. This flow works without a network connection.',
+                          'Development mode: no email is sent. This flow works without a network connection.',
                         ),
                       ),
                     ],
@@ -110,27 +114,51 @@ class _PhoneEntryScreenState extends ConsumerState<PhoneEntryScreen> {
                 ),
               const SizedBox(height: AppSpacing.xl),
               AppTextField(
-                label: '10-digit mobile number',
-                controller: _phoneController,
-                hint: '9876543210',
-                helperText: 'India (+91)',
+                label: 'Email address',
+                controller: _emailController,
+                hint: 'name@example.com',
                 errorText: authState.failure?.message,
-                keyboardType: TextInputType.phone,
+                keyboardType: TextInputType.emailAddress,
                 textInputAction: TextInputAction.done,
-                leadingIcon: Icons.phone_outlined,
+                leadingIcon: Icons.email_outlined,
                 enabled: !authState.isRequesting,
-                semanticLabel: 'Indian mobile number, 10 digits',
+                semanticLabel: 'Email address',
+                // The failure only cleared when the next request started, so
+                // a validation error stayed on screen while the candidate
+                // corrected the address -- making a now-valid address look
+                // rejected. Clear it as soon as they edit.
+                onChanged: (_) {
+                  if (authState.failure != null) {
+                    ref
+                        .read(developmentAuthControllerProvider.notifier)
+                        .clearFailure();
+                  }
+                },
                 onSubmitted: (_) => _requestOtp(),
               ),
               const SizedBox(height: AppSpacing.xl),
               AppButton(
-                label: 'Send development OTP',
+                // Every other string on this screen already branches on
+                // isRealBackend; this one did not, so a build wired to a
+                // real Supabase project told the candidate it was sending
+                // a "development code" while sending them a real one.
+                label: isRealBackend ? 'Send code' : 'Send development code',
                 isLoading: authState.isRequesting,
                 onPressed: _requestOtp,
               ),
               const SizedBox(height: AppSpacing.sm),
               Text(
-                'Your number is kept only in memory for this mock sign-in and is not sent to a server.',
+                // This one was hardcoded too, and unlike the button label it
+                // stated something untrue about data handling: a configured
+                // build does send the address to Supabase, which sends the
+                // code by email. Consent copy has to describe what the
+                // build actually does.
+                isRealBackend
+                    ? 'Your email is sent to our servers to send you a '
+                          'one-time code, and is used to create or resume '
+                          'your profile.'
+                    : 'Your email is kept only in memory for this mock '
+                          'sign-in and is not sent to a server.',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),

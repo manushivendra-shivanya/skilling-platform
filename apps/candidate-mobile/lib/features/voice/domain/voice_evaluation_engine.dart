@@ -40,7 +40,7 @@ class VoiceEvaluationEngine {
         dimension: 'Answer relevance',
         score: relevance,
         explanation:
-            '$answered.length of ${voiceInterviewQuestions.length} questions include reviewable transcript evidence.',
+            '${answered.length} of ${voiceInterviewQuestions.length} questions include reviewable transcript evidence.',
       ),
       VoiceDimensionFeedback(
         dimension: 'Operational correctness',
