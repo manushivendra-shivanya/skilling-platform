@@ -279,12 +279,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       candidateOnboardingRepositoryProvider,
     ),
     showDevelopmentTools: !ref.watch(appConfigProvider).isProduction,
-    // The dev-skip flow writes a fake, non-UUID candidate id, which always
-    // fails Postgres's UUID check and RLS against a real Supabase backend
-    // (see _skipToHomeForDev's doc comment). Once real Supabase
-    // configuration is active, Google sign-in is the real way to reach
-    // Home -- keep the button only for the pure-mock build.
-    allowDevSkipToHome: !ref.watch(appConfigProvider).hasSupabaseConfiguration,
+    // Available in any non-production build, including one wired to a real
+    // Supabase project. It used to be switched off as soon as Supabase was
+    // configured, which meant a correctly configured review build had no way
+    // in at all when sign-in was unavailable -- and reviewing the UI is
+    // exactly what a review build is for. See _skipToHomeForDev for what
+    // does and does not work once inside.
+    allowDevSkipToHome: !ref.watch(appConfigProvider).isProduction,
   );
   ref.onDispose(router.dispose);
   return router;
@@ -849,18 +850,31 @@ GoRouter createAppRouter({
   );
 }
 
-/// Dev-tools-only shortcut: saves a fake authenticated session and a
+/// Dev-tools-only shortcut: saves a local authenticated session and a
 /// completed onboarding draft directly, then lets the normal redirect
-/// logic carry the router to Home. Exists purely so testing screens past
-/// onboarding (e.g. the Learn tab) doesn't require re-typing the whole
-/// candidate profile form on every fresh install.
+/// logic carry the router to Home. Exists so screens past onboarding can be
+/// reviewed without re-typing the whole candidate profile form, and without
+/// depending on phone OTP or Google sign-in being reachable.
+///
+/// What works after skipping: everything backed locally or by a mock
+/// repository -- Home, the workplace simulation, micro-lessons, the
+/// certification exam, saved jobs, the design system gallery.
+///
+/// What does not: anything that queries Supabase. The id below is a
+/// well-formed UUID so it survives Postgres's type check rather than
+/// erroring, but there is no matching `auth.users` row, so RLS denies the
+/// read and those screens show their empty or error state. That is the
+/// intended, legible failure -- this shortcut reviews the UI, it does not
+/// impersonate a candidate.
 Future<void> _skipToHomeForDev({
   required BuildContext context,
   required CandidateSessionRepository candidateSessionRepository,
   required CandidateOnboardingRepository candidateOnboardingRepository,
 }) async {
   const session = CandidateSession(
-    candidateId: 'dev-skip-candidate',
+    // Fixed, obviously-synthetic UUID: hex-valid in every group, so it
+    // passes Postgres's type check, and recognisable in any log it reaches.
+    candidateId: '00000000-0000-4000-8000-00000000dead',
     isAuthenticated: true,
   );
   await candidateSessionRepository.saveSession(session);
