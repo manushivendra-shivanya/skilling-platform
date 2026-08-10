@@ -47,13 +47,13 @@ void main() {
       homeDashboardRepository: repository,
     );
     await tester.pumpAndSettle();
-    expect(find.text('Open career diagnostic'), findsOneWidget);
+    expect(find.text('Career diagnostic'), findsOneWidget);
 
     repository.setResponse(const Success(null));
-    // Drag from the always-visible greeting rather than "Open career
-    // diagnostic" -- the new "Today's services" rail above it can push that
-    // button below the fold at the default test surface size.
-    await tester.drag(find.text('Namaste!'), const Offset(0, 500));
+    // Drag from the greeting in the header: it is the one element present
+    // for every dashboard shape, so it cannot be pushed below the fold by
+    // an optional card above it.
+    await tester.drag(find.text('नमस्ते'), const Offset(0, 500));
     await tester.pump();
     await tester.pumpAndSettle();
     expect(find.text('Your journey starts here'), findsOneWidget);

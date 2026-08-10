@@ -45,9 +45,9 @@ void main() {
 
     // The Home "today's services" rail now sits above this card, pushing it
     // below the fold at the default test surface size.
-    await tester.ensureVisible(find.text('Open career diagnostic'));
+    await tester.ensureVisible(find.text('Career diagnostic'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Open career diagnostic'));
+    await tester.tap(find.text('Career diagnostic'));
     await tester.pumpAndSettle();
     expect(find.text('Find your logistics pathway'), findsOneWidget);
     await tester.tap(find.text('Start diagnostic'));

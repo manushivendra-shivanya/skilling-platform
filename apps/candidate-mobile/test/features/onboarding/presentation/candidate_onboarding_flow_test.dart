@@ -137,11 +137,11 @@ void main() {
     await tester.tap(find.text('Go to home'));
     await tester.pumpAndSettle();
     await tester.scrollUntilVisible(
-      find.text('Today’s mission'),
+      find.text('नमस्ते'),
       200,
       scrollable: find.byType(Scrollable).first,
     );
-    expect(find.text('Today’s mission'), findsOneWidget);
+    expect(find.text('नमस्ते'), findsOneWidget);
   });
 
   testWidgets('onboarding remains usable with scaled text on a narrow screen', (
