@@ -14,6 +14,7 @@ import 'package:candidate_mobile/features/certification_exam/domain/certificatio
 import 'package:candidate_mobile/features/certification_exam/domain/certification_exam_repository.dart';
 import 'package:candidate_mobile/features/home/domain/home_dashboard_repository.dart';
 import 'package:candidate_mobile/features/jobs/data/local_mock_jobs_repository.dart';
+import 'package:candidate_mobile/features/jobs/data/secure_saved_jobs_repository.dart';
 import 'package:candidate_mobile/features/jobs/domain/jobs_repository.dart';
 import 'package:candidate_mobile/features/intelligence/data/secure_candidate_intelligence_repository.dart';
 import 'package:candidate_mobile/features/intelligence/domain/candidate_intelligence_repository.dart';
@@ -132,6 +133,12 @@ extension CandidateAppPump on WidgetTester {
           jobsRepositoryProvider.overrideWithValue(
             jobsRepository ??
                 LocalMockJobsRepository(InMemorySecureKeyValueStore()),
+          ),
+          // Same rationale as microLessonAssessmentRepositoryProvider above:
+          // always overridden so it never falls through to the real
+          // secure-storage-backed provider in the widget test sandbox.
+          savedJobsRepositoryProvider.overrideWithValue(
+            SecureSavedJobsRepository(InMemorySecureKeyValueStore()),
           ),
           // Same rationale as microLessonAssessmentRepositoryProvider above:
           // always overridden so it never falls through to the real

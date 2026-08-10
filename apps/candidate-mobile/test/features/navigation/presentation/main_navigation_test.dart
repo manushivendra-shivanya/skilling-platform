@@ -5,12 +5,14 @@ import 'package:candidate_mobile/core/analytics/analytics_tracker.dart';
 import 'package:candidate_mobile/core/repositories/candidate_session_repository.dart';
 import 'package:candidate_mobile/core/storage/secure_key_value_store.dart';
 import 'package:candidate_mobile/features/jobs/data/local_mock_jobs_repository.dart';
+import 'package:candidate_mobile/features/jobs/data/secure_saved_jobs_repository.dart';
 import 'package:candidate_mobile/features/onboarding/data/secure_candidate_onboarding_repository.dart';
 import 'package:candidate_mobile/features/onboarding/domain/candidate_onboarding_draft.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../../helpers/fake_career_passport_repository.dart';
 import '../../../helpers/pump_app.dart';
 
 void main() {
@@ -182,6 +184,17 @@ void main() {
           candidateOnboardingRepositoryProvider.overrideWithValue(onboarding),
           jobsRepositoryProvider.overrideWithValue(
             LocalMockJobsRepository(InMemorySecureKeyValueStore()),
+          ),
+          // Reached by JobsController's match-scoring -- always overridden
+          // here (same rationale as pump_app.dart's unconditional
+          // overrides) so neither falls through to a real secure-storage-
+          // backed provider that hangs on the unmocked platform channel in
+          // this bare-ProviderScope harness.
+          savedJobsRepositoryProvider.overrideWithValue(
+            SecureSavedJobsRepository(InMemorySecureKeyValueStore()),
+          ),
+          careerPassportRepositoryProvider.overrideWithValue(
+            const NoEvidenceCareerPassportRepository(),
           ),
         ],
         child: MaterialApp.router(theme: buildAppTheme(), routerConfig: router),
