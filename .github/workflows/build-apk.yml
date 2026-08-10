@@ -14,6 +14,29 @@ on:
         description: 'Title for the release. Defaults to the tag.'
         required: false
         default: ''
+      # One-off overrides for a manual build. Repository variables are the
+      # durable home for these -- anything passed here is recorded in this
+      # run's metadata, and has to be re-entered on every later build. Only
+      # ever pass values that already ship inside the APK and are public by
+      # design: the Supabase publishable key (safe with RLS on, which every
+      # table has), the OAuth *web* client ID, and the two base URLs. Never
+      # an sb_secret_/service_role key or an OAuth client secret.
+      supabase_url:
+        description: 'Override SUPABASE_URL (else repo secret/variable).'
+        required: false
+        default: ''
+      supabase_publishable_key:
+        description: 'Override SUPABASE_PUBLISHABLE_KEY. Publishable/anon key only.'
+        required: false
+        default: ''
+      api_base_url:
+        description: 'Override API_BASE_URL, including /v1.'
+        required: false
+        default: ''
+      google_web_client_id:
+        description: 'Override GOOGLE_WEB_CLIENT_ID. Web application client ID.'
+        required: false
+        default: ''
   push:
     branches:
       - feature/flutter-foundation
@@ -58,10 +81,10 @@ jobs:
       # instead, at least for anything published for someone to install.
       - name: Check app configuration
         env:
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL || vars.SUPABASE_URL }}
-          SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY || vars.SUPABASE_PUBLISHABLE_KEY }}
-          API_BASE_URL: ${{ secrets.API_BASE_URL || vars.API_BASE_URL }}
-          GOOGLE_WEB_CLIENT_ID: ${{ secrets.GOOGLE_WEB_CLIENT_ID || vars.GOOGLE_WEB_CLIENT_ID }}
+          SUPABASE_URL: ${{ inputs.supabase_url || secrets.SUPABASE_URL || vars.SUPABASE_URL }}
+          SUPABASE_PUBLISHABLE_KEY: ${{ inputs.supabase_publishable_key || secrets.SUPABASE_PUBLISHABLE_KEY || vars.SUPABASE_PUBLISHABLE_KEY }}
+          API_BASE_URL: ${{ inputs.api_base_url || secrets.API_BASE_URL || vars.API_BASE_URL }}
+          GOOGLE_WEB_CLIENT_ID: ${{ inputs.google_web_client_id || secrets.GOOGLE_WEB_CLIENT_ID || vars.GOOGLE_WEB_CLIENT_ID }}
           PUBLISHING: ${{ inputs.release_tag != '' }}
         run: |
           set -euo pipefail
@@ -90,10 +113,10 @@ jobs:
       # this CDN; clips without one keep using their bundled local asset.
       - name: Build debug APK
         env:
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL || vars.SUPABASE_URL }}
-          SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY || vars.SUPABASE_PUBLISHABLE_KEY }}
-          API_BASE_URL: ${{ secrets.API_BASE_URL || vars.API_BASE_URL }}
-          GOOGLE_WEB_CLIENT_ID: ${{ secrets.GOOGLE_WEB_CLIENT_ID || vars.GOOGLE_WEB_CLIENT_ID }}
+          SUPABASE_URL: ${{ inputs.supabase_url || secrets.SUPABASE_URL || vars.SUPABASE_URL }}
+          SUPABASE_PUBLISHABLE_KEY: ${{ inputs.supabase_publishable_key || secrets.SUPABASE_PUBLISHABLE_KEY || vars.SUPABASE_PUBLISHABLE_KEY }}
+          API_BASE_URL: ${{ inputs.api_base_url || secrets.API_BASE_URL || vars.API_BASE_URL }}
+          GOOGLE_WEB_CLIENT_ID: ${{ inputs.google_web_client_id || secrets.GOOGLE_WEB_CLIENT_ID || vars.GOOGLE_WEB_CLIENT_ID }}
           MICRO_LESSON_CDN_BASE_URL: ${{ vars.MICRO_LESSON_CDN_BASE_URL || 'https://pub-968107cb08f34b87b748a3700b60843e.r2.dev' }}
         run: >-
           flutter build apk --debug
