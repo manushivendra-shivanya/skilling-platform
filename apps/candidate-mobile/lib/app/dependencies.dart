@@ -125,9 +125,40 @@ final onboardingEntryRepositoryProvider = Provider<OnboardingEntryRepository>(
       LocalOnboardingEntryRepository(ref.watch(localKeyValueStoreProvider)),
 );
 
+/// Whether the app can actually reach live data right now.
+///
+/// Configuration alone is not enough: every Supabase-backed repository sends
+/// the signed-in user's access token, and without one they fail before making
+/// a request -- `Sign in again to view jobs`, and the same for shifts and the
+/// career passport. A configured build with no session therefore shows empty
+/// screens everywhere, which is what the dev skip-to-home produces and what
+/// makes a review build unreviewable.
+///
+/// In a non-production build that resolves to the local mock repositories:
+/// no identity means live data is impossible, so show something reviewable
+/// instead of an error. Production keeps the live repository and its honest
+/// "sign in again" failure -- a real user whose session expired must never be
+/// quietly handed sample data.
+///
+/// Re-resolves on sign-in and sign-out rather than caching the decision made
+/// at startup.
+final canUseLiveBackendProvider = Provider<bool>((ref) {
+  final config = ref.watch(appConfigProvider);
+  if (!config.hasSupabaseConfiguration) return false;
+  if (config.isProduction) return true;
+
+  final auth = Supabase.instance.client.auth;
+  final subscription = auth.onAuthStateChange.listen(
+    (_) => ref.invalidateSelf(),
+  );
+  ref.onDispose(subscription.cancel);
+  return auth.currentSession != null;
+});
+
 final candidateOnboardingRepositoryProvider =
     Provider<CandidateOnboardingRepository>((ref) {
-      if (ref.watch(appConfigProvider).hasSupabaseConfiguration) {
+      if (ref.watch(appConfigProvider).hasSupabaseConfiguration &&
+          ref.watch(canUseLiveBackendProvider)) {
         return SupabaseCandidateOnboardingRepository(Supabase.instance.client);
       }
       return SecureCandidateOnboardingRepository(
@@ -170,7 +201,9 @@ final certificationExamAttemptRepositoryProvider =
 
 final jobsRepositoryProvider = Provider<JobsRepository>((ref) {
   final config = ref.watch(appConfigProvider);
-  if (config.hasSupabaseConfiguration && config.hasApiConfiguration) {
+  if (config.hasSupabaseConfiguration &&
+      config.hasApiConfiguration &&
+      ref.watch(canUseLiveBackendProvider)) {
     return ApiJobsRepository(
       dio: Dio(),
       supabaseClient: Supabase.instance.client,
@@ -189,7 +222,9 @@ final savedJobsRepositoryProvider = Provider<SavedJobsRepository>(
 
 final shiftsRepositoryProvider = Provider<ShiftsRepository>((ref) {
   final config = ref.watch(appConfigProvider);
-  if (config.hasSupabaseConfiguration && config.hasApiConfiguration) {
+  if (config.hasSupabaseConfiguration &&
+      config.hasApiConfiguration &&
+      ref.watch(canUseLiveBackendProvider)) {
     return ApiShiftsRepository(
       dio: Dio(),
       supabaseClient: Supabase.instance.client,
@@ -199,19 +234,19 @@ final shiftsRepositoryProvider = Provider<ShiftsRepository>((ref) {
   return LocalMockShiftsRepository(ref.watch(secureKeyValueStoreProvider));
 });
 
-// Direct-to-Supabase, matching candidateOnboardingRepositoryProvider's
-// simpler branching -- no BFF involved for these three, so only
-// hasSupabaseConfiguration matters, not hasApiConfiguration.
+// Direct-to-Supabase -- no BFF involved for these three, so hasApiConfiguration
+// is irrelevant, but they still read as the signed-in user and so still need a
+// session (see canUseLiveBackendProvider).
 final shiftAvailabilityRepositoryProvider =
     Provider<ShiftAvailabilityRepository>((ref) {
-      if (ref.watch(appConfigProvider).hasSupabaseConfiguration) {
+      if (ref.watch(canUseLiveBackendProvider)) {
         return SupabaseShiftAvailabilityRepository(Supabase.instance.client);
       }
       return _UnavailableShiftAvailabilityRepository();
     });
 
 final shiftPayoutRepositoryProvider = Provider<ShiftPayoutRepository>((ref) {
-  if (ref.watch(appConfigProvider).hasSupabaseConfiguration) {
+  if (ref.watch(canUseLiveBackendProvider)) {
     return SupabaseShiftPayoutRepository(Supabase.instance.client);
   }
   return _UnavailableShiftPayoutRepository();
@@ -220,7 +255,7 @@ final shiftPayoutRepositoryProvider = Provider<ShiftPayoutRepository>((ref) {
 final shiftGrievanceRepositoryProvider = Provider<ShiftGrievanceRepository>((
   ref,
 ) {
-  if (ref.watch(appConfigProvider).hasSupabaseConfiguration) {
+  if (ref.watch(canUseLiveBackendProvider)) {
     return SupabaseShiftGrievanceRepository(Supabase.instance.client);
   }
   return _UnavailableShiftGrievanceRepository();
@@ -294,10 +329,15 @@ final careerPassportRepositoryProvider = Provider<CareerPassportRepository>((
       certificationExamAttemptRepositoryProvider,
     ),
     shiftsRepository: ref.watch(shiftsRepositoryProvider),
-    supabaseClient: config.hasSupabaseConfiguration
+    // Null unless the backend is genuinely usable: the passport's share flow
+    // sends the access token, so without a session it can only fail.
+    supabaseClient: ref.watch(canUseLiveBackendProvider)
         ? Supabase.instance.client
         : null,
-    apiBaseUrl: config.hasApiConfiguration ? config.apiBaseUrl : null,
+    apiBaseUrl:
+        config.hasApiConfiguration && ref.watch(canUseLiveBackendProvider)
+        ? config.apiBaseUrl
+        : null,
     dio: Dio(),
   );
 });
