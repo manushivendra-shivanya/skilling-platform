@@ -2,6 +2,18 @@ name: Build Candidate Mobile APK
 
 on:
   workflow_dispatch:
+    inputs:
+      release_tag:
+        description: >-
+          Publish the APK as a GitHub release under this tag
+          (e.g. v0.1.0-home-redesign). Leave blank to only upload a
+          build artifact.
+        required: false
+        default: ''
+      release_name:
+        description: 'Title for the release. Defaults to the tag.'
+        required: false
+        default: ''
   push:
     branches:
       - feature/flutter-foundation
@@ -10,6 +22,10 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+
+    # Needed only by the release step below; pushes never reach it.
+    permissions:
+      contents: write
 
     defaults:
       run:
@@ -32,6 +48,8 @@ jobs:
 
       - run: flutter analyze
 
+      - run: flutter test
+
       # MICRO_LESSON_CDN_BASE_URL is the public r2.dev URL for the
       # flora-micro-lessons bucket -- not a secret, it's meant to be
       # publicly reachable. Clips with a cloudflareVideoPath resolve to
@@ -44,3 +62,36 @@ jobs:
         with:
           name: candidate-mobile-debug-apk
           path: apps/candidate-mobile/build/app/outputs/flutter-apk/app-debug.apk
+
+      # An upload-artifact zip needs a GitHub login and expires. A release
+      # asset has a plain download URL a tester can open on their phone,
+      # which is the point of building an APK for review at all.
+      - name: Publish APK as a release asset
+        if: github.event_name == 'workflow_dispatch' && inputs.release_tag != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.release_tag }}
+          TITLE: ${{ inputs.release_name }}
+        run: |
+          set -euo pipefail
+          asset="flora-candidate-app-${TAG}.apk"
+          cp build/app/outputs/flutter-apk/app-debug.apk "$asset"
+
+          # Debug signing keys: installable for review, not Play-ready.
+          notes=$(printf '%s\n' \
+            "Debug APK built from \`${GITHUB_REF_NAME}\` at \`${GITHUB_SHA}\`." \
+            "" \
+            "Signed with debug keys — install for review only, not for distribution." \
+            "Enable \"install from unknown sources\" on the device first.")
+
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" "$asset" --clobber
+          else
+            gh release create "$TAG" "$asset" \
+              --target "$GITHUB_SHA" \
+              --title "${TITLE:-$TAG}" \
+              --notes "$notes" \
+              --prerelease
+          fi
+
+          echo "Release: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/releases/tag/${TAG}" >> "$GITHUB_STEP_SUMMARY"
