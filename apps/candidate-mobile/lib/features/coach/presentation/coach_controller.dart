@@ -6,58 +6,106 @@ import '../../../app/dependencies.dart';
 import '../../../core/analytics/analytics_event.dart';
 import '../domain/coach_message.dart';
 
-final coachControllerProvider =
-    NotifierProvider<CoachController, List<CoachMessage>>(CoachController.new);
+const _welcomeMessage = CoachMessage(
+  id: 'welcome',
+  author: CoachMessageAuthor.coach,
+  text:
+      'Namaste! I am your AI career coach. Ask me how to prepare for a '
+      'logistics role.',
+);
 
-class CoachController extends Notifier<List<CoachMessage>> {
+class CoachState {
+  const CoachState({required this.messages, required this.isSending});
+
+  final List<CoachMessage> messages;
+
+  /// True while a `send()` call is awaiting the coach's reply -- drives
+  /// the typing indicator and disables the composer's send button so a
+  /// candidate can't fire a second request before the first resolves.
+  final bool isSending;
+
+  CoachState copyWith({List<CoachMessage>? messages, bool? isSending}) {
+    return CoachState(
+      messages: messages ?? this.messages,
+      isSending: isSending ?? this.isSending,
+    );
+  }
+}
+
+final coachControllerProvider = NotifierProvider<CoachController, CoachState>(
+  CoachController.new,
+);
+
+class CoachController extends Notifier<CoachState> {
   int _sequence = 0;
 
   @override
-  List<CoachMessage> build() => const [
-    CoachMessage(
-      id: 'welcome',
-      author: CoachMessageAuthor.coach,
-      text:
-          'Namaste! I am a local demo coach. Ask me how to prepare for a logistics role.',
-    ),
-  ];
+  CoachState build() =>
+      const CoachState(messages: [_welcomeMessage], isSending: false);
 
-  void send(String text) {
+  Future<void> send(String text) async {
     final trimmed = text.trim();
-    if (trimmed.isEmpty) {
+    if (trimmed.isEmpty || state.isSending) {
       return;
     }
     _sequence += 1;
-    state = [
-      ...state,
-      CoachMessage(
-        id: 'candidate-$_sequence',
-        author: CoachMessageAuthor.candidate,
-        text: trimmed,
-      ),
-      CoachMessage(
-        id: 'coach-$_sequence',
-        author: CoachMessageAuthor.coach,
-        text:
-            'Demo guidance: break the task into steps, confirm safety and accuracy, then explain when you would escalate to a supervisor.',
-      ),
-    ];
+    final historyBeforeThisMessage = state.messages;
+    final candidateMessage = CoachMessage(
+      id: 'candidate-$_sequence',
+      author: CoachMessageAuthor.candidate,
+      text: trimmed,
+    );
+    state = state.copyWith(
+      messages: [...state.messages, candidateMessage],
+      isSending: true,
+    );
     unawaited(
       ref
           .read(analyticsTrackerProvider)
           .track(AnalyticsEvent.coachMessageSent()),
     );
+
+    final result = await ref
+        .read(coachRepositoryProvider)
+        .sendMessage(message: trimmed, history: historyBeforeThisMessage);
+
+    result.when(
+      success: (reply) {
+        state = state.copyWith(
+          messages: [
+            ...state.messages,
+            CoachMessage(
+              id: 'coach-$_sequence',
+              author: CoachMessageAuthor.coach,
+              text: reply.text,
+            ),
+          ],
+          isSending: false,
+        );
+      },
+      failure: (failure) {
+        unawaited(
+          ref
+              .read(analyticsTrackerProvider)
+              .track(AnalyticsEvent.coachReplyFailed()),
+        );
+        state = state.copyWith(
+          messages: [
+            ...state.messages,
+            CoachMessage(
+              id: 'coach-error-$_sequence',
+              author: CoachMessageAuthor.coach,
+              text: failure.message,
+            ),
+          ],
+          isSending: false,
+        );
+      },
+    );
   }
 
   void reset() {
     _sequence = 0;
-    state = const [
-      CoachMessage(
-        id: 'welcome',
-        author: CoachMessageAuthor.coach,
-        text:
-            'Namaste! I am a local demo coach. Ask me how to prepare for a logistics role.',
-      ),
-    ];
+    state = const CoachState(messages: [_welcomeMessage], isSending: false);
   }
 }

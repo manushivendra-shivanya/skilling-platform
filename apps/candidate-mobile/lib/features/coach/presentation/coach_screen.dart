@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../app/dependencies.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../core/widgets/app_card.dart';
@@ -26,7 +29,8 @@ class _CoachScreenState extends ConsumerState<CoachScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final messages = ref.watch(coachControllerProvider);
+    final state = ref.watch(coachControllerProvider);
+    final isLiveData = ref.watch(coachRepositoryProvider).isLiveData;
     return Scaffold(
       appBar: AppBar(
         title: const Text('AI Career Coach'),
@@ -45,17 +49,23 @@ class _CoachScreenState extends ConsumerState<CoachScreen> {
               width: double.infinity,
               color: AppColors.infoSoft,
               padding: const EdgeInsets.all(AppSpacing.sm),
-              child: const Text(
-                'Local demo only • No production AI is connected. Do not share sensitive information.',
+              child: Text(
+                isLiveData
+                    ? 'AI-generated guidance • Verify anything important with your training officer.'
+                    : 'Local demo only • No production AI is connected. Do not share sensitive information.',
                 textAlign: TextAlign.center,
               ),
             ),
             Expanded(
               child: ListView.builder(
                 padding: const EdgeInsets.all(AppSpacing.md),
-                itemCount: messages.length,
-                itemBuilder: (context, index) =>
-                    _MessageBubble(message: messages[index]),
+                itemCount: state.messages.length + (state.isSending ? 1 : 0),
+                itemBuilder: (context, index) {
+                  if (index == state.messages.length) {
+                    return const _TypingIndicatorBubble();
+                  }
+                  return _MessageBubble(message: state.messages[index]);
+                },
               ),
             ),
             Padding(
@@ -80,6 +90,7 @@ class _CoachScreenState extends ConsumerState<CoachScreen> {
                   Expanded(
                     child: TextField(
                       controller: _composer,
+                      enabled: !state.isSending,
                       textInputAction: TextInputAction.send,
                       onSubmitted: (_) => _send(),
                       decoration: const InputDecoration(
@@ -90,7 +101,7 @@ class _CoachScreenState extends ConsumerState<CoachScreen> {
                   ),
                   IconButton(
                     tooltip: 'Send message',
-                    onPressed: _send,
+                    onPressed: state.isSending ? null : _send,
                     icon: const Icon(Icons.send),
                   ),
                 ],
@@ -104,10 +115,11 @@ class _CoachScreenState extends ConsumerState<CoachScreen> {
 
   void _send() {
     final text = _composer.text;
-    ref.read(coachControllerProvider.notifier).send(text);
-    if (text.trim().isNotEmpty) {
-      _composer.clear();
+    if (text.trim().isEmpty) {
+      return;
     }
+    unawaited(ref.read(coachControllerProvider.notifier).send(text));
+    _composer.clear();
   }
 
   void _showVoicePlaceholder() {
@@ -184,6 +196,40 @@ class _MessageBubble extends StatelessWidget {
         child: Text(
           message.text,
           style: TextStyle(color: isCandidate ? Colors.white : AppColors.ink),
+        ),
+      ),
+    );
+  }
+}
+
+class _TypingIndicatorBubble extends StatelessWidget {
+  const _TypingIndicatorBubble();
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+        padding: const EdgeInsets.all(AppSpacing.md),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Semantics(
+          liveRegion: true,
+          label: 'Coach is typing a reply',
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox.square(
+                dimension: 14,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Text('Coach is typing…', style: TextStyle(color: AppColors.ink)),
+            ],
+          ),
         ),
       ),
     );

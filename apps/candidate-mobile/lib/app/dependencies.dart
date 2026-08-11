@@ -20,6 +20,9 @@ import '../features/certification_exam/domain/certification_exam_repository.dart
 import '../features/authentication/domain/development_auth_repository.dart';
 import '../features/career_passport/data/wms_career_passport_repository.dart';
 import '../features/career_passport/domain/career_passport_repository.dart';
+import '../features/coach/data/api_coach_repository.dart';
+import '../features/coach/data/local_demo_coach_repository.dart';
+import '../features/coach/domain/coach_repository.dart';
 import '../features/home/data/mock_home_dashboard_repository.dart';
 import '../features/home/domain/home_dashboard_repository.dart';
 import '../features/intelligence/data/offline_first_candidate_intelligence_repository.dart';
@@ -204,6 +207,20 @@ final certificationExamAttemptRepositoryProvider =
         ref.watch(secureKeyValueStoreProvider),
       ),
     );
+
+final coachRepositoryProvider = Provider<CoachRepository>((ref) {
+  final config = ref.watch(appConfigProvider);
+  if (config.hasSupabaseConfiguration &&
+      config.hasApiConfiguration &&
+      ref.watch(canUseLiveBackendProvider)) {
+    return ApiCoachRepository(
+      dio: Dio(),
+      supabaseClient: Supabase.instance.client,
+      apiBaseUrl: config.apiBaseUrl,
+    );
+  }
+  return const LocalDemoCoachRepository();
+});
 
 final jobsRepositoryProvider = Provider<JobsRepository>((ref) {
   final config = ref.watch(appConfigProvider);

@@ -80,11 +80,11 @@ void main() {
         'How should I report a mismatch?',
       );
       await tester.tap(find.byTooltip('Send message'));
-      await tester.pump();
+      await tester.pumpAndSettle();
       expect(find.textContaining('break the task into steps'), findsOneWidget);
       expect(
         analytics.events.map((event) => event.name),
-        contains('local_coach_message_sent'),
+        contains('coach_message_sent'),
       );
 
       await tester.tap(find.byTooltip('Voice input unavailable'));

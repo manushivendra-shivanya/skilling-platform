@@ -52,7 +52,10 @@ class AnalyticsEvent {
       const AnalyticsEvent(name: 'home_dashboard_refreshed');
 
   factory AnalyticsEvent.coachMessageSent() =>
-      const AnalyticsEvent(name: 'local_coach_message_sent');
+      const AnalyticsEvent(name: 'coach_message_sent');
+
+  factory AnalyticsEvent.coachReplyFailed() =>
+      const AnalyticsEvent(name: 'coach_reply_failed');
 
   factory AnalyticsEvent.mockApplicationCreated() =>
       const AnalyticsEvent(name: 'mock_job_application_created');

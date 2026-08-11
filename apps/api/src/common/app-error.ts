@@ -40,4 +40,12 @@ export class AppError extends HttpException {
       details,
     );
   }
+
+  static rateLimited(message: string) {
+    return new AppError('RATE_LIMITED', message, HttpStatus.TOO_MANY_REQUESTS);
+  }
+
+  static serviceUnavailable(code: string, message: string) {
+    return new AppError(code, message, HttpStatus.SERVICE_UNAVAILABLE);
+  }
 }
