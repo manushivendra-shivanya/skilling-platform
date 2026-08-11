@@ -67,7 +67,7 @@ Initial roles:
 17. [Sprint Plan](docs/16-sprint-plan.md) — superseded by the phase-execution plan (18); kept for history.
 18. [Codex Phase Execution Plan](docs/20-codex-phase-execution.md) — the plan actually followed.
 19. [Claude Code Implementation Prompts](docs/17-claude-code-prompts.md)
-20. [Architecture Decision Records](docs/18-architecture-decisions.md) and [docs/adr/](docs/adr/) — six accepted ADRs (0013–0018) covering the decisions actually made since Phase 1.
+20. [Architecture Decision Records](docs/18-architecture-decisions.md) and [docs/adr/](docs/adr/) — seven accepted ADRs (0013–0019) covering the decisions actually made since Phase 1; doc 18 also tracks the status of the twelve initial decisions it originally mandated ADRs for.
 21. [Workplace Management Simulation](docs/21-workplace-management-simulation.md) — includes the layered simulation strategy (Layers 1–5), merged in from a since-deleted duplicate.
 22. [Simulation Content Schema](docs/22-simulation-content-schema.md)
 23. [AI Employability Infrastructure Platform](docs/23-ai-employability-infrastructure-platform.md) — target-state proposal; no implementation authorised per the doc itself.
