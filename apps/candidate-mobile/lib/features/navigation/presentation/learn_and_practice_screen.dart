@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../app/theme/app_colors.dart';
 import '../../certification_exam/presentation/certification_exam_controller.dart';
 import '../../certification_exam/presentation/certification_exam_section.dart';
 import '../../learning/presentation/learning_controller.dart';
@@ -118,7 +119,11 @@ class _SectorSegmentedTabBar extends ConsumerWidget {
       _practiseSegment(ref),
       _certificationSegment(ref),
     ];
-    final base = Color.lerp(pack.primaryAccent, Colors.black, 0.72)!;
+    // Fixed chrome, not derived from pack.primaryAccent -- see
+    // AppColors.navy's doc comment for why (a real bug caught on-device:
+    // darkening warehouse's orange accent produced brown, which read as an
+    // error state next to the light screens below it).
+    const base = AppColors.navy;
 
     return Container(
       color: base,
