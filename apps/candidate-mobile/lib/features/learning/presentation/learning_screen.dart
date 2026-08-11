@@ -12,8 +12,12 @@ import '../../../core/widgets/app_progress.dart';
 import '../../../core/widgets/app_skeleton.dart';
 import '../../../core/widgets/app_state_view.dart';
 import '../../../core/widgets/app_status_banner.dart';
-import '../../certification_exam/presentation/certification_exam_section.dart';
 import '../../micro_lessons/presentation/warehouse_clips_section.dart';
+import '../../sector_pack/application/active_sector_pack_provider.dart';
+import '../../sector_pack/domain/sector_pack.dart';
+import '../../sector_pack/presentation/sector_index_row.dart';
+import '../../sector_pack/presentation/sector_pack_icons.dart';
+import '../../sector_pack/presentation/sector_signal_dot.dart';
 import '../domain/learning_repository.dart';
 import 'learning_controller.dart';
 
@@ -52,6 +56,7 @@ class _LearningContent extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final pack = ref.watch(activeSectorPackProvider);
     return ListView(
       padding: const EdgeInsets.fromLTRB(
         AppSpacing.xl,
@@ -91,93 +96,127 @@ class _LearningContent extends ConsumerWidget {
           'Progress is stored securely, works offline, and syncs when a configured backend is available. Completion alone is not an employer qualification.',
         ),
         const SizedBox(height: AppSpacing.xl),
-        for (final unit in state.units) ...[
-          _LessonCard(
-            unit: unit,
-            downloaded: state.downloadedIds.contains(unit.id),
-            completed: state.completedIds.contains(unit.id),
+        for (final entry in state.units.indexed) ...[
+          _LessonRow(
+            pack: pack,
+            indexLabel: 'L-${(entry.$1 + 1).toString().padLeft(2, '0')}',
+            unit: entry.$2,
+            downloaded: state.downloadedIds.contains(entry.$2.id),
+            completed: state.completedIds.contains(entry.$2.id),
             onDownload: () => ref
                 .read(learningControllerProvider.notifier)
-                .toggleDownload(unit.id),
-            onComplete: () => ref
-                .read(learningControllerProvider.notifier)
-                .toggleComplete(unit.id),
+                .toggleDownload(entry.$2.id),
             onOpen: () async {
-              await _showLesson(context, unit);
+              await _showLesson(context, entry.$2);
               await ref
                   .read(learningControllerProvider.notifier)
-                  .toggleComplete(unit.id);
+                  .toggleComplete(entry.$2.id);
             },
+            onMarkIncomplete: () => ref
+                .read(learningControllerProvider.notifier)
+                .toggleComplete(entry.$2.id),
           ),
-          const SizedBox(height: AppSpacing.md),
+          const SizedBox(height: AppSpacing.sm),
         ],
-        const SizedBox(height: AppSpacing.xl),
+        const SizedBox(height: AppSpacing.lg),
         const Divider(),
         const SizedBox(height: AppSpacing.xl),
         const WarehouseClipsSection(),
-        const SizedBox(height: AppSpacing.xl),
-        const Divider(),
-        const SizedBox(height: AppSpacing.xl),
-        const CertificationExamSection(),
       ],
     );
   }
 }
 
-class _LessonCard extends StatelessWidget {
-  const _LessonCard({
+class _LessonRow extends StatelessWidget {
+  const _LessonRow({
+    required this.pack,
+    required this.indexLabel,
     required this.unit,
     required this.downloaded,
     required this.completed,
     required this.onDownload,
-    required this.onComplete,
     required this.onOpen,
+    required this.onMarkIncomplete,
   });
 
+  final SectorPack pack;
+  final String indexLabel;
   final LearningUnit unit;
   final bool downloaded;
   final bool completed;
   final VoidCallback onDownload;
-  final VoidCallback onComplete;
   final VoidCallback onOpen;
+  final VoidCallback onMarkIncomplete;
 
   @override
   Widget build(BuildContext context) {
-    return AppCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          if (unit.isDailyMission)
-            const Text(
-              'TODAY’S MISSION',
-              style: TextStyle(
-                color: AppColors.brand,
-                fontWeight: FontWeight.bold,
+    final base = '${unit.durationMinutes} min · Content v${unit.version}';
+    final statusText = completed
+        ? '$base · Completed — tap to mark incomplete'
+        : downloaded
+        ? '$base · Downloaded'
+        : '$base · Tap to open';
+    return SectorIndexRow(
+      pack: pack,
+      indexLabel: indexLabel,
+      glyph: completed ? SectorGlyph.check : SectorGlyph.play,
+      title: unit.title,
+      statusText: statusText,
+      signalState: completed
+          ? SectorSignalState.cleared
+          : downloaded
+          ? SectorSignalState.active
+          : null,
+      missionLabel: unit.isDailyMission ? "TODAY'S MISSION" : null,
+      onTap: completed ? onMarkIncomplete : onOpen,
+      semanticLabel: completed
+          ? '${unit.title}. Completed. Tap to mark incomplete.'
+          : '${unit.title}. Tap to open lesson.',
+      trailing: _DownloadUtilityButton(
+        downloaded: downloaded,
+        onPressed: onDownload,
+      ),
+    );
+  }
+}
+
+class _DownloadUtilityButton extends StatelessWidget {
+  const _DownloadUtilityButton({
+    required this.downloaded,
+    required this.onPressed,
+  });
+
+  final bool downloaded;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final divider = Theme.of(context).dividerColor;
+    return Tooltip(
+      message: downloaded ? 'Downloaded' : 'Download for offline',
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onPressed,
+          child: Container(
+            width: 36,
+            height: 36,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              border: Border.all(
+                color: downloaded ? AppColors.success : divider,
+                width: 1.5,
               ),
             ),
-          Text(unit.title, style: Theme.of(context).textTheme.titleMedium),
-          const SizedBox(height: AppSpacing.xs),
-          Text('${unit.durationMinutes} min • Content v${unit.version}'),
-          const SizedBox(height: AppSpacing.md),
-          Wrap(
-            spacing: AppSpacing.sm,
-            runSpacing: AppSpacing.sm,
-            children: [
-              OutlinedButton.icon(
-                onPressed: onDownload,
-                icon: Icon(
-                  downloaded ? Icons.download_done : Icons.download_outlined,
-                ),
-                label: Text(downloaded ? 'Downloaded' : 'Download'),
-              ),
-              FilledButton.icon(
-                onPressed: completed ? onComplete : onOpen,
-                icon: Icon(completed ? Icons.check_circle : Icons.play_arrow),
-                label: Text(completed ? 'Mark incomplete' : 'Open lesson'),
-              ),
-            ],
+            child: SectorIcon(
+              glyph: downloaded ? SectorGlyph.check : SectorGlyph.download,
+              color: downloaded
+                  ? AppColors.success
+                  : Theme.of(context).colorScheme.onSurfaceVariant,
+              size: 16,
+            ),
           ),
-        ],
+        ),
       ),
     );
   }
@@ -214,7 +253,12 @@ class _LearningLoadingView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Padding(
+    // Scrollable: the segmented tab bar above this (Lessons / Practise /
+    // Certification) takes noticeably more vertical room than the old
+    // plain TabBar once its state-readout text grows at a large
+    // accessibility text scale, which can leave less height than this
+    // view's fixed skeleton sizes need on a short device.
+    return const SingleChildScrollView(
       padding: EdgeInsets.all(AppSpacing.xl),
       child: Column(
         children: [

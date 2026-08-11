@@ -12,6 +12,9 @@ import '../../../core/widgets/app_state_view.dart';
 import '../../intelligence/domain/candidate_intelligence.dart';
 import '../../intelligence/domain/simulation_scoring_engine.dart';
 import '../../intelligence/presentation/candidate_intelligence_controller.dart';
+import '../../sector_pack/application/active_sector_pack_provider.dart';
+import '../../sector_pack/domain/sector_pack.dart';
+import '../../sector_pack/presentation/sector_task_card.dart';
 import '../../workplace_simulation/application/workplace_simulation_controller.dart';
 import '../../workplace_simulation/domain/simulation_enums.dart';
 
@@ -24,10 +27,57 @@ class PracticeScreen extends ConsumerStatefulWidget {
   ConsumerState<PracticeScreen> createState() => _PracticeScreenState();
 }
 
+class _WorkplaceMissionEntry {
+  const _WorkplaceMissionEntry({
+    required this.missionId,
+    required this.workOrderLabel,
+    required this.title,
+    required this.meta,
+    required this.difficultyLabel,
+  });
+
+  final String missionId;
+  final String workOrderLabel;
+  final String title;
+  final String meta;
+  final String difficultyLabel;
+}
+
 class _PracticeScreenState extends ConsumerState<PracticeScreen> {
   bool _demoOpen = false;
   bool _scoredOpen = false;
   String? _selectedDecision;
+
+  static const _missions = [
+    _WorkplaceMissionEntry(
+      missionId: WorkplaceSimulationController.missionId,
+      workOrderLabel: 'WM-01',
+      title: 'Receive an Incoming Shipment',
+      meta: 'Logistics · Warehouse Associate · Approximately 20 minutes',
+      difficultyLabel: 'Beginner',
+    ),
+    _WorkplaceMissionEntry(
+      missionId: WorkplaceSimulationController.putAwayMissionId,
+      workOrderLabel: 'WM-02',
+      title: 'Put Away Incoming Stock',
+      meta: 'Logistics · Warehouse Associate · Approximately 20 minutes',
+      difficultyLabel: 'Beginner',
+    ),
+    _WorkplaceMissionEntry(
+      missionId: WorkplaceSimulationController.processingMissionId,
+      workOrderLabel: 'WM-03',
+      title: 'Process Incoming Batch',
+      meta: 'Logistics · Warehouse Associate · Approximately 22 minutes',
+      difficultyLabel: 'Intermediate',
+    ),
+    _WorkplaceMissionEntry(
+      missionId: WorkplaceSimulationController.dispatchMissionId,
+      workOrderLabel: 'WM-04',
+      title: 'Dispatch Delivery Route',
+      meta: 'Logistics · Warehouse Associate · Approximately 24 minutes',
+      difficultyLabel: 'Intermediate',
+    ),
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -46,6 +96,8 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
         }),
       );
     }
+
+    final pack = ref.watch(activeSectorPackProvider);
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(
@@ -66,200 +118,26 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
           ),
         ),
         const SizedBox(height: AppSpacing.md),
-        AppCard(
-          backgroundColor: AppColors.brandSoft,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                'Scored inventory simulation',
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
-              const SizedBox(height: AppSpacing.xs),
-              const Text(
-                'Immutable v1 scenario with ordered events, deterministic scoring, explanations, and evidence.',
-              ),
-              const SizedBox(height: AppSpacing.md),
-              AppButton(
-                label: 'Start scored simulation',
-                onPressed: () => setState(() => _scoredOpen = true),
-              ),
-            ],
-          ),
+        SectorTaskCard(
+          pack: pack,
+          workOrderLabel: 'SIM-01',
+          tagLabel: 'Scored',
+          tone: SectorTaskTone.emphasis,
+          title: 'Scored inventory simulation',
+          description:
+              'Immutable v1 scenario with ordered events, deterministic scoring, explanations, and evidence.',
+          tearLabel: 'START',
+          onTap: () => setState(() => _scoredOpen = true),
         ),
         const SizedBox(height: AppSpacing.md),
-        ref
-            .watch(
-              workplaceSimulationControllerProvider(
-                WorkplaceSimulationController.missionId,
-              ),
-            )
-            .when(
-              loading: () => const _WorkplaceSimulationCard(
-                title: 'Workplace Simulation',
-                missionSummary:
-                    'Receive an Incoming Shipment\n'
-                    'Logistics • Warehouse Associate • Beginner • Approximately 20 minutes',
-                actionLabel: 'Loading simulation',
-              ),
-              error: (error, stackTrace) => const _WorkplaceSimulationCard(
-                title: 'Workplace Simulation',
-                missionSummary:
-                    'Receive an Incoming Shipment\n'
-                    'Logistics • Warehouse Associate • Beginner • Approximately 20 minutes',
-                actionLabel: 'Simulation unavailable',
-                unavailable: true,
-              ),
-              data: (state) {
-                final attempt = state.attempt;
-                final actionLabel = attempt == null
-                    ? 'Start Simulation'
-                    : attempt.state == MissionState.completed ||
-                          attempt.state == MissionState.failed
-                    ? 'Retry Simulation'
-                    : 'Continue Simulation';
-                return _WorkplaceSimulationCard(
-                  title: 'Workplace Simulation',
-                  missionSummary:
-                      'Receive an Incoming Shipment\n'
-                      'Logistics • Warehouse Associate • Beginner • Approximately 20 minutes',
-                  actionLabel: actionLabel,
-                  onPressed: () => widget.onOpenWorkplaceSimulation(
-                    WorkplaceSimulationController.missionId,
-                  ),
-                );
-              },
-            ),
-        const SizedBox(height: AppSpacing.md),
-        ref
-            .watch(
-              workplaceSimulationControllerProvider(
-                WorkplaceSimulationController.putAwayMissionId,
-              ),
-            )
-            .when(
-              loading: () => const _WorkplaceSimulationCard(
-                title: 'Workplace Simulation',
-                missionSummary:
-                    'Put Away Incoming Stock\n'
-                    'Logistics • Warehouse Associate • Beginner • Approximately 20 minutes',
-                actionLabel: 'Loading simulation',
-              ),
-              error: (error, stackTrace) => const _WorkplaceSimulationCard(
-                title: 'Workplace Simulation',
-                missionSummary:
-                    'Put Away Incoming Stock\n'
-                    'Logistics • Warehouse Associate • Beginner • Approximately 20 minutes',
-                actionLabel: 'Simulation unavailable',
-                unavailable: true,
-              ),
-              data: (state) {
-                final attempt = state.attempt;
-                final actionLabel = attempt == null
-                    ? 'Start Simulation'
-                    : attempt.state == MissionState.completed ||
-                          attempt.state == MissionState.failed
-                    ? 'Retry Simulation'
-                    : 'Continue Simulation';
-                return _WorkplaceSimulationCard(
-                  title: 'Workplace Simulation',
-                  missionSummary:
-                      'Put Away Incoming Stock\n'
-                      'Logistics • Warehouse Associate • Beginner • Approximately 20 minutes',
-                  actionLabel: actionLabel,
-                  onPressed: () => widget.onOpenWorkplaceSimulation(
-                    WorkplaceSimulationController.putAwayMissionId,
-                  ),
-                );
-              },
-            ),
-        const SizedBox(height: AppSpacing.md),
-        ref
-            .watch(
-              workplaceSimulationControllerProvider(
-                WorkplaceSimulationController.processingMissionId,
-              ),
-            )
-            .when(
-              loading: () => const _WorkplaceSimulationCard(
-                title: 'Workplace Simulation',
-                missionSummary:
-                    'Process Incoming Batch\n'
-                    'Logistics • Warehouse Associate • Intermediate • Approximately 22 minutes',
-                actionLabel: 'Loading simulation',
-              ),
-              error: (error, stackTrace) => const _WorkplaceSimulationCard(
-                title: 'Workplace Simulation',
-                missionSummary:
-                    'Process Incoming Batch\n'
-                    'Logistics • Warehouse Associate • Intermediate • Approximately 22 minutes',
-                actionLabel: 'Simulation unavailable',
-                unavailable: true,
-              ),
-              data: (state) {
-                final attempt = state.attempt;
-                final actionLabel = attempt == null
-                    ? 'Start Simulation'
-                    : attempt.state == MissionState.completed ||
-                          attempt.state == MissionState.failed
-                    ? 'Retry Simulation'
-                    : 'Continue Simulation';
-                return _WorkplaceSimulationCard(
-                  title: 'Workplace Simulation',
-                  missionSummary:
-                      'Process Incoming Batch\n'
-                      'Logistics • Warehouse Associate • Intermediate • Approximately 22 minutes',
-                  actionLabel: actionLabel,
-                  onPressed: () => widget.onOpenWorkplaceSimulation(
-                    WorkplaceSimulationController.processingMissionId,
-                  ),
-                );
-              },
-            ),
-        const SizedBox(height: AppSpacing.md),
-        ref
-            .watch(
-              workplaceSimulationControllerProvider(
-                WorkplaceSimulationController.dispatchMissionId,
-              ),
-            )
-            .when(
-              loading: () => const _WorkplaceSimulationCard(
-                title: 'Workplace Simulation',
-                missionSummary:
-                    'Dispatch Delivery Route\n'
-                    'Logistics • Warehouse Associate • Intermediate • Approximately 24 minutes',
-                actionLabel: 'Loading simulation',
-              ),
-              error: (error, stackTrace) => const _WorkplaceSimulationCard(
-                title: 'Workplace Simulation',
-                missionSummary:
-                    'Dispatch Delivery Route\n'
-                    'Logistics • Warehouse Associate • Intermediate • Approximately 24 minutes',
-                actionLabel: 'Simulation unavailable',
-                unavailable: true,
-              ),
-              data: (state) {
-                final attempt = state.attempt;
-                final actionLabel = attempt == null
-                    ? 'Start Simulation'
-                    : attempt.state == MissionState.completed ||
-                          attempt.state == MissionState.failed
-                    ? 'Retry Simulation'
-                    : 'Continue Simulation';
-                return _WorkplaceSimulationCard(
-                  title: 'Workplace Simulation',
-                  missionSummary:
-                      'Dispatch Delivery Route\n'
-                      'Logistics • Warehouse Associate • Intermediate • Approximately 24 minutes',
-                  actionLabel: actionLabel,
-                  onPressed: () => widget.onOpenWorkplaceSimulation(
-                    WorkplaceSimulationController.dispatchMissionId,
-                  ),
-                );
-              },
-            ),
-        const SizedBox(height: AppSpacing.md),
+        for (final mission in _missions) ...[
+          _WorkplaceMissionCard(
+            pack: pack,
+            entry: mission,
+            onOpen: () => widget.onOpenWorkplaceSimulation(mission.missionId),
+          ),
+          const SizedBox(height: AppSpacing.md),
+        ],
         Text(
           'Recommended practice',
           style: Theme.of(context).textTheme.headlineSmall,
@@ -357,48 +235,83 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
   }
 }
 
-class _WorkplaceSimulationCard extends StatelessWidget {
-  const _WorkplaceSimulationCard({
-    required this.title,
-    required this.missionSummary,
-    required this.actionLabel,
-    this.onPressed,
-    this.unavailable = false,
+/// One [SectorTaskCard] driven by a workplace mission's
+/// [workplaceSimulationControllerProvider] state -- loading, error
+/// (unavailable), not started, in progress/paused, and
+/// completed/failed all covered.
+class _WorkplaceMissionCard extends ConsumerWidget {
+  const _WorkplaceMissionCard({
+    required this.pack,
+    required this.entry,
+    required this.onOpen,
   });
 
-  final String title;
-  final String missionSummary;
-  final String actionLabel;
-  final VoidCallback? onPressed;
-  final bool unavailable;
+  final SectorPack pack;
+  final _WorkplaceMissionEntry entry;
+  final VoidCallback onOpen;
 
   @override
-  Widget build(BuildContext context) {
-    return AppCard(
-      backgroundColor: AppColors.brandSoft,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(title, style: Theme.of(context).textTheme.titleLarge),
-          const SizedBox(height: AppSpacing.xs),
-          const Text(
-            'Complete realistic workplace missions and build verified competency evidence.',
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          Text(missionSummary),
-          if (unavailable) ...[
-            const SizedBox(height: AppSpacing.sm),
-            const Text('Workplace simulation content is unavailable.'),
-          ],
-          const SizedBox(height: AppSpacing.md),
-          AppButton(
-            label: actionLabel,
-            semanticLabel: '$actionLabel button for $title.',
-            leadingIcon: Icons.factory_outlined,
-            onPressed: onPressed,
-          ),
-        ],
+  Widget build(BuildContext context, WidgetRef ref) {
+    final state = ref.watch(
+      workplaceSimulationControllerProvider(entry.missionId),
+    );
+    return state.when(
+      loading: () => SectorTaskCard(
+        pack: pack,
+        workOrderLabel: entry.workOrderLabel,
+        tagLabel: entry.difficultyLabel,
+        tone: SectorTaskTone.muted,
+        title: entry.title,
+        description: entry.meta,
+        statLeft: 'Loading simulation',
+        tearLabel: '···',
+        unavailable: true,
       ),
+      error: (error, stackTrace) => SectorTaskCard(
+        pack: pack,
+        workOrderLabel: entry.workOrderLabel,
+        tagLabel: 'Unavailable',
+        tone: SectorTaskTone.muted,
+        title: entry.title,
+        description: entry.meta,
+        statLeft: 'Content unavailable',
+        tearLabel: 'N/A',
+        unavailable: true,
+      ),
+      data: (value) {
+        final attempt = value.attempt;
+        final SectorTaskTone tone;
+        final String statLeft;
+        final String tearLabel;
+        if (attempt == null) {
+          tone = SectorTaskTone.emphasis;
+          statLeft = 'Not started';
+          tearLabel = 'START';
+        } else if (attempt.state == MissionState.completed ||
+            attempt.state == MissionState.failed) {
+          tone = SectorTaskTone.cleared;
+          statLeft = attempt.state == MissionState.completed
+              ? 'Completed'
+              : 'Attempt failed';
+          tearLabel = 'RETRY';
+        } else {
+          tone = SectorTaskTone.active;
+          statLeft = 'In progress';
+          tearLabel = 'CONTINUE';
+        }
+        return SectorTaskCard(
+          pack: pack,
+          workOrderLabel: entry.workOrderLabel,
+          tagLabel: entry.difficultyLabel,
+          tone: tone,
+          title: entry.title,
+          description: entry.meta,
+          statLeft: statLeft,
+          tearLabel: tearLabel,
+          onTap: onOpen,
+          semanticLabel: '${entry.title}. $statLeft. $tearLabel button.',
+        );
+      },
     );
   }
 }
