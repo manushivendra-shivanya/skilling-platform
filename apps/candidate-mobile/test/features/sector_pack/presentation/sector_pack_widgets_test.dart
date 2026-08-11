@@ -338,5 +338,51 @@ void main() {
       expect(find.text('LOCKED'), findsWidgets);
       expect(tester.takeException(), isNull);
     });
+
+    testWidgets(
+      'semanticLabel is exposed as a group without hiding the CTA button',
+      (tester) async {
+        final semantics = tester.ensureSemantics();
+        var ctaPressed = false;
+        await tester.pumpThemedWidget(
+          SectorCredentialCard(
+            pack: _pack,
+            orgLine: 'WAREHOUSE & LOGISTICS · 24Q · ~30 MIN',
+            levelLabel: 'PASS 70%',
+            glyph: SectorGlyph.lock,
+            credentialName: 'Warehouse Ops Certification',
+            subtitle: 'Warehouse Operations Associate',
+            statusLabel: 'LOCKED',
+            statusState: SectorSignalState.locked,
+            barcodeSeed: 'exam-1-none',
+            eligibilityLabel: '2 / 4 LESSONS CLEARED',
+            eligibilityFraction: 0.5,
+            ctaLabel: 'Clear all lessons to unlock',
+            ctaEnabled: false,
+            onCta: () => ctaPressed = true,
+            semanticLabel:
+                'Warehouse Ops Certification. Locked. 2 of 4 lessons cleared.',
+          ),
+        );
+
+        expect(
+          find.bySemanticsLabel(
+            'Warehouse Ops Certification. Locked. 2 of 4 lessons cleared.',
+          ),
+          findsOneWidget,
+        );
+        // The overall group label must not swallow the CTA's own semantics
+        // node -- it needs to stay independently reachable and announced,
+        // same rationale as SectorIndexRow's trailing utility button.
+        expect(
+          find.bySemanticsLabel('Clear all lessons to unlock'),
+          findsOneWidget,
+        );
+        await tester.tap(find.text('Clear all lessons to unlock'));
+        expect(ctaPressed, isFalse, reason: 'ctaEnabled: false still holds');
+        expect(tester.takeException(), isNull);
+        semantics.dispose();
+      },
+    );
   });
 }

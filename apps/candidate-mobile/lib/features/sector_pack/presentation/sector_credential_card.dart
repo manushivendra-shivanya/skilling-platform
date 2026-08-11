@@ -38,6 +38,7 @@ class SectorCredentialCard extends StatelessWidget {
     this.ctaLabel,
     this.onCta,
     this.ctaEnabled = true,
+    this.semanticLabel,
     super.key,
   });
 
@@ -73,6 +74,13 @@ class SectorCredentialCard extends StatelessWidget {
   final VoidCallback? onCta;
   final bool ctaEnabled;
 
+  /// An overall status summary (e.g. "Warehouse Ops Certification, locked,
+  /// 2 of 4 lessons cleared") for everything except [ctaLabel]'s button,
+  /// which stays independently reachable/announced as its own element.
+  /// Null means "not yet audited for this call site" -- prefer supplying
+  /// it; every real usage should.
+  final String? semanticLabel;
+
   @override
   Widget build(BuildContext context) {
     final base = pack.primaryAccent;
@@ -85,6 +93,194 @@ class SectorCredentialCard extends StatelessWidget {
       SectorSignalState.active => pack.signalPalette.active,
       SectorSignalState.cleared => pack.signalPalette.cleared,
     };
+
+    final infoContent = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Text(
+                orgLine,
+                style: SectorPackTypography.monoLabel(
+                  color: onDarkSoft,
+                  fontSize: 9.5,
+                  letterSpacing: 0.8,
+                ),
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+              decoration: BoxDecoration(
+                color: pack.signalPalette.active,
+                borderRadius: BorderRadius.circular(2),
+              ),
+              child: Text(
+                levelLabel,
+                style: SectorPackTypography.monoLabel(
+                  color: darkBottom,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 11,
+                  letterSpacing: 0.5,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 14),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Container(
+              width: 52,
+              height: 52,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.06),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.22)),
+              ),
+              child: SectorIcon(glyph: glyph, color: onDarkSoft, size: 24),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    credentialName,
+                    style: SectorPackTypography.displayLabel(
+                      color: onDark,
+                      fontSize: 18,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    subtitle,
+                    style: SectorPackTypography.bodyRegular(
+                      color: onDarkSoft,
+                      fontSize: 11.5,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        if (eligibilityFraction != null) ...[
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              Text(
+                'ELIGIBILITY',
+                style: SectorPackTypography.monoLabel(
+                  color: onDarkSoft,
+                  fontSize: 10,
+                ),
+              ),
+              if (eligibilityLabel != null) ...[
+                const Spacer(),
+                Flexible(
+                  child: Text(
+                    eligibilityLabel!,
+                    textAlign: TextAlign.right,
+                    overflow: TextOverflow.ellipsis,
+                    style: SectorPackTypography.monoLabel(
+                      color: onDarkSoft,
+                      fontSize: 10,
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+          const SizedBox(height: 6),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(99),
+            child: LinearProgressIndicator(
+              value: eligibilityFraction!.clamp(0, 1),
+              minHeight: 6,
+              backgroundColor: Colors.white.withValues(alpha: 0.12),
+              valueColor: AlwaysStoppedAnimation(
+                eligibilityFraction! >= 1
+                    ? pack.signalPalette.cleared
+                    : pack.signalPalette.active,
+              ),
+            ),
+          ),
+        ],
+        if (attemptText != null) ...[
+          const SizedBox(height: 14),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.06),
+              border: Border(
+                left: BorderSide(
+                  width: 4,
+                  color: switch (attemptState) {
+                    SectorSignalState.cleared => pack.signalPalette.cleared,
+                    SectorSignalState.locked => pack.signalPalette.locked,
+                    _ => pack.signalPalette.active,
+                  },
+                ),
+              ),
+            ),
+            child: Text(
+              attemptText!,
+              style: SectorPackTypography.bodyRegular(
+                color: Colors.white.withValues(alpha: 0.86),
+                fontSize: 12,
+              ),
+            ),
+          ),
+        ],
+        const SizedBox(height: 14),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Expanded(child: _Barcode(seed: barcodeSeed)),
+            const SizedBox(width: 10),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SectorSignalDot(pack: pack, state: statusState, size: 8),
+                const SizedBox(width: 5),
+                Text(
+                  statusLabel,
+                  style: SectorPackTypography.monoLabel(
+                    color: statusColor,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 10,
+                    letterSpacing: 0.6,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ],
+    );
+
+    // excludeSemantics: true, not just container: true -- without it,
+    // Flutter merges every descendant's own semantics (org line, level
+    // pill, name, subtitle, eligibility text, *and* the progress bar's
+    // role: progressBar / value semantics) into one combined node whose
+    // label is all that text newline-joined. Caught via a real
+    // semantics-tree dump in this widget's test: the merged node announced
+    // the whole card as a single confusingly-labelled "progress bar" that
+    // also swallowed the CTA button's own text -- worse than no
+    // semanticLabel at all. excludeSemantics replaces all of that with
+    // just the one summary string, and because it's scoped to infoContent
+    // only (not the CTA below), the button stays its own reachable node.
+    final wrappedInfo = semanticLabel == null
+        ? infoContent
+        : Semantics(
+            label: semanticLabel,
+            container: true,
+            excludeSemantics: true,
+            child: infoContent,
+          );
 
     return Container(
       clipBehavior: Clip.antiAlias,
@@ -126,181 +322,7 @@ class SectorCredentialCard extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: Text(
-                      orgLine,
-                      style: SectorPackTypography.monoLabel(
-                        color: onDarkSoft,
-                        fontSize: 9.5,
-                        letterSpacing: 0.8,
-                      ),
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 9,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: pack.signalPalette.active,
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                    child: Text(
-                      levelLabel,
-                      style: SectorPackTypography.monoLabel(
-                        color: darkBottom,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 11,
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 14),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Container(
-                    width: 52,
-                    height: 52,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.06),
-                      border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.22),
-                      ),
-                    ),
-                    child: SectorIcon(
-                      glyph: glyph,
-                      color: onDarkSoft,
-                      size: 24,
-                    ),
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          credentialName,
-                          style: SectorPackTypography.displayLabel(
-                            color: onDark,
-                            fontSize: 18,
-                          ),
-                        ),
-                        const SizedBox(height: 3),
-                        Text(
-                          subtitle,
-                          style: SectorPackTypography.bodyRegular(
-                            color: onDarkSoft,
-                            fontSize: 11.5,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              if (eligibilityFraction != null) ...[
-                const SizedBox(height: 14),
-                Row(
-                  children: [
-                    Text(
-                      'ELIGIBILITY',
-                      style: SectorPackTypography.monoLabel(
-                        color: onDarkSoft,
-                        fontSize: 10,
-                      ),
-                    ),
-                    if (eligibilityLabel != null) ...[
-                      const Spacer(),
-                      Flexible(
-                        child: Text(
-                          eligibilityLabel!,
-                          textAlign: TextAlign.right,
-                          overflow: TextOverflow.ellipsis,
-                          style: SectorPackTypography.monoLabel(
-                            color: onDarkSoft,
-                            fontSize: 10,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-                const SizedBox(height: 6),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(99),
-                  child: LinearProgressIndicator(
-                    value: eligibilityFraction!.clamp(0, 1),
-                    minHeight: 6,
-                    backgroundColor: Colors.white.withValues(alpha: 0.12),
-                    valueColor: AlwaysStoppedAnimation(
-                      eligibilityFraction! >= 1
-                          ? pack.signalPalette.cleared
-                          : pack.signalPalette.active,
-                    ),
-                  ),
-                ),
-              ],
-              if (attemptText != null) ...[
-                const SizedBox(height: 14),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 10,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.06),
-                    border: Border(
-                      left: BorderSide(
-                        width: 4,
-                        color: switch (attemptState) {
-                          SectorSignalState.cleared =>
-                            pack.signalPalette.cleared,
-                          SectorSignalState.locked => pack.signalPalette.locked,
-                          _ => pack.signalPalette.active,
-                        },
-                      ),
-                    ),
-                  ),
-                  child: Text(
-                    attemptText!,
-                    style: SectorPackTypography.bodyRegular(
-                      color: Colors.white.withValues(alpha: 0.86),
-                      fontSize: 12,
-                    ),
-                  ),
-                ),
-              ],
-              const SizedBox(height: 14),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Expanded(child: _Barcode(seed: barcodeSeed)),
-                  const SizedBox(width: 10),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      SectorSignalDot(pack: pack, state: statusState, size: 8),
-                      const SizedBox(width: 5),
-                      Text(
-                        statusLabel,
-                        style: SectorPackTypography.monoLabel(
-                          color: statusColor,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 10,
-                          letterSpacing: 0.6,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
+              wrappedInfo,
               if (ctaLabel != null) ...[
                 const SizedBox(height: 14),
                 SizedBox(

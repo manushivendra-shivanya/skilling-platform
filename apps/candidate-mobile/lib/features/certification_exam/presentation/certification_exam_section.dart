@@ -149,6 +149,7 @@ class _CredentialSection extends StatelessWidget {
     double? eligibilityFraction;
     final String ctaLabel;
     final bool ctaEnabled;
+    final String semanticLabel;
 
     if (!eligible) {
       glyph = SectorGlyph.lock;
@@ -161,12 +162,16 @@ class _CredentialSection extends StatelessWidget {
           : learning.completedIds.length / learning.units.length;
       ctaLabel = 'Clear all lessons to unlock';
       ctaEnabled = false;
+      semanticLabel =
+          '${data.title}. Locked. ${learning.completedIds.length} of '
+          '${learning.units.length} lessons cleared.';
     } else if (lastAttempt == null) {
       glyph = SectorGlyph.check;
       statusLabel = 'ELIGIBLE';
       statusState = SectorSignalState.cleared;
       ctaLabel = 'Start certification exam';
       ctaEnabled = true;
+      semanticLabel = '${data.title}. Eligible to start.';
     } else if (passed) {
       glyph = SectorGlyph.check;
       statusLabel = 'VERIFIED';
@@ -176,6 +181,9 @@ class _CredentialSection extends StatelessWidget {
       attemptState = SectorSignalState.cleared;
       ctaLabel = 'Retake exam';
       ctaEnabled = true;
+      semanticLabel =
+          '${data.title}. Verified. Passed with '
+          '${lastAttempt.scorePercent} percent.';
     } else {
       glyph = SectorGlyph.cross;
       statusLabel = 'LOCKED';
@@ -191,6 +199,10 @@ class _CredentialSection extends StatelessWidget {
       attemptState = SectorSignalState.locked;
       ctaLabel = 'Retake exam';
       ctaEnabled = true;
+      semanticLabel =
+          '${data.title}. Last attempt ${lastAttempt.scorePercent} percent, '
+          'below the ${data.passThresholdPercent} percent pass mark.'
+          '${canRetakeNow ? '' : ' Retake unlocks at ${_formatTime(retakeAt)}.'}';
     }
 
     return SectorCredentialCard(
@@ -210,6 +222,7 @@ class _CredentialSection extends StatelessWidget {
       attemptState: attemptState,
       ctaLabel: ctaLabel,
       ctaEnabled: ctaEnabled,
+      semanticLabel: semanticLabel,
       onCta: ctaEnabled
           ? () => Navigator.of(context, rootNavigator: true).push(
               MaterialPageRoute<void>(
