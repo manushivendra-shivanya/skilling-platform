@@ -3079,6 +3079,30 @@ been recorded here before this reconciliation pass.
   state" section rewritten to match reality instead of describing the
   default Flutter counter-app scaffold it once was.
 
+## SectorPack abstraction for Lessons/Practise/Certification
+
+- **Two published design references, neither wired to a live screen.**
+  Shift Floor (warehouse — dock lights, rack bins, job tickets, an access
+  badge) and On The Route v2 (last-mile delivery — traffic-signal
+  red/amber/green, a map-pin route line, trip-request cards, a
+  driving-licence-styled Rider ID). Both are self-contained HTML mocks
+  published as Artifacts, rendered and screenshot-verified via headless
+  Chromium before each publish — not eyeballed from source.
+- `apps/candidate-mobile/lib/features/sector_pack/domain/sector_pack.dart`
+  is a **domain-layer stub only**: `SectorPack`/`SectorSignalPalette`
+  data classes plus `SectorPacks.warehouseLogistics` and
+  `.lastMileDelivery` constants, covered by
+  `test/features/sector_pack/domain/sector_pack_test.dart` (5 tests,
+  including a regression guard for a real collision bug caught while
+  building the last-mile pack — a status colour reused as the primary
+  accent). No screen reads from this yet; `learning_screen.dart`,
+  `practice_screen.dart`, and `certification_exam_section.dart` still
+  render their original mock content.
+- See `docs/adr/0020-sector-pack-abstraction.md` for the decision and
+  `docs/26-sector-pack-rollout.md` for the entry-point plan (resolve the
+  pack from the candidate's matched job role, not a separate picker), the
+  QC checklist, and the full dogfooding log.
+
 ## Target product architecture proposal
 
 - Added the proposed Flora AI Employability Infrastructure architecture in
