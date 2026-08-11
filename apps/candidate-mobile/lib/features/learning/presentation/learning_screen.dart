@@ -198,22 +198,33 @@ class _DownloadUtilityButton extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: onPressed,
-          child: Container(
-            width: 36,
-            height: 36,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              border: Border.all(
-                color: downloaded ? AppColors.success : divider,
-                width: 1.5,
+          // The 36x36 box below is the intended *visual* size (matches
+          // the mock) -- this SizedBox+Center keeps that unchanged while
+          // expanding the actual tap target to Android's 48dp minimum
+          // (kMinInteractiveDimension), the same guarantee Flutter's
+          // IconButton gives for free but a hand-rolled InkWell doesn't.
+          child: SizedBox(
+            width: kMinInteractiveDimension,
+            height: kMinInteractiveDimension,
+            child: Center(
+              child: Container(
+                width: 36,
+                height: 36,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  border: Border.all(
+                    color: downloaded ? AppColors.success : divider,
+                    width: 1.5,
+                  ),
+                ),
+                child: SectorIcon(
+                  glyph: downloaded ? SectorGlyph.check : SectorGlyph.download,
+                  color: downloaded
+                      ? AppColors.success
+                      : Theme.of(context).colorScheme.onSurfaceVariant,
+                  size: 16,
+                ),
               ),
-            ),
-            child: SectorIcon(
-              glyph: downloaded ? SectorGlyph.check : SectorGlyph.download,
-              color: downloaded
-                  ? AppColors.success
-                  : Theme.of(context).colorScheme.onSurfaceVariant,
-              size: 16,
             ),
           ),
         ),
