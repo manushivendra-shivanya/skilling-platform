@@ -1,3 +1,5 @@
+import 'dart:ui' show SemanticsRole;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -125,84 +127,121 @@ class _SectorSegmentedTabBar extends ConsumerWidget {
     // error state next to the light screens below it).
     const base = AppColors.navy;
 
-    return Container(
-      color: base,
-      child: Row(
-        children: [
-          for (final (index, segment) in segments.indexed)
-            Expanded(
-              child: InkWell(
-                onTap: () => onSelected(index),
-                child: Container(
-                  padding: const EdgeInsets.fromLTRB(12, 12, 12, 11),
-                  decoration: BoxDecoration(
-                    border: Border(
-                      right: index == segments.length - 1
-                          ? BorderSide.none
-                          : BorderSide(
-                              color: Colors.white.withValues(alpha: 0.12),
-                            ),
-                      bottom: BorderSide(
-                        width: 3,
-                        color: index == selectedIndex
-                            ? pack.signalPalette.active
-                            : Colors.transparent,
-                      ),
-                    ),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        (index + 1).toString().padLeft(2, '0'),
-                        style: SectorPackTypography.monoLabel(
-                          color: Colors.white.withValues(alpha: 0.45),
-                          fontSize: 9.5,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        segment.label,
-                        style: SectorPackTypography.displayLabel(
-                          color: Colors.white.withValues(
-                            alpha: index == selectedIndex ? 1 : 0.55,
+    return Semantics(
+      // Mirrors the bottom nav's own `role: tabBar` / `role: tab` shape
+      // (see main_navigation_shell.dart's NavigationBar, which gets this
+      // for free from Material) -- this is a hand-rolled segmented control
+      // standing in for a real TabBar (see this class's doc comment for
+      // why), so it has to declare the same roles itself.
+      container: true,
+      role: SemanticsRole.tabBar,
+      child: Container(
+        color: base,
+        child: Row(
+          children: [
+            for (final (index, segment) in segments.indexed)
+              Expanded(
+                child: Semantics(
+                  // Before this fix, this segment had no Semantics node of
+                  // its own at all -- Flutter's default merge behaviour
+                  // still made it reachable and tappable (a real
+                  // debugDumpSemanticsTree() dump confirmed
+                  // `actions: focus, tap`), but the tab's *selected* state
+                  // was never announced: no `isSelected` flag, ever, on any
+                  // segment, even the active one. A screen-reader user had
+                  // no way to tell which of Lessons/Practise/Certification
+                  // they were currently on. `container: true` +
+                  // `excludeSemantics: true` replaces the auto-merged raw
+                  // text (index digit, label, state readout) with one
+                  // deliberate label, and `onTap` is repeated explicitly on
+                  // this node -- excludeSemantics wrapping the InkWell
+                  // itself would otherwise drop its own tap action, the
+                  // same fix already shipped on practice_screen.dart's
+                  // `_DemoOptionCard` and certification_exam_screen.dart's
+                  // `_ExamOptionCard`.
+                  label:
+                      '${segment.label}. ${segment.stateText}. '
+                      'Tab ${index + 1} of ${segments.length}.',
+                  button: true,
+                  selected: index == selectedIndex,
+                  role: SemanticsRole.tab,
+                  container: true,
+                  excludeSemantics: true,
+                  onTap: () => onSelected(index),
+                  child: InkWell(
+                    onTap: () => onSelected(index),
+                    child: Container(
+                      padding: const EdgeInsets.fromLTRB(12, 12, 12, 11),
+                      decoration: BoxDecoration(
+                        border: Border(
+                          right: index == segments.length - 1
+                              ? BorderSide.none
+                              : BorderSide(
+                                  color: Colors.white.withValues(alpha: 0.12),
+                                ),
+                          bottom: BorderSide(
+                            width: 3,
+                            color: index == selectedIndex
+                                ? pack.signalPalette.active
+                                : Colors.transparent,
                           ),
-                          fontSize: 15,
                         ),
                       ),
-                      const SizedBox(height: 6),
-                      Row(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          if (segment.signalState != null) ...[
-                            SectorSignalDot(
-                              pack: pack,
-                              state: segment.signalState!,
-                              size: 6,
+                          Text(
+                            (index + 1).toString().padLeft(2, '0'),
+                            style: SectorPackTypography.monoLabel(
+                              color: Colors.white.withValues(alpha: 0.45),
+                              fontSize: 9.5,
                             ),
-                            const SizedBox(width: 5),
-                          ],
-                          Flexible(
-                            child: Text(
-                              segment.stateText,
-                              overflow: TextOverflow.ellipsis,
-                              style: SectorPackTypography.monoLabel(
-                                color: index == selectedIndex
-                                    ? pack.signalPalette.active
-                                    : Colors.white.withValues(alpha: 0.5),
-                                fontSize: 9,
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            segment.label,
+                            style: SectorPackTypography.displayLabel(
+                              color: Colors.white.withValues(
+                                alpha: index == selectedIndex ? 1 : 0.55,
                               ),
+                              fontSize: 15,
                             ),
+                          ),
+                          const SizedBox(height: 6),
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (segment.signalState != null) ...[
+                                SectorSignalDot(
+                                  pack: pack,
+                                  state: segment.signalState!,
+                                  size: 6,
+                                ),
+                                const SizedBox(width: 5),
+                              ],
+                              Flexible(
+                                child: Text(
+                                  segment.stateText,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: SectorPackTypography.monoLabel(
+                                    color: index == selectedIndex
+                                        ? pack.signalPalette.active
+                                        : Colors.white.withValues(alpha: 0.5),
+                                    fontSize: 9,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
-                    ],
+                    ),
                   ),
                 ),
               ),
-            ),
-        ],
+          ],
+        ),
       ),
     );
   }
