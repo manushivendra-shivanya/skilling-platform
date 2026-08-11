@@ -11,6 +11,7 @@ import '../../../core/errors/app_failure.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_chip.dart';
 import '../../../core/widgets/app_feedback.dart';
+import '../../../core/widgets/app_loading_progress.dart';
 import '../../../core/widgets/app_skeleton.dart';
 import '../../../core/widgets/app_state_view.dart';
 import '../../../core/widgets/app_text_field.dart';
@@ -1137,93 +1138,45 @@ class _JobDetailsState extends State<_JobDetails> {
 /// serverless instance can make this screen sit in this state for real
 /// seconds, not milliseconds, and a still shimmer with no elapsed-time cue
 /// reads as frozen rather than working.
-class _JobsLoadingView extends StatefulWidget {
+class _JobsLoadingView extends StatelessWidget {
   const _JobsLoadingView();
 
-  static const _gracePeriod = Duration(seconds: 2);
-
-  @override
-  State<_JobsLoadingView> createState() => _JobsLoadingViewState();
-}
-
-class _JobsLoadingViewState extends State<_JobsLoadingView> {
-  // Timer-driven, not Stopwatch/DateTime -- a Stopwatch measures real
-  // wall-clock time, which does not advance together with
-  // `tester.pump(duration)`'s fake-async clock in widget tests, whereas
-  // Timer callbacks do.
-  Timer? _graceTimer;
-  Timer? _ticker;
-  bool _isPastGracePeriod = false;
-  int _elapsedSeconds = 0;
-
-  @override
-  void initState() {
-    super.initState();
-    _graceTimer = Timer(_JobsLoadingView._gracePeriod, () {
-      if (mounted) setState(() => _isPastGracePeriod = true);
-    });
-    _ticker = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (mounted) setState(() => _elapsedSeconds++);
-    });
-  }
-
-  @override
-  void dispose() {
-    _graceTimer?.cancel();
-    _ticker?.cancel();
-    super.dispose();
-  }
-
+  // Previously three competing loading affordances at once (an
+  // indeterminate LinearProgressIndicator, a separate spinning
+  // CircularProgressIndicator + status text, and skeleton placeholders) --
+  // real user report: "user seems clueless when both keep loading."
+  // AppLoadingProgressBar now owns the single progress signal + status
+  // text (including its own grace-period escalation, previously
+  // duplicated here as a StatefulWidget); skeletons stay, since they serve
+  // a different purpose (previewing content shape) rather than competing
+  // as a second "is it working?" signal.
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return ListView(
+      padding: const EdgeInsets.all(AppSpacing.xl),
       children: [
-        const LinearProgressIndicator(minHeight: 3),
-        Expanded(
-          child: ListView(
-            padding: const EdgeInsets.all(AppSpacing.xl),
+        const AppLoadingProgressBar(
+          label: 'Finding jobs for you…',
+          slowConnectionLabel:
+              'Still finding jobs for you — this can take a moment on a '
+              'slow connection.',
+        ),
+        const SizedBox(height: AppSpacing.lg),
+        const AppSkeletonGroup(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  ),
-                  const SizedBox(width: AppSpacing.xs),
-                  Text(
-                    _isPastGracePeriod
-                        ? 'Still finding jobs for you — this can take a '
-                              'moment on a slow connection (${_elapsedSeconds}s)'
-                        : 'Finding jobs for you…',
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: AppColors.inkMuted,
-                      fontSize: 12.5,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppSpacing.lg),
-              const AppSkeletonGroup(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    AppSkeleton(height: 56),
-                    SizedBox(height: AppSpacing.md),
-                    AppSkeleton(height: 40),
-                    SizedBox(height: AppSpacing.lg),
-                    _JobCardSkeleton(),
-                    SizedBox(height: AppSpacing.md),
-                    _JobCardSkeleton(),
-                    SizedBox(height: AppSpacing.md),
-                    _JobCardSkeleton(),
-                    SizedBox(height: AppSpacing.md),
-                    _JobCardSkeleton(),
-                  ],
-                ),
-              ),
+              AppSkeleton(height: 56),
+              SizedBox(height: AppSpacing.md),
+              AppSkeleton(height: 40),
+              SizedBox(height: AppSpacing.lg),
+              _JobCardSkeleton(),
+              SizedBox(height: AppSpacing.md),
+              _JobCardSkeleton(),
+              SizedBox(height: AppSpacing.md),
+              _JobCardSkeleton(),
+              SizedBox(height: AppSpacing.md),
+              _JobCardSkeleton(),
             ],
           ),
         ),
