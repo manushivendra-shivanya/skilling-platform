@@ -35,10 +35,32 @@ class FlutterSecureKeyValueStore implements SecureKeyValueStore {
   // so tests can use a short timeout instead of actually waiting 12s.
   final Duration _callTimeout;
 
+  // Real-device reproduction, distinct from the stall above: sign-in
+  // completes, saveSession() writes the new session, the app immediately
+  // navigates and the router's redirect immediately calls readSession()
+  // again to decide where to go -- and *that* read comes back empty/stuck,
+  // even though a full process kill and relaunch (a fresh read with
+  // nothing else in flight) loads correctly. That's a read-immediately-
+  // after-write gap on the platform channel, not the provisioning stall
+  // _callTimeout guards against. A key containing a value the app itself
+  // just wrote (or just confirmed absent, e.g. after delete/self-heal) is
+  // present in this map -- read() answers from here instead of touching
+  // the channel at all, so a same-process read can never race its own
+  // preceding write. A key simply absent from the map means "unknown, ask
+  // the platform" -- this is a cache of *this process's own writes*, not a
+  // general-purpose cache, so there's nothing to invalidate: the store has
+  // exactly one writer (this class), so nothing else can make it stale.
+  final Map<String, String?> _writeThroughCache = {};
+
   @override
   Future<String?> read(String key) async {
+    if (_writeThroughCache.containsKey(key)) {
+      return _writeThroughCache[key];
+    }
     try {
-      return await _storage.read(key: key).timeout(_callTimeout);
+      final value = await _storage.read(key: key).timeout(_callTimeout);
+      _writeThroughCache[key] = value;
+      return value;
     } catch (error) {
       if (error is! PlatformException) rethrow;
       // flutter_secure_storage's Android implementation can end up with a
@@ -67,6 +89,7 @@ class FlutterSecureKeyValueStore implements SecureKeyValueStore {
         } catch (_) {
           // Swallowed deliberately -- see the comment above.
         }
+        _writeThroughCache[key] = null;
         return null;
       }
       rethrow;
@@ -90,12 +113,15 @@ class FlutterSecureKeyValueStore implements SecureKeyValueStore {
   }
 
   @override
-  Future<void> remove(String key) =>
-      _storage.delete(key: key).timeout(_callTimeout);
+  Future<void> remove(String key) async {
+    await _storage.delete(key: key).timeout(_callTimeout);
+    _writeThroughCache[key] = null;
+  }
 
   @override
-  Future<void> write(String key, String value) {
-    return _storage.write(key: key, value: value).timeout(_callTimeout);
+  Future<void> write(String key, String value) async {
+    await _storage.write(key: key, value: value).timeout(_callTimeout);
+    _writeThroughCache[key] = value;
   }
 }
 
