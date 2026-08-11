@@ -3,8 +3,8 @@
 This is the single, authoritative source for how Flora looks, feels, and is
 built — screen inventory and design philosophy in one place, so there is one
 door to walk through, not several documents to reconcile. It replaces the
-former split between a screen-inventory spec and a separately-tracked
-award-grade design system; both are folded in below.
+former split between a screen-inventory spec and a separately-tracked design
+system document; both are folded in below.
 
 **Treat Part 2 as a checklist for every new or redesigned screen, not
 inspiration.** A screen that doesn't hold up against every item in it is not
@@ -177,19 +177,19 @@ not just the one that wrote it.
 
 ---
 
-## Part 2 — Award-Grade Design System
+## Part 2 — Best-in-Class Design System
 
 ### Why this part exists
 
 The Home and Voice Interview Practice redesigns (see the `2782334`-lineage
-commits and the award-grade voice interview commit on `main`) came out of a
+commits and the interview-practice redesign commit on `main`) came out of a
 `/deep-research` pass on what makes mobile product design genuinely
-award-grade (Webby-caliber), not just "clean Material Design." That research
-first lived only in a downloaded document and scattered code comments, then
-briefly as a separate file (`docs/26-award-grade-design-system.md`) before
-being folded in here — one UI door, not several documents to keep in sync.
-That's exactly how Lessons, Practise, and Certification ended up visually
-out of sync with Home: built to an earlier, generic standard and never
+best-in-class, not just "clean Material Design." That research first lived
+only in a downloaded document and scattered code comments, then briefly as
+a separate document before being folded in here — one UI door, not several
+documents to keep in sync. That's exactly how Lessons, Practise, and
+Certification ended up visually out of sync with Home: built to an earlier,
+generic standard and never
 retrofitted.
 
 ### The principles, grounded in what's already shipped
@@ -281,18 +281,19 @@ reads before they need it.
 As of this writing: **Lessons, Practise, and Certification** (the merged
 Learn/Practise tab) were flagged as not in sync with this design language —
 generic Material list tiles, no branded header, no evidence-first framing.
-Mocks for their award-grade redesign are the next piece of work; check them
-against every item above, not just against how Home looks.
+Mocks for their redesign are the next piece of work; check them against
+every item above, not just against how Home looks.
 
 ---
 
 ## Part 3 — Where This Is Heading
 
-This is deliberately not a frozen spec. The ambition behind the award-grade
-research is real award eligibility (Webby-caliber), not an internal figure
-of speech — that only holds up if the standard keeps moving as the product
-does. A few things worth naming so future work has somewhere to aim rather
-than just a floor to clear:
+This is deliberately not a frozen spec. The ambition behind this document is
+genuine, top-tier product quality that stands up against the best consumer
+apps built anywhere — not an internal figure of speech — and that only holds
+up if the standard keeps moving as the product does. A few things worth
+naming so future work has somewhere to aim rather than just a floor to
+clear:
 
 - **Motion with meaning, not motion for polish.** Principle 4 forbids fake
   data; it doesn't forbid real transitions. As more genuine signals become
@@ -317,9 +318,10 @@ This file is not a one-time snapshot. Treat it as living:
   with the same grounding style — cite the file and the reasoning, not just
   the rule.
 - If a genuinely new design-research pass happens (another `/deep-research`
-  round, a fresh Webby-criteria review), fold its conclusions into this file
-  rather than leaving them in a downloaded document or a chat transcript —
-  that's the only form that survives a session switch.
+  round, a fresh review against the best consumer product design out there),
+  fold its conclusions into this file rather than leaving them in a
+  downloaded document or a chat transcript — that's the only form that
+  survives a session switch.
 - Keep this as the *only* UI guideline document. If a new one seems worth
   starting, that's usually a sign this file needs a new section instead —
   ask before splitting it again.

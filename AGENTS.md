@@ -24,7 +24,7 @@ Initial pilot:
 **Additionally, before touching any candidate-facing screen (new or
 redesigned):**
 10. docs/04-ui-ux-specification.md — the single, authoritative UI design
-    document: screen inventory *and* the award-grade visual language
+    document: screen inventory *and* the best-in-class visual language
     established by the Home and Voice Interview redesigns, as a checklist,
     not inspiration. A screen that doesn't hold up against every item in
     Part 2's checklist is not done, the same way a screen with a failing
