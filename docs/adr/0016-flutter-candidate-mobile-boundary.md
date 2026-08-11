@@ -60,6 +60,5 @@ approved and implemented architecture. Rollback requires a superseding ADR.
 
 ## References
 
-- `docs/19-codex-master-context.md`
 - `docs/09-candidate-mobile-app.md`
 - `docs/20-codex-phase-execution.md`

@@ -1,4 +1,21 @@
-# 16 — Sprint-by-Sprint Development Plan
+# 16 — Sprint-by-Sprint Development Plan (Superseded)
+
+**This plan was never followed and is kept for history only.** Actual
+development went by `docs/20-codex-phase-execution.md`'s phase structure
+(Phase 1 — mobile shell, Phase 2 — candidate intelligence, and onward
+through the phases recorded in `docs/generated/current-state.md`), not the
+sprint numbering below. The two were never reconciled: this file plans web
+portals in Sprint 9–10 and an ATS integration in Sprint 15, none of which
+exist, while `docs/20` and `current-state.md` reflect a mobile-first,
+API-second build order that shipped a real Career Passport, Shift
+Marketplace, and job sourcing pipeline nothing here anticipated by name.
+
+Treat `docs/20-codex-phase-execution.md` and `docs/generated/current-state.md`
+as authoritative for what to build next and what already exists. This file
+is left below only as a record of the original two-week-sprint plan drafted
+before Phase 1 started.
+
+---
 
 Two-week sprints. Dates begin when the team starts.
 

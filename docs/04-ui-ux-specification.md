@@ -24,6 +24,15 @@ not just the one that wrote it.
 - Hindi/Hinglish copy is conversational, respectful, and occupation-specific.
 - Accessibility: scalable type, captions/transcripts, colour-independent status, screen-reader labels, minimum tap targets.
 
+### How the app should feel
+Premium, human, warm, trustworthy, modern, minimal, voice-friendly, Indian-first,
+and simple enough for a first-time digital user. In practice that means: large
+touch targets, clear hierarchy, low cognitive load, a single primary action
+per screen (see Part 2, principle 1), excellent empty and error states,
+accessible typography with Hindi/English text-expansion room, animation
+reserved for progress/guidance/reassurance rather than operational screens,
+and support for low-end Android devices on low bandwidth.
+
 ### Candidate Screen Inventory
 #### Acquisition and access
 1. App splash and language selection
