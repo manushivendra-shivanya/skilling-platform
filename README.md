@@ -52,7 +52,7 @@ Initial roles:
 2. [System Architecture](docs/01-system-architecture.md)
 3. [Database Design](docs/02-database-design.md)
 4. [API Specifications](docs/03-api-specifications.md)
-5. [UI/UX Specification](docs/04-ui-ux-specification.md)
+5. [UI/UX Design System](docs/04-ui-ux-specification.md)
 6. [AI Architecture](docs/05-ai-architecture.md)
 7. [Voice Architecture](docs/06-voice-architecture.md)
 8. [Prompt Library](docs/07-prompt-library.md)

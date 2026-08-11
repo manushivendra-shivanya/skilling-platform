@@ -23,15 +23,16 @@ Initial pilot:
 
 **Additionally, before touching any candidate-facing screen (new or
 redesigned):**
-10. docs/04-ui-ux-specification.md
-11. docs/26-award-grade-design-system.md — the award-grade visual language
+10. docs/04-ui-ux-specification.md — the single, authoritative UI design
+    document: screen inventory *and* the award-grade visual language
     established by the Home and Voice Interview redesigns, as a checklist,
-    not inspiration. A screen that doesn't hold up against every item in its
-    checklist is not done, the same way a screen with a failing test is not
-    done. When a design pass finds a reusable pattern, or a new
-    `/deep-research` round produces conclusions worth keeping, fold them
-    into that file rather than leaving them in a downloaded document or a
-    chat transcript — a session boundary does not preserve either of those.
+    not inspiration. A screen that doesn't hold up against every item in
+    Part 2's checklist is not done, the same way a screen with a failing
+    test is not done. This is deliberately the *only* UI guideline document
+    — when a design pass finds a reusable pattern, or a new `/deep-research`
+    round produces conclusions worth keeping, fold them into this file
+    rather than starting a new one or leaving them in a downloaded document
+    or a chat transcript, none of which survive a session boundary.
 
 Inspect the repository before assuming any file, package, API, route or feature exists.
 
