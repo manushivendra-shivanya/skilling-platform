@@ -170,8 +170,12 @@ void main() {
     // element -- which can happen while it's still in the sliver cache
     // extent, just outside the actual viewport, before it's truly
     // paintable/tappable.
+    //
+    // "Recommended practice" is now a real SectorTaskCard (the whole card
+    // is the tap target, same as the 4 mission tickets above it) rather
+    // than a separate "Start demonstration" AppButton -- tap its title.
     await tester.scrollUntilVisible(
-      find.text('Start demonstration'),
+      find.text('Inventory discrepancy'),
       200,
       scrollable: find.byType(Scrollable).first,
     );
@@ -184,11 +188,11 @@ void main() {
     // landed inside it. Centering the scroll instead keeps tappable
     // content clear of the FAB's fixed footprint.
     await Scrollable.ensureVisible(
-      tester.element(find.text('Start demonstration')),
+      tester.element(find.text('Inventory discrepancy')),
       alignment: 0.5,
     );
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Start demonstration'));
+    await tester.tap(find.text('Inventory discrepancy'));
     await tester.pumpAndSettle();
     await tester.scrollUntilVisible(
       find.text('Recount, preserve records, and escalate the mismatch'),
