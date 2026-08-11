@@ -216,6 +216,25 @@ class SectorTaskCard extends StatelessWidget {
     );
 
     if (semanticLabel == null) return card;
-    return Semantics(label: semanticLabel, container: true, child: card);
+    // excludeSemantics: true hides every descendant's own text (work order,
+    // tag, title, description, stat line, tear label) -- without it, a real
+    // debugDumpSemanticsTree() dump showed this node reading `semanticLabel`
+    // *and then* every one of those strings again, since there's no
+    // separate interactive child here for excludeSemantics to protect (the
+    // whole card is the one tap target, same shape as
+    // practice_screen.dart's `_DemoOptionCard`). Because excludeSemantics
+    // also drops the InkWell's own tap-action semantics, `onTap` is
+    // repeated explicitly on this node to keep it screen-reader-activatable
+    // -- the same fix already shipped there and on
+    // certification_exam_screen.dart's `_ExamOptionCard`.
+    return Semantics(
+      label: semanticLabel,
+      button: true,
+      enabled: onTap != null,
+      container: true,
+      excludeSemantics: true,
+      onTap: onTap,
+      child: card,
+    );
   }
 }

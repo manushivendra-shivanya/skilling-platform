@@ -148,6 +148,65 @@ void main() {
         expect(tester.takeException(), isNull);
       },
     );
+
+    testWidgets("a supplied semanticLabel is not duplicated by the row's own "
+        'descendant text, and the trailing button stays independently '
+        'reachable', (tester) async {
+      final semantics = tester.ensureSemantics();
+      var rowTapped = false;
+      var trailingTapped = false;
+      await tester.pumpThemedWidget(
+        SectorIndexRow(
+          pack: _pack,
+          indexLabel: 'L-01',
+          glyph: SectorGlyph.play,
+          title: 'Receiving Dock Safety Walkthrough',
+          statusText: '8 min · Content v3 · Tap to open',
+          onTap: () => rowTapped = true,
+          semanticLabel: 'Receiving Dock Safety Walkthrough. Tap to open.',
+          trailing: Tooltip(
+            message: 'Download for offline',
+            child: GestureDetector(
+              onTap: () => trailingTapped = true,
+              child: const SizedBox(
+                width: 36,
+                height: 36,
+                child: Icon(Icons.download_outlined),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      // Exactly the crafted label -- not that label followed by the raw
+      // "L-01" / title / status text again. Before this fix, the row's
+      // own container:true Semantics node (with no excludeSemantics) let
+      // every descendant Text merge in underneath the custom label, so a
+      // screen reader read the whole row twice.
+      final rowFinder = find.bySemanticsLabel(
+        'Receiving Dock Safety Walkthrough. Tap to open.',
+      );
+      expect(rowFinder, findsOneWidget);
+      expect(
+        tester.getSemantics(rowFinder).label,
+        'Receiving Dock Safety Walkthrough. Tap to open.',
+      );
+
+      await tester.tap(rowFinder);
+      expect(rowTapped, isTrue);
+
+      await tester.tap(find.byTooltip('Download for offline'));
+      expect(trailingTapped, isTrue);
+      expect(
+        rowTapped,
+        isTrue,
+        reason:
+            'unchanged from the row tap above -- confirms the '
+            'trailing tap did not also re-fire the row',
+      );
+      expect(tester.takeException(), isNull);
+      semantics.dispose();
+    });
   });
 
   group('SectorTaskCard', () {
@@ -230,6 +289,49 @@ void main() {
       );
       expect(tester.takeException(), isNull);
     });
+
+    testWidgets(
+      'a supplied semanticLabel replaces the raw descendant text instead '
+      'of being read alongside it, and the card stays tappable through it',
+      (tester) async {
+        final semantics = tester.ensureSemantics();
+        var tapped = false;
+        await tester.pumpThemedWidget(
+          SectorTaskCard(
+            pack: _pack,
+            workOrderLabel: 'WM-01',
+            tagLabel: 'Beginner',
+            tone: SectorTaskTone.emphasis,
+            title: 'Receive an Incoming Shipment',
+            description: 'Logistics · Warehouse Associate · ~20 min',
+            statLeft: 'Not started',
+            tearLabel: 'START',
+            onTap: () => tapped = true,
+            semanticLabel:
+                'Receive an Incoming Shipment. Not started. '
+                'Start button.',
+          ),
+        );
+
+        // Exactly the crafted label -- not that label followed by
+        // "WM-01\nBEGINNER\nReceive an Incoming Shipment\n..." again. See
+        // this widget's own build()-method doc comment for the real
+        // debugDumpSemanticsTree() finding this fixes.
+        final finder = find.bySemanticsLabel(
+          'Receive an Incoming Shipment. Not started. Start button.',
+        );
+        expect(finder, findsOneWidget);
+        expect(
+          tester.getSemantics(finder).label,
+          'Receive an Incoming Shipment. Not started. Start button.',
+        );
+
+        await tester.tap(finder);
+        expect(tapped, isTrue);
+        expect(tester.takeException(), isNull);
+        semantics.dispose();
+      },
+    );
   });
 
   group('SectorCredentialCard', () {

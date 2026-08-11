@@ -83,47 +83,71 @@ class SectorIndexRow extends StatelessWidget {
       ),
     );
 
+    // excluding: semanticLabel != null -- when no semanticLabel is
+    // supplied, this content must stay in the semantics tree exactly as
+    // before (Flutter's default merge is what makes the row readable at
+    // all in that case); only exclude it once `semanticLabel` below is
+    // about to state the same thing as one deliberate sentence. Getting
+    // this unconditional on the first pass silently made every
+    // semanticLabel-less row read as an empty, unlabelled tap target --
+    // this widget has no other caller today (only
+    // learning_screen.dart's `_LessonRow`, which always supplies one), but
+    // a future caller that doesn't would have hit it.
+    //
+    // ExcludeSemantics wraps the Padding *inside* Expanded, not Expanded
+    // itself -- Expanded is a ParentDataWidget that must sit directly
+    // inside the enclosing Row/Flex; wrapping it from the outside (as this
+    // fix first tried) crashes with "Incorrect use of ParentDataWidget"
+    // the moment this row builds, caught immediately by re-running the
+    // diagnostic widget test after making the change.
     final body = Expanded(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 10),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (missionLabel != null)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 2),
-                child: Text(
-                  missionLabel!,
-                  style: SectorPackTypography.monoLabel(
-                    color: pack.primaryAccent,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 9,
-                  ),
-                ),
-              ),
-            Text(title, style: SectorPackTypography.bodyBold(color: ink)),
-            const SizedBox(height: 2),
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (signalState != null) ...[
-                  SectorSignalDot(pack: pack, state: signalState!),
-                  const SizedBox(width: 6),
-                ] else if (locked) ...[
-                  SectorIcon(glyph: SectorGlyph.lock, color: inkSoft, size: 11),
-                  const SizedBox(width: 6),
-                ],
-                Flexible(
+      child: ExcludeSemantics(
+        excluding: semanticLabel != null,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (missionLabel != null)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 2),
                   child: Text(
-                    statusText,
-                    style: SectorPackTypography.monoLabel(color: inkSoft),
-                    overflow: TextOverflow.ellipsis,
+                    missionLabel!,
+                    style: SectorPackTypography.monoLabel(
+                      color: pack.primaryAccent,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 9,
+                    ),
                   ),
                 ),
-              ],
-            ),
-          ],
+              Text(title, style: SectorPackTypography.bodyBold(color: ink)),
+              const SizedBox(height: 2),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (signalState != null) ...[
+                    SectorSignalDot(pack: pack, state: signalState!),
+                    const SizedBox(width: 6),
+                  ] else if (locked) ...[
+                    SectorIcon(
+                      glyph: SectorGlyph.lock,
+                      color: inkSoft,
+                      size: 11,
+                    ),
+                    const SizedBox(width: 6),
+                  ],
+                  Flexible(
+                    child: Text(
+                      statusText,
+                      style: SectorPackTypography.monoLabel(color: inkSoft),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -141,6 +165,17 @@ class SectorIndexRow extends StatelessWidget {
     // widget tests). A Stack sidesteps both: its own size comes from the
     // naturally laid-out content below, and the index tag is simply
     // `Positioned` to fill whatever that height turns out to be.
+    // The index tag and the icon+title+status body are purely
+    // informational -- once `semanticLabel` below states the same content
+    // as one deliberate sentence, their own raw text must not also reach
+    // the tree, or TalkBack reads the row twice (the label, then every
+    // Text child's own value again). ExcludeSemantics is scoped to just
+    // these two pieces, not the whole row, so `trailing` (its own
+    // Tooltip/Semantics-wrapped utility button) stays completely
+    // unaffected and independently reachable -- confirmed via a real
+    // debugDumpSemanticsTree() dump: the row collapses to one clean node
+    // carrying `semanticLabel`, and the trailing download button still
+    // shows up as its own sibling node with its own tooltip and tap action.
     final row = Container(
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
@@ -158,7 +193,13 @@ class SectorIndexRow extends StatelessWidget {
                 padding: const EdgeInsets.only(left: _tagWidth),
                 child: Row(
                   children: [
-                    iconWrap,
+                    ExcludeSemantics(
+                      excluding: semanticLabel != null,
+                      child: iconWrap,
+                    ),
+                    // body is `Expanded(child: ExcludeSemantics(...))` --
+                    // already excluded internally, see its own definition
+                    // above for why it can't be wrapped from the outside.
                     body,
                     if (trailing != null)
                       Padding(
@@ -172,23 +213,26 @@ class SectorIndexRow extends StatelessWidget {
                 left: 0,
                 top: 0,
                 bottom: 0,
-                child: Container(
-                  constraints: const BoxConstraints(minWidth: _tagWidth),
-                  alignment: Alignment.center,
-                  padding: const EdgeInsets.symmetric(horizontal: 6),
-                  decoration: BoxDecoration(
-                    color: tagColor,
-                    border: Border(
-                      bottom: BorderSide(color: stripeColor, width: 3),
+                child: ExcludeSemantics(
+                  excluding: semanticLabel != null,
+                  child: Container(
+                    constraints: const BoxConstraints(minWidth: _tagWidth),
+                    alignment: Alignment.center,
+                    padding: const EdgeInsets.symmetric(horizontal: 6),
+                    decoration: BoxDecoration(
+                      color: tagColor,
+                      border: Border(
+                        bottom: BorderSide(color: stripeColor, width: 3),
+                      ),
                     ),
-                  ),
-                  child: Text(
-                    indexLabel,
-                    textAlign: TextAlign.center,
-                    style: SectorPackTypography.monoLabel(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 11.5,
+                    child: Text(
+                      indexLabel,
+                      textAlign: TextAlign.center,
+                      style: SectorPackTypography.monoLabel(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 11.5,
+                      ),
                     ),
                   ),
                 ),
@@ -200,9 +244,10 @@ class SectorIndexRow extends StatelessWidget {
     );
 
     if (semanticLabel == null) return row;
-    // Merges an overall label onto the row's semantics node without
-    // excluding descendants -- the trailing utility button (its own
-    // Tooltip/Semantics) must stay independently reachable.
+    // Merges an overall label onto the row's semantics node -- the info
+    // content above is already excluded, and `trailing` (its own
+    // Tooltip/Semantics) must stay independently reachable, so this node
+    // deliberately does not itself use excludeSemantics.
     return Semantics(label: semanticLabel, container: true, child: row);
   }
 }
