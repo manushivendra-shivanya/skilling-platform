@@ -10,15 +10,35 @@ abstract interface class SecureKeyValueStore {
 }
 
 class FlutterSecureKeyValueStore implements SecureKeyValueStore {
-  FlutterSecureKeyValueStore({FlutterSecureStorage? storage})
-    : _storage = storage ?? const FlutterSecureStorage();
+  FlutterSecureKeyValueStore({
+    FlutterSecureStorage? storage,
+    Duration callTimeout = const Duration(seconds: 12),
+  }) : _storage = storage ?? const FlutterSecureStorage(),
+       _callTimeout = callTimeout;
 
   final FlutterSecureStorage _storage;
+
+  // Real-device report: app stuck indefinitely on the splash screen after
+  // first Google sign-in, no error surfaced (a genuine hang, not a thrown
+  // exception -- confirmed by ruling out every build-time-exception
+  // candidate first). The AndroidKeystore-backed read this class wraps is
+  // the exact call that gates AppStartupController.build() via
+  // readSession() (see the BAD_DECRYPT handling below, which already
+  // documents that dependency for a *different* failure mode -- a thrown
+  // exception, not a stall). A first-time Keystore key provisioning can be
+  // genuinely slow on a budget device, which this app explicitly targets,
+  // but the plugin call itself has no built-in ceiling: if the platform
+  // channel stalls rather than throwing, `await` waits forever with no
+  // recovery path. 12s (the production default) is generous enough not to
+  // false-positive on a slow but real provisioning, short enough that
+  // "stuck" becomes "a retryable error" instead of "forever." Injectable
+  // so tests can use a short timeout instead of actually waiting 12s.
+  final Duration _callTimeout;
 
   @override
   Future<String?> read(String key) async {
     try {
-      return await _storage.read(key: key);
+      return await _storage.read(key: key).timeout(_callTimeout);
     } catch (error) {
       if (error is! PlatformException) rethrow;
       // flutter_secure_storage's Android implementation can end up with a
@@ -43,7 +63,7 @@ class FlutterSecureKeyValueStore implements SecureKeyValueStore {
         // key already behaves as "nothing stored" going forward regardless
         // of whether the cleanup itself succeeds.
         try {
-          await _storage.delete(key: key);
+          await _storage.delete(key: key).timeout(_callTimeout);
         } catch (_) {
           // Swallowed deliberately -- see the comment above.
         }
@@ -70,11 +90,12 @@ class FlutterSecureKeyValueStore implements SecureKeyValueStore {
   }
 
   @override
-  Future<void> remove(String key) => _storage.delete(key: key);
+  Future<void> remove(String key) =>
+      _storage.delete(key: key).timeout(_callTimeout);
 
   @override
   Future<void> write(String key, String value) {
-    return _storage.write(key: key, value: value);
+    return _storage.write(key: key, value: value).timeout(_callTimeout);
   }
 }
 

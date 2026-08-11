@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:candidate_mobile/core/storage/secure_key_value_store.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -175,5 +177,63 @@ void main() {
     );
 
     expect(await store.read('candidate.session'), 'stored-value');
+  });
+
+  group('a stalled platform channel call (real-device report: stuck '
+      'indefinitely on the splash screen after first Google sign-in, no '
+      'error shown)', () {
+    // Simulates the platform channel simply never responding -- not
+    // throwing, which every case above already covers -- by handing back a
+    // Future that never completes. Uses an injected short timeout so this
+    // doesn't actually wait 12s (the production default) per test.
+    const shortTimeout = Duration(milliseconds: 20);
+
+    test('read times out instead of hanging forever', () async {
+      await mockChannel((call) async {
+        if (call.method == 'read') return Completer<Object?>().future;
+        return null;
+      });
+      final store = FlutterSecureKeyValueStore(
+        storage: const FlutterSecureStorage(),
+        callTimeout: shortTimeout,
+      );
+
+      await expectLater(
+        store.read('candidate.session'),
+        throwsA(isA<TimeoutException>()),
+      );
+    });
+
+    test('write times out instead of hanging forever', () async {
+      await mockChannel((call) async {
+        if (call.method == 'write') return Completer<Object?>().future;
+        return null;
+      });
+      final store = FlutterSecureKeyValueStore(
+        storage: const FlutterSecureStorage(),
+        callTimeout: shortTimeout,
+      );
+
+      await expectLater(
+        store.write('candidate.session', 'value'),
+        throwsA(isA<TimeoutException>()),
+      );
+    });
+
+    test('remove times out instead of hanging forever', () async {
+      await mockChannel((call) async {
+        if (call.method == 'delete') return Completer<Object?>().future;
+        return null;
+      });
+      final store = FlutterSecureKeyValueStore(
+        storage: const FlutterSecureStorage(),
+        callTimeout: shortTimeout,
+      );
+
+      await expectLater(
+        store.remove('candidate.session'),
+        throwsA(isA<TimeoutException>()),
+      );
+    });
   });
 }
