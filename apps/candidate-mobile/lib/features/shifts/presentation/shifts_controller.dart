@@ -56,7 +56,11 @@ class ShiftsController extends AsyncNotifier<ShiftsState> {
       throw const AuthenticationFailure('Sign in again to view shifts.');
     }
     _candidateId = session.candidateId;
-    final repository = ref.read(shiftsRepositoryProvider);
+    // watch, not read: shiftsRepositoryProvider switches from the local mock
+    // to the live API once canUseLiveBackendProvider flips true right after
+    // sign-in -- a `read` would leave this controller stuck on whichever
+    // repository was live when it first built.
+    final repository = ref.watch(shiftsRepositoryProvider);
     final shifts = (await repository.loadPublishedShifts()).when(
       success: (value) => value,
       failure: (failure) => throw failure,

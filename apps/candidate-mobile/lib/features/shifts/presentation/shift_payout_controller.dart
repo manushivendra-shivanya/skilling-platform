@@ -20,8 +20,11 @@ class ShiftPayoutController extends AsyncNotifier<List<ShiftPayout>> {
     if (session == null || !session.isAuthenticated) {
       throw const AuthenticationFailure('Sign in again to view payouts.');
     }
+    // watch, not read: shiftPayoutRepositoryProvider switches from an
+    // unavailable stub to Supabase once canUseLiveBackendProvider flips true
+    // right after sign-in -- a `read` would leave this controller stuck.
     return (await ref
-            .read(shiftPayoutRepositoryProvider)
+            .watch(shiftPayoutRepositoryProvider)
             .loadPayouts(session.candidateId))
         .when(success: (value) => value, failure: (failure) => throw failure);
   }

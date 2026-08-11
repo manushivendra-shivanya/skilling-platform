@@ -33,8 +33,14 @@ class CandidateOnboardingController
     }
     _candidateId = session.candidateId;
 
+    // watch, not read: candidateOnboardingRepositoryProvider switches from
+    // secure-local to Supabase once canUseLiveBackendProvider flips true
+    // (right after sign-in completes). A `read` here would freeze this
+    // controller on whichever repository was live when it first built --
+    // exactly the "signed in but nothing loads until the app is killed and
+    // reopened" bug this fixes.
     final result = await ref
-        .read(candidateOnboardingRepositoryProvider)
+        .watch(candidateOnboardingRepositoryProvider)
         .readDraft(session.candidateId);
     return result.when(
       success: (draft) {

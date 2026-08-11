@@ -23,8 +23,11 @@ class ShiftAvailabilityController extends AsyncNotifier<ShiftAvailability> {
       throw const AuthenticationFailure('Sign in again to view availability.');
     }
     _candidateId = session.candidateId;
+    // watch, not read: shiftAvailabilityRepositoryProvider switches from an
+    // unavailable stub to Supabase once canUseLiveBackendProvider flips true
+    // right after sign-in -- a `read` would leave this controller stuck.
     return (await ref
-            .read(shiftAvailabilityRepositoryProvider)
+            .watch(shiftAvailabilityRepositoryProvider)
             .readAvailability(session.candidateId))
         .when(success: (value) => value, failure: (failure) => throw failure);
   }
