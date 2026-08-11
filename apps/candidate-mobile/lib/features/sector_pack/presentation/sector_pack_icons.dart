@@ -11,8 +11,27 @@ import 'package:flutter/material.dart';
 ///
 /// Geometry is traced from the published Shift Floor mock's `<symbol>`
 /// defs (24x24 viewBox, round caps/joins) -- see the mock's `i-play`,
-/// `i-check`, `i-cross`, `i-lock`, `i-download` symbols.
-enum SectorGlyph { play, check, cross, lock, download }
+/// `i-check`, `i-cross`, `i-lock`, `i-download` symbols. [pending],
+/// [chevronRight], [truck], and [mic] are traced the same way from the
+/// "Full Coverage" mock's `i-hourglass`, `i-arrow`, `i-truck`, and `i-mic`
+/// symbols (added while restyling `WarehouseClipsSection` and Practice's
+/// Catalogue rows -- see docs/26-sector-pack-rollout.md's dogfooding log).
+/// [radioUnselected] / [radioSelected] are traced from the approved
+/// "Practice — remaining screens, styled" mock's inline `.demo-glyph` SVGs
+/// (added for the inventory-demo selection cards).
+enum SectorGlyph {
+  play,
+  check,
+  cross,
+  lock,
+  download,
+  pending,
+  chevronRight,
+  truck,
+  mic,
+  radioUnselected,
+  radioSelected,
+}
 
 /// One consistent stroke weight across the whole set, per the QC
 /// checklist above -- do not vary this per icon.
@@ -124,6 +143,91 @@ class _SectorIconPainter extends CustomPainter {
             paint,
           )
           ..drawLine(const Offset(4, 19.5), const Offset(20, 19.5), paint);
+      case SectorGlyph.pending:
+        canvas
+          ..drawLine(const Offset(6, 3), const Offset(18, 3), paint)
+          ..drawLine(const Offset(6, 21), const Offset(18, 21), paint)
+          ..drawPath(
+            Path()
+              ..moveTo(7, 3)
+              ..lineTo(7, 7)
+              ..lineTo(12, 12)
+              ..lineTo(17, 7)
+              ..lineTo(17, 3),
+            paint,
+          )
+          ..drawPath(
+            Path()
+              ..moveTo(7, 21)
+              ..lineTo(7, 17)
+              ..lineTo(12, 12)
+              ..lineTo(17, 17)
+              ..lineTo(17, 21),
+            paint,
+          );
+      case SectorGlyph.chevronRight:
+        canvas.drawPath(
+          Path()
+            ..moveTo(9, 6)
+            ..lineTo(15, 12)
+            ..lineTo(9, 18),
+          paint,
+        );
+      case SectorGlyph.truck:
+        canvas
+          ..drawRRect(
+            RRect.fromRectAndRadius(
+              const Rect.fromLTWH(1, 7, 12, 9),
+              const Radius.circular(1),
+            ),
+            paint,
+          )
+          ..drawPath(
+            Path()
+              ..moveTo(13, 10)
+              ..lineTo(17, 10)
+              ..lineTo(20, 13)
+              ..lineTo(20, 16)
+              ..lineTo(13, 16)
+              ..close(),
+            paint,
+          )
+          ..drawCircle(const Offset(5.5, 18), 1.6, paint)
+          ..drawCircle(const Offset(16.5, 18), 1.6, paint);
+      case SectorGlyph.mic:
+        canvas
+          ..drawRRect(
+            RRect.fromRectAndRadius(
+              const Rect.fromLTWH(9, 3, 6, 11),
+              const Radius.circular(3),
+            ),
+            paint,
+          )
+          ..drawPath(
+            Path()
+              ..moveTo(6, 11)
+              ..arcToPoint(
+                const Offset(18, 11),
+                radius: const Radius.circular(6),
+                clockwise: false,
+                largeArc: true,
+              ),
+            paint,
+          )
+          ..drawLine(const Offset(12, 17), const Offset(12, 21), paint)
+          ..drawLine(const Offset(9, 21), const Offset(15, 21), paint);
+      case SectorGlyph.radioUnselected:
+        canvas.drawCircle(const Offset(12, 12), 8, paint);
+      case SectorGlyph.radioSelected:
+        canvas
+          ..drawCircle(const Offset(12, 12), 8, paint)
+          ..drawPath(
+            Path()
+              ..moveTo(8.5, 12.5)
+              ..lineTo(10.8, 14.8)
+              ..lineTo(16, 9.5),
+            paint,
+          );
     }
     canvas.restore();
   }
