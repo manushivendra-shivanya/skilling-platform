@@ -50,3 +50,29 @@ flutter:
     - assets/wms_3d/
     - assets/wms_3d/models/
     - assets/wms_3d/textures/
+
+  # Sector-pack typography (docs/adr/0020-sector-pack-abstraction.md). Family
+  # names are prefixed "Sector " and used ONLY inside
+  # lib/features/sector_pack/presentation/ -- never registered in
+  # app_theme.dart's global textTheme. A single-weight subset relative to the
+  # published Shift Floor mock (see docs/26-sector-pack-rollout.md): Big
+  # Shoulders 800 only, IBM Plex Sans 400/600/700, IBM Plex Mono 500. All
+  # three are open-source (Big Shoulders Display: Google Fonts / SIL OFL;
+  # IBM Plex: IBM / SIL OFL).
+  fonts:
+    - family: Sector Big Shoulders
+      fonts:
+        - asset: assets/fonts/BigShoulders-ExtraBold.ttf
+          weight: 800
+    - family: Sector IBM Plex Sans
+      fonts:
+        - asset: assets/fonts/IBMPlexSans-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/IBMPlexSans-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/IBMPlexSans-Bold.ttf
+          weight: 700
+    - family: Sector IBM Plex Mono
+      fonts:
+        - asset: assets/fonts/IBMPlexMono-Medium.ttf
+          weight: 500
