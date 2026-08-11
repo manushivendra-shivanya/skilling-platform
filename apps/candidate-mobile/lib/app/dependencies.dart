@@ -34,8 +34,10 @@ import '../features/learning/data/mock_learning_repository.dart';
 import '../features/learning/domain/learning_repository.dart';
 import '../features/micro_lessons/data/asset_micro_lesson_clip_repository.dart';
 import '../features/micro_lessons/data/secure_micro_lesson_assessment_repository.dart';
+import '../features/micro_lessons/data/secure_viewed_clips_repository.dart';
 import '../features/micro_lessons/domain/micro_lesson_assessment_repository.dart';
 import '../features/micro_lessons/domain/micro_lesson_clip_repository.dart';
+import '../features/micro_lessons/domain/viewed_clips_repository.dart';
 import '../features/onboarding/data/local_onboarding_entry_repository.dart';
 import '../features/onboarding/data/secure_candidate_onboarding_repository.dart';
 import '../features/onboarding/data/supabase_candidate_onboarding_repository.dart';
@@ -178,6 +180,10 @@ final microLessonClipRepositoryProvider = Provider<MicroLessonClipRepository>(
   (ref) => AssetMicroLessonClipRepository(
     cdnBaseUrl: ref.watch(appConfigProvider).microLessonCdnBaseUrl,
   ),
+);
+
+final viewedClipsRepositoryProvider = Provider<ViewedClipsRepository>(
+  (ref) => SecureViewedClipsRepository(ref.watch(secureKeyValueStoreProvider)),
 );
 
 final microLessonAssessmentRepositoryProvider =

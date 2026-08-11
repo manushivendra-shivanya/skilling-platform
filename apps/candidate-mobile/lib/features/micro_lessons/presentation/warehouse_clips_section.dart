@@ -90,6 +90,7 @@ class WarehouseClipsSection extends ConsumerWidget {
                     domain: domain,
                     label: _domainLabel(domain),
                     clips: data.clipsForDomain(domain),
+                    viewedClipIds: data.viewedClipIds,
                   ),
               ],
             );
@@ -105,11 +106,13 @@ class _DomainGroup extends StatelessWidget {
     required this.domain,
     required this.label,
     required this.clips,
+    required this.viewedClipIds,
   });
 
   final MicroLessonDomain domain;
   final String label;
   final List<MicroLessonClip> clips;
+  final Set<String> viewedClipIds;
 
   @override
   Widget build(BuildContext context) {
@@ -121,7 +124,7 @@ class _DomainGroup extends StatelessWidget {
           Text(label, style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: AppSpacing.xs),
           for (final clip in clips) ...[
-            _ClipTile(clip: clip),
+            _ClipTile(clip: clip, viewed: viewedClipIds.contains(clip.id)),
             const SizedBox(height: AppSpacing.xs),
           ],
         ],
@@ -131,9 +134,13 @@ class _DomainGroup extends StatelessWidget {
 }
 
 class _ClipTile extends StatelessWidget {
-  const _ClipTile({required this.clip});
+  const _ClipTile({required this.clip, required this.viewed});
 
   final MicroLessonClip clip;
+
+  /// Persisted on-device once playback reaches the end -- see
+  /// `MicroLessonClipController.markViewed`.
+  final bool viewed;
 
   @override
   Widget build(BuildContext context) {
@@ -173,14 +180,26 @@ class _ClipTile extends StatelessWidget {
                     Text(
                       hasVideo
                           ? '${clip.durationSeconds}s • ${clip.processArea} • Downloaded'
+                                '${viewed ? ' • Watched' : ''}'
                           : 'Video not yet available • ${clip.processArea}',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        color: viewed
+                            ? AppColors.success
+                            : Theme.of(context).colorScheme.onSurfaceVariant,
+                        fontWeight: viewed ? FontWeight.w600 : null,
                       ),
                     ),
                   ],
                 ),
               ),
+              if (viewed) ...[
+                const Icon(
+                  Icons.check_circle,
+                  color: AppColors.success,
+                  size: 20,
+                ),
+                const SizedBox(width: AppSpacing.xs),
+              ],
               const Icon(Icons.chevron_right),
             ],
           ),

@@ -3,6 +3,7 @@ import 'package:candidate_mobile/core/errors/result.dart';
 import 'package:candidate_mobile/core/repositories/candidate_session_repository.dart';
 import 'package:candidate_mobile/core/storage/secure_key_value_store.dart';
 import 'package:candidate_mobile/features/micro_lessons/data/secure_micro_lesson_assessment_repository.dart';
+import 'package:candidate_mobile/features/micro_lessons/data/secure_viewed_clips_repository.dart';
 import 'package:candidate_mobile/features/micro_lessons/domain/micro_lesson_clip.dart';
 import 'package:candidate_mobile/features/micro_lessons/domain/micro_lesson_clip_repository.dart';
 import 'package:candidate_mobile/features/onboarding/data/secure_candidate_onboarding_repository.dart';
@@ -72,6 +73,51 @@ void main() {
       // No video bundled for either fixture clip -- should read as a real,
       // plain state rather than an error.
       expect(find.textContaining('Video not yet available'), findsNWidgets(2));
+    },
+  );
+
+  testWidgets(
+    'shows a persisted watched clip as Watched from the very first frame',
+    (tester) async {
+      await tester.binding.setSurfaceSize(const Size(800, 1200));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      final viewedClips = SecureViewedClipsRepository(
+        InMemorySecureKeyValueStore(),
+      );
+      // Watched on a previous visit, before this widget tree ever existed --
+      // the point of persisting this on-device rather than in controller
+      // state is that it has to survive exactly this kind of cold start.
+      await viewedClips.markViewed(
+        'dev-candidate-3210',
+        'clip_receiving_frozen_001',
+      );
+      // Watching requires a video to have existed -- the "Watched" text only
+      // appears alongside the real duration/Downloaded line, not the
+      // no-video-yet placeholder, so this fixture needs one.
+      final watchedClip = _receivingClip().copyWith(
+        videoUrl: 'asset://assets/clips/receiving.mp4',
+      );
+
+      await tester.pumpCandidateApp(
+        candidateSessionRepository: sessions,
+        candidateOnboardingRepository: onboarding,
+        microLessonClipRepository: _FakeMicroLessonClipRepository(
+          Success([watchedClip, _inspectionClip()]),
+        ),
+        viewedClipsRepository: viewedClips,
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Learn'));
+      await tester.pumpAndSettle();
+      await tester.scrollUntilVisible(
+        find.text('Warehouse process clips'),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+
+      expect(find.textContaining('Watched'), findsOneWidget);
+      // The other clip was never watched -- only one tile should show it.
+      expect(find.byIcon(Icons.check_circle), findsOneWidget);
     },
   );
 

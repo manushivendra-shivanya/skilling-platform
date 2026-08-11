@@ -10,6 +10,7 @@ import '../../../core/widgets/app_card.dart';
 import '../domain/micro_lesson_assessment_attempt.dart';
 import '../domain/micro_lesson_assessment_repository.dart';
 import '../domain/micro_lesson_clip.dart';
+import 'micro_lesson_clip_controller.dart';
 import 'not_employer_evidence_banner.dart';
 
 /// Clip detail + practice/assessment screen for a single [MicroLessonClip]
@@ -51,6 +52,11 @@ class _MicroLessonPlayerScreenState
   String? _loadError;
   String? _selectedAnswerId;
 
+  // The clip loops, so "finished" isn't a one-shot event -- this listener
+  // fires on every position tick regardless, and the flag just makes the
+  // actual markViewed call (and its controller-state write) happen once.
+  bool _hasMarkedViewed = false;
+
   // null while the existing attempt count is still loading.
   int? _attemptsUsed;
   MicroLessonAssessmentAttempt? _lastSubmittedAttempt;
@@ -75,8 +81,10 @@ class _MicroLessonPlayerScreenState
     try {
       await controller.initialize();
       await controller.setLooping(true);
+      controller.addListener(_onPositionChanged);
       await controller.play();
       if (!mounted) {
+        controller.removeListener(_onPositionChanged);
         await controller.dispose();
         return;
       }
@@ -85,6 +93,24 @@ class _MicroLessonPlayerScreenState
       await controller.dispose();
       if (mounted) setState(() => _loadError = '$error');
     }
+  }
+
+  // Near-end rather than exact-end: a looping controller's position can
+  // skip past the final frame straight to the next loop's start between
+  // ticks, so waiting for position == duration risks missing the moment
+  // entirely on a fast device.
+  void _onPositionChanged() {
+    if (_hasMarkedViewed) return;
+    final controller = _controller;
+    if (controller == null || !controller.value.isInitialized) return;
+    final position = controller.value.position;
+    final duration = controller.value.duration;
+    if (duration == Duration.zero) return;
+    if (position < duration - const Duration(milliseconds: 300)) return;
+    _hasMarkedViewed = true;
+    ref
+        .read(microLessonClipControllerProvider.notifier)
+        .markViewed(widget.clip.id);
   }
 
   Future<void> _loadAttemptsUsed() async {
@@ -155,6 +181,7 @@ class _MicroLessonPlayerScreenState
 
   @override
   void dispose() {
+    _controller?.removeListener(_onPositionChanged);
     _controller?.dispose();
     super.dispose();
   }
