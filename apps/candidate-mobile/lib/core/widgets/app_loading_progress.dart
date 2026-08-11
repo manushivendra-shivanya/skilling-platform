@@ -26,10 +26,17 @@ class AppLoadingProgressBar extends StatefulWidget {
     required this.label,
     this.slowConnectionLabel,
     this.slowConnectionThreshold = const Duration(seconds: 4),
+    this.showPercent = false,
     super.key,
   });
 
   final String label;
+
+  /// Shows the running percentage as a plain number next to the bar
+  /// instead of just the bar + label. Same underlying easing curve either
+  /// way -- this only changes what's displayed, not how progress is
+  /// computed. Deliberately plain: a number and a bar, no extra chrome.
+  final bool showPercent;
 
   /// Shown instead of [label] once [slowConnectionThreshold] elapses
   /// without the caller removing this widget (i.e. without the real load
@@ -83,26 +90,72 @@ class _AppLoadingProgressBarState extends State<AppLoadingProgressBar> {
   @override
   Widget build(BuildContext context) {
     final label = _isSlow ? widget.slowConnectionLabel! : widget.label;
+    final percent = (_progress * 100).round();
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Semantics(
       label: label,
+      value: widget.showPercent ? '$percent percent' : null,
       liveRegion: true,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(999),
-            child: LinearProgressIndicator(value: _progress, minHeight: 3),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            label,
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
+      child: widget.showPercent
+          ? Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                SizedBox(
+                  width: 44,
+                  child: Text(
+                    '$percent%',
+                    textAlign: TextAlign.right,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontFeatures: const [FontFeature.tabularFigures()],
+                      color: colorScheme.primary,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(999),
+                        child: LinearProgressIndicator(
+                          value: _progress,
+                          minHeight: 5,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        label,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            )
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(999),
+                  child: LinearProgressIndicator(
+                    value: _progress,
+                    minHeight: 3,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  label,
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
             ),
-          ),
-        ],
-      ),
     );
   }
 }

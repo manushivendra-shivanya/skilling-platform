@@ -31,6 +31,31 @@ void main() {
     expect(afterTicks, lessThan(0.92));
   });
 
+  testWidgets('showPercent renders a running number alongside the bar', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: AppLoadingProgressBar(
+            label: 'Finding jobs for you…',
+            showPercent: true,
+          ),
+        ),
+      ),
+    );
+
+    // Starts at 0%, matching the bar's own starting value.
+    expect(find.text('0%'), findsOneWidget);
+
+    await tester.pump(const Duration(milliseconds: 600));
+    final value = tester
+        .widget<LinearProgressIndicator>(find.byType(LinearProgressIndicator))
+        .value!;
+    expect(find.text('${(value * 100).round()}%'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets(
     'swaps to the slow-connection label after the threshold, not before',
     (tester) async {

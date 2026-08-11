@@ -1160,6 +1160,7 @@ class _JobsLoadingView extends StatelessWidget {
           slowConnectionLabel:
               'Still finding jobs for you — this can take a moment on a '
               'slow connection.',
+          showPercent: true,
         ),
         const SizedBox(height: AppSpacing.lg),
         const AppSkeletonGroup(
