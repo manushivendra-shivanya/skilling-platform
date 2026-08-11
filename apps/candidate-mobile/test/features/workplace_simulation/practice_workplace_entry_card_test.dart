@@ -53,13 +53,17 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    // One card per mission: Receiving, Put Away, Processing, Dispatch.
-    expect(find.text('Workplace Simulation'), findsNWidgets(4));
-    expect(find.textContaining('Receive an Incoming Shipment'), findsOneWidget);
-    expect(find.textContaining('Put Away Incoming Stock'), findsOneWidget);
-    await tester.ensureVisible(find.text('Start Simulation').first);
+    // One SectorTaskCard per mission: Receiving, Put Away, Processing,
+    // Dispatch -- each card's title is the mission name itself now
+    // (no shared generic "Workplace Simulation" title / "Start
+    // Simulation" button -- the whole card is the tap target, tagged
+    // "Not started" with a START tear tab).
+    expect(find.text('Receive an Incoming Shipment'), findsOneWidget);
+    expect(find.text('Put Away Incoming Stock'), findsOneWidget);
+    expect(find.text('Not started'), findsNWidgets(4));
+    await tester.ensureVisible(find.text('Receive an Incoming Shipment'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Start Simulation').first);
+    await tester.tap(find.text('Receive an Incoming Shipment'));
     expect(openedMissionId, WorkplaceSimulationController.missionId);
   });
 }

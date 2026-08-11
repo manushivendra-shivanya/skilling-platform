@@ -117,7 +117,10 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Practise'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Start scored simulation'));
+    // The scored simulation entry point is now a job-ticket-style
+    // SectorTaskCard -- the whole card (its title text) is the tap target,
+    // there's no separate "Start scored simulation" button anymore.
+    await tester.tap(find.text('Scored inventory simulation'));
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('Recount the physical stock'));

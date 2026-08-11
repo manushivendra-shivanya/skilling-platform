@@ -55,14 +55,19 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Your logistics pathway'), findsOneWidget);
 
-    await tester.ensureVisible(find.text('Open lesson').first);
-    await tester.tap(find.text('Open lesson').first);
+    // The lesson row itself is the tap target now (no separate "Open
+    // lesson" button -- see sector_index_row.dart).
+    await tester.ensureVisible(find.text('Inventory accuracy basics'));
+    await tester.tap(find.text('Inventory accuracy basics'));
     await tester.pumpAndSettle();
     expect(find.text('Inventory accuracy basics'), findsWidgets);
     await tester.ensureVisible(find.text('Close'));
     await tester.tap(find.text('Close'));
     await tester.pumpAndSettle();
-    expect(find.text('Mark incomplete'), findsOneWidget);
+    expect(
+      find.textContaining('Completed — tap to mark incomplete'),
+      findsOneWidget,
+    );
 
     await tester.tap(find.text('Jobs'));
     await tester.pumpAndSettle();
@@ -73,7 +78,10 @@ void main() {
 
     await tester.tap(find.text('Learn'));
     await tester.pumpAndSettle();
-    expect(find.text('Mark incomplete'), findsOneWidget);
+    expect(
+      find.textContaining('Completed — tap to mark incomplete'),
+      findsOneWidget,
+    );
 
     // Practise now lives as a sub-tab inside Learn rather than its own
     // bottom-nav destination.

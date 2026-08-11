@@ -45,7 +45,7 @@ not resolved here.
 
 | Pack | `SectorPackId` | Design reference | Wired to live screens |
 |---|---|---|---|
-| Warehouse & Logistics | `warehouseLogistics` | [Shift Floor](https://claude.ai/code/artifact/7577fd3a-a115-4e19-bbfa-fd0242325c3c) — published | No — screens still render the pre-SectorPack mock content |
+| Warehouse & Logistics | `warehouseLogistics` | [Shift Floor](https://claude.ai/code/artifact/7577fd3a-a115-4e19-bbfa-fd0242325c3c) — published, plus a [full coverage pass](https://claude.ai/code/artifact/b66d923c-031c-4a3a-a958-8cf6362abad9) against every real screen state | Yes — `learning_screen.dart`, `practice_screen.dart`, and the Certification tab (`certification_exam_section.dart`) render through the four shared structural widgets in `lib/features/sector_pack/presentation/`, resolving `SectorPacks.warehouseLogistics` via `activeSectorPackProvider` (hardcoded — see the Entry point section above; no role resolver exists yet) |
 | Last-Mile Delivery Partner | `lastMileDelivery` | [On The Route](https://claude.ai/code/artifact/0aacdcbf-fb52-4998-bfca-69bf6eabe76e) v2 — published | No |
 | Retail & Field Sales | *(not yet defined)* | Not started | No |
 | Hospitality & F&B | *(not yet defined)* | Not started — spec note: primary colour green (food-safety/freshness association) | No |
@@ -53,8 +53,9 @@ not resolved here.
 "Wired to live screens" means `learning_screen.dart` /
 `practice_screen.dart` / `certification_exam_section.dart` actually read
 their content from a `SectorPack` instead of the current hardcoded mock
-content. That migration hasn't happened for any pack yet — it's separate,
-future work per pack, not implied by a design reference existing.
+content. That migration has happened for `warehouseLogistics` only — for
+every other pack it remains separate, future work, not implied by a
+design reference existing.
 
 ## QC checklist
 
@@ -116,6 +117,9 @@ replace it, as more packs go through review.
 | 2026-08-11 | Last-mile v2 | Practise | After recolouring to the traffic-signal palette, the "Scored" tag's background collided with the new primary accent colour | Medium | Fixed — moved the tag to a neutral ink background, reserved the signal colours for actual state |
 | 2026-08-11 | Last-mile v2 | Lessons | Locked list-row state used a generic grey instead of the sector's own "stop" signal colour | Low | Fixed — locked now reads as the traffic-light red |
 | 2026-08-11 | Last-mile (domain model) | — | `sector_pack_test.dart`'s collision-guard test caught `primaryAccent` and `signalPalette.cleared` sharing the exact same hex in the Dart model — the same collision class as the Practise-tag bug above, just imperceptible at that particular colour value | Low | Fixed in the domain model (deepened `primaryAccent`); the published mock still has the original value, judged not worth a re-publish for an imperceptible difference |
+| 2026-08-11 | Warehouse (Flutter build) | Lessons / Practise | `SectorIndexRow` and `SectorTaskCard` both sit inside a plain `ListView`, which gives each item unbounded height along the scroll axis. The mock's "stretch the index tag / stripe to the row's full height" effect, implemented first as `Row(crossAxisAlignment: stretch)` wrapped in `IntrinsicHeight`, hit two real bugs in sequence: (1) `IntrinsicHeight` estimates each child's height at the *full* row width rather than the narrower width text actually gets once flex siblings take their share, under-computing height for a wrapped title at a large accessibility text scale and overflowing; (2) removing `IntrinsicHeight` in response then hit `CrossAxisAlignment.stretch`'s own requirement for a *bounded* cross-axis size, which a ListView item's unbounded height doesn't provide, crashing with "BoxConstraints forces an infinite height" | High | Fixed — rebuilt both widgets on a `Stack` instead: the row/card's own size comes from the naturally-laid-out content, and the coloured index tag / stripe / tear tab are `Positioned` to fill whatever height that resolves to. No stretch, no intrinsic pre-pass, no ambiguity at any text scale |
+| 2026-08-11 | Warehouse (Flutter build) | Certification | The credential card's gradient was speced against the mock's literal navy (`#16233B`→`#0A1220`), which isn't part of `SectorPack` and would have been a hardcoded warehouse colour inside a supposedly sector-blind widget. Replaced with a gradient derived from `SectorPack.primaryAccent` darkened 55–88% toward black — re-verified the resulting contrast for white body text against both existing packs' `primaryAccent` (warehouse orange, last-mile green): 12:1–19:1 in every case, comfortably past WCAG AA | Medium | Fixed in `sector_credential_card.dart` before it shipped, not after — the derivation is now the documented, sector-blind default |
+| 2026-08-11 | Warehouse (Flutter build) | Lessons | `learning_screen.dart`'s loading skeleton (`_LearningLoadingView`, fixed-height `Column` of `AppSkeleton`s) started overflowing at a 2x accessibility text scale on a short device once it had to fit under the new, taller segmented tab bar (idx + label + state readout, versus the old single-line `TabBar`) — not a sector-pack bug per se, but a real regression the taller chrome surfaced | Medium | Fixed — wrapped the loading view in a `SingleChildScrollView` |
 
 ## Cross-sector notes (not yet built)
 

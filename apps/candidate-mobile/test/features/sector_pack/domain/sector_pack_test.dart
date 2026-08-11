@@ -16,18 +16,21 @@ void main() {
       }
     });
 
-    test('every pack names a real-world signal source, not a generic label', () {
-      for (final pack in SectorPacks.all) {
-        expect(pack.signalSource, isNotEmpty);
-        expect(
-          pack.signalSource.toLowerCase(),
-          isNot(contains('status colour')),
-          reason:
-              '${pack.displayName} signalSource should name the real object '
-              'its palette is read from, not describe itself generically',
-        );
-      }
-    });
+    test(
+      'every pack names a real-world signal source, not a generic label',
+      () {
+        for (final pack in SectorPacks.all) {
+          expect(pack.signalSource, isNotEmpty);
+          expect(
+            pack.signalSource.toLowerCase(),
+            isNot(contains('status colour')),
+            reason:
+                '${pack.displayName} signalSource should name the real object '
+                'its palette is read from, not describe itself generically',
+          );
+        }
+      },
+    );
 
     test('no pack reuses its signal palette as the primary accent', () {
       // Regression guard for the bug caught while building the last-mile
@@ -49,14 +52,17 @@ void main() {
       }
     });
 
-    test('warehouse and last-mile packs use distinct labels for every slot', () {
-      final warehouse = SectorPacks.warehouseLogistics;
-      final lastMile = SectorPacks.lastMileDelivery;
+    test(
+      'warehouse and last-mile packs use distinct labels for every slot',
+      () {
+        final warehouse = SectorPacks.warehouseLogistics;
+        final lastMile = SectorPacks.lastMileDelivery;
 
-      expect(warehouse.listItemLabel, isNot(lastMile.listItemLabel));
-      expect(warehouse.taskObjectLabel, isNot(lastMile.taskObjectLabel));
-      expect(warehouse.credentialLabel, isNot(lastMile.credentialLabel));
-      expect(warehouse.signalSource, isNot(lastMile.signalSource));
-    });
+        expect(warehouse.listItemLabel, isNot(lastMile.listItemLabel));
+        expect(warehouse.taskObjectLabel, isNot(lastMile.taskObjectLabel));
+        expect(warehouse.credentialLabel, isNot(lastMile.credentialLabel));
+        expect(warehouse.signalSource, isNot(lastMile.signalSource));
+      },
+    );
   });
 }

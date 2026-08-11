@@ -63,6 +63,31 @@ CertificationExam _exam() {
   );
 }
 
+/// [MockLearningRepository]'s fixed unit titles -- certification now
+/// unlocks only once every lesson unit is completed (see
+/// `isCertificationEligible` in `certification_exam_section.dart`), so
+/// these tests have to clear all three before the exam card is reachable.
+const _lessonTitles = [
+  'Inventory accuracy basics',
+  'When and how to escalate',
+  'Understanding dispatch priority',
+];
+
+Future<void> _completeAllLessons(WidgetTester tester) async {
+  for (final title in _lessonTitles) {
+    await tester.scrollUntilVisible(
+      find.text(title),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.tap(find.text(title));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Close'));
+    await tester.tap(find.text('Close'));
+    await tester.pumpAndSettle();
+  }
+}
+
 void main() {
   late InMemoryCandidateSessionRepository sessions;
   late InMemoryCandidateOnboardingRepository onboarding;
@@ -92,6 +117,9 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Learn'));
     await tester.pumpAndSettle();
+    await _completeAllLessons(tester);
+    await tester.tap(find.text('Certification'));
+    await tester.pumpAndSettle();
     // The exam's title also matches the section header above the card
     // ("Warehouse Operations Certification"), so scroll to something that
     // only appears once instead.
@@ -102,7 +130,7 @@ void main() {
     );
 
     expect(find.text('Warehouse Operations Certification'), findsWidgets);
-    expect(find.textContaining('2 questions'), findsOneWidget);
+    expect(find.textContaining('2Q'), findsOneWidget);
     expect(find.text('Start certification exam'), findsOneWidget);
   });
 
@@ -118,6 +146,9 @@ void main() {
       );
       await tester.pumpAndSettle();
       await tester.tap(find.text('Learn'));
+      await tester.pumpAndSettle();
+      await _completeAllLessons(tester);
+      await tester.tap(find.text('Certification'));
       await tester.pumpAndSettle();
       await tester.scrollUntilVisible(
         find.text('Start certification exam'),
