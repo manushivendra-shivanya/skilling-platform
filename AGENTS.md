@@ -21,6 +21,18 @@ Initial pilot:
 8. docs/20-codex-phase-execution.md
 9. docs/generated/current-state.md
 
+**Additionally, before touching any candidate-facing screen (new or
+redesigned):**
+10. docs/04-ui-ux-specification.md
+11. docs/26-award-grade-design-system.md — the award-grade visual language
+    established by the Home and Voice Interview redesigns, as a checklist,
+    not inspiration. A screen that doesn't hold up against every item in its
+    checklist is not done, the same way a screen with a failing test is not
+    done. When a design pass finds a reusable pattern, or a new
+    `/deep-research` round produces conclusions worth keeping, fold them
+    into that file rather than leaving them in a downloaded document or a
+    chat transcript — a session boundary does not preserve either of those.
+
 Inspect the repository before assuming any file, package, API, route or feature exists.
 
 ## Locked stack
