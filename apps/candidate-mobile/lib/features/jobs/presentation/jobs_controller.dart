@@ -132,7 +132,12 @@ class JobsController extends AsyncNotifier<JobsState> {
     }
     _candidateId = session.candidateId;
 
-    final repository = ref.read(jobsRepositoryProvider);
+    // watch, not read: jobsRepositoryProvider switches from the local mock
+    // to the live API once canUseLiveBackendProvider flips true right after
+    // sign-in. A `read` here would leave Jobs stuck on whichever repository
+    // was live when this controller first built, showing nothing new until
+    // the app is killed and reopened.
+    final repository = ref.watch(jobsRepositoryProvider);
     final jobs = (await repository.loadJobs()).when(
       success: (value) => value,
       failure: (failure) => throw failure,

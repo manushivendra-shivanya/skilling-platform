@@ -121,16 +121,27 @@ void main() {
       find.textContaining('only lessons marked Downloaded'),
       findsOneWidget,
     );
-    await tester.tap(find.text('Download').first);
+    // The row itself is the tap target now (no separate "Open lesson"
+    // button -- see sector_index_row.dart); the download toggle is a
+    // small icon-only utility button identified by its Tooltip, not a
+    // labeled "Download" button.
+    await tester.tap(find.byTooltip('Download for offline').first);
     await tester.pumpAndSettle();
-    await tester.ensureVisible(find.text('Open lesson').first);
-    await tester.tap(find.text('Open lesson').first);
+    expect(find.byTooltip('Downloaded'), findsOneWidget);
+
+    await tester.ensureVisible(find.text('Inventory accuracy basics'));
+    await tester.tap(find.text('Inventory accuracy basics'));
     await tester.pumpAndSettle();
     await tester.ensureVisible(find.text('Close'));
     await tester.tap(find.text('Close'));
     await tester.pumpAndSettle();
-    expect(find.text('Downloaded'), findsOneWidget);
-    expect(find.text('Mark incomplete'), findsOneWidget);
+    // Downloaded state persists independently of completion; completion
+    // now reads from the row's own status line, not a separate button.
+    expect(find.byTooltip('Downloaded'), findsOneWidget);
+    expect(
+      find.textContaining('Completed — tap to mark incomplete'),
+      findsOneWidget,
+    );
     expect(
       find.textContaining('not an employer qualification'),
       findsOneWidget,
@@ -159,8 +170,12 @@ void main() {
     // element -- which can happen while it's still in the sliver cache
     // extent, just outside the actual viewport, before it's truly
     // paintable/tappable.
+    //
+    // "Recommended practice" is now a real SectorTaskCard (the whole card
+    // is the tap target, same as the 4 mission tickets above it) rather
+    // than a separate "Start demonstration" AppButton -- tap its title.
     await tester.scrollUntilVisible(
-      find.text('Start demonstration'),
+      find.text('Inventory discrepancy'),
       200,
       scrollable: find.byType(Scrollable).first,
     );
@@ -173,11 +188,11 @@ void main() {
     // landed inside it. Centering the scroll instead keeps tappable
     // content clear of the FAB's fixed footprint.
     await Scrollable.ensureVisible(
-      tester.element(find.text('Start demonstration')),
+      tester.element(find.text('Inventory discrepancy')),
       alignment: 0.5,
     );
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Start demonstration'));
+    await tester.tap(find.text('Inventory discrepancy'));
     await tester.pumpAndSettle();
     await tester.scrollUntilVisible(
       find.text('Recount, preserve records, and escalate the mismatch'),

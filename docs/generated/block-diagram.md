@@ -30,8 +30,9 @@ flowchart TD
     WMSOFFICE --> WMSFEEDBACK[Performance Feedback]
 
     ENTRY --> AUTHCTRL[Authentication Controller]
-    AUTHCTRL --> LOCALOTP[Development OTP Adapter]
-    AUTHCTRL --> SUPAAUTH[Supabase Phone Auth Adapter]
+    AUTHCTRL --> LOCALOTP[Development Email OTP Adapter]
+    AUTHCTRL --> SUPAEMAIL[Supabase Email OTP Adapter]
+    AUTHCTRL --> GOOGLEAUTH[Native Google Sign-In - signInWithIdToken]
     ONBOARD --> PROFILECTRL[Candidate Profile and Consent Controller]
     PROFILECTRL --> LOCALPROFILE[Secure Local Profile Adapter]
     PROFILECTRL --> SUPAPROFILE[Supabase Profile Adapter]
@@ -40,8 +41,18 @@ flowchart TD
     SHELL --> LEARN[Learning]
     SHELL --> PRACTISE[Practice]
     SHELL --> JOBS[Jobs]
+    SHELL --> SHIFT[Shift Marketplace]
     SHELL --> ME[Profile and Evidence]
     SHELL --> COACH[Local Scripted Coach]
+
+    SHIFT --> SHIFTCTRL[Shifts Controller]
+    SHIFTCTRL --> SHIFTAPI[Employer Shifts API - publish, list, accept]
+    SHIFTCTRL --> SHIFTAVAIL[Shift Availability - Supabase direct]
+    SHIFTCTRL --> SHIFTPAYOUT[Shift Payout - Supabase direct]
+    SHIFTCTRL --> SHIFTGRIEVANCE[Shift Grievance - Supabase direct]
+
+    JOBS --> JOBSCTRL[Jobs Controller]
+    JOBSCTRL --> JOBSOURCES[External Job Sourcing - Adzuna, Jooble, Careerjet]
 
     DIAG --> INTELCTRL[Candidate Intelligence Controller]
     LEARN --> INTELCTRL
@@ -95,9 +106,13 @@ flowchart TD
     DEVFEEDBACK --> HUMAN[Human Review Required]
     DEVFEEDBACK --> DELETE[Candidate Audio Deletion]
 
-    SUPAAUTH --> JOBSKILLS[(JobSkills Supabase)]
+    SUPAEMAIL --> JOBSKILLS[(JobSkills Supabase)]
+    GOOGLEAUTH --> JOBSKILLS
     SUPAPROFILE --> JOBSKILLS
     OFFLINE --> JOBSKILLS
+    SHIFTAVAIL --> JOBSKILLS
+    SHIFTPAYOUT --> JOBSKILLS
+    SHIFTGRIEVANCE --> JOBSKILLS
     JOBSKILLS --> RLS[Candidate Ownership RLS]
     JOBSKILLS --> CATALOG[Read-only Published Taxonomy and Content]
     JOBSKILLS --> VOICEDATA[Voice Schema, Prompt and Rubric Registry]
@@ -122,11 +137,15 @@ flowchart TD
     WMSCTRL --> WMSFEEDBACK
 
     GH[GitHub Repository] --> ACTIONS[GitHub Actions APK Build]
-    ACTIONS --> APK[Signed Android Debug APK]
-    APK --> DEVICE[Samsung S24 Ultra]
+    ACTIONS --> APK[Signed Android Debug APK - stable review keystore]
+    APK --> DEVICE[Android Device - manual review install]
 
     API[NestJS BFF]
     API --> JOBAPI[Jobs Apply API]
+    API --> JOBSOURCEAPI[Employer Jobs API - sourced listings]
+    JOBSOURCEAPI --> JOBSOURCES
+    API --> SHIFTAPI
+    SHIFTAPI --> JOBSKILLS
     API --> WMSSYNC[WMS Attempt Sync API]
     API --> EMPLOYERAPI[Employer Evidence Review API]
     EMPLOYERAPI --> EMPLOYERGUARD[Employer API Key Guard]

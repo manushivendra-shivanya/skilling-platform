@@ -16,10 +16,22 @@ Initial pilot:
 3. docs/01-system-architecture.md
 4. docs/09-candidate-mobile-app.md
 5. docs/12-engineering-handbook.md
-6. docs/16-sprint-plan.md
-7. docs/19-codex-master-context.md
-8. docs/20-codex-phase-execution.md
-9. docs/generated/current-state.md
+6. docs/20-codex-phase-execution.md — the plan actually followed (docs/16-sprint-plan.md
+   is superseded and kept only for history; don't plan against it)
+7. docs/generated/current-state.md
+
+**Additionally, before touching any candidate-facing screen (new or
+redesigned):**
+8. docs/04-ui-ux-specification.md — the single, authoritative UI design
+    document: screen inventory *and* the best-in-class visual language
+    established by the Home and Voice Interview redesigns, as a checklist,
+    not inspiration. A screen that doesn't hold up against every item in
+    Part 2's checklist is not done, the same way a screen with a failing
+    test is not done. This is deliberately the *only* UI guideline document
+    — when a design pass finds a reusable pattern, or a new `/deep-research`
+    round produces conclusions worth keeping, fold them into this file
+    rather than starting a new one or leaving them in a downloaded document
+    or a chat transcript, none of which survive a session boundary.
 
 Inspect the repository before assuming any file, package, API, route or feature exists.
 
@@ -38,10 +50,26 @@ Inspect the repository before assuming any file, package, API, route or feature 
 Do not replace this stack without an approved architecture decision record.
 
 ## Current mobile state
-- Flutter app path: apps/candidate-mobile
+Do not trust this section's phrasing over `docs/generated/current-state.md`
+— that file is the continuously-updated ground truth; this is a compact
+summary kept here so the build facts are visible without an extra file
+open. If the two disagree, `current-state.md` wins and this needs fixing.
+
+- Flutter app path: apps/candidate-mobile, 20 feature modules under
+  `lib/features/` (authentication, home, jobs, shifts, learning,
+  micro_lessons, career_passport, certification_exam, coach, intelligence,
+  onboarding, practice, profile, resume, voice, workplace_simulation and
+  its 3D preview spike, navigation, splash, dev_tools)
+- This is a shipping app, not a scaffold: Google Sign-In and email OTP
+  sign-in are both live, alongside a Career Passport, a Shift Marketplace,
+  and job sourcing from real external sources (Adzuna/Jooble/Careerjet)
 - Android debug APK builds successfully through GitHub Actions
-- APK installs and opens successfully
-- Current UI is still the default Flutter counter application
+  (`.github/workflows/build-apk.yml`), publishable as a GitHub release
+  asset, signed with a stable review keystore (`FLORA_REVIEW_KEYSTORE_*`
+  repo secrets) so Google Sign-In's registered SHA-1 stays valid across runs
+- `applicationId` is still the Flutter template default
+  (`com.example.candidate_mobile`) — changing it is a known Play Store
+  prerequisite, not yet done
 - compileSdk = 36
 - targetSdk = 36
 - Java 17

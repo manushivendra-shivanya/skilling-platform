@@ -23,21 +23,49 @@ class AppStartupScreen extends ConsumerStatefulWidget {
 class _AppStartupScreenState extends ConsumerState<AppStartupScreen> {
   bool _hasNavigated = false;
 
+  // `ref.listen`'s callback only fires on a *change* -- previous vs. next --
+  // never for the value the provider already held the instant this widget's
+  // listener was registered. appStartupControllerProvider is a plain
+  // (non-autoDispose) AsyncNotifierProvider, so its resolved `data` state
+  // survives independently of this screen's own lifecycle: if an
+  // AppStartupScreen is ever mounted a *second* time while that state is
+  // already sitting resolved in the container (this used to happen every
+  // time appRouterProvider rebuilt after Google sign-in and threw away the
+  // old GoRouter -- see the comment on appRouterProvider), `ref.watch` below
+  // returns `data` on the very first build, `ref.listen` never sees a
+  // transition into it, and `onReady` is never called. The screen then sits
+  // on its *ready* view forever -- no spinner, because it genuinely isn't
+  // loading -- with literally nothing left to wait on. That is exactly the
+  // real-device report: a static "Saksham" splash, no progress indicator,
+  // that never moves.
+  //
+  // Fixing appRouterProvider's identity already stops it from happening in
+  // practice, but this screen has no business depending on that elsewhere
+  // never changing again. Checking the *current* value on every build,
+  // rather than only reacting to `ref.listen`'s transitions, means an
+  // already-resolved state is handled exactly like one that resolves after
+  // mount -- there is no "arrived already done" gap left to fall into.
+  void _handleStartupState(AsyncValue<AppStartupState> value) {
+    final readyState = value.valueOrNull;
+    if (_hasNavigated || readyState == null || widget.onReady == null) {
+      return;
+    }
+    _hasNavigated = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        widget.onReady!(readyState);
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     ref.listen(appStartupControllerProvider, (previous, next) {
-      final readyState = next.valueOrNull;
-      if (!_hasNavigated && readyState != null && widget.onReady != null) {
-        _hasNavigated = true;
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) {
-            widget.onReady!(readyState);
-          }
-        });
-      }
+      _handleStartupState(next);
     });
 
     final startupState = ref.watch(appStartupControllerProvider);
+    _handleStartupState(startupState);
 
     return Scaffold(
       body: SafeArea(

@@ -79,7 +79,7 @@ Three to five employer pilots, company SOP modules, employer portal, interview w
 Expanded logistics roles, partner centre pilot, verified physical assessment, integration framework, career passport v1.
 
 ### Months 10–12
-Micro-gig pilot, 90-day retention product, first ATS integration, regional-language experiment, benefits partner discovery.
+90-day retention product, first ATS integration, regional-language experiment, benefits partner discovery. (The micro-gig pilot shipped ahead of this roadmap's original schedule — see "Shift Marketplace" / Phase OD-1 in `docs/generated/current-state.md`.)
 
 ## 10. Success Metrics
 - Diagnostic completion rate

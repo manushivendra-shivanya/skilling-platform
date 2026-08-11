@@ -534,7 +534,6 @@ Start with architecture, design system, routing and production mobile shell. Do 
 Before editing:
 - Read AGENTS.md
 - Read README.md
-- Read docs/19-codex-master-context.md
 - Read docs/20-codex-phase-execution.md
 - Read docs/09-candidate-mobile-app.md
 - Inspect apps/candidate-mobile

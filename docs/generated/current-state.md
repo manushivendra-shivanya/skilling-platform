@@ -1,6 +1,14 @@
 # Current Repository State
 
-Last updated: 2026-08-01
+Last updated: 2026-08-11
+
+**How to read this file:** it's a chronological build log, oldest phases
+first. Early "Status"/"Current UI" entries are snapshots of what was true
+*at that phase* (e.g. "Phone OTP is clearly marked for Phase 1.4" describes
+Phase 1.3's screen, not today's) — don't treat anything above the most
+recent `## Phase` heading as current. For what's actually true right now,
+read **"Known constraints"** (the closest thing to a live summary) and the
+most recent `## Phase` section above it, not the top of the file.
 
 ## Status
 
@@ -2992,6 +3000,109 @@ credentials for Adzuna, Jooble, and Careerjet:
   (retail floor ops, BPO/customer service, manufacturing line ops,
   hospitality frontline, BFSI agent roles).
 
+## Phase OD-1: Shift Marketplace, Google Sign-In, and Home/Voice redesign
+
+Everything below shipped between Phase H and this update; none of it had
+been recorded here before this reconciliation pass.
+
+- **Shift Marketplace.** New `apps/candidate-mobile/lib/features/shifts/`
+  (availability, grievance, payout, my-shifts controllers/screens/domain)
+  and `apps/api/src/employer/employer-shifts.controller.ts`
+  (`POST /employer/shifts`, `POST /employer/shifts/:id/publish`,
+  `GET /employer/shifts`), backed by migration
+  `20260808000000_phase_od1_shift_marketplace.sql`. This is the real,
+  shipped version of the concept `docs/15-integrations-phygital-fintech.md`
+  describes as "Micro-Gigs" under a different name -- the two were never
+  cross-linked before now. `shiftAvailabilityRepositoryProvider`,
+  `shiftPayoutRepositoryProvider`, and `shiftGrievanceRepositoryProvider`
+  are direct-to-Supabase (no BFF), gated on `canUseLiveBackendProvider`;
+  `shiftsRepositoryProvider` goes through the BFF like Jobs.
+- **Google Sign-In**: `GoogleAuthRepository` uses the native
+  `google_sign_in` package (`GoogleSignIn.instance.initialize(serverClientId:)`
+  → `.authenticate()` → `supabase.auth.signInWithIdToken`), not a browser
+  redirect flow -- `AndroidManifest.xml` has no VIEW/BROWSABLE intent
+  filter and `signInWithOAuth` is not used anywhere in the app. Requires
+  the CI-built APK's signing SHA-1 to be registered against an Android
+  OAuth client in Google Cloud Console; the stable review keystore above
+  exists specifically to keep that SHA-1 constant across builds.
+- **Email OTP replaced phone OTP as the primary sign-in channel.** Phone
+  OTP was dropped because SMS delivery to Indian numbers requires DLT
+  (Distributed Ledger Technology) registration -- a TRAI-mandated,
+  per-sender process independent of any SMS vendor -- which was the actual
+  cause of production SMS sends 400ing at the Zavu gateway. WhatsApp OTP
+  was evaluated as an alternative and also rejected: Meta only unlocks its
+  Authentication template category once a number clears one of Meta's
+  Scaling Paths *and* hits 2,000 business-initiated conversations/day,
+  which a pre-launch app can't reach. Email needs no equivalent
+  per-message regulatory gate. `SupabaseEmailAuthRepository` replaces
+  `SupabasePhoneAuthRepository`; `OtpChallenge.phoneNumber` became
+  `OtpChallenge.contact` (channel-agnostic). Aadhaar/DigiLocker sign-in
+  were also evaluated and shelved: direct Aadhaar authentication needs a
+  UIDAI AUA/KUA license plus a Section 11A PMLA government notification;
+  DigiLocker needs a Meri Pehchaan partner-approval process and a
+  browser-redirect OAuth flow this app has never built. Worth revisiting
+  DigiLocker later as Career Passport *identity verification*, not as the
+  sign-in path.
+- **Home rebuilt around one action and its evidence**, replacing a
+  9-card screen with 5 competing filled buttons. The mission card is a
+  scroll-list sibling `Transform.translate`d to overlap the header
+  gradient rather than nested inside it, so it reads as genuinely lifted;
+  the action list under it is trimmed to pathway + interview practice,
+  since Jobs/Coach/Career Passport/diagnostic all already live one tap
+  away in the shell or the profile tab. See the "Home and Learning are
+  unconditionally mock" constraint above -- this redesign did not touch
+  data wiring, only presentation.
+- **Voice interview practice rebuilt** as "साक्षात्कार (इंटरव्यू) अभ्यास":
+  self-introduction is now the first question (matching how a real
+  interview opens), every question carries a category and optional
+  guidance shown alongside it rather than withheld, and a new
+  `AnswerPacingTrack` gauges answer length against a 1-2 minute target
+  window -- deliberately not a waveform, since the capture layer exposes
+  no amplitude and a moving waveform would be animation pretending to be
+  data.
+- **Warehouse process clips now persist "watched" state on-device**:
+  `ViewedClipsRepository`/`SecureViewedClipsRepository`, same posture as
+  `SavedJobsRepository` (no table, no cross-device sync, no employer
+  visibility). `MicroLessonPlayerScreen` marks a clip viewed once playback
+  crosses a near-end threshold; `WarehouseClipsSection` shows a "Watched"
+  label + check icon.
+- **UI documentation consolidated to one file.** `docs/04-ui-ux-specification.md`
+  is now the single authoritative UI design document (screen inventory +
+  a best-in-class visual-language checklist, both previously split across
+  two files); `AGENTS.md` lists it as mandatory reading before touching
+  any candidate-facing screen. `docs/16-sprint-plan.md` is marked
+  superseded by this doc (`docs/20-codex-phase-execution.md` is the plan
+  actually followed); `docs/19-codex-master-context.md` was deleted after
+  confirming its content was near-total duplication of docs 00/01/09/20
+  and `AGENTS.md`, with its few unique bullets (design-direction
+  adjectives) folded into doc 04 and this file's own "Current mobile
+  state" section rewritten to match reality instead of describing the
+  default Flutter counter-app scaffold it once was.
+
+## SectorPack abstraction for Lessons/Practise/Certification
+
+- **Two published design references, neither wired to a live screen.**
+  Shift Floor (warehouse — dock lights, rack bins, job tickets, an access
+  badge) and On The Route v2 (last-mile delivery — traffic-signal
+  red/amber/green, a map-pin route line, trip-request cards, a
+  driving-licence-styled Rider ID). Both are self-contained HTML mocks
+  published as Artifacts, rendered and screenshot-verified via headless
+  Chromium before each publish — not eyeballed from source.
+- `apps/candidate-mobile/lib/features/sector_pack/domain/sector_pack.dart`
+  is a **domain-layer stub only**: `SectorPack`/`SectorSignalPalette`
+  data classes plus `SectorPacks.warehouseLogistics` and
+  `.lastMileDelivery` constants, covered by
+  `test/features/sector_pack/domain/sector_pack_test.dart` (5 tests,
+  including a regression guard for a real collision bug caught while
+  building the last-mile pack — a status colour reused as the primary
+  accent). No screen reads from this yet; `learning_screen.dart`,
+  `practice_screen.dart`, and `certification_exam_section.dart` still
+  render their original mock content.
+- See `docs/adr/0020-sector-pack-abstraction.md` for the decision and
+  `docs/26-sector-pack-rollout.md` for the entry-point plan (resolve the
+  pack from the candidate's matched job role, not a separate picker), the
+  QC checklist, and the full dogfooding log.
+
 ## Target product architecture proposal
 
 - Added the proposed Flora AI Employability Infrastructure architecture in
@@ -3013,29 +3124,53 @@ credentials for Adzuna, Jooble, and Careerjet:
   integration, portal or production authority has been added
 
 ## Known constraints
-- Android/Termux/Ubuntu PRoot environment cannot reliably run Android SDK host binaries
-- GitHub Actions is the authoritative APK build path for mobile-only development
-- The generic `app-debug.apk` artifact filename can be confused with stale
-  downloads until GitHub workflow-write permission is available
+- Development happens across several environments now, not one fixed setup:
+  Claude Code remote/cloud sessions self-provision Flutter via
+  `.claude/hooks/session-start.sh` (Android SDK unavailable there --
+  `dl.google.com` is blocked by egress policy, so `flutter build apk` only
+  runs in CI from that environment); a Mac is used for `adb`, keystore
+  generation, and anything needing a physical/emulated device. GitHub
+  Actions remains the authoritative APK compiler regardless of which
+  environment wrote the code.
+- Review APKs are published as named GitHub release assets
+  (`flora-candidate-app-${TAG}.apk`) via `workflow_dispatch`, signed with a
+  stable review keystore (`FLORA_REVIEW_KEYSTORE_*` repo secrets) so the
+  signing SHA-1 stays constant across CI runs and can be registered against
+  the Android OAuth client for Google Sign-In. Ordinary pushes still only
+  produce the generic `app-debug.apk` build artifact.
 - macOS will be required for iOS build and signing
-- External analytics and connectivity adapters remain local mocks. Supabase
-  authentication and candidate-owned data adapters are available only in a
-  build configured with the JobSkills URL and publishable key.
+- Analytics events are tracked via `InMemoryAnalyticsTracker` and discarded,
+  not sent to any real analytics backend -- there is no production
+  observability pipeline yet. Supabase authentication and candidate-owned
+  data adapters are available only in a build configured with the
+  JobSkills URL and publishable key.
 - The component gallery is a development aid and is intentionally unavailable
   in production configuration
 - Selected language still uses the Phase 1 in-memory adapter and persists
   through navigation; authenticated session state uses secure device storage
-- Development OTP `123456` is intentionally local and must never be treated as
-  production authentication
+- **Phone OTP has been replaced by email OTP as the primary sign-in
+  channel, alongside native Google Sign-In** (`SupabaseEmailAuthRepository`,
+  `GoogleAuthRepository`) -- see the "Email OTP + Google Sign-In" entry
+  below for why. The development-only local adapter's fixed code remains
+  `123456` and must never be treated as production authentication.
 - Candidate onboarding drafts remain available locally; profiles and consent
   can synchronize to JobSkills when the Supabase build configuration is
   supplied
 - Resume upload and onboarding voice introduction remain non-interactive
   placeholders; voice interview practice is the only route that requests
   microphone permission
-- Home, Coach, and Jobs remain local mock experiences. Diagnostic, learning,
-  simulation, score, and evidence records use local-first persistence and can
-  synchronize to candidate-owned JobSkills records when configured.
+- **Home and Learning are unconditionally mock, regardless of backend
+  configuration** -- `homeDashboardRepositoryProvider` and
+  `learningRepositoryProvider` in `apps/candidate-mobile/lib/app/dependencies.dart`
+  always return their mock implementation; neither is gated on
+  `canUseLiveBackendProvider` like every other repository is. There is no
+  `GET /home/dashboard` endpoint in `apps/api` yet. This means Home's
+  redesigned header/mission-card/readiness-ring UI (see below) is real,
+  polished UI decorating fake data unconditionally -- worth fixing before
+  treating Home as done. Coach remains a local scripted experience by
+  design. Jobs and Shifts are live once Supabase+API configuration and a
+  session are present (see Phase H and Shift Marketplace entries); Jobs
+  falls back to `LocalMockJobsRepository` only when unconfigured.
 - Coach voice/attachment controls and notifications remain transparent
   placeholders; the voice interview uses local capture but no AI provider,
   remote upload, push token, or notification service is connected
@@ -3043,20 +3178,35 @@ credentials for Adzuna, Jooble, and Careerjet:
   Phase 2 records and narrowly scoped Phase 3 practice metadata; media
   authorisation, AI, employer and administrator operations remain behind the
   BFF, which now exists (`apps/api`) and implements candidate job application
-  submission plus the WMS attempt sync boundary. The Flutter Jobs feature's
+  submission, the WMS attempt sync boundary, and (per Phase H) multi-source
+  job sourcing plus employer job/shift posting. The Flutter Jobs feature's
   Apply action calls the Jobs endpoint when both Supabase and API
-  configuration are present; job listing itself still comes from
-  `LocalMockJobsRepository`, whose mock ids don't match the real seeded jobs
-  yet. The Flutter WMS runtime calls the WMS sync endpoint only in builds that
-  provide both Supabase and API configuration; otherwise it remains purely
-  local.
+  configuration are present, and job listings themselves now come from
+  `ApiJobsRepository` (real, source-tagged listings) rather than
+  `LocalMockJobsRepository` once configured -- the mock-id mismatch this
+  bullet used to describe no longer applies. The Flutter WMS runtime calls
+  the WMS sync endpoint only in builds that provide both Supabase and API
+  configuration; otherwise it remains purely local.
 - The Receiving mission is complete end to end (Document Desk through
   Performance Feedback) and the Put Away mission is complete end to end
   (Staging Area through Performance Feedback), both merged to `main`. WMS
   now has a live Supabase persistence schema, a BFF sync endpoint and an
   API-gated Flutter offline-first sync adapter. No WMS screen is withheld
-  pending approval; the WebGL/3D
-  spatial interaction layer remains deliberately deferred per direct
-  discussion with the product owner rather than a specific ADR (see the Put
-  Away workstation screens entry above for the correction to a stale
-  "ADR-001" citation).
+  pending approval; the WebGL/3D spatial interaction layer for production
+  use remains deliberately deferred per direct discussion with the product
+  owner rather than a specific ADR (see the Put Away workstation screens
+  entry above for the correction to a stale "ADR-001" citation). **A
+  working proof of concept of that layer does exist**, dev-tools-only:
+  `workplace_simulation_3d/presentation/workplace_3d_preview_screen.dart`
+  is a Babylon.js-in-WebView spike with a real `FloraNative` JS bridge that
+  round-trips carton-inspection actions into `WorkplaceSimulationController`
+  against the live Receiving mission. It proves the render path works and
+  nothing more -- not on any candidate-facing route.
+- Every AsyncNotifier controller whose repository is gated on
+  `canUseLiveBackendProvider` (onboarding, jobs, shifts, shift
+  availability/payout/grievance, Career Passport) now `ref.watch`es that
+  provider instead of `ref.read`ing it, so a controller that already built
+  before sign-in completed correctly re-fetches once the live repository
+  becomes available. Before this fix, only a full app kill-and-reopen made
+  those screens reflect a real signed-in session -- worth being alert to
+  this same read-vs-watch shape in any new controller.

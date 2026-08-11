@@ -81,9 +81,16 @@
 - `partner_centres(id, partner_id, location, capabilities_json, status)`
 - `physical_assessment_slots(id, centre_id, assessment_type, starts_at, capacity)`
 - `physical_assessment_results(id, candidate_id, slot_id, assessor_id, evidence_json, status)`
-- `micro_gigs(id, employer_id, title, deliverable_json, stipend_minor, status)`
-- `micro_gig_assignments(id, gig_id, candidate_id, status, accepted_at, completed_at)`
-- `wallet_ledger(id, candidate_id, entry_type, amount_minor, currency, reference_type, reference_id)`
+- Micro-gigs shipped as the "Shift Marketplace" (Phase OD-1) under
+  different table names than proposed here — see
+  `supabase/migrations/20260808000000_phase_od1_shift_marketplace.sql`:
+  `shift_requests`, `shift_applications`, `shift_payouts`,
+  `shift_grievances`, `candidate_shift_availability`. The
+  `micro_gigs`/`micro_gig_assignments`/`wallet_ledger` names below were
+  never built and should be read as superseded, not additional/pending.
+  ~~`micro_gigs(id, employer_id, title, deliverable_json, stipend_minor, status)`~~
+  ~~`micro_gig_assignments(id, gig_id, candidate_id, status, accepted_at, completed_at)`~~
+  ~~`wallet_ledger(id, candidate_id, entry_type, amount_minor, currency, reference_type, reference_id)`~~
 
 ### Platform
 - `notifications(id, user_id, channel, template, payload_json, status)`

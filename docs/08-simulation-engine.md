@@ -12,12 +12,14 @@ Create reusable, versioned, auditable workplace simulations that capture process
 - The first local content pack models a logistics receiving mission so the
   generic runtime can be validated before the final interaction contract is
   applied.
-- Approved Simulation Entry and Supervisor Briefing screens now expose the
-  backbone from Practice. Screen 03 remains an explicit handoff and has not
-  been invented.
-- See `docs/21-workplace-management-simulation.md`,
-  `docs/21-layered-simulation-strategy.md`,
-  `docs/22-simulation-content-schema.md` and ADR-0015.
+- The Receiving mission is complete end to end (Document Desk through
+  Performance Feedback) and the Put Away mission is complete end to end
+  (Staging Area through Performance Feedback) -- see
+  `docs/generated/current-state.md`'s WMS milestone entries for the full
+  build history from the original Screen 01/02 handoff to today.
+- See `docs/21-workplace-management-simulation.md` (includes the layered
+  simulation strategy), `docs/22-simulation-content-schema.md` and
+  ADR-0015.
 
 ## Authoring Model
 A simulation version contains:

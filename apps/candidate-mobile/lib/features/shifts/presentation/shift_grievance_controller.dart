@@ -23,8 +23,11 @@ class ShiftGrievanceController extends AsyncNotifier<List<ShiftGrievance>> {
       throw const AuthenticationFailure('Sign in again to view grievances.');
     }
     _candidateId = session.candidateId;
+    // watch, not read: shiftGrievanceRepositoryProvider switches from an
+    // unavailable stub to Supabase once canUseLiveBackendProvider flips true
+    // right after sign-in -- a `read` would leave this controller stuck.
     return (await ref
-            .read(shiftGrievanceRepositoryProvider)
+            .watch(shiftGrievanceRepositoryProvider)
             .loadGrievances(session.candidateId))
         .when(success: (value) => value, failure: (failure) => throw failure);
   }

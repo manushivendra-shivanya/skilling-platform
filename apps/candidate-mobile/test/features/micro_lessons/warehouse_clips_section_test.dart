@@ -3,10 +3,12 @@ import 'package:candidate_mobile/core/errors/result.dart';
 import 'package:candidate_mobile/core/repositories/candidate_session_repository.dart';
 import 'package:candidate_mobile/core/storage/secure_key_value_store.dart';
 import 'package:candidate_mobile/features/micro_lessons/data/secure_micro_lesson_assessment_repository.dart';
+import 'package:candidate_mobile/features/micro_lessons/data/secure_viewed_clips_repository.dart';
 import 'package:candidate_mobile/features/micro_lessons/domain/micro_lesson_clip.dart';
 import 'package:candidate_mobile/features/micro_lessons/domain/micro_lesson_clip_repository.dart';
 import 'package:candidate_mobile/features/onboarding/data/secure_candidate_onboarding_repository.dart';
 import 'package:candidate_mobile/features/onboarding/domain/candidate_onboarding_draft.dart';
+import 'package:candidate_mobile/features/sector_pack/presentation/sector_pack_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -72,6 +74,58 @@ void main() {
       // No video bundled for either fixture clip -- should read as a real,
       // plain state rather than an error.
       expect(find.textContaining('Video not yet available'), findsNWidgets(2));
+    },
+  );
+
+  testWidgets(
+    'shows a persisted watched clip as Watched from the very first frame',
+    (tester) async {
+      await tester.binding.setSurfaceSize(const Size(800, 1200));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      final viewedClips = SecureViewedClipsRepository(
+        InMemorySecureKeyValueStore(),
+      );
+      // Watched on a previous visit, before this widget tree ever existed --
+      // the point of persisting this on-device rather than in controller
+      // state is that it has to survive exactly this kind of cold start.
+      await viewedClips.markViewed(
+        'dev-candidate-3210',
+        'clip_receiving_frozen_001',
+      );
+      // Watching requires a video to have existed -- the "Watched" text only
+      // appears alongside the real duration/Downloaded line, not the
+      // no-video-yet placeholder, so this fixture needs one.
+      final watchedClip = _receivingClip().copyWith(
+        videoUrl: 'asset://assets/clips/receiving.mp4',
+      );
+
+      await tester.pumpCandidateApp(
+        candidateSessionRepository: sessions,
+        candidateOnboardingRepository: onboarding,
+        microLessonClipRepository: _FakeMicroLessonClipRepository(
+          Success([watchedClip, _inspectionClip()]),
+        ),
+        viewedClipsRepository: viewedClips,
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Learn'));
+      await tester.pumpAndSettle();
+      await tester.scrollUntilVisible(
+        find.text('Warehouse process clips'),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+
+      expect(find.textContaining('Watched'), findsOneWidget);
+      // The other clip was never watched -- only its thumbnail should show
+      // the check glyph (no bare Material icons in sector-pack-styled
+      // content -- this is a drawn SectorIcon, not Icons.check_circle).
+      expect(
+        find.byWidgetPredicate(
+          (widget) => widget is SectorIcon && widget.glyph == SectorGlyph.check,
+        ),
+        findsOneWidget,
+      );
     },
   );
 
@@ -239,6 +293,82 @@ void main() {
 
       expect(find.text('Clips could not be loaded'), findsOneWidget);
       expect(find.text('Try again'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'restyled clip rows use drawn SectorIcons for pending/available, not bare Material icons',
+    (tester) async {
+      await tester.binding.setSurfaceSize(const Size(800, 1200));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      final withVideo = _receivingClip().copyWith(
+        videoUrl: 'asset://assets/clips/receiving.mp4',
+      );
+      await tester.pumpCandidateApp(
+        candidateSessionRepository: sessions,
+        candidateOnboardingRepository: onboarding,
+        microLessonClipRepository: _FakeMicroLessonClipRepository(
+          Success([withVideo, _inspectionClip()]),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Learn'));
+      await tester.pumpAndSettle();
+      await tester.scrollUntilVisible(
+        find.text('Warehouse process clips'),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+
+      // Clip with a bundled video shows the play glyph; the other clip
+      // (no video) shows the pending/hourglass glyph -- both drawn, no
+      // bare Material icons. findsWidgets (at least one), not
+      // findsOneWidget: the Lessons rows above this section (seeded
+      // default content, not controlled by this fixture) also render an
+      // uncompleted lesson with the same play glyph.
+      expect(
+        find.byWidgetPredicate(
+          (widget) => widget is SectorIcon && widget.glyph == SectorGlyph.play,
+        ),
+        findsWidgets,
+      );
+      expect(
+        find.byWidgetPredicate(
+          (widget) =>
+              widget is SectorIcon && widget.glyph == SectorGlyph.pending,
+        ),
+        findsOneWidget,
+      );
+      expect(find.byIcon(Icons.play_circle_outline), findsNothing);
+      expect(find.byIcon(Icons.hourglass_empty), findsNothing);
+      expect(find.byIcon(Icons.chevron_right), findsNothing);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
+    'a hazard-tape divider (not a plain Divider) sits between the lesson list and the clips section',
+    (tester) async {
+      await tester.binding.setSurfaceSize(const Size(800, 1200));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await tester.pumpCandidateApp(
+        candidateSessionRepository: sessions,
+        candidateOnboardingRepository: onboarding,
+        microLessonClipRepository: _FakeMicroLessonClipRepository(
+          Success([_receivingClip()]),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Learn'));
+      await tester.pumpAndSettle();
+      await tester.scrollUntilVisible(
+        find.text('Warehouse process clips'),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+
+      expect(find.byType(Divider), findsNothing);
+      expect(tester.takeException(), isNull);
     },
   );
 }

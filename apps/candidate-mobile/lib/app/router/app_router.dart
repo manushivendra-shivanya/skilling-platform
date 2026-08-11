@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/analytics/analytics_event.dart';
 import '../../core/analytics/analytics_tracker.dart';
+import '../../core/errors/result.dart';
 import '../../core/repositories/candidate_session_repository.dart';
 import '../../core/widgets/app_error_boundary.dart';
 import '../../features/authentication/presentation/authenticated_placeholder_screen.dart';
@@ -274,10 +275,25 @@ String workstationPath(String workstationId, String missionId) =>
 final appRouterProvider = Provider<GoRouter>((ref) {
   final router = createAppRouter(
     analyticsTracker: ref.watch(analyticsTrackerProvider),
-    candidateSessionRepository: ref.watch(candidateSessionRepositoryProvider),
-    candidateOnboardingRepository: ref.watch(
-      candidateOnboardingRepositoryProvider,
-    ),
+    // Deliberately NOT `ref.watch(candidateSessionRepositoryProvider)` /
+    // `ref.watch(candidateOnboardingRepositoryProvider)`. Those two rebuild
+    // whenever `canUseLiveBackendProvider` flips -- which it does the moment
+    // Google sign-in completes, since it listens to Supabase's
+    // `onAuthStateChange` and invalidates itself on every auth event. A
+    // `Provider` that watches a value which just changed identity rebuilds,
+    // and this `Provider` doing so meant a *brand new* `GoRouter` got
+    // constructed mid-sign-in -- with no `initialLocation`, i.e. back at `/`.
+    // `MaterialApp.router` then swapped to that new router, which looked to
+    // the user like the app snapping back to the branded startup splash
+    // right after they'd finished signing in, sometimes hanging there for
+    // good if the redirect's onboarding-draft read (now Supabase-backed,
+    // see below) never resolved. Reading through a stable proxy instead
+    // means this provider's own identity no longer depends on which backend
+    // the onboarding repository currently resolves to, so sign-in can no
+    // longer force a router rebuild at all -- the actual bug, not just its
+    // slow-network symptom.
+    candidateSessionRepository: _LiveCandidateSessionRepository(ref),
+    candidateOnboardingRepository: _LiveCandidateOnboardingRepository(ref),
     showDevelopmentTools: !ref.watch(appConfigProvider).isProduction,
     // Available in any non-production build, including one wired to a real
     // Supabase project. It used to be switched off as soon as Supabase was
@@ -290,6 +306,53 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   ref.onDispose(router.dispose);
   return router;
 });
+
+/// Forwards every call to whatever `candidateSessionRepositoryProvider`
+/// currently resolves to, read fresh on each call rather than captured once.
+/// Exists so `appRouterProvider` can hand `createAppRouter` something with a
+/// stable identity across the provider's whole lifetime -- see the long
+/// comment above `appRouterProvider` for why that matters.
+class _LiveCandidateSessionRepository implements CandidateSessionRepository {
+  _LiveCandidateSessionRepository(this._ref);
+
+  final Ref _ref;
+
+  CandidateSessionRepository get _live =>
+      _ref.read(candidateSessionRepositoryProvider);
+
+  @override
+  Future<Result<void>> clearSession() => _live.clearSession();
+
+  @override
+  Future<Result<CandidateSession?>> readSession() => _live.readSession();
+
+  @override
+  Future<Result<void>> saveSession(CandidateSession session) =>
+      _live.saveSession(session);
+}
+
+/// Same forwarding trick as [_LiveCandidateSessionRepository], for the
+/// onboarding draft repository -- the one that actually swaps backend (secure
+/// storage to Supabase) right after sign-in.
+class _LiveCandidateOnboardingRepository
+    implements CandidateOnboardingRepository {
+  _LiveCandidateOnboardingRepository(this._ref);
+
+  final Ref _ref;
+
+  CandidateOnboardingRepository get _live =>
+      _ref.read(candidateOnboardingRepositoryProvider);
+
+  @override
+  Future<Result<CandidateOnboardingDraft>> readDraft(String candidateId) =>
+      _live.readDraft(candidateId);
+
+  @override
+  Future<Result<void>> saveDraft(
+    String candidateId,
+    CandidateOnboardingDraft draft,
+  ) => _live.saveDraft(candidateId, draft);
+}
 
 GoRouter createAppRouter({
   required AnalyticsTracker analyticsTracker,

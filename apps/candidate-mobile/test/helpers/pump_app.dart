@@ -20,8 +20,10 @@ import 'package:candidate_mobile/features/intelligence/data/secure_candidate_int
 import 'package:candidate_mobile/features/intelligence/domain/candidate_intelligence_repository.dart';
 import 'package:candidate_mobile/features/learning/domain/learning_repository.dart';
 import 'package:candidate_mobile/features/micro_lessons/data/secure_micro_lesson_assessment_repository.dart';
+import 'package:candidate_mobile/features/micro_lessons/data/secure_viewed_clips_repository.dart';
 import 'package:candidate_mobile/features/micro_lessons/domain/micro_lesson_assessment_repository.dart';
 import 'package:candidate_mobile/features/micro_lessons/domain/micro_lesson_clip_repository.dart';
+import 'package:candidate_mobile/features/micro_lessons/domain/viewed_clips_repository.dart';
 import 'package:candidate_mobile/features/onboarding/data/secure_candidate_onboarding_repository.dart';
 import 'package:candidate_mobile/features/onboarding/domain/candidate_onboarding_repository.dart';
 import 'package:candidate_mobile/features/onboarding/domain/onboarding_entry_repository.dart';
@@ -50,6 +52,7 @@ extension CandidateAppPump on WidgetTester {
     LearningRepository? learningRepository,
     MicroLessonClipRepository? microLessonClipRepository,
     MicroLessonAssessmentRepository? microLessonAssessmentRepository,
+    ViewedClipsRepository? viewedClipsRepository,
     CertificationExamRepository? certificationExamRepository,
     CertificationExamAttemptRepository? certificationExamAttemptRepository,
     JobsRepository? jobsRepository,
@@ -106,6 +109,13 @@ extension CandidateAppPump on WidgetTester {
                 SecureMicroLessonAssessmentRepository(
                   InMemorySecureKeyValueStore(),
                 ),
+          ),
+          // Same rationale as microLessonAssessmentRepositoryProvider above:
+          // always overridden so it never falls through to the real
+          // secure-storage-backed provider in the widget test sandbox.
+          viewedClipsRepositoryProvider.overrideWithValue(
+            viewedClipsRepository ??
+                SecureViewedClipsRepository(InMemorySecureKeyValueStore()),
           ),
           // Always overridden (not just when explicitly passed). Unlike the
           // secure-storage providers above, this one doesn't hang on an

@@ -33,4 +33,17 @@ abstract final class AppColors {
   // dark ink background (journey stepper, readiness ring) -- warning/accent
   // are both too close in value to ink to read clearly there.
   static const Color highlight = Color(0xFFFFC933);
+
+  // Fixed dark chrome tone for persistent structural chrome that sits above
+  // sector-pack content (e.g. the Lessons/Practise/Certification segmented
+  // tab bar) -- deliberately NOT derived from any per-sector colour.
+  // Darkening a pack's `primaryAccent` toward black works for a one-off
+  // focal object like the credential card (reviewed, kept intentionally),
+  // but this bar is persistent chrome visible on every screen in the
+  // destination, sitting directly against each screen's light content --
+  // darkening warehouse's orange primaryAccent that way produced a muddy
+  // brown that read as an error state, not a dark UI chrome tone (caught
+  // via real-device dogfooding, see docs/26-sector-pack-rollout.md). Value
+  // matches the navy already contrast-verified in the Shift Floor mock.
+  static const Color navy = Color(0xFF16233B);
 }

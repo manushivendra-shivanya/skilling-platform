@@ -61,7 +61,11 @@ class CareerPassportController extends AsyncNotifier<CareerPassportState> {
       );
     }
     _candidateId = session.candidateId;
-    final repository = ref.read(careerPassportRepositoryProvider);
+    // watch, not read: careerPassportRepositoryProvider's Supabase
+    // client/apiBaseUrl switch from null to real once canUseLiveBackendProvider
+    // flips true right after sign-in -- a `read` would leave this controller
+    // stuck on the pre-auth (share-link-disabled) instance.
+    final repository = ref.watch(careerPassportRepositoryProvider);
     final evidence = (await repository.loadEvidence(
       session.candidateId,
     )).when(success: (value) => value, failure: (failure) => throw failure);

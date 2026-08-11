@@ -1,5 +1,12 @@
 # 21 — Workplace Management Simulation
 
+This file absorbs `docs/21-layered-simulation-strategy.md` (deleted): the
+two shared the number 21, and the layered-strategy file's content was
+almost entirely reproduced here already. Its one genuinely unique section
+("Current boundary") is folded in below as "Current boundary," corrected
+to match what has actually shipped since — the receiving and put-away
+missions are complete end to end now, not just Screens 01–02.
+
 ## Purpose
 
 The Workplace Management Simulation (WMS) is an additive, content-driven
@@ -36,17 +43,37 @@ interaction decisions.
 - A UI-neutral Riverpod application controller.
 - Local logistics content for the first receiving mission.
 
-Version 0.2 originally excluded production screens. Approved Screens 01–05 are
-now connected as subsequent presentation slices, and Screen 06 is a controlled
-Inspection Zone placeholder.
+Version 0.2 originally excluded production screens. That boundary has since
+moved substantially — see "Current boundary" below for what's actually
+built. What's still excluded, unchanged since v0.2:
 
-Still excluded:
-
-- Screen 06 inspection behaviour and later workstation workflows.
-- Assumptions about Barcode, Quarantine, Office or result behaviour.
-- Supabase schema or synchronization.
-- AI providers, NPCs, voice, Redis or BFF changes.
+- AI providers, NPCs, voice, Redis or BFF changes beyond the sync boundary
+  described under "Persistence and future synchronization."
 - Changes to the existing Phase 2 simulation.
+- A second industry pack (the engine is industry-neutral; logistics
+  remains the only authored content).
+
+## Current boundary
+
+The Receiving mission is complete end to end — Document Desk, Receiving
+Dock, Inspection Zone, Barcode Station, Quarantine Zone, Receiving Office,
+and Performance Feedback all built and connected, per
+`docs/generated/current-state.md`'s WMS milestone entries. The Put Away
+mission is also complete end to end (Staging Area through Performance
+Feedback). Both are merged to `main`.
+
+Remote persistence is **not** deferred: WMS has a live Supabase persistence
+schema, a BFF sync endpoint (`WMS Attempt Sync API`), and a Flutter
+offline-first sync adapter that's API-gated (activates only in builds
+configured with both Supabase and `API_BASE_URL`; otherwise attempts stay
+local-only, which is a config state, not a missing feature).
+
+No WMS screen is withheld pending approval. The WebGL/3D spatial
+interaction layer (Layer 4+ territory below) remains deliberately deferred
+for production use, per direct discussion with the product owner rather
+than a specific ADR — though a dev-tools-only proof of concept exists
+(`workplace_simulation_3d/presentation/workplace_3d_preview_screen.dart`),
+proving the render path works and nothing more.
 
 ## Content and versioning
 
@@ -131,11 +158,12 @@ stored value. A future database adapter must implement a real transaction.
 
 ## Persistence and future synchronization
 
-The current attempt repository uses encrypted local key-value storage through
-the existing secure-storage abstraction. Candidate ownership, immutable action
-prefixes, continuous sequence numbers and fresh retries are enforced locally.
-
-Remote persistence remains deferred. Any later Supabase/BFF adapter must
-preserve the same contracts, ordered idempotent actions, version provenance
-and candidate ownership without weakening RLS or the planned consequential
-operation boundary.
+The attempt repository is offline-first, not local-only: encrypted local
+key-value storage through the existing secure-storage abstraction remains
+authoritative, and — as described under "Current boundary" above — a
+Supabase/BFF sync adapter now exists and activates whenever a build is
+configured with both Supabase and `API_BASE_URL`. Candidate ownership,
+immutable action prefixes, continuous sequence numbers and fresh retries
+are enforced both locally and by the sync adapter, which preserves the
+same contracts, ordered idempotent actions, and version provenance without
+weakening RLS or the consequential-operation boundary.

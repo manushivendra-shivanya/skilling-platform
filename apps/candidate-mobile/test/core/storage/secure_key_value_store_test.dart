@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:candidate_mobile/core/storage/secure_key_value_store.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -175,5 +177,131 @@ void main() {
     );
 
     expect(await store.read('candidate.session'), 'stored-value');
+  });
+
+  group('read-immediately-after-write (real-device report: sign-in completes, '
+      'saveSession() writes the session, the redirect that follows '
+      'immediately calls readSession() again and the app gets stuck -- but '
+      'a full process kill and relaunch, a fresh read with nothing else in '
+      'flight, loads correctly)', () {
+    test(
+      'a read for a key this store just wrote never touches the channel again',
+      () async {
+        var readCalls = 0;
+        await mockChannel((call) async {
+          if (call.method == 'write') return null;
+          if (call.method == 'read') {
+            readCalls++;
+            // The real-device failure this reproduces: the channel read
+            // immediately following this store's own write stalls/never
+            // resolves. If read() ever fell through to the channel here,
+            // this test would hang instead of failing cleanly.
+            return Completer<Object?>().future;
+          }
+          return null;
+        });
+        final store = FlutterSecureKeyValueStore(
+          storage: const FlutterSecureStorage(),
+        );
+
+        await store.write('candidate.session', 'a-real-session');
+        final value = await store
+            .read('candidate.session')
+            .timeout(const Duration(seconds: 2));
+
+        expect(value, 'a-real-session');
+        expect(
+          readCalls,
+          0,
+          reason:
+              'the write-through cache must answer this without ever '
+              'calling the platform channel',
+        );
+      },
+    );
+
+    test(
+      'a read for a key this store just removed also never touches the channel',
+      () async {
+        var readCalls = 0;
+        await mockChannel((call) async {
+          if (call.method == 'delete') return null;
+          if (call.method == 'read') {
+            readCalls++;
+            return Completer<Object?>().future;
+          }
+          return null;
+        });
+        final store = FlutterSecureKeyValueStore(
+          storage: const FlutterSecureStorage(),
+        );
+
+        await store.remove('candidate.session');
+        final value = await store
+            .read('candidate.session')
+            .timeout(const Duration(seconds: 2));
+
+        expect(value, isNull);
+        expect(readCalls, 0);
+      },
+    );
+  });
+
+  group('a stalled platform channel call (real-device report: stuck '
+      'indefinitely on the splash screen after first Google sign-in, no '
+      'error shown)', () {
+    // Simulates the platform channel simply never responding -- not
+    // throwing, which every case above already covers -- by handing back a
+    // Future that never completes. Uses an injected short timeout so this
+    // doesn't actually wait 12s (the production default) per test.
+    const shortTimeout = Duration(milliseconds: 20);
+
+    test('read times out instead of hanging forever', () async {
+      await mockChannel((call) async {
+        if (call.method == 'read') return Completer<Object?>().future;
+        return null;
+      });
+      final store = FlutterSecureKeyValueStore(
+        storage: const FlutterSecureStorage(),
+        callTimeout: shortTimeout,
+      );
+
+      await expectLater(
+        store.read('candidate.session'),
+        throwsA(isA<TimeoutException>()),
+      );
+    });
+
+    test('write times out instead of hanging forever', () async {
+      await mockChannel((call) async {
+        if (call.method == 'write') return Completer<Object?>().future;
+        return null;
+      });
+      final store = FlutterSecureKeyValueStore(
+        storage: const FlutterSecureStorage(),
+        callTimeout: shortTimeout,
+      );
+
+      await expectLater(
+        store.write('candidate.session', 'value'),
+        throwsA(isA<TimeoutException>()),
+      );
+    });
+
+    test('remove times out instead of hanging forever', () async {
+      await mockChannel((call) async {
+        if (call.method == 'delete') return Completer<Object?>().future;
+        return null;
+      });
+      final store = FlutterSecureKeyValueStore(
+        storage: const FlutterSecureStorage(),
+        callTimeout: shortTimeout,
+      );
+
+      await expectLater(
+        store.remove('candidate.session'),
+        throwsA(isA<TimeoutException>()),
+      );
+    });
   });
 }
