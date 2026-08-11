@@ -7,11 +7,22 @@ import '../../../app/dependencies.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../core/widgets/app_button.dart';
-import '../../../core/widgets/app_card.dart';
+import '../../sector_pack/application/active_sector_pack_provider.dart';
+import '../../sector_pack/domain/sector_pack.dart';
+import '../../sector_pack/presentation/sector_pack_icons.dart';
+import '../../sector_pack/presentation/sector_pack_typography.dart';
 import '../domain/certification_exam.dart';
 import '../domain/certification_exam_attempt.dart';
 import 'certification_exam_controller.dart';
 import 'certification_exam_result_screen.dart';
+
+/// Muted red the exam timer switches to inside its last minute, on top of
+/// the navy app-bar chrome -- traced from the approved
+/// `exam-screen-mock.html`'s `.exam-timer.low` (`#E8746A`). Not an
+/// `AppColors` token: it's a one-off tone for white-on-navy timer text/icon
+/// contrast, distinct from `AppColors.error`'s light-surface red used
+/// everywhere else the timer sat before this restyle.
+const _timerLowColor = Color(0xFFE8746A);
 
 /// Answer recorded for a question the candidate never reached before the
 /// timer ran out. Never matches a real [ExamAnswerOption.id], so it always
@@ -138,6 +149,7 @@ class _CertificationExamScreenState
 
   @override
   Widget build(BuildContext context) {
+    final pack = ref.watch(activeSectorPackProvider);
     final questions = widget.exam.questions;
     final question = questions[_currentIndex];
     final answeredCount = _selections.length;
@@ -147,26 +159,46 @@ class _CertificationExamScreenState
       canPop: false,
       child: Scaffold(
         appBar: AppBar(
+          backgroundColor: AppColors.navy,
+          foregroundColor: Colors.white,
           leading: IconButton(
             tooltip: 'Exit exam',
             onPressed: () => _confirmExit(context),
-            icon: const Icon(Icons.close),
+            icon: SectorIcon(
+              glyph: SectorGlyph.cross,
+              color: Colors.white.withValues(alpha: 0.7),
+              size: 20,
+            ),
           ),
           title: Text('Question ${_currentIndex + 1} of ${questions.length}'),
           actions: [
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-              child: Center(child: _TimerLabel(remaining: _remaining)),
+              child: Center(
+                child: _TimerLabel(remaining: _remaining, pack: pack),
+              ),
             ),
           ],
+          // Thin hazard-amber progress fill directly under the app-bar, per
+          // the mock's `.exam-progress-track`/`.exam-progress-fill` -- moved
+          // out of the scrollable body (where it lived as a plain Material
+          // `LinearProgressIndicator`) so it reads as fixed chrome, same as
+          // the navy bar above it.
+          bottom: PreferredSize(
+            preferredSize: const Size.fromHeight(3),
+            child: LinearProgressIndicator(
+              value: (_currentIndex + 1) / questions.length,
+              minHeight: 3,
+              backgroundColor: Colors.white.withValues(alpha: 0.15),
+              valueColor: AlwaysStoppedAnimation<Color>(
+                pack.signalPalette.active,
+              ),
+            ),
+          ),
         ),
         body: ListView(
           padding: const EdgeInsets.all(AppSpacing.md),
           children: [
-            LinearProgressIndicator(
-              value: (_currentIndex + 1) / questions.length,
-            ),
-            const SizedBox(height: AppSpacing.md),
             if (question.context != null) ...[
               Text(
                 question.context!,
@@ -182,30 +214,14 @@ class _CertificationExamScreenState
             ),
             const SizedBox(height: AppSpacing.sm),
             for (final option in question.options) ...[
-              AppCard(
+              _ExamOptionCard(
+                pack: pack,
+                label: option.label,
+                selected: _selections[question.id] == option.id,
                 onTap: _isSubmitting
                     ? null
                     : () =>
                           setState(() => _selections[question.id] = option.id),
-                semanticLabel:
-                    '${option.label}. '
-                    '${_selections[question.id] == option.id ? 'Selected' : 'Not selected'}',
-                backgroundColor: _selections[question.id] == option.id
-                    ? AppColors.brandSoft
-                    : AppColors.surface,
-                child: Row(
-                  children: [
-                    Expanded(child: Text(option.label)),
-                    Icon(
-                      _selections[question.id] == option.id
-                          ? Icons.check_circle
-                          : Icons.radio_button_unchecked,
-                      color: _selections[question.id] == option.id
-                          ? AppColors.brand
-                          : AppColors.outline,
-                    ),
-                  ],
-                ),
               ),
               const SizedBox(height: AppSpacing.xs),
             ],
@@ -289,9 +305,10 @@ class _CertificationExamScreenState
 }
 
 class _TimerLabel extends StatelessWidget {
-  const _TimerLabel({required this.remaining});
+  const _TimerLabel({required this.remaining, required this.pack});
 
   final Duration remaining;
+  final SectorPack pack;
 
   @override
   Widget build(BuildContext context) {
@@ -300,24 +317,113 @@ class _TimerLabel extends StatelessWidget {
     final label =
         '${minutes.toString().padLeft(2, '0')}:'
         '${seconds.toString().padLeft(2, '0')}';
+    // isLow threshold is unchanged assessment logic -- only the colours it
+    // drives are restyled here (hazard-amber normally, muted red in the
+    // last minute, per the mock's `.exam-timer`/`.exam-timer.low`). The
+    // clock glyph itself stays the bare Material `Icons.timer_outlined`:
+    // no clock shape exists in `SectorGlyph`, and the mock is explicit that
+    // its 4 existing glyphs (check/cross/radioSelected/radioUnselected)
+    // cover everything this restyle needs -- adding a 5th glyph for a
+    // decorative timer icon was out of scope.
     final isLow = remaining <= const Duration(minutes: 1);
+    final color = isLow ? _timerLowColor : pack.signalPalette.active;
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(
-          Icons.timer_outlined,
-          size: 18,
-          color: isLow ? AppColors.error : AppColors.inkMuted,
-        ),
+        Icon(Icons.timer_outlined, size: 18, color: color),
         const SizedBox(width: AppSpacing.xxs),
         Text(
           label,
-          style: TextStyle(
-            color: isLow ? AppColors.error : AppColors.inkMuted,
-            fontWeight: FontWeight.w600,
-          ),
+          style: TextStyle(color: color, fontWeight: FontWeight.w600),
         ),
       ],
+    );
+  }
+}
+
+/// One MCQ answer row -- `pack.primaryAccent`-toned border/tint when
+/// selected, drawn [SectorGlyph.radioSelected] / [SectorGlyph.radioUnselected]
+/// glyphs instead of `Icons.check_circle` / `Icons.radio_button_unchecked`,
+/// same shape as `practice_screen.dart`'s private `_DemoOptionCard` (the
+/// mock explicitly reuses that pattern). `onTap` is nullable, unlike
+/// `_DemoOptionCard`'s, so a row can be disabled while `_isSubmitting`.
+class _ExamOptionCard extends StatelessWidget {
+  const _ExamOptionCard({
+    required this.pack,
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final SectorPack pack;
+  final String label;
+  final bool selected;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final surface = Theme.of(context).colorScheme.surface;
+    final divider = Theme.of(context).dividerColor;
+    final ink = Theme.of(context).colorScheme.onSurface;
+    final inkSoft = Theme.of(context).colorScheme.onSurfaceVariant;
+    return Semantics(
+      label: '$label. ${selected ? 'Selected' : 'Not selected'}',
+      button: true,
+      enabled: onTap != null,
+      container: true,
+      // excludeSemantics: true hides the descendant Text/icon's own
+      // semantics (redundant with `label` above), but it also drops the
+      // InkWell's own tap-action semantics -- `onTap` is repeated
+      // explicitly on this node to keep it screen-reader-activatable, same
+      // fix already shipped on `_DemoOptionCard` in practice_screen.dart.
+      excludeSemantics: true,
+      onTap: onTap,
+      child: Material(
+        color: selected
+            ? Color.lerp(surface, pack.primaryAccent, 0.08)
+            : surface,
+        borderRadius: BorderRadius.circular(8),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(8),
+          child: Container(
+            constraints: const BoxConstraints(
+              minHeight: kMinInteractiveDimension,
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: selected ? pack.primaryAccent : divider,
+                width: selected ? 1.5 : 1,
+              ),
+            ),
+            child: ExcludeSemantics(
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      label,
+                      style: SectorPackTypography.bodyRegular(
+                        color: ink,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  SectorIcon(
+                    glyph: selected
+                        ? SectorGlyph.radioSelected
+                        : SectorGlyph.radioUnselected,
+                    color: selected ? pack.primaryAccent : inkSoft,
+                    size: 20,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

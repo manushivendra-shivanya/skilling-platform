@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../core/widgets/app_button.dart';
-import '../../../core/widgets/app_card.dart';
+import '../../sector_pack/application/active_sector_pack_provider.dart';
+import '../../sector_pack/domain/sector_pack.dart';
+import '../../sector_pack/presentation/sector_pack_icons.dart';
+import '../../sector_pack/presentation/sector_pack_typography.dart';
 import '../domain/certification_exam.dart';
 import '../domain/certification_exam_attempt.dart';
 import '../domain/certification_exam_repository.dart';
@@ -16,7 +20,12 @@ import 'certification_exam_screen.dart' show unansweredOptionId;
 /// Passport evidence is loaded, since attempts (like micro-lesson
 /// assessments) are the source of truth rather than evidence being written
 /// separately at submission time.
-class CertificationExamResultScreen extends StatelessWidget {
+///
+/// A [ConsumerWidget], not [StatelessWidget], purely so it can read
+/// [activeSectorPackProvider] the same way every other sector-pack-styled
+/// screen does -- no `pack` constructor parameter, matching
+/// `PracticeScreen`/`LearningScreen`'s convention.
+class CertificationExamResultScreen extends ConsumerWidget {
   const CertificationExamResultScreen({
     required this.exam,
     required this.attempt,
@@ -27,56 +36,31 @@ class CertificationExamResultScreen extends StatelessWidget {
   final CertificationExamAttempt attempt;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final pack = ref.watch(activeSectorPackProvider);
     final passed = attempt.passed(exam.passThresholdPercent);
     final retakeAt = attempt.submittedAt.add(certificationExamRetakeCooldown);
     return Scaffold(
-      appBar: AppBar(title: const Text('Exam result')),
+      appBar: AppBar(
+        backgroundColor: AppColors.navy,
+        foregroundColor: Colors.white,
+        title: const Text('Exam result'),
+      ),
       body: ListView(
         padding: const EdgeInsets.all(AppSpacing.md),
         children: [
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(AppSpacing.lg),
-            decoration: BoxDecoration(
-              color: passed ? AppColors.successSoft : AppColors.errorSoft,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Column(
-              children: [
-                Icon(
-                  passed ? Icons.verified : Icons.cancel,
-                  size: 48,
-                  color: passed ? AppColors.success : AppColors.error,
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                Text(
-                  passed ? 'Passed' : 'Not passed',
-                  style: Theme.of(context).textTheme.headlineSmall,
-                ),
-                const SizedBox(height: AppSpacing.xs),
-                Text(
-                  '${attempt.scorePercent}% • '
-                  '${attempt.correctCount} of ${attempt.responses.length} '
-                  'correct • pass mark ${exam.passThresholdPercent}%',
-                ),
-                if (passed) ...[
-                  const SizedBox(height: AppSpacing.sm),
-                  const Text(
-                    'Your Career Passport has been updated with evidence '
-                    'for every competency this exam covers.',
-                    textAlign: TextAlign.center,
-                  ),
-                ] else ...[
-                  const SizedBox(height: AppSpacing.sm),
-                  Text(
-                    'You can retake this exam after '
-                    '${_formatDateTime(retakeAt)}.',
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-              ],
-            ),
+          _ResultBanner(
+            pack: pack,
+            passed: passed,
+            metaText:
+                '${attempt.scorePercent}% • '
+                '${attempt.correctCount} of ${attempt.responses.length} '
+                'correct • pass mark ${exam.passThresholdPercent}%',
+            noteText: passed
+                ? 'Your Career Passport has been updated with evidence '
+                      'for every competency this exam covers.'
+                : 'You can retake this exam after '
+                      '${_formatDateTime(retakeAt)}.',
           ),
           const SizedBox(height: AppSpacing.lg),
           Text(
@@ -86,6 +70,7 @@ class CertificationExamResultScreen extends StatelessWidget {
           const SizedBox(height: AppSpacing.sm),
           for (final question in exam.questions) ...[
             _QuestionResult(
+              pack: pack,
               question: question,
               response: attempt.responses.firstWhere(
                 (r) => r.questionId == question.id,
@@ -112,9 +97,111 @@ class CertificationExamResultScreen extends StatelessWidget {
   }
 }
 
-class _QuestionResult extends StatelessWidget {
-  const _QuestionResult({required this.question, required this.response});
+/// The result screen's focal card: the exact dark-gradient derivation
+/// already shipped on `practice_screen.dart`'s private `_ResultCard` --
+/// `pack.signalPalette.cleared` for a pass, `pack.signalPalette.locked` for
+/// a fail (deliberately *not* a new red/alarm tone: the approved mock reuses
+/// the same muted "locked" grey `SectorCredentialCard` already shows for a
+/// not-yet-eligible retry), then `Color.lerp(toneBase, Colors.black, 0.55)`
+/// / `0.85` for the gradient's top/bottom stop.
+///
+/// Contrast (actual `Color.lerp(toneBase, Colors.black, t)` output --
+/// `toneBase * (1 - t)` per channel, rounded, since black is (0,0,0) --
+/// checked against white with the real WCAG relative-luminance formula,
+/// same method `_ResultCard`'s doc comment uses): white text/glyph on
+/// warehouse's `signalPalette.cleared` (green, 0xFF176B3A) runs 14.48:1 at
+/// `darkTop` (t=0.55, 0x0A301A) and 19.41:1 at `darkBottom` (t=0.85,
+/// 0x031009); on `signalPalette.locked` (grey, 0xFF56635D) it runs 14.05:1
+/// at `darkTop` (0x272D2A) and 19.23:1 at `darkBottom` (0x0D0F0E). All four
+/// bands clear WCAG AAA (7:1) by a wide margin.
+class _ResultBanner extends StatelessWidget {
+  const _ResultBanner({
+    required this.pack,
+    required this.passed,
+    required this.metaText,
+    required this.noteText,
+  });
 
+  final SectorPack pack;
+  final bool passed;
+  final String metaText;
+  final String noteText;
+
+  @override
+  Widget build(BuildContext context) {
+    final toneBase = passed
+        ? pack.signalPalette.cleared
+        : pack.signalPalette.locked;
+    final darkTop = Color.lerp(toneBase, Colors.black, 0.55)!;
+    final darkBottom = Color.lerp(toneBase, Colors.black, 0.85)!;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [darkTop, darkBottom],
+        ),
+      ),
+      child: Column(
+        children: [
+          SectorIcon(
+            glyph: passed ? SectorGlyph.check : SectorGlyph.cross,
+            color: Colors.white,
+            size: 44,
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            passed ? 'Passed' : 'Not passed',
+            style: SectorPackTypography.displayLabel(
+              color: Colors.white,
+              fontSize: 20,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            metaText,
+            textAlign: TextAlign.center,
+            style: SectorPackTypography.bodyRegular(
+              color: Colors.white.withValues(alpha: 0.8),
+              fontSize: 12.5,
+            ),
+          ),
+          Container(
+            width: double.infinity,
+            margin: const EdgeInsets.only(top: AppSpacing.sm),
+            padding: const EdgeInsets.only(top: AppSpacing.sm),
+            decoration: BoxDecoration(
+              border: Border(
+                top: BorderSide(color: Colors.white.withValues(alpha: 0.18)),
+              ),
+            ),
+            child: Text(
+              noteText,
+              textAlign: TextAlign.center,
+              style: SectorPackTypography.bodyRegular(
+                color: Colors.white.withValues(alpha: 0.85),
+                fontSize: 12,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _QuestionResult extends StatelessWidget {
+  const _QuestionResult({
+    required this.pack,
+    required this.question,
+    required this.response,
+  });
+
+  final SectorPack pack;
   final CertificationExamQuestion question;
   final QuestionResponse response;
 
@@ -126,14 +213,35 @@ class _QuestionResult extends StatelessWidget {
         : question.options
               .where((option) => option.id == response.selectedOptionId)
               .firstOrNull;
-    return AppCard(
-      backgroundColor: isCorrect ? AppColors.successSoft : AppColors.errorSoft,
+    final surface = Theme.of(context).colorScheme.surface;
+    final ink = Theme.of(context).colorScheme.onSurface;
+    final inkMuted = Theme.of(context).colorScheme.onSurfaceVariant;
+    // pack.signalPalette.cleared/locked, same mapping the result banner
+    // above and SectorCredentialCard's status states already use -- not a
+    // new red/green pair invented for this row.
+    final tone = isCorrect
+        ? pack.signalPalette.cleared
+        : pack.signalPalette.locked;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+      decoration: BoxDecoration(
+        // Subtle tone wash matching the mock's `.qr.correct`/`.qr.wrong`
+        // `color-mix(... 8%/10% ...)` background.
+        color: Color.lerp(surface, tone, isCorrect ? 0.08 : 0.10),
+        borderRadius: BorderRadius.circular(8),
+        // Left stripe idiom, not the mock's flat neutral border -- matches
+        // `_DemoOptionCard`'s feedback banner in practice_screen.dart
+        // (lines ~940-967), per this restyle's explicit brief.
+        border: Border(left: BorderSide(width: 3, color: tone)),
+      ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(
-            isCorrect ? Icons.check_circle : Icons.cancel,
-            color: isCorrect ? AppColors.success : AppColors.error,
+          SectorIcon(
+            glyph: isCorrect ? SectorGlyph.check : SectorGlyph.cross,
+            color: tone,
+            size: 18,
           ),
           const SizedBox(width: AppSpacing.sm),
           Expanded(
@@ -142,20 +250,29 @@ class _QuestionResult extends StatelessWidget {
               children: [
                 Text(
                   question.prompt,
-                  style: Theme.of(context).textTheme.bodyMedium,
+                  style: SectorPackTypography.bodySemiBold(
+                    color: ink,
+                    fontSize: 12.5,
+                  ),
                 ),
                 const SizedBox(height: AppSpacing.xxs),
                 Text(
                   selectedOption == null
                       ? 'Not answered'
                       : 'Your answer: ${selectedOption.label}',
-                  style: Theme.of(context).textTheme.bodySmall,
+                  style: SectorPackTypography.bodyRegular(
+                    color: inkMuted,
+                    fontSize: 11.5,
+                  ),
                 ),
                 if (!isCorrect) ...[
                   const SizedBox(height: AppSpacing.xxs),
                   Text(
                     'Correct answer: ${question.correctOption.label}',
-                    style: Theme.of(context).textTheme.bodySmall,
+                    style: SectorPackTypography.bodyRegular(
+                      color: inkMuted,
+                      fontSize: 11.5,
+                    ),
                   ),
                 ],
               ],

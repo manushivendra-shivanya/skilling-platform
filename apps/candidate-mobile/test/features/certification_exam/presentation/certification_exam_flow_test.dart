@@ -4,6 +4,7 @@ import 'package:candidate_mobile/features/certification_exam/domain/certificatio
 import 'package:candidate_mobile/features/certification_exam/domain/certification_exam_repository.dart';
 import 'package:candidate_mobile/features/onboarding/data/secure_candidate_onboarding_repository.dart';
 import 'package:candidate_mobile/features/onboarding/domain/candidate_onboarding_draft.dart';
+import 'package:candidate_mobile/features/sector_pack/presentation/sector_pack_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -188,6 +189,107 @@ void main() {
       );
     },
   );
+
+  testWidgets(
+    'exam option rows use drawn SectorIcons, not bare Material icons',
+    (tester) async {
+      await _openExamQuestionOne(tester, sessions, onboarding);
+
+      expect(find.text('Question 1 of 2'), findsOneWidget);
+      // Both options start unselected.
+      expect(
+        find.byWidgetPredicate(
+          (widget) =>
+              widget is SectorIcon &&
+              widget.glyph == SectorGlyph.radioUnselected,
+        ),
+        findsNWidgets(2),
+      );
+      expect(find.byIcon(Icons.check_circle), findsNothing);
+      expect(find.byIcon(Icons.radio_button_unchecked), findsNothing);
+
+      await tester.tap(find.text('The correct action'));
+      await tester.pump();
+
+      expect(
+        find.byWidgetPredicate(
+          (widget) =>
+              widget is SectorIcon && widget.glyph == SectorGlyph.radioSelected,
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.byWidgetPredicate(
+          (widget) =>
+              widget is SectorIcon &&
+              widget.glyph == SectorGlyph.radioUnselected,
+        ),
+        findsOneWidget,
+      );
+      expect(find.byIcon(Icons.check_circle), findsNothing);
+      expect(find.byIcon(Icons.radio_button_unchecked), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'an exam option row is independently reachable and activatable via semantics',
+    (tester) async {
+      final semantics = tester.ensureSemantics();
+      await _openExamQuestionOne(tester, sessions, onboarding);
+
+      expect(
+        find.bySemanticsLabel('The correct action. Not selected'),
+        findsOneWidget,
+      );
+      // Tapping through the semantics-labelled node (not just the row's
+      // text) is what regresses if `excludeSemantics: true` is added
+      // without also repeating `onTap` on the outer Semantics node -- see
+      // the same fix already shipped on practice_screen.dart's
+      // `_DemoOptionCard`.
+      await tester.tap(
+        find.bySemanticsLabel('The correct action. Not selected'),
+      );
+      await tester.pump();
+
+      expect(
+        find.bySemanticsLabel('The correct action. Selected'),
+        findsOneWidget,
+      );
+      semantics.dispose();
+    },
+  );
+}
+
+/// Common setup for the two option-row restyle tests below: reaches the
+/// exam's first question screen the same way the passing-attempt flow test
+/// above does, using explicit pumps rather than `pumpAndSettle` because the
+/// exam screen's periodic countdown timer never settles.
+Future<void> _openExamQuestionOne(
+  WidgetTester tester,
+  InMemoryCandidateSessionRepository sessions,
+  InMemoryCandidateOnboardingRepository onboarding,
+) async {
+  await tester.binding.setSurfaceSize(const Size(800, 2400));
+  addTearDown(() => tester.binding.setSurfaceSize(null));
+  await tester.pumpCandidateApp(
+    candidateSessionRepository: sessions,
+    candidateOnboardingRepository: onboarding,
+    certificationExamRepository: _FakeCertificationExamRepository(),
+  );
+  await tester.pumpAndSettle();
+  await tester.tap(find.text('Learn'));
+  await tester.pumpAndSettle();
+  await _completeAllLessons(tester);
+  await tester.tap(find.text('Certification'));
+  await tester.pumpAndSettle();
+  await tester.scrollUntilVisible(
+    find.text('Start certification exam'),
+    200,
+    scrollable: find.byType(Scrollable).first,
+  );
+  await tester.tap(find.text('Start certification exam'));
+  await tester.pump();
+  await tester.pump(const Duration(milliseconds: 300));
 }
 
 CandidateOnboardingDraft _completedDraft() {
