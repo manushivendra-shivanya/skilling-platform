@@ -119,7 +119,7 @@ class _LearningContent extends ConsumerWidget {
           const SizedBox(height: AppSpacing.sm),
         ],
         const SizedBox(height: AppSpacing.lg),
-        const Divider(),
+        _HazardTapeDivider(pack: pack),
         const SizedBox(height: AppSpacing.xl),
         const WarehouseClipsSection(),
       ],
@@ -257,6 +257,97 @@ Future<void> _showLesson(BuildContext context, LearningUnit unit) async {
       ],
     ),
   );
+}
+
+/// Diagonal hazard-tape divider between the lesson list and the process
+/// clips section -- traced from the published Shift Floor mock's
+/// `.hazard-divider` device (`repeating-linear-gradient(-45deg, hazard 0
+/// 8px, navy 8px 16px)`, 7px tall).
+///
+/// This is deliberately a private, screen-scoped widget rather than a
+/// fifth entry in `sector_pack/presentation/` -- per
+/// `docs/adr/0020-sector-pack-abstraction.md`, only the four contracted
+/// slots (signal / list row / task object / credential) are meant to be
+/// shared structural widgets. A divider used in exactly one place is
+/// screen-specific content styled with the pack's tokens directly, not a
+/// new reusable component.
+///
+/// Colours: `AppColors.navy` for the dark stripe, not a colour derived
+/// from `pack.primaryAccent` -- this is persistent structural chrome
+/// (always visible once Lessons has any clips), the same category of
+/// "don't darken primaryAccent toward black for this" case that produced
+/// the Learn tab bar's muddy-brown bug this session (see
+/// `AppColors.navy`'s own doc comment in `app_colors.dart`). The amber
+/// stripe reads `pack.signalPalette.active` so the divider still resolves
+/// entirely from `pack`, just not from `primaryAccent`.
+class _HazardTapeDivider extends StatelessWidget {
+  const _HazardTapeDivider({required this.pack});
+
+  final SectorPack pack;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 7,
+      width: double.infinity,
+      child: CustomPaint(
+        painter: _HazardStripePainter(
+          navy: AppColors.navy,
+          amber: pack.signalPalette.active,
+        ),
+      ),
+    );
+  }
+}
+
+class _HazardStripePainter extends CustomPainter {
+  const _HazardStripePainter({required this.navy, required this.amber});
+
+  final Color navy;
+  final Color amber;
+
+  /// 8px amber + 8px navy, matching the mock's
+  /// `repeating-linear-gradient(-45deg, hazard 0 8px, navy 8px 16px)`.
+  static const double _stripeWidth = 8;
+  static const double _period = _stripeWidth * 2;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final bounds = Offset.zero & size;
+    canvas.save();
+    canvas.clipRect(bounds);
+    canvas.drawRect(bounds, Paint()..color = navy);
+    // -45deg diagonal amber bands: each band is a thick diagonal line from
+    // the bottom-left corner of its period to the top-right, stepped
+    // across the full width (plus one extra period of overscan on each
+    // side so the diagonal still fully covers the top/bottom corners).
+    // A stroke's `strokeWidth` is measured perpendicular to the line; at a
+    // 45deg line angle the *horizontal* cross-section of that stroke is
+    // strokeWidth / sin(45deg) = strokeWidth * sqrt(2). Dividing by
+    // sqrt(2) here keeps each drawn band exactly `_stripeWidth` (8px)
+    // wide when measured horizontally, matching the CSS repeating
+    // gradient's 8px hazard / 8px navy period.
+    final stripePaint = Paint()
+      ..color = amber
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = _stripeWidth / 1.4142135623730951;
+    for (
+      var x = -size.height - _period;
+      x < size.width + size.height + _period;
+      x += _period
+    ) {
+      canvas.drawLine(
+        Offset(x, size.height),
+        Offset(x + size.height, 0),
+        stripePaint,
+      );
+    }
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(covariant _HazardStripePainter oldDelegate) =>
+      oldDelegate.navy != navy || oldDelegate.amber != amber;
 }
 
 class _LearningLoadingView extends StatelessWidget {
