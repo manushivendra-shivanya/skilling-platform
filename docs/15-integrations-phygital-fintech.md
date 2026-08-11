@@ -37,6 +37,25 @@ Booking → reminder → centre check-in → equipment briefing → assessment �
 Do not claim a CSC partnership until an agreement exists. Design the partner-centre system to support CSCs and private centres.
 
 ## Micro-Gigs
+
+**A real, shipped implementation of this concept exists under the name
+"Shift Marketplace" (Phase OD-1) — see
+`docs/generated/current-state.md`'s "Phase OD-1" entry.** It predates this
+section being reconciled against it, so treat the two as describing the
+same thing rather than separate features: this section's design intent
+(clear scope/stipend/acceptance criteria, no disguised unpaid work,
+employer verification, dispute handling) is what the shipped feature
+should be held to, not a different, still-unbuilt idea.
+
+Shipped schema (`supabase/migrations/20260808000000_phase_od1_shift_marketplace.sql`):
+`shift_requests`, `shift_applications`, `shift_payouts`,
+`shift_grievances`, `candidate_shift_availability` — table names differ
+from the `micro_gigs`/`micro_gig_assignments`/`wallet_ledger` names
+`docs/02-database-design.md` proposes; that doc's tables were never built
+under those names and should be read as superseded by the schema above,
+not as an additional, still-pending set of tables.
+
+Design intent, held against what's shipped:
 - Clear scope, duration, stipend, expenses, ownership, safety, and acceptance criteria.
 - No unpaid productive work disguised as assessment.
 - Candidate acceptance and withdrawal.
