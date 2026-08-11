@@ -78,6 +78,42 @@ void main() {
   );
 
   testWidgets(
+    'the scored result card\'s "Return to practice" button is independently '
+    'reachable and activatable via semantics, not merged into the score '
+    'breakdown text',
+    (tester) async {
+      final semantics = tester.ensureSemantics();
+      await openPractise(tester);
+      await tester.tap(find.text('Scored inventory simulation'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Recount the physical stock'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Preserve both values and count notes'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Escalate the documented exception'));
+      await tester.pumpAndSettle();
+
+      // Before this fix, nothing in the result card declared its own
+      // semantics boundary, so Flutter's default merge combined the score,
+      // explanation, every dimension row, and the improvement note *and*
+      // this button into one node -- a real debugDumpSemanticsTree() dump
+      // confirmed the button's own label only reached the tree as the tail
+      // of that giant string, with no `button` role. It must now be its
+      // own clean node.
+      final buttonFinder = find.bySemanticsLabel('Return to practice');
+      expect(buttonFinder, findsOneWidget);
+      final buttonNode = tester.getSemantics(buttonFinder);
+      expect(buttonNode.flagsCollection.isButton, isTrue);
+      expect(buttonNode.label, 'Return to practice');
+
+      await tester.tap(buttonFinder);
+      await tester.pumpAndSettle();
+      expect(find.text('Scored inventory simulation'), findsOneWidget);
+      semantics.dispose();
+    },
+  );
+
+  testWidgets(
     'recording a demo network interruption mid-wizard shows the snackbar and does not advance the step',
     (tester) async {
       await openPractise(tester);

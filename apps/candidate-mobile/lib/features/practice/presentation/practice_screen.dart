@@ -779,96 +779,142 @@ class _ResultCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            '${score.totalScore}%',
-            style: SectorPackTypography.monoLabel(
-              color: Colors.white,
-              fontWeight: FontWeight.w800,
-              fontSize: 38,
-              letterSpacing: 0,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            score.explanation,
-            style: SectorPackTypography.bodyRegular(
-              color: Colors.white.withValues(alpha: 0.78),
-              fontSize: 12.5,
-            ),
-          ),
-          const SizedBox(height: 16),
-          for (final dimension in score.dimensionScores.entries)
-            Container(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              decoration: BoxDecoration(
-                border: Border(
-                  top: BorderSide(color: Colors.white.withValues(alpha: 0.12)),
+          // `container: true` gives this informational block its own
+          // semantics boundary, scoped separately from the "Return to
+          // practice" button below. Before this fix, neither this Column
+          // nor anything else in the card declared a boundary at all, so
+          // Flutter's default merge climbed all the way up through every
+          // Text/Container here *and* the button's own InkWell into one
+          // single node -- a real debugDumpSemanticsTree() dump confirmed
+          // the merged label concatenated the score, explanation, all
+          // three dimension rows, and the improvement note *before*
+          // "Return to practice", the actionable button's own text landing
+          // last inside an unlabelled wall of text instead of being its
+          // own clean, independently reachable node (same trap class as
+          // sector_credential_card.dart's pre-fix bug, just without an
+          // author-supplied `semanticLabel` making it as obvious from
+          // source).
+          Semantics(
+            container: true,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '${score.totalScore}%',
+                  style: SectorPackTypography.monoLabel(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 38,
+                    letterSpacing: 0,
+                  ),
                 ),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Flexible(
-                    child: Text(
-                      dimension.key.replaceAll('_', ' '),
-                      style: SectorPackTypography.bodyRegular(
-                        color: Colors.white.withValues(alpha: 0.85),
-                        fontSize: 12.5,
+                const SizedBox(height: 6),
+                Text(
+                  score.explanation,
+                  style: SectorPackTypography.bodyRegular(
+                    color: Colors.white.withValues(alpha: 0.78),
+                    fontSize: 12.5,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                for (final dimension in score.dimensionScores.entries)
+                  Container(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    decoration: BoxDecoration(
+                      border: Border(
+                        top: BorderSide(
+                          color: Colors.white.withValues(alpha: 0.12),
+                        ),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Flexible(
+                          child: Text(
+                            dimension.key.replaceAll('_', ' '),
+                            style: SectorPackTypography.bodyRegular(
+                              color: Colors.white.withValues(alpha: 0.85),
+                              fontSize: 12.5,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          '${dimension.value}%',
+                          style: SectorPackTypography.monoLabel(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 12.5,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 10,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.06),
+                    border: Border(
+                      left: BorderSide(
+                        width: 4,
+                        color: Colors.white.withValues(alpha: 0.4),
                       ),
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  Text(
-                    '${dimension.value}%',
-                    style: SectorPackTypography.monoLabel(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 12.5,
+                  child: Text(
+                    'Next improvement: ${score.improvement}',
+                    style: SectorPackTypography.bodyRegular(
+                      color: Colors.white.withValues(alpha: 0.86),
+                      fontSize: 12,
                     ),
                   ),
-                ],
-              ),
-            ),
-          const SizedBox(height: 8),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.06),
-              border: Border(
-                left: BorderSide(
-                  width: 4,
-                  color: Colors.white.withValues(alpha: 0.4),
                 ),
-              ),
-            ),
-            child: Text(
-              'Next improvement: ${score.improvement}',
-              style: SectorPackTypography.bodyRegular(
-                color: Colors.white.withValues(alpha: 0.86),
-                fontSize: 12,
-              ),
+              ],
             ),
           ),
           const SizedBox(height: 16),
-          SizedBox(
-            width: double.infinity,
-            child: Material(
-              color: Colors.white.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(6),
-              child: InkWell(
-                onTap: onClose,
+          Semantics(
+            // container: true here too -- without it, this button's own
+            // actionable config (having no boundary of its own) became the
+            // *owner* of the merge scope shared with the informational
+            // Semantics above, and the informational block ended up
+            // re-parented as this node's child instead of its plain
+            // preceding sibling -- confirmed via a real
+            // debugDumpSemanticsTree() dump: traversal order put "Return
+            // to practice" *before* the score breakdown, backwards from
+            // the visual top-to-bottom layout. Giving both pieces their
+            // own explicit boundary makes them clean, independent
+            // siblings in the correct order, matching how
+            // certification_exam_result_screen.dart's `_ResultBanner` and
+            // `AppButton('Back to Learn')` already sit as siblings with no
+            // such inversion.
+            container: true,
+            button: true,
+            child: SizedBox(
+              width: double.infinity,
+              child: Material(
+                color: Colors.white.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(6),
-                child: Container(
-                  constraints: const BoxConstraints(
-                    minHeight: kMinInteractiveDimension,
-                  ),
-                  alignment: Alignment.center,
-                  padding: const EdgeInsets.symmetric(vertical: 13),
-                  child: Text(
-                    'Return to practice',
-                    style: SectorPackTypography.bodySemiBold(
-                      color: Colors.white,
-                      fontSize: 13,
+                child: InkWell(
+                  onTap: onClose,
+                  borderRadius: BorderRadius.circular(6),
+                  child: Container(
+                    constraints: const BoxConstraints(
+                      minHeight: kMinInteractiveDimension,
+                    ),
+                    alignment: Alignment.center,
+                    padding: const EdgeInsets.symmetric(vertical: 13),
+                    child: Text(
+                      'Return to practice',
+                      style: SectorPackTypography.bodySemiBold(
+                        color: Colors.white,
+                        fontSize: 13,
+                      ),
                     ),
                   ),
                 ),
