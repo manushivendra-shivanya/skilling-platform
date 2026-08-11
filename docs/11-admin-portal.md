@@ -1,5 +1,13 @@
 # 11 — Admin Portal
 
+**Status: target design, entirely unbuilt.** No admin portal UI, API
+surface, or role/permission system exists anywhere in the repo — unlike
+the Employer Portal (`docs/10-employer-portal.md`), which at least has a
+narrow, real API surface behind it, nothing below has any implementation
+to point to. Content authoring today happens by editing versioned JSON
+directly in `apps/candidate-mobile/assets/` and Supabase migrations, not
+through any admin tooling.
+
 ## Roles
 Super admin, operations admin, curriculum author, simulation author, AI quality reviewer, employer success, candidate support, trust and safety, finance operations, analyst, and auditor.
 
