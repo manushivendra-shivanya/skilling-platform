@@ -16,6 +16,10 @@ class UnavailableNetworkingRepository implements NetworkingRepository {
       'available in this build.';
 
   @override
+  Future<Result<NetworkingProfile>> getMyProfile() async =>
+      const ResultFailure(UnexpectedFailure(_message));
+
+  @override
   Future<Result<NetworkingProfile>> publishProfile({
     required String fullName,
     required String headline,

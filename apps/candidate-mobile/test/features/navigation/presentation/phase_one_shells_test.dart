@@ -474,6 +474,18 @@ class _FakeNetworkingRepository implements NetworkingRepository {
   final publishedProfiles = <NetworkingProfile>[];
 
   @override
+  Future<Result<NetworkingProfile>> getMyProfile() async => const Success(
+    NetworkingProfile(
+      discoverable: false,
+      fullName: '',
+      headline: '',
+      city: '',
+      state: '',
+      preferredRoles: [],
+    ),
+  );
+
+  @override
   Future<Result<NetworkingProfile>> publishProfile({
     required String fullName,
     required String headline,

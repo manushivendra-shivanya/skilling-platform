@@ -130,6 +130,39 @@ export class NetworkingService {
 
   constructor(private readonly supabase: SupabaseService) {}
 
+  /**
+   * The candidate's own current networking profile, including
+   * `discoverable` -- added alongside the mobile-client fix for the bug
+   * where `NetworkingSection`'s local `_discoverable` state was hardcoded
+   * to `false` on every fresh build instead of ever being read from here.
+   * This reuses the exact same row lookup `discover`/`sendConnectionRequest`
+   * already do via `getProfileRow`; a candidate who has never published a
+   * profile has no row yet, which honestly *is* "not discoverable" --
+   * so that case returns the same all-defaults shape `publishProfile`
+   * would produce for a fresh candidate, not an error.
+   */
+  async getMyProfile(candidateId: string): Promise<NetworkingProfileResponse> {
+    const row = await this.getProfileRow(candidateId);
+    if (!row) {
+      return {
+        discoverable: false,
+        fullName: '',
+        headline: '',
+        city: '',
+        state: '',
+        preferredRoles: [],
+      };
+    }
+    return {
+      discoverable: row.discoverable,
+      fullName: row.full_name,
+      headline: row.headline,
+      city: row.city,
+      state: row.state,
+      preferredRoles: row.preferred_roles,
+    };
+  }
+
   async publishProfile(
     candidateId: string,
     body: PublishProfileBody,

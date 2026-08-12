@@ -8,6 +8,11 @@ import { NetworkingService, PublishProfileBody } from './networking.service';
 export class NetworkingController {
   constructor(private readonly networking: NetworkingService) {}
 
+  @Get('profile')
+  async getMyProfile(@CurrentCandidate() candidateId: string) {
+    return this.networking.getMyProfile(candidateId);
+  }
+
   @Put('profile')
   async publishProfile(
     @CurrentCandidate() candidateId: string,
