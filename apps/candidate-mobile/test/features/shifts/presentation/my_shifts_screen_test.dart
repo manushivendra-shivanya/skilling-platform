@@ -88,6 +88,49 @@ void main() {
     expect(find.text('Check in'), findsOneWidget);
   });
 
+  testWidgets('an application whose shift is known shows role and pay', (
+    tester,
+  ) async {
+    final repository = _FakeShiftsRepository(
+      applications: [_acceptedApplication],
+    );
+    final container = _buildContainer(repository);
+    addTearDown(container.dispose);
+
+    await tester.pumpWidget(_app(container));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Picker / Packer'), findsOneWidget);
+    expect(find.text('₹650'), findsOneWidget);
+    expect(find.text('Shift details unavailable'), findsNothing);
+    expect(find.text('1 shift in progress'), findsOneWidget);
+  });
+
+  testWidgets(
+    'an application whose shift lookup failed shows an unavailable note',
+    (tester) async {
+      final orphanApplication = ShiftApplication(
+        id: 'app-2',
+        shiftId: 'missing-shift',
+        status: ShiftApplicationStatus.accepted,
+        checkedInAt: null,
+        checkedOutAt: null,
+        createdAt: DateTime(2026, 8, 9),
+      );
+      final repository = _FakeShiftsRepository(
+        applications: [orphanApplication],
+      );
+      final container = _buildContainer(repository);
+      addTearDown(container.dispose);
+
+      await tester.pumpWidget(_app(container));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Shift details unavailable'), findsOneWidget);
+      expect(find.text('Picker / Packer'), findsNothing);
+    },
+  );
+
   testWidgets('checking out a checked-in shift moves it to Completed', (
     tester,
   ) async {

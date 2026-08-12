@@ -1,4 +1,5 @@
 import 'package:candidate_mobile/app/dependencies.dart';
+import 'package:candidate_mobile/app/theme/app_colors.dart';
 import 'package:candidate_mobile/app/theme/app_theme.dart';
 import 'package:candidate_mobile/core/errors/app_failure.dart';
 import 'package:candidate_mobile/core/errors/result.dart';
@@ -42,6 +43,19 @@ void main() {
     expect(find.text('Payout mismatch'), findsOneWidget);
     expect(find.text('Payout total looked short.'), findsOneWidget);
     expect(find.text('Open'), findsOneWidget);
+
+    // Category reads as a small muted caption, description as the main
+    // body text -- distinct visual weights instead of three same-size
+    // lines.
+    final categoryStyle = tester
+        .widget<Text>(find.text('Payout mismatch'))
+        .style;
+    final descriptionStyle = tester
+        .widget<Text>(find.text('Payout total looked short.'))
+        .style;
+    expect(categoryStyle?.fontWeight, FontWeight.w700);
+    expect(categoryStyle?.color, AppColors.inkMuted);
+    expect(descriptionStyle?.color, isNot(AppColors.inkMuted));
   });
 
   testWidgets('submitting with no description shows a validation message', (
@@ -56,6 +70,10 @@ void main() {
 
     expect(find.text('Describe what happened.'), findsOneWidget);
     expect(repository.submitted, isEmpty);
+    expect(
+      tester.widget<Text>(find.text('Describe what happened.')).style?.color,
+      AppColors.error,
+    );
   });
 
   testWidgets(

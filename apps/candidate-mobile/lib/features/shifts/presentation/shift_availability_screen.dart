@@ -5,8 +5,11 @@ import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../core/errors/app_failure.dart';
 import '../../../core/widgets/app_button.dart';
+import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_feedback.dart';
+import '../../../core/widgets/app_loading_progress.dart';
 import '../../../core/widgets/app_state_view.dart';
+import '../../../core/widgets/app_sticky_footer.dart';
 import '../../../core/widgets/app_text_field.dart';
 import '../domain/shift_availability.dart';
 import 'shift_availability_controller.dart';
@@ -21,7 +24,9 @@ class ShiftAvailabilityScreen extends ConsumerWidget {
       appBar: AppBar(title: const Text('Availability')),
       body: SafeArea(
         child: state.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
+          loading: () => const Center(
+            child: AppLoadingProgressBar(label: 'Loading your availability…'),
+          ),
           error: (error, stackTrace) => AppErrorState(
             title: 'Availability could not be loaded',
             message: error is AppFailure
@@ -87,79 +92,101 @@ class _AvailabilityFormState extends ConsumerState<_AvailabilityForm> {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(AppSpacing.xl),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            'Tell Flora when you can work',
-            style: Theme.of(context).textTheme.headlineSmall,
-          ),
-          const SizedBox(height: AppSpacing.xs),
-          const Text(
-            'Used to match and nudge you toward relevant shifts. You can change this any time.',
-            style: TextStyle(color: AppColors.inkMuted),
-          ),
-          const SizedBox(height: AppSpacing.xl),
-          SwitchListTile(
-            contentPadding: EdgeInsets.zero,
-            value: _availableToday,
-            onChanged: (value) => setState(() => _availableToday = value),
-            title: const Text('I can work today'),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          Row(
-            children: [
-              Expanded(
-                child: AppTextField(
-                  label: 'Available from',
-                  controller: _fromController,
-                  hint: '16:00',
-                  helperText: '24-hour, HH:mm',
-                  keyboardType: TextInputType.datetime,
+    return Column(
+      children: [
+        Expanded(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(AppSpacing.xl),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  'Tell Flora when you can work',
+                  style: Theme.of(context).textTheme.headlineSmall,
                 ),
-              ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: AppTextField(
-                  label: 'Available until',
-                  controller: _untilController,
-                  hint: '22:00',
-                  helperText: '24-hour, HH:mm',
-                  keyboardType: TextInputType.datetime,
+                const SizedBox(height: AppSpacing.xs),
+                const Text(
+                  'Used to match and nudge you toward relevant shifts. You can change this any time.',
+                  style: TextStyle(color: AppColors.inkMuted),
                 ),
-              ),
-            ],
+                const SizedBox(height: AppSpacing.xl),
+                AppCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      SwitchListTile(
+                        contentPadding: EdgeInsets.zero,
+                        value: _availableToday,
+                        onChanged: (value) =>
+                            setState(() => _availableToday = value),
+                        title: const Text('I can work today'),
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: AppTextField(
+                              label: 'Available from',
+                              controller: _fromController,
+                              hint: '16:00',
+                              helperText: '24-hour, HH:mm',
+                              keyboardType: TextInputType.datetime,
+                            ),
+                          ),
+                          const SizedBox(width: AppSpacing.md),
+                          Expanded(
+                            child: AppTextField(
+                              label: 'Available until',
+                              controller: _untilController,
+                              hint: '22:00',
+                              helperText: '24-hour, HH:mm',
+                              keyboardType: TextInputType.datetime,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                AppCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      AppTextField(
+                        label: 'Preferred city',
+                        controller: _cityController,
+                        hint: 'Bengaluru',
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      AppTextField(
+                        label: 'Maximum travel distance (km)',
+                        controller: _travelController,
+                        hint: '8',
+                        keyboardType: TextInputType.number,
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      AppTextField(
+                        label: 'Minimum pay (₹)',
+                        controller: _minPayController,
+                        hint: '500',
+                        keyboardType: TextInputType.number,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
-          const SizedBox(height: AppSpacing.md),
-          AppTextField(
-            label: 'Preferred city',
-            controller: _cityController,
-            hint: 'Bengaluru',
-          ),
-          const SizedBox(height: AppSpacing.md),
-          AppTextField(
-            label: 'Maximum travel distance (km)',
-            controller: _travelController,
-            hint: '8',
-            keyboardType: TextInputType.number,
-          ),
-          const SizedBox(height: AppSpacing.md),
-          AppTextField(
-            label: 'Minimum pay (₹)',
-            controller: _minPayController,
-            hint: '500',
-            keyboardType: TextInputType.number,
-          ),
-          const SizedBox(height: AppSpacing.xl),
-          AppButton(
+        ),
+        AppStickyFooter(
+          child: AppButton(
             label: _saving ? 'Saving…' : 'Save availability',
             isLoading: _saving,
             onPressed: _save,
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 

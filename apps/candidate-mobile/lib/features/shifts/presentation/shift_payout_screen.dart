@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../core/errors/app_failure.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_chip.dart';
+import '../../../core/widgets/app_loading_progress.dart';
 import '../../../core/widgets/app_state_view.dart';
 import '../domain/shift_payout.dart';
 import 'shift_payout_controller.dart';
@@ -20,7 +22,9 @@ class ShiftPayoutScreen extends ConsumerWidget {
       appBar: AppBar(title: const Text('Payouts')),
       body: SafeArea(
         child: state.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
+          loading: () => const Center(
+            child: AppLoadingProgressBar(label: 'Loading your payouts…'),
+          ),
           error: (error, stackTrace) => AppErrorState(
             title: 'Payouts could not be loaded',
             message: error is AppFailure
@@ -57,7 +61,15 @@ class _PayoutList extends StatelessWidget {
         AppSpacing.xl,
       ),
       children: [
+        Text('Payouts', style: Theme.of(context).textTheme.headlineSmall),
+        const SizedBox(height: AppSpacing.xs),
+        Text(
+          '${payouts.length} payout${payouts.length == 1 ? '' : 's'}',
+          style: const TextStyle(color: AppColors.inkMuted),
+        ),
+        const SizedBox(height: AppSpacing.md),
         const AppCard(
+          backgroundColor: AppColors.infoSoft,
           child: Text(
             'This is a status ledger, not a wallet -- Flora does not move '
             'money directly yet. Approved payouts are disbursed by the '
@@ -75,7 +87,9 @@ class _PayoutList extends StatelessWidget {
                   children: [
                     Text(
                       '₹${payout.total.toStringAsFixed(0)}',
-                      style: Theme.of(context).textTheme.titleLarge,
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                     AppStatusChip(
                       label: _statusLabel(payout.status),
