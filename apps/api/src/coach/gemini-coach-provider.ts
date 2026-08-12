@@ -7,7 +7,13 @@ import {
 
 // Recorded here (not just in .env.example) because it feeds `modelId` on
 // every reply for auditability -- see docs/25's Phase J precedent.
-export const GEMINI_COACH_MODEL_ID = 'gemini-2.5-flash';
+//
+// Was 'gemini-2.5-flash' -- retired from serving (confirmed via a
+// production trace: generateContent started 404ing on that model id,
+// and the official google-genai SDK READMEs' own quickstart examples
+// moved on to 'gemini-3.5-flash' as the current fast/low-cost model in
+// this generation, the same "-flash" tier 2.5-flash was in).
+export const GEMINI_COACH_MODEL_ID = 'gemini-3.5-flash';
 
 /**
  * Active/default coach provider (see COACH_MODEL_PROVIDER in
