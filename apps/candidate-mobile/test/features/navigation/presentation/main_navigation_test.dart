@@ -117,6 +117,42 @@ void main() {
     );
   });
 
+  testWidgets(
+    'Home has no shell AppBar; the other four tabs keep theirs unchanged',
+    (tester) async {
+      await tester.binding.setSurfaceSize(const Size(800, 1400));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await tester.pumpCandidateApp(
+        candidateSessionRepository: sessions,
+        candidateOnboardingRepository: onboarding,
+      );
+      await tester.pumpAndSettle();
+
+      // Home: HomeHeader (the gradient hero) is its only header -- no
+      // generic shell AppBar stacked above it. Its own notifications bell,
+      // styled to match the gradient, stands in for the shell's.
+      expect(find.byType(AppBar), findsNothing);
+      expect(find.byTooltip('Notifications'), findsOneWidget);
+
+      await tester.tap(find.text('Train'));
+      await tester.pumpAndSettle();
+      expect(find.widgetWithText(AppBar, 'Train'), findsOneWidget);
+      expect(find.byTooltip('Notifications'), findsOneWidget);
+
+      await tester.tap(find.text('Jobs'));
+      await tester.pumpAndSettle();
+      expect(find.widgetWithText(AppBar, 'Jobs'), findsOneWidget);
+
+      await tester.tap(find.text('Shift'));
+      await tester.pumpAndSettle();
+      expect(find.widgetWithText(AppBar, 'Shift'), findsOneWidget);
+
+      await tester.tap(find.text('My Profile'));
+      await tester.pumpAndSettle();
+      expect(find.widgetWithText(AppBar, 'My Profile'), findsOneWidget);
+    },
+  );
+
   testWidgets('Android back returns a non-home root tab to Home', (
     tester,
   ) async {

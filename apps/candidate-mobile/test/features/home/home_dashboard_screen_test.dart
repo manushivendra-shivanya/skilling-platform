@@ -1,5 +1,7 @@
 import 'package:candidate_mobile/app/dependencies.dart';
 import 'package:candidate_mobile/core/errors/result.dart';
+import 'package:candidate_mobile/core/widgets/app_card.dart';
+import 'package:candidate_mobile/core/widgets/app_meter_bar.dart';
 import 'package:candidate_mobile/features/home/data/mock_home_dashboard_repository.dart';
 import 'package:candidate_mobile/features/home/domain/home_dashboard_repository.dart';
 import 'package:candidate_mobile/features/home/presentation/home_dashboard_screen.dart';
@@ -23,6 +25,7 @@ void main() {
             onOpenDiagnostic: () {},
             onOpenVoiceInterview: () {},
             onOpenPathway: () {},
+            onOpenNotifications: () {},
           ),
         ),
       ),
@@ -127,8 +130,23 @@ void main() {
   testWidgets('keeps Home to two rows and never repeats a nav tab', (
     tester,
   ) async {
+    // Sample dashboard has no upcoming interview here, so the interview
+    // practice shortcut is the row under test -- see the next two tests for
+    // what happens to it once an interview *is* present.
+    final sample = MockHomeDashboardRepository.sampleDashboard();
     await tester.pumpWidget(
-      wrap(MockHomeDashboardRepository.sampleDashboard()),
+      wrap(
+        HomeDashboard(
+          candidateFirstName: sample.candidateFirstName,
+          goalRoleName: sample.goalRoleName,
+          readinessProgress: sample.readinessProgress,
+          evidence: sample.evidence,
+          learningProgress: sample.learningProgress,
+          pendingSyncCount: sample.pendingSyncCount,
+          todayMission: sample.todayMission,
+          pathway: sample.pathway,
+        ),
+      ),
     );
     await tester.pumpAndSettle();
 
@@ -141,6 +159,49 @@ void main() {
     expect(find.text('Career diagnostic'), findsNothing);
     expect(find.text('साक्षात्कार (इंटरव्यू) अभ्यास'), findsOneWidget);
   });
+
+  testWidgets(
+    'hides the interview-practice shortcut when the interview card already '
+    'offers the same CTA',
+    (tester) async {
+      // sampleDashboard carries a nextInterview, so UpcomingInterviewCard's
+      // own "Prepare" button is already on screen -- the shortcut row below
+      // would just be a second way to say the same thing.
+      await tester.pumpWidget(
+        wrap(MockHomeDashboardRepository.sampleDashboard()),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('साक्षात्कार (इंटरव्यू) अभ्यास'), findsNothing);
+      expect(find.textContaining('Taiyari karein'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'shows the interview-practice shortcut again once there is no interview '
+    'card to duplicate',
+    (tester) async {
+      final sample = MockHomeDashboardRepository.sampleDashboard();
+      await tester.pumpWidget(
+        wrap(
+          HomeDashboard(
+            candidateFirstName: sample.candidateFirstName,
+            goalRoleName: sample.goalRoleName,
+            readinessProgress: sample.readinessProgress,
+            evidence: sample.evidence,
+            learningProgress: sample.learningProgress,
+            pendingSyncCount: sample.pendingSyncCount,
+            todayMission: sample.todayMission,
+            pathway: sample.pathway,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('साक्षात्कार (इंटरव्यू) अभ्यास'), findsOneWidget);
+      expect(find.textContaining('Taiyari karein'), findsNothing);
+    },
+  );
 
   testWidgets('lifts the mission card into the header gradient', (
     tester,
@@ -164,5 +225,34 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.textContaining('2 items waiting to sync'), findsOneWidget);
+  });
+
+  testWidgets('surfaces overall learning progress on the pathway row', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      wrap(MockHomeDashboardRepository.sampleDashboard()),
+    );
+    await tester.pumpAndSettle();
+
+    // sampleDashboard.learningProgress is 0.33 -- a real, distinct value
+    // from pathway.fraction (4/12 completed units), so this guards against
+    // the field being silently dropped rather than merely rendered.
+    expect(find.text('Overall learning journey'), findsOneWidget);
+    expect(find.text('33%'), findsOneWidget);
+
+    // Two meters on the pathway row itself: the pathway's own completed/
+    // total fraction, and this overall learning-journey figure beside it.
+    // Not a bare find.byType(AppMeterBar) count -- TodayMissionCard above
+    // it renders one of its own, so this scopes to the pathway row's card.
+    final pathwayCard = find.ancestor(
+      of: find.text('Overall learning journey'),
+      matching: find.byType(AppCard),
+    );
+    expect(pathwayCard, findsOneWidget);
+    expect(
+      find.descendant(of: pathwayCard, matching: find.byType(AppMeterBar)),
+      findsNWidgets(2),
+    );
   });
 }

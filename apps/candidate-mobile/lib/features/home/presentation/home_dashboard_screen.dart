@@ -1,8 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../app/dependencies.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_spacing.dart';
+import '../../../core/analytics/analytics_event.dart';
 import '../../../core/errors/app_failure.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_icon_plate.dart';
@@ -21,6 +25,7 @@ class HomeDashboardScreen extends ConsumerWidget {
     required this.onOpenDiagnostic,
     required this.onOpenVoiceInterview,
     required this.onOpenPathway,
+    required this.onOpenNotifications,
     super.key,
   });
 
@@ -28,9 +33,22 @@ class HomeDashboardScreen extends ConsumerWidget {
   final VoidCallback onOpenVoiceInterview;
   final VoidCallback onOpenPathway;
 
+  /// Home's only route to notifications now that it has no shell AppBar --
+  /// see `MainNavigationShell`'s doc comment. Surfaced from `HomeHeader`.
+  final VoidCallback onOpenNotifications;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final dashboard = ref.watch(homeDashboardControllerProvider);
+    void openNotifications() {
+      unawaited(
+        ref
+            .read(analyticsTrackerProvider)
+            .track(AnalyticsEvent.globalActionOpened('notifications')),
+      );
+      onOpenNotifications();
+    }
+
     return dashboard.when(
       loading: () => const _HomeLoadingView(),
       error: (error, stackTrace) => AppErrorState(
@@ -57,6 +75,7 @@ class HomeDashboardScreen extends ConsumerWidget {
           onOpenDiagnostic: onOpenDiagnostic,
           onOpenVoiceInterview: onOpenVoiceInterview,
           onOpenPathway: onOpenPathway,
+          onOpenNotifications: openNotifications,
           onRefresh: () =>
               ref.read(homeDashboardControllerProvider.notifier).refresh(),
         );
@@ -71,6 +90,7 @@ class _HomeContent extends StatelessWidget {
     required this.onOpenDiagnostic,
     required this.onOpenVoiceInterview,
     required this.onOpenPathway,
+    required this.onOpenNotifications,
     required this.onRefresh,
   });
 
@@ -78,6 +98,7 @@ class _HomeContent extends StatelessWidget {
   final VoidCallback onOpenDiagnostic;
   final VoidCallback onOpenVoiceInterview;
   final VoidCallback onOpenPathway;
+  final VoidCallback onOpenNotifications;
   final Future<void> Function() onRefresh;
 
   /// How far the mission card rises into the gradient. The header reserves
@@ -99,6 +120,7 @@ class _HomeContent extends StatelessWidget {
         children: [
           HomeHeader(
             dashboard: dashboard,
+            onOpenNotifications: onOpenNotifications,
             bottomInset: mission == null ? 0 : _cardLift + AppSpacing.md,
           ),
           if (mission != null)
@@ -177,22 +199,31 @@ class _HomeContent extends StatelessWidget {
                 const SizedBox(height: AppSpacing.xs),
 
                 if (pathway != null) ...[
-                  _PathwayRow(pathway: pathway, onTap: onOpenPathway),
+                  _PathwayRow(
+                    pathway: pathway,
+                    learningProgress: dashboard.learningProgress,
+                    onTap: onOpenPathway,
+                  ),
                   const SizedBox(height: AppSpacing.sm),
                 ],
 
-                // Only two rows, and neither duplicates a bottom-nav tab.
-                // Jobs, Coach, the Career Passport and the diagnostic all
-                // live one tap away in the shell; repeating them here made
-                // Home a menu instead of a next step.
-                _ShortcutRow(
-                  icon: Icons.mic_none_outlined,
-                  iconBackground: AppColors.infoSoft,
-                  iconColor: AppColors.info,
-                  title: 'साक्षात्कार (इंटरव्यू) अभ्यास',
-                  subtitle: 'पहला सवाल · अपना परिचय',
-                  onTap: onOpenVoiceInterview,
-                ),
+                // Only one row, and it never duplicates a bottom-nav tab or
+                // a CTA already on screen above it. Jobs, Coach, the Career
+                // Passport and the diagnostic all live one tap away in the
+                // shell; repeating them here made Home a menu instead of a
+                // next step. Interview practice is the same story: when
+                // UpcomingInterviewCard is already showing its own "Prepare"
+                // button above, this row would just be a second way to say
+                // the same thing, so it only appears when that card doesn't.
+                if (interview == null)
+                  _ShortcutRow(
+                    icon: Icons.mic_none_outlined,
+                    iconBackground: AppColors.infoSoft,
+                    iconColor: AppColors.info,
+                    title: 'साक्षात्कार (इंटरव्यू) अभ्यास',
+                    subtitle: 'पहला सवाल · अपना परिचय',
+                    onTap: onOpenVoiceInterview,
+                  ),
               ],
             ),
           ),
@@ -203,9 +234,18 @@ class _HomeContent extends StatelessWidget {
 }
 
 class _PathwayRow extends StatelessWidget {
-  const _PathwayRow({required this.pathway, required this.onTap});
+  const _PathwayRow({
+    required this.pathway,
+    required this.learningProgress,
+    required this.onTap,
+  });
 
   final PathwayProgress pathway;
+
+  /// `dashboard.learningProgress` -- overall progress through the candidate's
+  /// learning state, distinct from [pathway]'s own completed/total unit
+  /// count above it.
+  final double learningProgress;
   final VoidCallback onTap;
 
   @override
@@ -214,7 +254,8 @@ class _PathwayRow extends StatelessWidget {
       onTap: onTap,
       semanticLabel:
           'Continue pathway ${pathway.title}. '
-          '${pathway.completedUnits} of ${pathway.totalUnits} lessons done.',
+          '${pathway.completedUnits} of ${pathway.totalUnits} lessons done. '
+          '${(learningProgress * 100).round()}% of your learning journey done.',
       child: Column(
         children: [
           Row(
@@ -253,6 +294,28 @@ class _PathwayRow extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.sm),
           AppMeterBar(value: pathway.fraction),
+          const SizedBox(height: AppSpacing.sm),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'Overall learning journey',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.labelSmall?.copyWith(color: AppColors.inkMuted),
+                ),
+              ),
+              Text(
+                '${(learningProgress * 100).round()}%',
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: AppColors.inkMuted,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.xxs),
+          AppMeterBar(value: learningProgress),
         ],
       ),
     );

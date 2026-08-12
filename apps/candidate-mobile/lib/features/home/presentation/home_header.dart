@@ -17,10 +17,21 @@ import '../domain/home_dashboard_repository.dart';
 /// straddles the header's bottom edge. Reserving the space here — rather than
 /// nesting the card inside the header — keeps the card a sibling in the scroll
 /// list, so it casts a real shadow onto both the gradient and the page.
+///
+/// [onOpenNotifications] lives here rather than on a shell AppBar: Home is
+/// the one tab with no AppBar (see `MainNavigationShell`), so this is its
+/// only route to notifications, styled to match the goal/language chips
+/// already on this gradient.
 class HomeHeader extends StatelessWidget {
-  const HomeHeader({required this.dashboard, this.bottomInset = 0, super.key});
+  const HomeHeader({
+    required this.dashboard,
+    required this.onOpenNotifications,
+    this.bottomInset = 0,
+    super.key,
+  });
 
   final HomeDashboard dashboard;
+  final VoidCallback onOpenNotifications;
   final double bottomInset;
 
   @override
@@ -67,6 +78,8 @@ class HomeHeader extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: AppSpacing.sm),
+              _NotificationsButton(onPressed: onOpenNotifications),
+              const SizedBox(width: AppSpacing.xs),
               const _LanguageChip(),
             ],
           ),
@@ -169,6 +182,35 @@ class _GoalChip extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Same translucent-white treatment as [_LanguageChip], sized as a tap
+/// target rather than a chip: this is an action, not a status readout.
+class _NotificationsButton extends StatelessWidget {
+  const _NotificationsButton({required this.onPressed});
+
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.14),
+        shape: BoxShape.circle,
+        border: Border.all(color: Colors.white.withValues(alpha: 0.22)),
+      ),
+      child: IconButton(
+        tooltip: 'Notifications',
+        onPressed: onPressed,
+        icon: const Icon(Icons.notifications_none_outlined),
+        color: Colors.white,
+        iconSize: 20,
+        padding: const EdgeInsets.all(8),
+        constraints: const BoxConstraints(),
+        visualDensity: VisualDensity.compact,
       ),
     );
   }
