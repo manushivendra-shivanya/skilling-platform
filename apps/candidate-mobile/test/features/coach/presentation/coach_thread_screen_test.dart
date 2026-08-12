@@ -1,13 +1,31 @@
 import 'package:candidate_mobile/app/dependencies.dart';
+import 'package:candidate_mobile/core/errors/result.dart';
 import 'package:candidate_mobile/core/repositories/candidate_session_repository.dart';
 import 'package:candidate_mobile/core/storage/secure_key_value_store.dart';
 import 'package:candidate_mobile/features/coach/data/secure_coach_thread_repository.dart';
 import 'package:candidate_mobile/features/coach/domain/coach_message.dart';
+import 'package:candidate_mobile/features/coach/domain/coach_repository.dart';
 import 'package:candidate_mobile/features/coach/domain/coach_thread.dart';
 import 'package:candidate_mobile/features/coach/presentation/coach_thread_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+class _FakeCoachRepository implements CoachRepository {
+  @override
+  bool get isLiveData => true;
+
+  @override
+  Future<Result<CoachReply>> sendMessage({
+    required String message,
+    required List<CoachMessage> history,
+  }) async {
+    return const Success(
+      CoachReply(text: 'Fake reply', modelId: 'fake-model', provider: 'fake'),
+    );
+  }
+}
 
 void main() {
   testWidgets(
@@ -103,6 +121,165 @@ void main() {
           tester.view.physicalSize.height / tester.view.devicePixelRatio,
         ),
       );
+    },
+  );
+
+  testWidgets(
+    'sending a message triggers a light haptic and the reply fades/slides '
+    'in rather than appearing instantly',
+    (tester) async {
+      final threadRepository = SecureCoachThreadRepository(
+        InMemorySecureKeyValueStore(),
+      );
+      final thread = CoachThread(
+        id: 'thread-1',
+        topicLabel: 'Practice interview answers',
+        messages: const [],
+        lastActivityAt: DateTime.utc(2026, 8, 12),
+      );
+      await threadRepository.saveThread('candidate-1', thread);
+
+      // Intercepts the platform channel HapticFeedback.lightImpact()
+      // ultimately calls (HapticFeedback methods all funnel through
+      // SystemChannels.platform's 'HapticFeedback.vibrate' method) --
+      // there's no public Flutter API to assert "a haptic fired" other
+      // than watching for this platform call.
+      final hapticCalls = <String>[];
+      tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        SystemChannels.platform,
+        (call) async {
+          if (call.method == 'HapticFeedback.vibrate') {
+            hapticCalls.add(call.arguments as String);
+          }
+          return null;
+        },
+      );
+      addTearDown(() {
+        tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+          SystemChannels.platform,
+          null,
+        );
+      });
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            candidateSessionRepositoryProvider.overrideWithValue(
+              InMemoryCandidateSessionRepository(
+                session: const CandidateSession(
+                  candidateId: 'candidate-1',
+                  isAuthenticated: true,
+                ),
+              ),
+            ),
+            coachThreadRepositoryProvider.overrideWithValue(threadRepository),
+            coachRepositoryProvider.overrideWithValue(_FakeCoachRepository()),
+          ],
+          child: const MaterialApp(
+            home: CoachThreadScreen(threadId: 'thread-1'),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(hapticCalls, isEmpty);
+
+      await tester.enterText(find.byType(TextField), 'How am I doing?');
+      await tester.tap(find.byTooltip('Send message'));
+      await tester.pump();
+
+      expect(
+        hapticCalls,
+        isNotEmpty,
+        reason: 'HapticFeedback.lightImpact() should fire on send',
+      );
+
+      // The just-sent bubble is mid entrance animation, not fully opaque
+      // yet -- the whole point of _MessageEntrance is that it doesn't
+      // appear instantly.
+      final fade = tester.widget<FadeTransition>(
+        find
+            .ancestor(
+              of: find.text('How am I doing?'),
+              matching: find.byType(FadeTransition),
+            )
+            .first,
+      );
+      expect(
+        fade.opacity.value,
+        lessThan(1.0),
+        reason: 'message bubble should still be fading in on the first pump',
+      );
+
+      await tester.pumpAndSettle();
+      final settledFade = tester.widget<FadeTransition>(
+        find
+            .ancestor(
+              of: find.text('How am I doing?'),
+              matching: find.byType(FadeTransition),
+            )
+            .first,
+      );
+      expect(settledFade.opacity.value, 1.0);
+      expect(find.text('Fake reply'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
+    'the message entrance animation is skipped when the OS reduces motion',
+    (tester) async {
+      final threadRepository = SecureCoachThreadRepository(
+        InMemorySecureKeyValueStore(),
+      );
+      final thread = CoachThread(
+        id: 'thread-1',
+        topicLabel: 'Practice interview answers',
+        messages: const [
+          CoachMessage(
+            id: 'candidate-1',
+            author: CoachMessageAuthor.candidate,
+            text: 'Already here before reduce-motion was checked',
+          ),
+        ],
+        lastActivityAt: DateTime.utc(2026, 8, 12),
+      );
+      await threadRepository.saveThread('candidate-1', thread);
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            candidateSessionRepositoryProvider.overrideWithValue(
+              InMemoryCandidateSessionRepository(
+                session: const CandidateSession(
+                  candidateId: 'candidate-1',
+                  isAuthenticated: true,
+                ),
+              ),
+            ),
+            coachThreadRepositoryProvider.overrideWithValue(threadRepository),
+          ],
+          child: MediaQuery(
+            data: const MediaQueryData(disableAnimations: true),
+            child: const MaterialApp(
+              home: CoachThreadScreen(threadId: 'thread-1'),
+            ),
+          ),
+        ),
+      );
+      // A single pump, not pumpAndSettle -- if the animation weren't
+      // skipped this would still be mid-fade on the very first frame.
+      await tester.pump();
+
+      final fade = tester.widget<FadeTransition>(
+        find
+            .ancestor(
+              of: find.text('Already here before reduce-motion was checked'),
+              matching: find.byType(FadeTransition),
+            )
+            .first,
+      );
+      expect(fade.opacity.value, 1.0);
+      expect(tester.takeException(), isNull);
     },
   );
 }

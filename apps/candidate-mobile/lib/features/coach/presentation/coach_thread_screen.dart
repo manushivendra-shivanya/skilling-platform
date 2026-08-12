@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show HapticFeedback;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/app_colors.dart';
@@ -57,9 +58,16 @@ class _CoachThreadScreenState extends ConsumerState<CoachThreadScreen> {
                 itemCount: thread.messages.length + (isSending ? 1 : 0),
                 itemBuilder: (context, index) {
                   if (index == thread.messages.length) {
-                    return const _TypingIndicatorBubble();
+                    return const _MessageEntrance(
+                      key: ValueKey('typing-indicator'),
+                      child: _TypingIndicatorBubble(),
+                    );
                   }
-                  return _MessageBubble(message: thread.messages[index]);
+                  final message = thread.messages[index];
+                  return _MessageEntrance(
+                    key: ValueKey(message.id),
+                    child: _MessageBubble(message: message),
+                  );
                 },
               ),
             ),
@@ -118,12 +126,81 @@ class _CoachThreadScreenState extends ConsumerState<CoachThreadScreen> {
     if (text.trim().isEmpty) {
       return;
     }
+    unawaited(HapticFeedback.lightImpact());
     unawaited(
       ref
           .read(coachThreadsControllerProvider.notifier)
           .sendMessage(widget.threadId, text),
     );
     _composer.clear();
+  }
+}
+
+/// Fades and slides a new message bubble in as it's added -- same pattern
+/// as `SimulationScreenReveal`
+/// (workplace_simulation/presentation/widgets/simulation_section_card.dart),
+/// kept as a small screen-scoped copy rather than a shared import: Coach
+/// has no dependency on the workplace-simulation feature otherwise, and a
+/// one-message-bubble entrance isn't worth a cross-feature coupling for.
+/// Respects the OS "reduce motion" setting the same way that widget does
+/// -- see `MediaQuery.disableAnimationsOf`'s use in `app_skeleton.dart`
+/// for the same house pattern.
+class _MessageEntrance extends StatefulWidget {
+  const _MessageEntrance({required this.child, super.key});
+
+  final Widget child;
+
+  @override
+  State<_MessageEntrance> createState() => _MessageEntranceState();
+}
+
+class _MessageEntranceState extends State<_MessageEntrance>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _opacity;
+  late final Animation<Offset> _offset;
+  bool _started = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 220),
+    );
+    final curve = CurvedAnimation(parent: _controller, curve: Curves.easeOut);
+    _opacity = curve;
+    _offset = Tween<Offset>(
+      begin: const Offset(0, 0.06),
+      end: Offset.zero,
+    ).animate(curve);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_started) return;
+    _started = true;
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _controller.value = 1;
+    } else {
+      _controller.forward();
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: _opacity,
+      alwaysIncludeSemantics: true,
+      child: SlideTransition(position: _offset, child: widget.child),
+    );
   }
 }
 

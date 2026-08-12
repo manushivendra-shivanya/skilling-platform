@@ -7,6 +7,7 @@ import 'package:candidate_mobile/features/coach/domain/coach_message.dart';
 import 'package:candidate_mobile/features/coach/domain/coach_repository.dart';
 import 'package:candidate_mobile/features/coach/presentation/ask_coach_affordance.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -14,8 +15,26 @@ import 'package:go_router/go_router.dart';
 void main() {
   testWidgets(
     'opening, asking, and continuing to Coach carries the context and the '
-    "conversation forward -- and the mic control degrades honestly",
+    "conversation forward -- and the mic control degrades honestly, and "
+    'sending triggers a light haptic',
     (tester) async {
+      final hapticCalls = <String>[];
+      tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        SystemChannels.platform,
+        (call) async {
+          if (call.method == 'HapticFeedback.vibrate') {
+            hapticCalls.add(call.arguments as String);
+          }
+          return null;
+        },
+      );
+      addTearDown(() {
+        tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+          SystemChannels.platform,
+          null,
+        );
+      });
+
       final router = GoRouter(
         initialLocation: '/',
         routes: [
@@ -86,9 +105,15 @@ void main() {
         find.byType(TextField),
         'What if the reading does not match?',
       );
+      expect(hapticCalls, isEmpty);
       await tester.tap(find.byTooltip('Send message'));
       await tester.pumpAndSettle();
 
+      expect(
+        hapticCalls,
+        isNotEmpty,
+        reason: 'HapticFeedback.lightImpact() should fire on send',
+      );
       expect(find.text('Fake reply'), findsOneWidget);
       expect(find.text('Continue in Coach'), findsOneWidget);
 

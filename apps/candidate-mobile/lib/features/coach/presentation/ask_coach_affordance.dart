@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show HapticFeedback;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -195,6 +196,7 @@ class _AskCoachSheetState extends ConsumerState<_AskCoachSheet> {
   Future<void> _send() async {
     final text = _composer.text.trim();
     if (text.isEmpty || _isSending) return;
+    unawaited(HapticFeedback.lightImpact());
     _composer.clear();
     setState(() => _isSending = true);
 

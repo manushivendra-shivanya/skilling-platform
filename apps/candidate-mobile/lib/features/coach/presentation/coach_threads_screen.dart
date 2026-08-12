@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show HapticFeedback;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/dependencies.dart';
@@ -135,6 +136,7 @@ class _CoachThreadsScreenState extends ConsumerState<CoachThreadsScreen> {
     if (text.trim().isEmpty || _isStarting) {
       return;
     }
+    unawaited(HapticFeedback.lightImpact());
     _composer.clear();
     unawaited(_startThread(text));
   }
