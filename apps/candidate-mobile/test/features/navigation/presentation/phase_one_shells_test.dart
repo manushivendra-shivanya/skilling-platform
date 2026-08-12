@@ -90,7 +90,16 @@ void main() {
       // The question text appears twice on this screen -- once as the
       // candidate's message bubble, once as the AppBar title (the thread's
       // topic label, derived from this same opening question).
-      expect(find.textContaining('break the task into steps'), findsOneWidget);
+      //
+      // Not find.textContaining: coach replies reveal word-by-word via
+      // _InkRevealText (each word is its own Text widget), so no single
+      // Text.data contains this whole phrase. The complete sentence is
+      // still exposed as one Semantics label for screen readers -- see
+      // _InkRevealText's doc comment in coach_thread_screen.dart.
+      expect(
+        find.bySemanticsLabel(RegExp('break the task into steps')),
+        findsOneWidget,
+      );
       expect(find.text('How should I report a mismatch?'), findsNWidgets(2));
       expect(
         analytics.events.map((event) => event.name),

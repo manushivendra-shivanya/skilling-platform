@@ -220,7 +220,12 @@ void main() {
             .first,
       );
       expect(settledFade.opacity.value, 1.0);
-      expect(find.text('Fake reply'), findsOneWidget);
+      // Not find.text('Fake reply'): coach replies now reveal word-by-word
+      // via _InkRevealText (each word is its own Text widget), so the full
+      // sentence never exists as a single Text.data string. The complete
+      // sentence is still exposed as one Semantics label for screen
+      // readers -- see _InkRevealText's doc comment.
+      expect(find.bySemanticsLabel('Fake reply'), findsOneWidget);
       expect(tester.takeException(), isNull);
     },
   );
