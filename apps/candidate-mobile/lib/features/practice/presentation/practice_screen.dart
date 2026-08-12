@@ -12,10 +12,13 @@ import '../../../core/widgets/app_state_view.dart';
 import '../../intelligence/domain/candidate_intelligence.dart';
 import '../../intelligence/domain/simulation_scoring_engine.dart';
 import '../../intelligence/presentation/candidate_intelligence_controller.dart';
+import '../../micro_lessons/presentation/not_employer_evidence_banner.dart';
 import '../../sector_pack/application/active_sector_pack_provider.dart';
 import '../../sector_pack/domain/sector_pack.dart';
+import '../../sector_pack/presentation/sector_index_row.dart';
 import '../../sector_pack/presentation/sector_pack_icons.dart';
 import '../../sector_pack/presentation/sector_pack_typography.dart';
+import '../../sector_pack/presentation/sector_signal_dot.dart';
 import '../../sector_pack/presentation/sector_task_card.dart';
 import '../../workplace_simulation/application/workplace_simulation_controller.dart';
 import '../../workplace_simulation/domain/simulation_enums.dart';
@@ -121,15 +124,15 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
         112,
       ),
       children: [
-        Container(
-          padding: const EdgeInsets.all(AppSpacing.sm),
-          decoration: BoxDecoration(
-            color: AppColors.warningSoft,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: const Text(
-            'Practice demonstrations are not scored assessments and create no employer evidence.',
-          ),
+        // Shared with micro_lessons' clip list/detail screens -- this was a
+        // near-verbatim hand-rolled duplicate of NotEmployerEvidenceBanner
+        // (same AppColors.warningSoft container, same 12px radius). Practice
+        // sits above scored simulations too, so it keeps its own wording via
+        // the optional `message` override rather than the micro-lesson
+        // default.
+        const NotEmployerEvidenceBanner(
+          message:
+              'Practice demonstrations are not scored assessments and create no employer evidence.',
         ),
         const SizedBox(height: AppSpacing.md),
         SectorTaskCard(
@@ -181,32 +184,35 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
         const SizedBox(height: AppSpacing.xl),
         Text('Catalogue', style: Theme.of(context).textTheme.titleLarge),
         const SizedBox(height: AppSpacing.sm),
-        AppCard(
-          child: ListTile(
-            contentPadding: EdgeInsets.zero,
-            leading: SectorIcon(
-              glyph: SectorGlyph.truck,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-            title: const Text('Dispatch prioritisation'),
-            subtitle: const Text('Preview planned • demonstration only'),
-          ),
+        // SectorIndexRow, the same structural row Learning uses for its
+        // lesson list -- these two entries were previously a plain
+        // AppCard+ListTile, the exact seam this pass closes: Practice
+        // otherwise commits to the sector-pack idiom top to bottom.
+        // `locked: true` is this widget's existing "unavailable" state
+        // (muted colours + lock glyph), reused here for "not built yet"
+        // rather than a generic disabled ListTile -- it preserves the same
+        // "Preview planned • demonstration only" honesty, just in the
+        // sector-pack visual language.
+        SectorIndexRow(
+          pack: pack,
+          indexLabel: 'CAT-01',
+          glyph: SectorGlyph.truck,
+          title: 'Dispatch prioritisation',
+          statusText: 'Preview planned • demonstration only',
+          locked: true,
         ),
         const SizedBox(height: AppSpacing.sm),
-        AppCard(
-          child: ListTile(
-            contentPadding: EdgeInsets.zero,
-            leading: SectorIcon(
-              glyph: SectorGlyph.mic,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-            title: const Text('Voice workplace practice'),
-            subtitle: const Text('Planned • microphone is not active'),
-            onTap: () => showAppSnackBar(
-              context: context,
-              message:
-                  'Voice practice is not active. No microphone permission was requested.',
-            ),
+        SectorIndexRow(
+          pack: pack,
+          indexLabel: 'CAT-02',
+          glyph: SectorGlyph.mic,
+          title: 'Voice workplace practice',
+          statusText: 'Planned • microphone is not active',
+          locked: true,
+          onTap: () => showAppSnackBar(
+            context: context,
+            message:
+                'Voice practice is not active. No microphone permission was requested.',
           ),
         ),
         const SizedBox(height: AppSpacing.xl),
@@ -236,18 +242,27 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
                     )
                   : Column(
                       children: [
-                        for (final score in state.simulationScores.reversed)
-                          AppCard(
-                            child: ListTile(
-                              contentPadding: EdgeInsets.zero,
-                              leading: SectorIcon(
-                                glyph: SectorGlyph.check,
-                                color: pack.signalPalette.cleared,
-                              ),
-                              title: Text(
-                                'Inventory simulation • ${score.totalScore}%',
-                              ),
-                              subtitle: Text(score.explanation),
+                        // Same SectorIndexRow shape as the Catalogue rows
+                        // above and Learning's own lesson list -- was
+                        // AppCard+ListTile. `signalState: cleared` (rather
+                        // than `locked`) matches how Learning marks a
+                        // completed lesson: the check glyph plus a cleared
+                        // signal dot, not a recoloured icon.
+                        for (final (index, score)
+                            in state.simulationScores.reversed.indexed)
+                          Padding(
+                            padding: const EdgeInsets.only(
+                              bottom: AppSpacing.sm,
+                            ),
+                            child: SectorIndexRow(
+                              pack: pack,
+                              indexLabel:
+                                  'ATT-${(index + 1).toString().padLeft(2, '0')}',
+                              glyph: SectorGlyph.check,
+                              title:
+                                  'Inventory simulation • ${score.totalScore}%',
+                              statusText: score.explanation,
+                              signalState: SectorSignalState.cleared,
                             ),
                           ),
                       ],
