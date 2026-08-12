@@ -76,7 +76,9 @@ class _LearnAndPracticeScreenState extends State<LearnAndPracticeScreen> {
           child: IndexedStack(
             index: _selectedIndex,
             children: [
-              const LearningScreen(),
+              LearningScreen(
+                onOpenSimulation: widget.onOpenWorkplaceSimulation,
+              ),
               PracticeScreen(
                 onOpenWorkplaceSimulation: widget.onOpenWorkplaceSimulation,
               ),

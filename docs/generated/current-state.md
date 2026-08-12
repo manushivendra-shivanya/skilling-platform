@@ -3103,6 +3103,42 @@ been recorded here before this reconciliation pass.
   pack from the candidate's matched job role, not a separate picker), the
   QC checklist, and the full dogfooding log.
 
+## Train tab: video-optional messaging and WMS simulation handoff
+
+- The bottom-nav "Learn" destination is now labelled **Train**
+  (`main_navigation_shell.dart`'s `NavigationDestination` label and the
+  shell's per-tab AppBar title). The route path (`/learn`), the route
+  name, and the `learn` analytics destination name in
+  `MainNavigationShell.destinationNames` are all unchanged — only the
+  user-facing label moved, so existing deep links and analytics history
+  stay valid.
+- `LearningScreen`'s heading changed from "Your logistics pathway" to
+  "Your training pathway", and a new "Train flow" summary card explains
+  the intended path: short lesson → real warehouse clip or text fallback
+  → decision check → matching simulation where available.
+- `MicroLessonPlayerScreen`'s two "no clip produced yet" placeholders were
+  reworded ("No video yet — text lesson is ready" / "No video yet • text
+  lesson and assessment ready") to read as a normal, expected state
+  instead of a missing-asset apology -- the underlying behaviour (text
+  lesson, expected observation/decision, practice question and assessment
+  all work without a video) was already true before this wording change.
+- `WarehouseClipsSection` gained an optional `onOpenSimulation` callback,
+  threaded from `LearnAndPracticeScreen.onOpenWorkplaceSimulation` through
+  `LearningScreen`. Clips whose domain has a matching Workplace Simulation
+  mission (Receiving/Inspection → `receive-incoming-shipment-01`,
+  Put-away → `put-away-incoming-stock-01`) now show a "Practise <mission>
+  simulation" button directly on the clip row, alongside the existing
+  domain grouping and sector-pack styling -- domain grouping itself was
+  left unchanged (not switched to the `MicroLessonModule` inward/
+  processing/dispatch grouping some earlier drafts of this slice explored)
+  to avoid rewriting the already-tested clip list structure for a
+  cosmetic reorg. Processing and dispatch-domain clips have no simulation
+  yet and show no button, matching where those workstations currently
+  stand.
+- No scoring engine or evidence-generation logic changed in this slice;
+  the existing micro-lesson assessment and Career Passport evidence path
+  is unchanged.
+
 ## Target product architecture proposal
 
 - Added the proposed Flora AI Employability Infrastructure architecture in

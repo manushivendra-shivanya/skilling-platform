@@ -44,7 +44,7 @@ void main() {
         candidateOnboardingRepository: onboarding,
       );
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Learn'));
+      await tester.tap(find.text('Train'));
       await tester.pumpAndSettle();
 
       final lessonsFinder = find.bySemanticsLabel(

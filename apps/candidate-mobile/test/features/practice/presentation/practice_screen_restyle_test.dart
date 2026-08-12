@@ -45,7 +45,7 @@ void main() {
       candidateIntelligenceRepository: intelligence,
     );
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Learn'));
+    await tester.tap(find.text('Train'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Practise'));
     await tester.pumpAndSettle();

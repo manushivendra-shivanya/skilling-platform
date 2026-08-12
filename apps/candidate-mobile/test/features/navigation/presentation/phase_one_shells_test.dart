@@ -122,7 +122,7 @@ void main() {
       connectivityRepository: connectivity,
     );
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Learn'));
+    await tester.tap(find.text('Train'));
     await tester.pumpAndSettle();
 
     expect(
@@ -168,7 +168,7 @@ void main() {
     await tester.pumpAndSettle();
     // Practise now lives as a sub-tab inside Learn rather than its own
     // bottom-nav destination.
-    await tester.tap(find.text('Learn'));
+    await tester.tap(find.text('Train'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Practise'));
     await tester.pumpAndSettle();

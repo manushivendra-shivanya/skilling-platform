@@ -19,7 +19,14 @@ import 'not_employer_evidence_banner.dart';
 /// local practice feedback only, no Career Passport scoring or evidence
 /// wiring yet; that's an explicitly separate, later slice).
 class WarehouseClipsSection extends ConsumerWidget {
-  const WarehouseClipsSection({super.key});
+  const WarehouseClipsSection({this.onOpenSimulation, super.key});
+
+  /// Opens the matching Workplace Simulation mission for a clip that has
+  /// one (Receiving/Inspection -> receiving, Put-away -> put-away) -- null
+  /// when the caller has no simulation entry point wired (e.g. embedded
+  /// somewhere the Practise handoff doesn't make sense), in which case the
+  /// handoff button in [_ClipRow] simply doesn't render.
+  final ValueChanged<String>? onOpenSimulation;
 
   static const _domainOrder = [
     MicroLessonDomain.receiving,
@@ -96,6 +103,7 @@ class WarehouseClipsSection extends ConsumerWidget {
                     label: _domainLabel(domain),
                     clips: data.clipsForDomain(domain),
                     viewedClipIds: data.viewedClipIds,
+                    onOpenSimulation: onOpenSimulation,
                   ),
               ],
             );
@@ -113,6 +121,7 @@ class _DomainGroup extends StatelessWidget {
     required this.label,
     required this.clips,
     required this.viewedClipIds,
+    required this.onOpenSimulation,
   });
 
   final SectorPack pack;
@@ -120,6 +129,7 @@ class _DomainGroup extends StatelessWidget {
   final String label;
   final List<MicroLessonClip> clips;
   final Set<String> viewedClipIds;
+  final ValueChanged<String>? onOpenSimulation;
 
   @override
   Widget build(BuildContext context) {
@@ -135,6 +145,7 @@ class _DomainGroup extends StatelessWidget {
               pack: pack,
               clip: clip,
               viewed: viewedClipIds.contains(clip.id),
+              onOpenSimulation: onOpenSimulation,
             ),
             const SizedBox(height: AppSpacing.xs),
           ],
@@ -162,6 +173,7 @@ class _ClipRow extends StatelessWidget {
     required this.pack,
     required this.clip,
     required this.viewed,
+    required this.onOpenSimulation,
   });
 
   final SectorPack pack;
@@ -170,6 +182,8 @@ class _ClipRow extends StatelessWidget {
   /// Persisted on-device once playback reaches the end -- see
   /// `MicroLessonClipController.markViewed`.
   final bool viewed;
+
+  final ValueChanged<String>? onOpenSimulation;
 
   @override
   Widget build(BuildContext context) {
@@ -181,6 +195,7 @@ class _ClipRow extends StatelessWidget {
               '${viewed ? ' · Watched' : ''}'
         : 'Video not yet available · ${clip.processArea}';
     final statusColor = viewed ? pack.signalPalette.cleared : inkSoft;
+    final simulation = _simulationForClip(clip);
 
     return Container(
       decoration: BoxDecoration(
@@ -191,65 +206,118 @@ class _ClipRow extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       child: Material(
         color: Colors.transparent,
-        child: InkWell(
-          // Pushed on the root navigator, not the Learn tab's own nested
-          // one (StatefulShellRoute gives each tab its own navigator) --
-          // pushing on the tab's navigator left the shell's persistent
-          // "AI Coach" FAB floating on top of the clip detail screen,
-          // intercepting taps near the bottom of the page instead of
-          // reaching real content.
-          onTap: () => Navigator.of(context, rootNavigator: true).push(
-            MaterialPageRoute<void>(
-              builder: (_) => MicroLessonPlayerScreen(
-                clip: clip,
-                onBack: () => Navigator.of(context, rootNavigator: true).pop(),
-              ),
-            ),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.sm,
-              vertical: AppSpacing.xs,
-            ),
-            child: Row(
-              children: [
-                _ClipThumbnail(pack: pack, clip: clip, viewed: viewed),
-                const SizedBox(width: AppSpacing.sm),
-                Expanded(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        clip.title,
-                        style: SectorPackTypography.bodyBold(color: ink),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        statusText,
-                        style: SectorPackTypography.monoLabel(
-                          color: statusColor,
-                          fontWeight: viewed
-                              ? FontWeight.w600
-                              : FontWeight.w500,
-                        ),
-                      ),
-                    ],
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            InkWell(
+              // Pushed on the root navigator, not the Learn tab's own
+              // nested one (StatefulShellRoute gives each tab its own
+              // navigator) -- pushing on the tab's navigator left the
+              // shell's persistent "AI Coach" FAB floating on top of the
+              // clip detail screen, intercepting taps near the bottom of
+              // the page instead of reaching real content.
+              onTap: () => Navigator.of(context, rootNavigator: true).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => MicroLessonPlayerScreen(
+                    clip: clip,
+                    onBack: () =>
+                        Navigator.of(context, rootNavigator: true).pop(),
                   ),
                 ),
-                const SizedBox(width: AppSpacing.xs),
-                SectorIcon(
-                  glyph: SectorGlyph.chevronRight,
-                  color: inkSoft,
-                  size: 16,
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.sm,
+                  vertical: AppSpacing.xs,
                 ),
-              ],
+                child: Row(
+                  children: [
+                    _ClipThumbnail(pack: pack, clip: clip, viewed: viewed),
+                    const SizedBox(width: AppSpacing.sm),
+                    Expanded(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            clip.title,
+                            style: SectorPackTypography.bodyBold(color: ink),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            statusText,
+                            style: SectorPackTypography.monoLabel(
+                              color: statusColor,
+                              fontWeight: viewed
+                                  ? FontWeight.w600
+                                  : FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.xs),
+                    SectorIcon(
+                      glyph: SectorGlyph.chevronRight,
+                      color: inkSoft,
+                      size: 16,
+                    ),
+                  ],
+                ),
+              ),
             ),
-          ),
+            // Direct handoff into the matching Workplace Simulation mission
+            // -- only for the clips that actually have one (Receiving,
+            // Inspection, Put-away today), and only when the caller wired a
+            // simulation entry point at all.
+            if (simulation != null && onOpenSimulation != null)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.sm,
+                  0,
+                  AppSpacing.sm,
+                  AppSpacing.xs,
+                ),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: OutlinedButton.icon(
+                    onPressed: () => onOpenSimulation!(simulation.missionId),
+                    icon: const Icon(Icons.precision_manufacturing_outlined),
+                    label: Text('Practise ${simulation.label} simulation'),
+                  ),
+                ),
+              ),
+          ],
         ),
       ),
     );
   }
+}
+
+/// Which Workplace Simulation mission (if any) reinforces this clip's
+/// domain -- see `WorkplaceSimulationController`'s mission IDs. Only
+/// wired for the domains that currently have a matching mission; every
+/// other domain returns null and the handoff button doesn't render.
+class _SimulationLink {
+  const _SimulationLink({required this.label, required this.missionId});
+
+  final String label;
+  final String missionId;
+}
+
+_SimulationLink? _simulationForClip(MicroLessonClip clip) {
+  return switch (clip.domain) {
+    MicroLessonDomain.receiving ||
+    MicroLessonDomain.inspection => const _SimulationLink(
+      label: 'Receiving',
+      missionId: 'receive-incoming-shipment-01',
+    ),
+    MicroLessonDomain.putAway => const _SimulationLink(
+      label: 'Put-away',
+      missionId: 'put-away-incoming-stock-01',
+    ),
+    _ => null,
+  };
 }
 
 /// Real thumbnail (generated by scripts/micro_lesson_video_pipeline.py)

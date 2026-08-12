@@ -22,7 +22,9 @@ import '../domain/learning_repository.dart';
 import 'learning_controller.dart';
 
 class LearningScreen extends ConsumerWidget {
-  const LearningScreen({super.key});
+  const LearningScreen({this.onOpenSimulation, super.key});
+
+  final ValueChanged<String>? onOpenSimulation;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -43,16 +45,20 @@ class LearningScreen extends ConsumerWidget {
             message: 'Your pathway will appear here when content is assigned.',
           );
         }
-        return _LearningContent(state: value);
+        return _LearningContent(
+          state: value,
+          onOpenSimulation: onOpenSimulation,
+        );
       },
     );
   }
 }
 
 class _LearningContent extends ConsumerWidget {
-  const _LearningContent({required this.state});
+  const _LearningContent({required this.state, required this.onOpenSimulation});
 
   final LearningState state;
+  final ValueChanged<String>? onOpenSimulation;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -82,7 +88,7 @@ class _LearningContent extends ConsumerWidget {
           },
         ),
         Text(
-          'Your logistics pathway',
+          'Your training pathway',
           style: Theme.of(context).textTheme.headlineSmall,
         ),
         const SizedBox(height: AppSpacing.sm),
@@ -94,6 +100,13 @@ class _LearningContent extends ConsumerWidget {
         const SizedBox(height: AppSpacing.xs),
         const Text(
           'Progress is stored securely, works offline, and syncs when a configured backend is available. Completion alone is not an employer qualification.',
+        ),
+        const SizedBox(height: AppSpacing.md),
+        const AppCard(
+          backgroundColor: AppColors.brandSoft,
+          child: Text(
+            'Train flow: short lesson → real warehouse clip or text fallback → decision check → matching simulation where available.',
+          ),
         ),
         const SizedBox(height: AppSpacing.xl),
         for (final entry in state.units.indexed) ...[
@@ -121,7 +134,7 @@ class _LearningContent extends ConsumerWidget {
         const SizedBox(height: AppSpacing.lg),
         _HazardTapeDivider(pack: pack),
         const SizedBox(height: AppSpacing.xl),
-        const WarehouseClipsSection(),
+        WarehouseClipsSection(onOpenSimulation: onOpenSimulation),
       ],
     );
   }

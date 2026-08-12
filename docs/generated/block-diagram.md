@@ -38,7 +38,7 @@ flowchart TD
     PROFILECTRL --> SUPAPROFILE[Supabase Profile Adapter]
 
     SHELL --> HOME[Home]
-    SHELL --> LEARN[Learning]
+    SHELL --> LEARN[Train tab - Learning]
     SHELL --> PRACTISE[Practice]
     SHELL --> JOBS[Jobs]
     SHELL --> SHIFT[Shift Marketplace]
@@ -71,6 +71,7 @@ flowchart TD
     DIAGENGINE --> PATHWAY[Explainable Role Gaps and Pathway]
     LEARN --> CONTENT[Versioned Content, Download and Progress]
     LEARN --> MICROCLIPS[10-second Micro-lesson Clip Catalogue]
+    MICROCLIPS -->|Receiving, Inspection and Put-away clips offer a direct handoff| WMSENTRY
     PRACTISE --> MICROCLIPS
     MICROCLIPS --> CLIPREPO[Asset-backed Local Clip Repository]
     CLIPREPO --> CLIPJSON[Warehouse Clip JSON and Future Media URLs]

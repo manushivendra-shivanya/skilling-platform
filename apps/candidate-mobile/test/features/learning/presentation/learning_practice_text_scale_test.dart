@@ -107,10 +107,10 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Learn'));
+    await tester.tap(find.text('Train'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Your logistics pathway'), findsOneWidget);
+    expect(find.text('Your training pathway'), findsOneWidget);
     expect(tester.takeException(), isNull);
 
     // At 2x text scale the header, progress copy, and segmented tab bar
@@ -159,7 +159,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Learn'));
+    await tester.tap(find.text('Train'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Practise'));
     await tester.pumpAndSettle();
@@ -189,7 +189,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Learn'));
+    await tester.tap(find.text('Train'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Certification'));
     await tester.pumpAndSettle();

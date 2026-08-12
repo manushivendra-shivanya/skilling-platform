@@ -54,7 +54,7 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Learn'));
+      await tester.tap(find.text('Train'));
       await tester.pumpAndSettle();
       await tester.scrollUntilVisible(
         find.text('Warehouse process clips'),
@@ -108,7 +108,7 @@ void main() {
         viewedClipsRepository: viewedClips,
       );
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Learn'));
+      await tester.tap(find.text('Train'));
       await tester.pumpAndSettle();
       await tester.scrollUntilVisible(
         find.text('Warehouse process clips'),
@@ -146,7 +146,7 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Learn'));
+    await tester.tap(find.text('Train'));
     await tester.pumpAndSettle();
     await tester.scrollUntilVisible(
       find.text('Frozen receiving check'),
@@ -199,7 +199,7 @@ void main() {
         microLessonAssessmentRepository: assessments,
       );
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Learn'));
+      await tester.tap(find.text('Train'));
       await tester.pumpAndSettle();
       await tester.scrollUntilVisible(
         find.text('Frozen receiving check'),
@@ -257,7 +257,7 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Learn'));
+    await tester.tap(find.text('Train'));
     await tester.pumpAndSettle();
     await tester.scrollUntilVisible(
       find.text('No clips yet'),
@@ -283,7 +283,7 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Learn'));
+      await tester.tap(find.text('Train'));
       await tester.pumpAndSettle();
       await tester.scrollUntilVisible(
         find.text('Clips could not be loaded'),
@@ -312,7 +312,7 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Learn'));
+      await tester.tap(find.text('Train'));
       await tester.pumpAndSettle();
       await tester.scrollUntilVisible(
         find.text('Warehouse process clips'),
@@ -359,7 +359,7 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Learn'));
+      await tester.tap(find.text('Train'));
       await tester.pumpAndSettle();
       await tester.scrollUntilVisible(
         find.text('Warehouse process clips'),
@@ -368,6 +368,50 @@ void main() {
       );
 
       expect(find.byType(Divider), findsNothing);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
+    'a clip whose domain has a matching Workplace Simulation mission offers '
+    'a direct handoff button, and opening it reaches that simulation',
+    (tester) async {
+      await tester.binding.setSurfaceSize(const Size(800, 1200));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await tester.pumpCandidateApp(
+        candidateSessionRepository: sessions,
+        candidateOnboardingRepository: onboarding,
+        microLessonClipRepository: _FakeMicroLessonClipRepository(
+          Success([_receivingClip(), _inspectionClip(), _safetyClip()]),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Train'));
+      await tester.pumpAndSettle();
+      await tester.scrollUntilVisible(
+        find.text('Warehouse process clips'),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+
+      // Receiving and Inspection both hand off to the same Receiving
+      // simulation mission -- one button per clip, not deduplicated.
+      await tester.scrollUntilVisible(
+        find.text('Practise Receiving simulation').first,
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+      expect(find.text('Practise Receiving simulation'), findsNWidgets(2));
+      // Safety has no matching mission -- no button for that clip's group.
+      expect(find.text('Practise Safety simulation'), findsNothing);
+
+      await tester.ensureVisible(
+        find.text('Practise Receiving simulation').first,
+      );
+      await tester.tap(find.text('Practise Receiving simulation').first);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Workplace Management Simulation'), findsOneWidget);
       expect(tester.takeException(), isNull);
     },
   );
@@ -458,6 +502,51 @@ MicroLessonClip _inspectionClip() {
       ),
     ],
     correctAnswerId: 'segregate',
+    scoringRules: const ClipScoringRules(
+      maxPoints: 10,
+      correctAnswerPoints: 10,
+      evidenceSource: 'systemObserved',
+      technicalFailuresScoreable: false,
+    ),
+    auditEvents: const [],
+  );
+}
+
+MicroLessonClip _safetyClip() {
+  return MicroLessonClip(
+    id: 'clip_safety_ppe_001',
+    title: 'PPE check before floor entry',
+    module: MicroLessonModule.dispatch,
+    sequenceNumber: 1,
+    domain: MicroLessonDomain.safety,
+    role: 'Warehouse Operations Associate',
+    processArea: 'Floor Entry Point',
+    temperatureZone: TemperatureZone.ambient,
+    durationSeconds: 10,
+    videoUrl: null,
+    cloudflareVideoPath: null,
+    fallbackVideoUrl: null,
+    thumbnailUrl: null,
+    transcript: 'Transcript',
+    description: 'A worker approaches the floor entry point.',
+    expectedObservation: 'Check for PPE.',
+    expectedDecision: 'Stop entry until PPE is worn.',
+    competencyTags: const ['ppe_compliance_check'],
+    lessonContent: 'PPE basics.',
+    assessmentQuestion: 'What should you do if PPE is missing?',
+    answerOptions: const [
+      ClipAnswerOption(
+        id: 'allow',
+        label: 'Allow entry anyway',
+        feedback: 'Wrong.',
+      ),
+      ClipAnswerOption(
+        id: 'stop',
+        label: 'Stop entry until PPE is worn',
+        feedback: 'Correct.',
+      ),
+    ],
+    correctAnswerId: 'stop',
     scoringRules: const ClipScoringRules(
       maxPoints: 10,
       correctAnswerPoints: 10,
