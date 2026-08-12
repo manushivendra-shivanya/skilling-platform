@@ -63,153 +63,167 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final intelligence = ref
         .watch(candidateIntelligenceControllerProvider)
         .valueOrNull;
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(
-        AppSpacing.xl,
-        AppSpacing.md,
-        AppSpacing.xl,
-        112,
-      ),
+    return Column(
       children: [
-        Text(draft.fullName, style: Theme.of(context).textTheme.headlineSmall),
-        const SizedBox(height: AppSpacing.xxs),
-        Text('${draft.city}, ${draft.state}'),
-        if (intelligence != null && intelligence.pendingSyncCount > 0) ...[
-          const SizedBox(height: AppSpacing.md),
-          AppPendingSyncBanner(pendingCount: intelligence.pendingSyncCount),
-        ],
-        const SizedBox(height: AppSpacing.md),
-        AppButton(
-          label: 'Edit personal details',
-          variant: AppButtonVariant.secondary,
-          onPressed: () => _editDetails(draft),
-        ),
-        const SizedBox(height: AppSpacing.lg),
-        _Section(
-          title: 'Career profile',
-          children: [
-            _DetailRow(label: 'Goal', value: draft.goal?.label ?? 'Not set'),
-            _DetailRow(
-              label: 'Education',
-              value: draft.education?.label ?? 'Not set',
+        _IdentityHeader(draft: draft),
+        Expanded(
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.xl,
+              AppSpacing.md,
+              AppSpacing.xl,
+              112,
             ),
-            _DetailRow(
-              label: 'Experience',
-              value: draft.experience?.label ?? 'Not set',
-            ),
-            _DetailRow(
-              label: 'Preferred roles',
-              value: draft.preferredRoles.map((role) => role.label).join(', '),
-            ),
-            _DetailRow(
-              label: 'Evidence',
-              value: intelligence == null || intelligence.evidence.isEmpty
-                  ? 'No assessed evidence yet'
-                  : '${intelligence.evidence.length} explainable records',
-            ),
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: const Icon(Icons.assignment_outlined),
-              title: const Text('Career diagnostic'),
-              subtitle: const Text('Apni taiyari dobara jaanchein'),
-              trailing: const Icon(Icons.arrow_forward_rounded, size: 18),
-              onTap: widget.onOpenDiagnostic,
-            ),
-          ],
-        ),
-        if (draft.headline.trim().isNotEmpty) ...[
-          const SizedBox(height: AppSpacing.md),
-          ProfessionalPersonaCard(draft: draft),
-          const SizedBox(height: AppSpacing.md),
-          NetworkingSection(draft: draft),
-        ],
-        if (intelligence != null && intelligence.evidence.isNotEmpty) ...[
-          const SizedBox(height: AppSpacing.md),
-          _Section(
-            title: 'Readiness evidence',
             children: [
-              for (final item in intelligence.evidence.reversed.take(4))
-                _EvidenceRow(item: item),
-              const Text(
-                'Evidence shows observed platform work. It is not a personality score and cannot be the sole basis for rejection.',
+              if (intelligence != null &&
+                  intelligence.pendingSyncCount > 0) ...[
+                AppPendingSyncBanner(
+                  pendingCount: intelligence.pendingSyncCount,
+                ),
+                const SizedBox(height: AppSpacing.md),
+              ],
+              AppButton(
+                label: 'Edit personal details',
+                variant: AppButtonVariant.secondary,
+                onPressed: () => _editDetails(draft),
+              ),
+              const SizedBox(height: AppSpacing.lg),
+              _Section(
+                title: 'Career profile',
+                children: [
+                  _DetailRow(
+                    label: 'Goal',
+                    value: draft.goal?.label ?? 'Not set',
+                  ),
+                  _DetailRow(
+                    label: 'Education',
+                    value: draft.education?.label ?? 'Not set',
+                  ),
+                  _DetailRow(
+                    label: 'Experience',
+                    value: draft.experience?.label ?? 'Not set',
+                  ),
+                  _DetailRow(
+                    label: 'Preferred roles',
+                    value: draft.preferredRoles
+                        .map((role) => role.label)
+                        .join(', '),
+                  ),
+                  _DetailRow(
+                    label: 'Evidence',
+                    value: intelligence == null || intelligence.evidence.isEmpty
+                        ? 'No assessed evidence yet'
+                        : '${intelligence.evidence.length} explainable records',
+                  ),
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.assignment_outlined),
+                    title: const Text('Career diagnostic'),
+                    subtitle: const Text('Apni taiyari dobara jaanchein'),
+                    trailing: const Icon(Icons.arrow_forward_rounded, size: 18),
+                    onTap: widget.onOpenDiagnostic,
+                  ),
+                ],
+              ),
+              if (draft.headline.trim().isNotEmpty) ...[
+                const SizedBox(height: AppSpacing.md),
+                ProfessionalPersonaCard(draft: draft),
+                const SizedBox(height: AppSpacing.md),
+                NetworkingSection(draft: draft),
+              ],
+              if (intelligence != null && intelligence.evidence.isNotEmpty) ...[
+                const SizedBox(height: AppSpacing.md),
+                _Section(
+                  title: 'Readiness evidence',
+                  children: [
+                    for (final item in intelligence.evidence.reversed.take(4))
+                      _EvidenceRow(item: item),
+                    const Text(
+                      'Evidence shows observed platform work. It is not a personality score and cannot be the sole basis for rejection.',
+                    ),
+                  ],
+                ),
+              ],
+              const SizedBox(height: AppSpacing.md),
+              const RoleReadinessSection(),
+              const SizedBox(height: AppSpacing.md),
+              const CareerPassportSection(),
+              const SizedBox(height: AppSpacing.md),
+              _Section(
+                title: 'Privacy and consent',
+                children: [
+                  _DetailRow(
+                    label: 'Platform terms',
+                    value:
+                        draft
+                            .consents[OnboardingConsentVersions.termsPurpose]
+                            ?.version ??
+                        'Not accepted',
+                  ),
+                  _DetailRow(
+                    label: 'Privacy notice',
+                    value:
+                        draft
+                            .consents[OnboardingConsentVersions.privacyPurpose]
+                            ?.version ??
+                        'Not accepted',
+                  ),
+                  const _DetailRow(
+                    label: 'Voice sharing',
+                    value: 'Requested separately when that feature is used',
+                  ),
+                  const _DetailRow(
+                    label: 'Employer sharing',
+                    value: 'Controlled in the Career Passport section above',
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.md),
+              _Section(
+                title: 'Preferences and support',
+                children: [
+                  const _DetailRow(label: 'Language', value: 'English'),
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    value: _notificationsEnabled,
+                    onChanged: (value) =>
+                        setState(() => _notificationsEnabled = value),
+                    title: const Text('Notification preference'),
+                    subtitle: const Text(
+                      'Stored as a preference only. No push token is registered yet.',
+                    ),
+                  ),
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.help_outline),
+                    title: const Text('Help and support'),
+                    onTap: () => showAppSnackBar(
+                      context: context,
+                      message:
+                          'Support contact workflow will be connected in a later phase.',
+                    ),
+                  ),
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(
+                      Icons.delete_outline,
+                      color: AppColors.error,
+                    ),
+                    title: const Text('Request account deletion'),
+                    subtitle: const Text('Placeholder • no request is sent'),
+                    onTap: _showDeletionPlaceholder,
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.lg),
+              AppButton(
+                label: 'Log out',
+                variant: AppButtonVariant.secondary,
+                isLoading: _loggingOut,
+                onPressed: _loggingOut ? null : _logout,
               ),
             ],
           ),
-        ],
-        const SizedBox(height: AppSpacing.md),
-        const RoleReadinessSection(),
-        const SizedBox(height: AppSpacing.md),
-        const CareerPassportSection(),
-        const SizedBox(height: AppSpacing.md),
-        _Section(
-          title: 'Privacy and consent',
-          children: [
-            _DetailRow(
-              label: 'Platform terms',
-              value:
-                  draft
-                      .consents[OnboardingConsentVersions.termsPurpose]
-                      ?.version ??
-                  'Not accepted',
-            ),
-            _DetailRow(
-              label: 'Privacy notice',
-              value:
-                  draft
-                      .consents[OnboardingConsentVersions.privacyPurpose]
-                      ?.version ??
-                  'Not accepted',
-            ),
-            const _DetailRow(
-              label: 'Voice sharing',
-              value: 'Requested separately when that feature is used',
-            ),
-            const _DetailRow(
-              label: 'Employer sharing',
-              value: 'Controlled in the Career Passport section above',
-            ),
-          ],
-        ),
-        const SizedBox(height: AppSpacing.md),
-        _Section(
-          title: 'Preferences and support',
-          children: [
-            const _DetailRow(label: 'Language', value: 'English'),
-            SwitchListTile(
-              contentPadding: EdgeInsets.zero,
-              value: _notificationsEnabled,
-              onChanged: (value) =>
-                  setState(() => _notificationsEnabled = value),
-              title: const Text('Notification preference'),
-              subtitle: const Text(
-                'Stored as a preference only. No push token is registered yet.',
-              ),
-            ),
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: const Icon(Icons.help_outline),
-              title: const Text('Help and support'),
-              onTap: () => showAppSnackBar(
-                context: context,
-                message:
-                    'Support contact workflow will be connected in a later phase.',
-              ),
-            ),
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: const Icon(Icons.delete_outline, color: AppColors.error),
-              title: const Text('Request account deletion'),
-              subtitle: const Text('Placeholder • no request is sent'),
-              onTap: _showDeletionPlaceholder,
-            ),
-          ],
-        ),
-        const SizedBox(height: AppSpacing.lg),
-        AppButton(
-          label: 'Log out',
-          variant: AppButtonVariant.secondary,
-          isLoading: _loggingOut,
-          onPressed: _loggingOut ? null : _logout,
         ),
       ],
     );
@@ -263,6 +277,98 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         tone: AppMessageTone.error,
       );
     }
+  }
+}
+
+/// The gradient hero header atop the profile screen: an avatar built from
+/// the candidate's initials, their name, and their city/state -- all read
+/// from the same [CandidateOnboardingDraft] the sections below already use.
+///
+/// Sits outside the ListView's horizontal padding so the gradient runs
+/// edge-to-edge, matching a full-bleed hero rather than a padded card.
+class _IdentityHeader extends StatelessWidget {
+  const _IdentityHeader({required this.draft});
+
+  final CandidateOnboardingDraft draft;
+
+  @override
+  Widget build(BuildContext context) {
+    final initials = draft.fullName
+        .trim()
+        .split(RegExp(r'\s+'))
+        .where((word) => word.isNotEmpty)
+        .take(2)
+        .map((word) => word[0].toUpperCase())
+        .join();
+    // Tinted white rather than a fixed grey: it keeps its relationship with
+    // the gradient at every point down the header.
+    final onBrandMuted = Colors.white.withValues(alpha: 0.82);
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.lg,
+        AppSpacing.xl,
+        AppSpacing.lg,
+        AppSpacing.xl,
+      ),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          // A lighter brand tone through brand to brandDark -- composed only
+          // from the two existing brand tokens (extrapolating past brand,
+          // away from brandDark, rather than inventing a new colour).
+          colors: [
+            Color.lerp(AppColors.brand, AppColors.brandDark, -0.35)!,
+            AppColors.brand,
+            AppColors.brandDark,
+          ],
+        ),
+      ),
+      child: Column(
+        children: [
+          Container(
+            width: 60,
+            height: 60,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: AppColors.brandDark,
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.35),
+                width: 2,
+              ),
+            ),
+            child: Text(
+              initials,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w800,
+                fontSize: 20,
+              ),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            draft.fullName,
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.xxs),
+          Text(
+            '${draft.city}, ${draft.state}',
+            textAlign: TextAlign.center,
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: onBrandMuted),
+          ),
+        ],
+      ),
+    );
   }
 }
 
