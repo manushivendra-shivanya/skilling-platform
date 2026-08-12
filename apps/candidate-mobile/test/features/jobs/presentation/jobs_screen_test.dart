@@ -199,6 +199,122 @@ void main() {
       expect(find.text('Bhiwandi'), findsOneWidget); // active filter pill
     },
   );
+
+  testWidgets(
+    'the "Top match for you" ribbon appears only on the #1 For-you card, '
+    'and disappears on the All jobs tab',
+    (tester) async {
+      final container = _buildContainer(
+        _FakeJobsRepository([
+          // Flora-native + freshly posted: higher deriveJobMatch score.
+          JobOpportunity(
+            id: 'job-top',
+            title: 'Warehouse Operations Associate',
+            employer: 'Apex Consumer Products',
+            location: 'Bhiwandi, Maharashtra',
+            isSupervisorRole: false,
+            description: 'Receiving and put-away.',
+            source: 'flora',
+            publishedAt: DateTime.now(),
+          ),
+          // Aggregator-sourced, no publishedAt: lower score, sorts second.
+          const JobOpportunity(
+            id: 'job-second',
+            title: 'Inventory Executive',
+            employer: 'Meridian Logistics',
+            location: 'Gurugram, Haryana',
+            isSupervisorRole: false,
+            description: 'Cycle counts and stock accuracy.',
+            source: 'adzuna',
+            applyUrl: 'https://adzuna.example/jobs/1',
+          ),
+        ]),
+      );
+      addTearDown(container.dispose);
+
+      await tester.pumpWidget(_app(container));
+      await tester.pumpAndSettle();
+
+      // For-you is the default tab, and it's ranked by match score -- the
+      // ribbon states that the #1 card is genuinely the top match.
+      expect(find.text('Top match for you'), findsOneWidget);
+
+      await tester.tap(find.text('All jobs'));
+      await tester.pumpAndSettle();
+
+      // Not sorted by match on this tab, so the ribbon's claim wouldn't
+      // hold -- it must not render here.
+      expect(find.text('Top match for you'), findsNothing);
+    },
+  );
+
+  testWidgets('the ribbon is withheld on a For-you list with only one job', (
+    tester,
+  ) async {
+    final container = _buildContainer(
+      _FakeJobsRepository([
+        const JobOpportunity(
+          id: 'job-only',
+          title: 'Warehouse Operations Associate',
+          employer: 'Apex Consumer Products',
+          location: 'Bhiwandi, Maharashtra',
+          isSupervisorRole: false,
+          description: 'Receiving and put-away.',
+          source: 'flora',
+        ),
+      ]),
+    );
+    addTearDown(container.dispose);
+
+    await tester.pumpWidget(_app(container));
+    await tester.pumpAndSettle();
+
+    // "Top match" only means something relative to other jobs.
+    expect(find.text('Top match for you'), findsNothing);
+  });
+
+  testWidgets(
+    'the match meter bar renders only on the For-you tab, alongside the '
+    'match badge -- not on All jobs',
+    (tester) async {
+      final container = _buildContainer(
+        _FakeJobsRepository([
+          const JobOpportunity(
+            id: 'job-a',
+            title: 'Warehouse Operations Associate',
+            employer: 'Apex Consumer Products',
+            location: 'Bhiwandi, Maharashtra',
+            isSupervisorRole: false,
+            description: 'Receiving and put-away.',
+            source: 'flora',
+          ),
+          const JobOpportunity(
+            id: 'job-b',
+            title: 'Inventory Executive',
+            employer: 'Meridian Logistics',
+            location: 'Gurugram, Haryana',
+            isSupervisorRole: false,
+            description: 'Cycle counts and stock accuracy.',
+            source: 'adzuna',
+            applyUrl: 'https://adzuna.example/jobs/1',
+          ),
+        ]),
+      );
+      addTearDown(container.dispose);
+
+      await tester.pumpWidget(_app(container));
+      await tester.pumpAndSettle();
+
+      // One meter bar per card on the ranked For-you tab.
+      expect(find.byType(FractionallySizedBox), findsNWidgets(2));
+
+      await tester.tap(find.text('All jobs'));
+      await tester.pumpAndSettle();
+
+      // showMatch is false here, so no match badge and no meter bar.
+      expect(find.byType(FractionallySizedBox), findsNothing);
+    },
+  );
 }
 
 ProviderContainer _buildContainer(JobsRepository repository) =>

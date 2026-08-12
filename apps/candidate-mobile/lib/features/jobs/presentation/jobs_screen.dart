@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../app/theme/app_colors.dart';
+import '../../../app/theme/app_elevation.dart';
 import '../../../app/theme/app_radius.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../core/errors/app_failure.dart';
@@ -72,29 +73,38 @@ class _JobsContent extends ConsumerWidget {
           ],
         ),
         const SizedBox(height: AppSpacing.md),
-        AppTextField(
-          label: 'Search role, company, or city',
-          leadingIcon: Icons.search,
-          onChanged: notifier.search,
-          trailing: _FilterTrigger(state: state),
-        ),
-        if (!state.filters.isEmpty) ...[
-          const SizedBox(height: AppSpacing.sm),
-          _ActiveFilterPills(state: state, notifier: notifier),
-        ],
-        const SizedBox(height: AppSpacing.md),
-        SegmentedButton<JobsTab>(
-          segments: const [
-            ButtonSegment(
-              value: JobsTab.forYou,
-              label: Text('For you'),
-              icon: Icon(Icons.auto_awesome_outlined, size: 16),
-            ),
-            ButtonSegment(value: JobsTab.all, label: Text('All jobs')),
-          ],
-          selected: {state.tab},
-          showSelectedIcon: false,
-          onSelectionChanged: (selection) => notifier.setTab(selection.first),
+        AppCard(
+          elevation: AppElevation.medium,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              AppTextField(
+                label: 'Search role, company, or city',
+                leadingIcon: Icons.search,
+                onChanged: notifier.search,
+                trailing: _FilterTrigger(state: state),
+              ),
+              if (!state.filters.isEmpty) ...[
+                const SizedBox(height: AppSpacing.sm),
+                _ActiveFilterPills(state: state, notifier: notifier),
+              ],
+              const SizedBox(height: AppSpacing.md),
+              SegmentedButton<JobsTab>(
+                segments: const [
+                  ButtonSegment(
+                    value: JobsTab.forYou,
+                    label: Text('For you'),
+                    icon: Icon(Icons.auto_awesome_outlined, size: 16),
+                  ),
+                  ButtonSegment(value: JobsTab.all, label: Text('All jobs')),
+                ],
+                selected: {state.tab},
+                showSelectedIcon: false,
+                onSelectionChanged: (selection) =>
+                    notifier.setTab(selection.first),
+              ),
+            ],
+          ),
         ),
         const SizedBox(height: AppSpacing.sm),
         Text(
@@ -121,6 +131,14 @@ class _JobsContent extends ConsumerWidget {
               child: _JobCard(
                 item: items[i],
                 showMatch: state.tab == JobsTab.forYou,
+                // The For-you tab is already sorted by matchScore
+                // (descending, see JobsController.visibleJobs) -- so the
+                // first card genuinely is the best match, and this ribbon
+                // just states that existing fact. A ribbon on a list of
+                // one wouldn't mean anything ("top" of one), so it's
+                // withheld there.
+                isTopMatch:
+                    i == 0 && state.tab == JobsTab.forYou && items.length > 1,
                 isSaved: state.savedJobIds.contains(items[i].job.id),
                 isApplied: state.appliedJobIds.contains(items[i].job.id),
                 isLiveData: state.isLiveData,
@@ -724,6 +742,7 @@ class _JobCard extends StatelessWidget {
   const _JobCard({
     required this.item,
     required this.showMatch,
+    required this.isTopMatch,
     required this.isSaved,
     required this.isApplied,
     required this.isLiveData,
@@ -733,6 +752,11 @@ class _JobCard extends StatelessWidget {
 
   final JobListItem item;
   final bool showMatch;
+
+  /// Whether this card is the #1 result on the (already match-sorted)
+  /// For-you tab -- see the "Top match for you" ribbon this draws when
+  /// true.
+  final bool isTopMatch;
   final bool isSaved;
   final bool isApplied;
   final bool isLiveData;
@@ -745,7 +769,7 @@ class _JobCard extends StatelessWidget {
     final isFlora = job.source == 'flora';
     final sourceName = jobSourceDisplayName(job.source);
 
-    return AppCard(
+    final card = AppCard(
       onTap: onTap,
       semanticLabel: 'Open ${job.title} at ${job.employer}',
       child: Column(
@@ -774,14 +798,26 @@ class _JobCard extends StatelessWidget {
                         ],
                       ],
                     ),
-                    Text(
-                      '${job.employer} • ${job.location}',
-                      style: const TextStyle(
-                        color: AppColors.inkMuted,
-                        fontSize: 12.5,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.location_on_outlined,
+                          size: 12,
+                          color: AppColors.inkMuted,
+                        ),
+                        const SizedBox(width: 2),
+                        Expanded(
+                          child: Text(
+                            '${job.employer} • ${job.location}',
+                            style: const TextStyle(
+                              color: AppColors.inkMuted,
+                              fontSize: 12.5,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -797,6 +833,10 @@ class _JobCard extends StatelessWidget {
               ),
             ],
           ),
+          if (showMatch) ...[
+            const SizedBox(height: AppSpacing.xs),
+            _MatchMeterBar(score: item.matchScore),
+          ],
           const SizedBox(height: AppSpacing.xs),
           Text(
             job.description,
@@ -829,17 +869,91 @@ class _JobCard extends StatelessWidget {
                   label: 'Supervisor',
                   tone: AppChipTone.warning,
                 ),
-              Text(
-                jobPostedLabel(job.publishedAt),
-                style: const TextStyle(
-                  color: AppColors.inkMuted,
-                  fontSize: 11.5,
-                  fontWeight: FontWeight.w600,
-                ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.access_time,
+                    size: 11,
+                    color: AppColors.inkMuted,
+                  ),
+                  const SizedBox(width: 2),
+                  Text(
+                    jobPostedLabel(job.publishedAt),
+                    style: const TextStyle(
+                      color: AppColors.inkMuted,
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
         ],
+      ),
+    );
+
+    if (!isTopMatch) return card;
+
+    // Extra top padding gives the ribbon (positioned above the card's own
+    // top edge) room to render without being clipped by the list's
+    // spacing above it.
+    return Padding(
+      padding: const EdgeInsets.only(top: 14),
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          card,
+          const Positioned(top: -10, left: 14, child: _TopMatchRibbon()),
+        ],
+      ),
+    );
+  }
+}
+
+/// Pinned to the top-left of the #1 For-you card. States an existing fact
+/// about the list (For-you is already sorted by [JobListItem.matchScore])
+/// rather than a new claim, and is only ever attached when that's true --
+/// see `isTopMatch` on [_JobCard].
+class _TopMatchRibbon extends StatelessWidget {
+  const _TopMatchRibbon();
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      label: 'Top match for you',
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.xs,
+          vertical: 4,
+        ),
+        decoration: BoxDecoration(
+          color: AppColors.brand,
+          borderRadius: BorderRadius.circular(AppRadius.pill),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.ink.withValues(alpha: 0.18),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: const Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.star_rounded, size: 12, color: Colors.white),
+            SizedBox(width: 3),
+            Text(
+              'Top match for you',
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w800,
+                color: Colors.white,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -880,6 +994,10 @@ class _SourceAvatar extends StatelessWidget {
   }
 }
 
+/// A compact two-line stat (percentage on top, "MATCH" below) rather than
+/// a single-line "N% match" pill -- reads more like a scorecard number at
+/// a glance. Same [JobListItem.matchScore] value, same isTop threshold and
+/// brand/accent colour logic as before, just re-laid-out.
 class _MatchBadge extends StatelessWidget {
   const _MatchBadge({required this.score});
 
@@ -888,21 +1006,79 @@ class _MatchBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isTop = score >= 85;
+    final tone = isTop ? AppColors.brand : AppColors.accent;
     return Semantics(
       label: '$score percent match',
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.xs,
+          vertical: 3,
+        ),
         decoration: BoxDecoration(
           color: isTop ? AppColors.brandSoft : AppColors.accentSoft,
           borderRadius: AppRadius.smallBorder,
         ),
-        child: Text(
-          '$score% match',
-          style: TextStyle(
-            fontSize: 10.5,
-            fontWeight: FontWeight.w800,
-            color: isTop ? AppColors.brand : AppColors.accent,
-          ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Text(
+              '$score%',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w800,
+                color: tone,
+                height: 1,
+              ),
+            ),
+            Text(
+              'MATCH',
+              style: TextStyle(
+                fontSize: 8,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.6,
+                color: tone,
+                height: 1.4,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// A thin horizontal meter that visualises the same [JobListItem.matchScore]
+/// the badge above already shows as a number -- not a new figure, just a
+/// second read of it. Only rendered on the For-you tab (`showMatch`),
+/// matching where the badge itself is shown.
+class _MatchMeterBar extends StatelessWidget {
+  const _MatchMeterBar({required this.score});
+
+  final int score;
+
+  @override
+  Widget build(BuildContext context) {
+    final isTop = score >= 85;
+    return SizedBox(
+      width: double.infinity,
+      height: 4,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(AppRadius.pill),
+        child: Stack(
+          children: [
+            Positioned.fill(child: Container(color: AppColors.surfaceMuted)),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: FractionallySizedBox(
+                widthFactor: (score / 100).clamp(0.0, 1.0),
+                child: Container(
+                  height: 4,
+                  color: isTop ? AppColors.brand : AppColors.accent,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
