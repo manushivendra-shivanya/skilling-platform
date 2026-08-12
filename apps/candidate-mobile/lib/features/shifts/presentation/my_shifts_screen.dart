@@ -8,6 +8,7 @@ import '../../../core/errors/app_failure.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_feedback.dart';
+import '../../../core/widgets/app_loading_progress.dart';
 import '../../../core/widgets/app_state_view.dart';
 import '../../../core/widgets/app_text_field.dart';
 import '../domain/shifts_repository.dart';
@@ -23,7 +24,9 @@ class MyShiftsScreen extends ConsumerWidget {
       appBar: AppBar(title: const Text('My shifts')),
       body: SafeArea(
         child: state.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
+          loading: () => const Center(
+            child: AppLoadingProgressBar(label: 'Loading your shifts…'),
+          ),
           error: (error, stackTrace) => AppErrorState(
             title: 'Your shifts could not be loaded',
             message: error is AppFailure
@@ -51,6 +54,7 @@ class _MyShiftsContent extends ConsumerWidget {
         message: 'Accept a shift from the Shift tab to see it here.',
       );
     }
+    final shiftCount = state.myApplications.length;
     return ListView(
       padding: const EdgeInsets.fromLTRB(
         AppSpacing.xl,
@@ -59,6 +63,13 @@ class _MyShiftsContent extends ConsumerWidget {
         AppSpacing.xl,
       ),
       children: [
+        Text('My shifts', style: Theme.of(context).textTheme.headlineSmall),
+        const SizedBox(height: AppSpacing.xs),
+        Text(
+          '$shiftCount shift${shiftCount == 1 ? '' : 's'} in progress',
+          style: const TextStyle(color: AppColors.inkMuted),
+        ),
+        const SizedBox(height: AppSpacing.md),
         for (final application in state.myApplications) ...[
           _MyShiftCard(
             application: application,
@@ -107,15 +118,34 @@ class _MyShiftCardState extends ConsumerState<_MyShiftCard> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            shift?.roleTitle ?? 'Shift',
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
           if (shift != null) ...[
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    shift.roleTitle,
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                ),
+                Text(
+                  '₹${shift.payAmount.toStringAsFixed(0)}',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+              ],
+            ),
             const SizedBox(height: AppSpacing.xxs),
             Text('${shift.siteName} • ${shift.city}'),
             const SizedBox(height: AppSpacing.xxs),
             Text(dateFormat.format(shift.startsAt)),
+          ] else ...[
+            Text('Shift', style: Theme.of(context).textTheme.titleMedium),
+            const SizedBox(height: AppSpacing.xxs),
+            Text(
+              'Shift details unavailable',
+              style: Theme.of(
+                context,
+              ).textTheme.labelSmall?.copyWith(color: AppColors.inkMuted),
+            ),
           ],
           const SizedBox(height: AppSpacing.sm),
           _StatusStepper(status: widget.application.status),

@@ -3,6 +3,7 @@ import 'package:candidate_mobile/app/theme/app_theme.dart';
 import 'package:candidate_mobile/core/errors/app_failure.dart';
 import 'package:candidate_mobile/core/errors/result.dart';
 import 'package:candidate_mobile/core/repositories/candidate_session_repository.dart';
+import 'package:candidate_mobile/core/widgets/app_sticky_footer.dart';
 import 'package:candidate_mobile/features/shifts/domain/shift_availability.dart';
 import 'package:candidate_mobile/features/shifts/presentation/shift_availability_screen.dart';
 import 'package:flutter/material.dart';
@@ -91,6 +92,26 @@ void main() {
 
     expect(find.text('Availability could not be loaded'), findsOneWidget);
   });
+
+  testWidgets(
+    'the save button is pinned in a sticky footer below the scrolling form',
+    (tester) async {
+      final repository = _FakeShiftAvailabilityRepository(
+        const ShiftAvailability(),
+      );
+      await tester.pumpWidget(_app(repository));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(AppStickyFooter), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byType(AppStickyFooter),
+          matching: find.text('Save availability'),
+        ),
+        findsOneWidget,
+      );
+    },
+  );
 }
 
 Widget _app(ShiftAvailabilityRepository repository) =>
