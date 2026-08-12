@@ -295,7 +295,10 @@ class _CandidateOnboardingScreenState
         onChanged: (roles) =>
             _updateDraft(draft.copyWith(preferredRoles: roles)),
       ),
-      6 => _ResumeUploadStep(onFullNameExtracted: _applyExtractedFullName),
+      6 => _ResumeUploadStep(
+        onFullNameExtracted: _applyExtractedFullName,
+        onHeadlineExtracted: _applyExtractedHeadline,
+      ),
       7 => const _PlaceholderStep(
         icon: Icons.mic_none_outlined,
         title: 'Voice introduction',
@@ -331,6 +334,17 @@ class _CandidateOnboardingScreenState
   void _applyExtractedFullName(String name) {
     if (_fullNameController.text.trim().isNotEmpty) return;
     setState(() => _fullNameController.text = name);
+  }
+
+  /// Same non-clobbering rule as [_applyExtractedFullName], but writes
+  /// straight onto the draft rather than a text controller -- `headline`
+  /// has no dedicated onboarding step of its own, so there's no field for
+  /// the candidate to have already typed into; the check is only against
+  /// whatever an earlier resume-parse attempt may have already filled in.
+  void _applyExtractedHeadline(String headline) {
+    final draft = _workingDraft;
+    if (draft == null || draft.headline.trim().isNotEmpty) return;
+    _updateDraft(draft.copyWith(headline: headline));
   }
 
   CandidateOnboardingDraft _draftWithTextFields(
@@ -612,16 +626,21 @@ class _SelectableCard extends StatelessWidget {
 /// action without reordering onboarding or extending the versioned
 /// consent system for a single new purpose.
 ///
-/// Only `fullName` is ever written back onto the draft (see
-/// `_CandidateOnboardingScreenState._applyExtractedFullName`). Every
-/// other extracted field is shown for the candidate's own reference only
-/// -- `CandidateOnboardingDraft` has no columns for work history,
-/// skills, or a free-text headline yet, and adding them is a real schema
-/// decision this step doesn't make on its own.
+/// Only `fullName` and `headline` are ever written back onto the draft
+/// (see `_CandidateOnboardingScreenState._applyExtractedFullName` and
+/// `_applyExtractedHeadline`). Every other extracted field is shown for
+/// the candidate's own reference only -- `CandidateOnboardingDraft` has
+/// no columns for work history, skills, phone, or email, and adding them
+/// is a real schema decision this step doesn't make on its own. `headline`
+/// feeds the Professional Persona networking card (features/persona/).
 class _ResumeUploadStep extends ConsumerStatefulWidget {
-  const _ResumeUploadStep({required this.onFullNameExtracted});
+  const _ResumeUploadStep({
+    required this.onFullNameExtracted,
+    required this.onHeadlineExtracted,
+  });
 
   final ValueChanged<String> onFullNameExtracted;
+  final ValueChanged<String> onHeadlineExtracted;
 
   @override
   ConsumerState<_ResumeUploadStep> createState() => _ResumeUploadStepState();
@@ -758,6 +777,10 @@ class _ResumeUploadStepState extends ConsumerState<_ResumeUploadStep> {
         final extractedName = parsed.fields['fullName']?.trim();
         if (extractedName != null && extractedName.isNotEmpty) {
           widget.onFullNameExtracted(extractedName);
+        }
+        final extractedHeadline = parsed.fields['headline']?.trim();
+        if (extractedHeadline != null && extractedHeadline.isNotEmpty) {
+          widget.onHeadlineExtracted(extractedHeadline);
         }
       },
       failure: (failure) {

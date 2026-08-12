@@ -43,6 +43,9 @@ import '../features/micro_lessons/data/secure_viewed_clips_repository.dart';
 import '../features/micro_lessons/domain/micro_lesson_assessment_repository.dart';
 import '../features/micro_lessons/domain/micro_lesson_clip_repository.dart';
 import '../features/micro_lessons/domain/viewed_clips_repository.dart';
+import '../features/networking/data/api_networking_repository.dart';
+import '../features/networking/data/unavailable_networking_repository.dart';
+import '../features/networking/domain/networking_repository.dart';
 import '../features/onboarding/data/local_onboarding_entry_repository.dart';
 import '../features/onboarding/data/secure_candidate_onboarding_repository.dart';
 import '../features/onboarding/data/supabase_candidate_onboarding_repository.dart';
@@ -248,6 +251,20 @@ final resumeParsingRepositoryProvider = Provider<ResumeParsingRepository>((
     );
   }
   return const UnavailableResumeParsingRepository();
+});
+
+final networkingRepositoryProvider = Provider<NetworkingRepository>((ref) {
+  final config = ref.watch(appConfigProvider);
+  if (config.hasSupabaseConfiguration &&
+      config.hasApiConfiguration &&
+      ref.watch(canUseLiveBackendProvider)) {
+    return ApiNetworkingRepository(
+      dio: Dio(),
+      supabaseClient: Supabase.instance.client,
+      apiBaseUrl: config.apiBaseUrl,
+    );
+  }
+  return const UnavailableNetworkingRepository();
 });
 
 final jobsRepositoryProvider = Provider<JobsRepository>((ref) {

@@ -23,6 +23,7 @@ void main() {
           LogisticsRole.warehouseAssociate,
           LogisticsRole.inventoryExecutive,
         },
+        headline: 'Warehouse Associate at ABC Logistics',
         consents: {
           OnboardingConsentVersions.termsPurpose: ConsentAcceptance(
             purpose: OnboardingConsentVersions.termsPurpose,
@@ -52,6 +53,7 @@ void main() {
         restored.preferredRoles,
         contains(LogisticsRole.inventoryExecutive),
       );
+      expect(restored.headline, 'Warehouse Associate at ABC Logistics');
       expect(restored.hasCurrentRequiredConsents, isTrue);
       expect(
         restored.consents[OnboardingConsentVersions.termsPurpose]?.acceptedAt,
