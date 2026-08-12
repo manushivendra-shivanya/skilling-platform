@@ -3,12 +3,17 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../app/theme/app_colors.dart';
+import '../../../app/theme/app_shadows.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../core/errors/app_failure.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_chip.dart';
 import '../../../core/widgets/app_feedback.dart';
+import '../../../core/widgets/app_icon_plate.dart';
+import '../../../core/widgets/app_initials_avatar.dart';
+import '../../../core/widgets/app_meter_bar.dart';
 import '../../../core/widgets/app_skeleton.dart';
 import '../../workplace_simulation/domain/simulation_enums.dart';
 import '../../workplace_simulation/domain/simulation_runtime.dart';
@@ -46,6 +51,13 @@ class CareerPassportSection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(careerPassportControllerProvider);
     return AppCard(
+      // A touch more depth than the flat AppElevation.low every other card
+      // defaults to -- this cluster (Career Passport, Role Readiness,
+      // Persona, Networking) reads flat against the rest of the app, whose
+      // hero treatment stops at Profile's own header. AppShadows.card is
+      // the "subtle default" tier built for exactly this: more depth than
+      // flat, without reading as a hero.
+      boxShadow: AppShadows.card,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -197,6 +209,11 @@ class _EmployerAccessDetails extends ConsumerWidget {
               contentPadding: EdgeInsets.zero,
               value: entry.granted,
               onChanged: (_) => _toggle(context, ref, entry),
+              secondary: AppInitialsAvatar(
+                name: entry.employerName,
+                circular: false,
+                size: 32,
+              ),
               title: Text(entry.employerName),
               subtitle: Text(
                 entry.granted ? 'Can review your evidence.' : 'No access.',
@@ -345,6 +362,17 @@ class _CareerPassportDetails extends StatelessWidget {
   }
 }
 
+/// The same tone -> foreground color pairing [AppStatusChip] already uses
+/// internally, exposed here so the score meter bar can be tinted to match
+/// its paired chip instead of inventing a new color scale.
+Color _toneColor(AppChipTone tone) => switch (tone) {
+  AppChipTone.neutral => AppColors.ink,
+  AppChipTone.info => AppColors.info,
+  AppChipTone.success => AppColors.success,
+  AppChipTone.warning => AppColors.warning,
+  AppChipTone.error => AppColors.error,
+};
+
 class _CareerPassportEntryTile extends StatelessWidget {
   const _CareerPassportEntryTile({required this.entry});
 
@@ -353,6 +381,11 @@ class _CareerPassportEntryTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final evidence = entry.evidence;
+    // Every evidence type shares the same "evidence entry" icon --
+    // competencyId/evidenceType carry no per-competency icon mapping to
+    // draw from, and inventing one would be guessing, not reusing data.
+    const entryIcon = Icons.verified_outlined;
+    final scoreTone = _provenanceTone(evidence.verificationStatus);
     return InkWell(
       onTap: () => showAppBottomSheet<void>(
         context: context,
@@ -365,7 +398,16 @@ class _CareerPassportEntryTile extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                const AppIconPlate(
+                  icon: entryIcon,
+                  background: AppColors.brandSoft,
+                  foreground: AppColors.brand,
+                  size: 36,
+                  iconSize: 18,
+                ),
+                const SizedBox(width: AppSpacing.sm),
                 Expanded(
                   child: Text(
                     competencyDisplayName(evidence.competencyId),
@@ -386,13 +428,30 @@ class _CareerPassportEntryTile extends StatelessWidget {
                   label: EvidenceVerificationStatus.displayLabel(
                     evidence.verificationStatus,
                   ),
-                  tone: _provenanceTone(evidence.verificationStatus),
+                  tone: scoreTone,
                 ),
                 AppStatusChip(
                   label: _freshnessLabel(entry.freshness),
                   tone: _freshnessTone(entry.freshness),
                 ),
-                AppStatusChip(label: '${evidence.score}%'),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            // A real scorecard for evidence.score -- the chip alone was the
+            // only visual read of the number; the meter bar underneath
+            // gives it a second, at-a-glance one, colored by the same
+            // provenance tone the chips above already compute (not a new
+            // threshold).
+            Row(
+              children: [
+                AppStatusChip(label: '${evidence.score}%', tone: scoreTone),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: AppMeterBar(
+                    value: evidence.score / 100,
+                    fillColor: _toneColor(scoreTone),
+                  ),
+                ),
               ],
             ),
           ],

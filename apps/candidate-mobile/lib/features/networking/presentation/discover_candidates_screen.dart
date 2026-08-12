@@ -8,6 +8,7 @@ import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_chip.dart';
 import '../../../core/widgets/app_feedback.dart';
+import '../../../core/widgets/app_initials_avatar.dart';
 import '../../../core/widgets/app_loading_progress.dart';
 import '../../../core/widgets/app_state_view.dart';
 import '../domain/networking_repository.dart';
@@ -130,9 +131,17 @@ class _CandidateCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            candidate.fullName,
-            style: Theme.of(context).textTheme.titleMedium,
+          Row(
+            children: [
+              AppInitialsAvatar(name: candidate.fullName, size: 40),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Text(
+                  candidate.fullName,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+              ),
+            ],
           ),
           if (candidate.headline.isNotEmpty) ...[
             const SizedBox(height: AppSpacing.xxs),

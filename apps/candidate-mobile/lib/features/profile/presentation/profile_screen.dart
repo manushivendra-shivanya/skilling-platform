@@ -8,6 +8,7 @@ import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_feedback.dart';
 import '../../../core/widgets/app_gradient_hero.dart';
+import '../../../core/widgets/app_initials_avatar.dart';
 import '../../../core/widgets/app_skeleton.dart';
 import '../../../core/widgets/app_state_view.dart';
 import '../../../core/widgets/app_status_banner.dart';
@@ -294,13 +295,6 @@ class _IdentityHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final initials = draft.fullName
-        .trim()
-        .split(RegExp(r'\s+'))
-        .where((word) => word.isNotEmpty)
-        .take(2)
-        .map((word) => word[0].toUpperCase())
-        .join();
     // Tinted white rather than a fixed grey: it keeps its relationship with
     // the gradient at every point down the header.
     final onBrandMuted = Colors.white.withValues(alpha: 0.82);
@@ -319,20 +313,17 @@ class _IdentityHeader extends StatelessWidget {
             height: 60,
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: AppColors.brandDark,
               shape: BoxShape.circle,
               border: Border.all(
                 color: Colors.white.withValues(alpha: 0.35),
                 width: 2,
               ),
             ),
-            child: Text(
-              initials,
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w800,
-                fontSize: 20,
-              ),
+            child: AppInitialsAvatar(
+              name: draft.fullName,
+              background: AppColors.brandDark,
+              foreground: Colors.white,
+              size: 56,
             ),
           ),
           const SizedBox(height: AppSpacing.sm),

@@ -6,6 +6,7 @@ import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_chip.dart';
 import '../../../core/widgets/app_feedback.dart';
+import '../../../core/widgets/app_initials_avatar.dart';
 import '../../onboarding/domain/candidate_onboarding_draft.dart';
 
 /// A shareable-style summary card built entirely from data the candidate
@@ -51,7 +52,10 @@ class ProfessionalPersonaCard extends StatelessWidget {
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
               ),
-              const AppStatusChip(label: 'Self-reported'),
+              const AppStatusChip(
+                label: 'Self-reported',
+                tone: AppChipTone.info,
+              ),
             ],
           ),
           const SizedBox(height: AppSpacing.xxs),
@@ -62,7 +66,18 @@ class ProfessionalPersonaCard extends StatelessWidget {
             style: Theme.of(context).textTheme.bodySmall,
           ),
           const SizedBox(height: AppSpacing.md),
-          Text(draft.fullName, style: Theme.of(context).textTheme.titleMedium),
+          Row(
+            children: [
+              AppInitialsAvatar(name: draft.fullName, size: 40),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Text(
+                  draft.fullName,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+              ),
+            ],
+          ),
           if (draft.headline.trim().isNotEmpty) ...[
             const SizedBox(height: AppSpacing.xxs),
             Text(draft.headline),
