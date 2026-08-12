@@ -4,14 +4,18 @@ import 'package:intl/intl.dart';
 
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_radius.dart';
+import '../../../app/theme/app_shadows.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../core/errors/app_failure.dart';
+import '../../../core/widgets/app_accent_pill.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_chip.dart';
 import '../../../core/widgets/app_feedback.dart';
+import '../../../core/widgets/app_icon_plate.dart';
 import '../../../core/widgets/app_skeleton.dart';
 import '../../../core/widgets/app_state_view.dart';
+import '../../../core/widgets/app_sticky_footer.dart';
 import '../domain/shift_match.dart';
 import '../domain/shifts_repository.dart';
 import 'shifts_controller.dart';
@@ -272,30 +276,19 @@ class _UrgencyRibbon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
+    return AppAccentPill(
+      icon: Icons.bolt_rounded,
+      label: label,
+      background: AppColors.accentSoft,
+      foreground: AppColors.accent,
+      iconSize: 18,
+      fontWeight: FontWeight.w700,
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.md,
         vertical: AppSpacing.sm,
       ),
-      decoration: BoxDecoration(
-        color: AppColors.accentSoft,
-        borderRadius: AppRadius.mediumBorder,
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(Icons.bolt_rounded, size: 18, color: AppColors.accent),
-          const SizedBox(width: AppSpacing.xs),
-          Text(
-            label,
-            style: const TextStyle(
-              color: AppColors.accent,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ],
-      ),
+      borderRadius: AppRadius.medium,
+      expand: true,
     );
   }
 }
@@ -335,7 +328,7 @@ class _ShortcutStrip extends StatelessWidget {
         scrollDirection: Axis.horizontal,
         physics: const BouncingScrollPhysics(),
         children: [
-          _ShortcutPlate(
+          AppIconPlateButton(
             icon: Icons.schedule_outlined,
             label: 'Availability',
             background: AppColors.brandSoft,
@@ -343,7 +336,7 @@ class _ShortcutStrip extends StatelessWidget {
             onTap: onOpenAvailability,
           ),
           const SizedBox(width: AppSpacing.md),
-          _ShortcutPlate(
+          AppIconPlateButton(
             icon: Icons.event_note_outlined,
             label: 'My shifts',
             background: AppColors.infoSoft,
@@ -351,7 +344,7 @@ class _ShortcutStrip extends StatelessWidget {
             onTap: onOpenMyShifts,
           ),
           const SizedBox(width: AppSpacing.md),
-          _ShortcutPlate(
+          AppIconPlateButton(
             icon: Icons.account_balance_wallet_outlined,
             label: 'Payouts',
             background: AppColors.successSoft,
@@ -359,7 +352,7 @@ class _ShortcutStrip extends StatelessWidget {
             onTap: onOpenPayouts,
           ),
           const SizedBox(width: AppSpacing.md),
-          _ShortcutPlate(
+          AppIconPlateButton(
             icon: Icons.support_agent_outlined,
             label: 'Support',
             background: AppColors.warningSoft,
@@ -367,64 +360,6 @@ class _ShortcutStrip extends StatelessWidget {
             onTap: onOpenGrievances,
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _ShortcutPlate extends StatelessWidget {
-  const _ShortcutPlate({
-    required this.icon,
-    required this.label,
-    required this.background,
-    required this.foreground,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final String label;
-  final Color background;
-  final Color foreground;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Semantics(
-      button: true,
-      label: label,
-      child: ExcludeSemantics(
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: AppRadius.mediumBorder,
-          child: SizedBox(
-            width: 68,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 36,
-                  height: 36,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: background,
-                    borderRadius: AppRadius.mediumBorder,
-                  ),
-                  child: Icon(icon, color: foreground, size: 20),
-                ),
-                const SizedBox(height: AppSpacing.xxs),
-                Text(
-                  label,
-                  textAlign: TextAlign.center,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w700),
-                ),
-              ],
-            ),
-          ),
-        ),
       ),
     );
   }
@@ -546,10 +481,14 @@ class _ShiftCard extends StatelessWidget {
       );
     }
 
-    // AppCard's flat Material elevation isn't enough weight for the hero
-    // card, and app_card.dart itself is off-limits here (a sibling PR is
-    // changing it) -- so this is a local Container/BoxShadow composition
-    // instead, wrapping the same tap-ripple + rounded-corner behaviour.
+    // AppCard now supports a boxShadow override (see AppCard.boxShadow),
+    // but it bakes in AppRadius.largeBorder for both its Material shape and
+    // that shadow's own rounded rect -- this hero card wants the rounder
+    // AppRadius.extraLargeBorder every other Shift/Home hero surface uses,
+    // which AppCard has no knob for. So this stays a local Container +
+    // AppShadows.hero composition, wrapping the same tap-ripple +
+    // rounded-corner behaviour, rather than migrating to AppCard and
+    // silently shrinking the hero card's corners.
     return Semantics(
       container: true,
       button: true,
@@ -558,13 +497,7 @@ class _ShiftCard extends StatelessWidget {
         child: Container(
           decoration: BoxDecoration(
             borderRadius: AppRadius.extraLargeBorder,
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.ink.withValues(alpha: 0.18),
-                blurRadius: 28,
-                offset: const Offset(0, 14),
-              ),
-            ],
+            boxShadow: AppShadows.hero,
           ),
           child: Material(
             color: AppColors.surface,
@@ -596,35 +529,13 @@ class _AcceptShiftFooter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        border: const Border(top: BorderSide(color: AppColors.surfaceMuted)),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.ink.withValues(alpha: 0.12),
-            blurRadius: 16,
-            offset: const Offset(0, -4),
-          ),
-        ],
-      ),
-      child: SafeArea(
-        top: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(
-            AppSpacing.xl,
-            AppSpacing.sm,
-            AppSpacing.xl,
-            AppSpacing.sm,
-          ),
-          child: AppButton(
-            label: 'Accept shift · ₹${shift.payAmount.toStringAsFixed(0)}',
-            onPressed: onTap,
-            semanticLabel:
-                'Accept ${shift.roleTitle} shift for '
-                '₹${shift.payAmount.toStringAsFixed(0)}',
-          ),
-        ),
+    return AppStickyFooter(
+      child: AppButton(
+        label: 'Accept shift · ₹${shift.payAmount.toStringAsFixed(0)}',
+        onPressed: onTap,
+        semanticLabel:
+            'Accept ${shift.roleTitle} shift for '
+            '₹${shift.payAmount.toStringAsFixed(0)}',
       ),
     );
   }

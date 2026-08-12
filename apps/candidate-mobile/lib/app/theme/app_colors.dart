@@ -4,6 +4,19 @@ abstract final class AppColors {
   static const Color brand = Color(0xFF075C42);
   static const Color brandDark = Color(0xFF003D2B);
   static const Color brandSoft = Color(0xFFD9F1E6);
+
+  // A lighter brand tone used only as the top-left anchor color of a
+  // full-bleed gradient hero (Home's HomeHeader, Profile's identity
+  // header) -- never applied to flat surfaces or text. Both gradient
+  // heroes independently invented an approximation of this before this
+  // token existed: Home used this exact literal, Profile derived one
+  // algorithmically via `Color.lerp(brand, brandDark, -0.35)`, which
+  // resolves to a close but not identical ~0xFF09674A. Reconciled to
+  // Home's value here, since it was the one already shipped and dogfooded
+  // in production (see AppColors.navy above for the same "keep the
+  // reviewed value" precedent) -- so every gradient hero in the app now
+  // shares exactly one top color instead of two near-misses.
+  static const Color brandLight = Color(0xFF0A7355);
   static const Color accent = Color(0xFFB85C13);
   static const Color accentSoft = Color(0xFFFFE8D2);
 

@@ -1,18 +1,25 @@
 import 'package:flutter/material.dart';
 
 import '../../../app/theme/app_colors.dart';
+import '../../../app/theme/app_elevation.dart';
 import '../../../app/theme/app_icons.dart';
 import '../../../app/theme/app_radius.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../app/theme/coach_mark.dart';
+import '../../../core/widgets/app_accent_pill.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_chip.dart';
 import '../../../core/widgets/app_feedback.dart';
+import '../../../core/widgets/app_gradient_hero.dart';
+import '../../../core/widgets/app_icon_plate.dart';
+import '../../../core/widgets/app_loading_progress.dart';
+import '../../../core/widgets/app_meter_bar.dart';
 import '../../../core/widgets/app_progress.dart';
 import '../../../core/widgets/app_skeleton.dart';
 import '../../../core/widgets/app_state_view.dart';
 import '../../../core/widgets/app_status_banner.dart';
+import '../../../core/widgets/app_sticky_footer.dart';
 import '../../../core/widgets/app_text_field.dart';
 
 class DesignSystemGalleryScreen extends StatelessWidget {
@@ -174,6 +181,16 @@ class DesignSystemGalleryScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: AppSpacing.md),
+                AppCard(
+                  elevation: AppElevation.medium,
+                  semanticLabel: 'Elevated card, e.g. a toolbar wrapper',
+                  child: const Text(
+                    'AppCard(elevation: AppElevation.medium) -- raised '
+                    'above ordinary page content, e.g. Jobs\' search '
+                    'toolbar.',
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.md),
                 const Wrap(
                   spacing: AppSpacing.xs,
                   runSpacing: AppSpacing.xs,
@@ -201,6 +218,11 @@ class DesignSystemGalleryScreen extends StatelessWidget {
                   value: 0.64,
                   label: 'Pathway progress',
                   detail: '7 of 11 missions',
+                ),
+                SizedBox(height: AppSpacing.xl),
+                AppLoadingProgressBar(
+                  label: 'Finding jobs for you…',
+                  showPercent: true,
                 ),
                 SizedBox(height: AppSpacing.xl),
                 AppCard(child: AppSkeletonCard()),
@@ -286,6 +308,87 @@ class DesignSystemGalleryScreen extends StatelessWidget {
                     message: 'Your progress was saved.',
                     tone: AppMessageTone.success,
                   ),
+                ),
+              ],
+            ),
+          ),
+          _GallerySection(
+            title: 'Layout patterns',
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const Text('AppIconPlate + AppIconPlateButton'),
+                const SizedBox(height: AppSpacing.sm),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    const AppIconPlate(
+                      icon: Icons.route_outlined,
+                      background: AppColors.brandSoft,
+                      foreground: AppColors.brand,
+                    ),
+                    AppIconPlateButton(
+                      icon: Icons.schedule_outlined,
+                      label: 'Availability',
+                      background: AppColors.infoSoft,
+                      foreground: AppColors.info,
+                      onTap: () {},
+                    ),
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                const Text('AppMeterBar'),
+                const SizedBox(height: AppSpacing.sm),
+                const AppMeterBar(value: 0.72),
+                const SizedBox(height: AppSpacing.lg),
+                const Text('AppAccentPill'),
+                const SizedBox(height: AppSpacing.sm),
+                Row(
+                  children: [
+                    AppAccentPill(
+                      icon: Icons.star_rounded,
+                      label: 'Top match for you',
+                      background: AppColors.brand,
+                      foreground: Colors.white,
+                      iconSize: 12,
+                      fontSize: 10,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                AppAccentPill(
+                  icon: Icons.bolt_rounded,
+                  label: 'Starts in 45m',
+                  background: AppColors.accentSoft,
+                  foreground: AppColors.accent,
+                  iconSize: 18,
+                  fontWeight: FontWeight.w700,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.md,
+                    vertical: AppSpacing.sm,
+                  ),
+                  borderRadius: AppRadius.medium,
+                  expand: true,
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                const Text('AppGradientHero'),
+                const SizedBox(height: AppSpacing.sm),
+                ClipRRect(
+                  borderRadius: AppRadius.mediumBorder,
+                  child: AppGradientHero(
+                    child: Text(
+                      'नमस्ते, Rahul',
+                      style: Theme.of(
+                        context,
+                      ).textTheme.titleMedium?.copyWith(color: Colors.white),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                const Text('AppStickyFooter'),
+                const SizedBox(height: AppSpacing.sm),
+                AppStickyFooter(
+                  child: AppButton(label: 'Accept shift', onPressed: () {}),
                 ),
               ],
             ),

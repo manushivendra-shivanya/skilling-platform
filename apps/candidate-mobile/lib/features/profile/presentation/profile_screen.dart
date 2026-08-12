@@ -7,6 +7,7 @@ import '../../../core/errors/app_failure.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_feedback.dart';
+import '../../../core/widgets/app_gradient_hero.dart';
 import '../../../core/widgets/app_skeleton.dart';
 import '../../../core/widgets/app_state_view.dart';
 import '../../../core/widgets/app_status_banner.dart';
@@ -304,27 +305,12 @@ class _IdentityHeader extends StatelessWidget {
     // the gradient at every point down the header.
     final onBrandMuted = Colors.white.withValues(alpha: 0.82);
 
-    return Container(
-      width: double.infinity,
+    return AppGradientHero(
       padding: const EdgeInsets.fromLTRB(
         AppSpacing.lg,
         AppSpacing.xl,
         AppSpacing.lg,
         AppSpacing.xl,
-      ),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          // A lighter brand tone through brand to brandDark -- composed only
-          // from the two existing brand tokens (extrapolating past brand,
-          // away from brandDark, rather than inventing a new colour).
-          colors: [
-            Color.lerp(AppColors.brand, AppColors.brandDark, -0.35)!,
-            AppColors.brand,
-            AppColors.brandDark,
-          ],
-        ),
       ),
       child: Column(
         children: [
