@@ -4,6 +4,7 @@ import 'package:candidate_mobile/core/errors/app_failure.dart';
 import 'package:candidate_mobile/core/errors/result.dart';
 import 'package:candidate_mobile/core/repositories/candidate_session_repository.dart';
 import 'package:candidate_mobile/features/career_passport/domain/career_passport_repository.dart';
+import 'package:candidate_mobile/core/widgets/app_meter_bar.dart';
 import 'package:candidate_mobile/features/career_passport/presentation/role_readiness_section.dart';
 import 'package:candidate_mobile/features/workplace_simulation/domain/simulation_enums.dart';
 import 'package:candidate_mobile/features/workplace_simulation/domain/simulation_runtime.dart';
@@ -66,6 +67,11 @@ void main() {
     expect(find.text('Needs practice'), findsOneWidget);
     expect(find.text('Developing'), findsOneWidget);
     expect(find.text('Unknown'), findsOneWidget);
+
+    // Real evidence -> a real score meter bar and a "(N records)" caption;
+    // the mapped categories each have exactly 1 evidence record.
+    expect(find.byType(AppMeterBar), findsNWidgets(3));
+    expect(find.text('(1 record)'), findsNWidgets(3));
   });
 
   testWidgets('all categories show Unknown when there is no evidence', (
@@ -80,6 +86,12 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Unknown'), findsNWidgets(4));
+
+    // No evidence anywhere -> averageScore is null for every category, so
+    // no meter bar is rendered at all -- distinct from a real low score,
+    // not the same as showing an empty/zero bar.
+    expect(find.byType(AppMeterBar), findsNothing);
+    expect(find.textContaining('record'), findsNothing);
   });
 }
 

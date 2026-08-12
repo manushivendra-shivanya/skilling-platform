@@ -7,6 +7,7 @@ import '../../../core/errors/result.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_feedback.dart';
+import '../../../core/widgets/app_initials_avatar.dart';
 import '../../../core/widgets/app_loading_progress.dart';
 import '../../../core/widgets/app_state_view.dart';
 import '../domain/networking_repository.dart';
@@ -143,7 +144,11 @@ class _MyConnectionsScreenState extends ConsumerState<MyConnectionsScreen> {
                   ),
                   AppButton(
                     label: 'Block',
-                    variant: AppButtonVariant.secondary,
+                    // The one safety action a candidate can take on a
+                    // connection unilaterally (see this file's doc
+                    // comment) -- destructive, not visually identical to
+                    // the reversible "Disconnect" beside it.
+                    variant: AppButtonVariant.destructive,
                     onPressed: () => _block(connection),
                   ),
                 ],
@@ -216,13 +221,22 @@ class _ConnectionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final other = connection.otherCandidate;
+    final fullName = other?.fullName ?? 'A candidate';
     return AppCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            other?.fullName ?? 'A candidate',
-            style: Theme.of(context).textTheme.titleMedium,
+          Row(
+            children: [
+              AppInitialsAvatar(name: fullName, size: 40),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Text(
+                  fullName,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+              ),
+            ],
           ),
           if (other != null && other.headline.isNotEmpty) ...[
             const SizedBox(height: AppSpacing.xxs),

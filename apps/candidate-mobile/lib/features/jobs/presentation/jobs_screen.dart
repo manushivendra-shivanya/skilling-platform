@@ -13,6 +13,7 @@ import '../../../core/widgets/app_accent_pill.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_chip.dart';
 import '../../../core/widgets/app_feedback.dart';
+import '../../../core/widgets/app_initials_avatar.dart';
 import '../../../core/widgets/app_loading_progress.dart';
 import '../../../core/widgets/app_meter_bar.dart';
 import '../../../core/widgets/app_skeleton.dart';
@@ -950,29 +951,11 @@ class _SourceAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final initials = employer
-        .trim()
-        .split(RegExp(r'\s+'))
-        .where((word) => word.isNotEmpty)
-        .take(2)
-        .map((word) => word[0].toUpperCase())
-        .join();
-    return Container(
-      width: 40,
-      height: 40,
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        color: isFlora ? AppColors.brandSoft : AppColors.infoSoft,
-        borderRadius: AppRadius.mediumBorder,
-      ),
-      child: Text(
-        initials,
-        style: TextStyle(
-          fontWeight: FontWeight.w800,
-          fontSize: 13,
-          color: isFlora ? AppColors.brand : AppColors.info,
-        ),
-      ),
+    return AppInitialsAvatar(
+      name: employer,
+      circular: false,
+      background: isFlora ? AppColors.brandSoft : AppColors.infoSoft,
+      foreground: isFlora ? AppColors.brand : AppColors.info,
     );
   }
 }

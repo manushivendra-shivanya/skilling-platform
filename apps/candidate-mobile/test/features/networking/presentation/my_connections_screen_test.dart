@@ -154,7 +154,10 @@ void main() {
     expect(find.text('Connected'), findsOneWidget);
     expect(find.text('Kiran Patel'), findsOneWidget);
 
-    await tester.tap(find.widgetWithText(OutlinedButton, 'Block'));
+    // Block is destructive (a FilledButton styled with the error color),
+    // not the plain OutlinedButton secondary actions elsewhere use --
+    // see the widget's own comment for why.
+    await tester.tap(find.widgetWithText(FilledButton, 'Block'));
     await tester.pumpAndSettle();
 
     expect(repo.blockedCandidateIds, ['candidate-3']);

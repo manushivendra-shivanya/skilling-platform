@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../core/errors/app_failure.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_chip.dart';
+import '../../../core/widgets/app_icon_plate.dart';
+import '../../../core/widgets/app_meter_bar.dart';
 import '../../../core/widgets/app_skeleton.dart';
 import '../domain/role_readiness.dart';
 import 'career_passport_controller.dart';
@@ -109,20 +112,62 @@ class _RoleReadinessRow extends StatelessWidget {
       ReadinessLevel.needsPractice => AppChipTone.warning,
       ReadinessLevel.unknown => AppChipTone.neutral,
     };
+    final (plateBackground, plateForeground) = _toneColors(tone);
     final label = readinessCategoryLabel(summary.category);
+    final averageScore = summary.averageScore;
     return Semantics(
       label:
           '$label: ${readinessLevelLabel(summary.level)}'
-          '${summary.averageScore != null ? ', ${summary.averageScore}% average' : ''}',
+          '${averageScore != null ? ', $averageScore% average' : ''}',
       child: ExcludeSemantics(
         child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(
-              child: Text(label, style: Theme.of(context).textTheme.bodyLarge),
+            AppIconPlate(
+              icon: _categoryIcon(summary.category),
+              background: plateBackground,
+              foreground: plateForeground,
+              size: 36,
+              iconSize: 18,
             ),
-            AppStatusChip(
-              label: readinessLevelLabel(summary.level),
-              tone: tone,
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(label, style: Theme.of(context).textTheme.bodyLarge),
+                  // Honestly distinguishes "no evidence yet" (no bar) from
+                  // a real low score (a bar showing it) -- matching how the
+                  // rest of the app treats those as different states, not
+                  // the same "0%".
+                  if (averageScore != null) ...[
+                    const SizedBox(height: AppSpacing.xxs),
+                    AppMeterBar(
+                      value: averageScore / 100,
+                      height: 4,
+                      fillColor: plateForeground,
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                AppStatusChip(
+                  label: readinessLevelLabel(summary.level),
+                  tone: tone,
+                ),
+                if (summary.evidenceCount > 0) ...[
+                  const SizedBox(height: AppSpacing.xxs),
+                  Text(
+                    '(${summary.evidenceCount} record'
+                    '${summary.evidenceCount == 1 ? '' : 's'})',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ],
+              ],
             ),
           ],
         ),
@@ -130,3 +175,21 @@ class _RoleReadinessRow extends StatelessWidget {
     );
   }
 }
+
+IconData _categoryIcon(ReadinessCategory category) => switch (category) {
+  ReadinessCategory.receiving => Icons.move_to_inbox_outlined,
+  ReadinessCategory.processing => Icons.build_outlined,
+  ReadinessCategory.dispatch => Icons.local_shipping_outlined,
+  ReadinessCategory.supervisor => Icons.supervisor_account_outlined,
+};
+
+/// The same soft-background/tone-foreground pairing [AppStatusChip] already
+/// uses internally, reused here for the category icon plate and the score
+/// meter bar's fill color rather than inventing a new color scale.
+(Color, Color) _toneColors(AppChipTone tone) => switch (tone) {
+  AppChipTone.neutral => (AppColors.surfaceMuted, AppColors.ink),
+  AppChipTone.info => (AppColors.infoSoft, AppColors.info),
+  AppChipTone.success => (AppColors.successSoft, AppColors.success),
+  AppChipTone.warning => (AppColors.warningSoft, AppColors.warning),
+  AppChipTone.error => (AppColors.errorSoft, AppColors.error),
+};
