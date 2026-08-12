@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { AuthHooksModule } from './auth-hooks/auth-hooks.module';
 import { SupabaseModule } from './supabase/supabase.module';
 import { CareerPassportModule } from './career-passport/career-passport.module';
+import { CoachModule } from './coach/coach.module';
 import { DevModule } from './dev/dev.module';
 import { EmployerModule } from './employer/employer.module';
 import { HealthController } from './health/health.controller';
@@ -17,6 +18,7 @@ import { WorkplaceSimulationModule } from './workplace-simulation/workplace-simu
     AuthHooksModule,
     SupabaseModule,
     CareerPassportModule,
+    CoachModule,
     DevModule,
     EmployerModule,
     JobSourcesModule,

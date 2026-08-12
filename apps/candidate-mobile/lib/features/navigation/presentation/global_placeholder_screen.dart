@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../../app/theme/app_icons.dart';
 import '../../../core/widgets/app_state_view.dart';
 
 class GlobalPlaceholderScreen extends StatelessWidget {
@@ -14,16 +13,6 @@ class GlobalPlaceholderScreen extends StatelessWidget {
   final String title;
   final String message;
   final IconData icon;
-
-  factory GlobalPlaceholderScreen.aiCoach({Key? key}) {
-    return GlobalPlaceholderScreen(
-      key: key,
-      icon: AppIcons.coach,
-      title: 'AI Career Coach',
-      message:
-          'The Coach route is ready. Local text conversation arrives in Phase 1.8. No AI provider, microphone, or upload is active yet.',
-    );
-  }
 
   factory GlobalPlaceholderScreen.notifications({Key? key}) {
     return GlobalPlaceholderScreen(

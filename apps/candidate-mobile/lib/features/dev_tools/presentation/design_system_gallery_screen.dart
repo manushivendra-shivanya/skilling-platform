@@ -4,6 +4,7 @@ import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_icons.dart';
 import '../../../app/theme/app_radius.dart';
 import '../../../app/theme/app_spacing.dart';
+import '../../../app/theme/coach_mark.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_chip.dart';
@@ -81,12 +82,12 @@ class DesignSystemGalleryScreen extends StatelessWidget {
               spacing: AppSpacing.lg,
               runSpacing: AppSpacing.md,
               children: [
-                _IconToken(label: 'Home', icon: AppIcons.home),
-                _IconToken(label: 'Learn', icon: AppIcons.learn),
-                _IconToken(label: 'Practise', icon: AppIcons.practise),
-                _IconToken(label: 'Jobs', icon: AppIcons.jobs),
-                _IconToken(label: 'Profile', icon: AppIcons.profile),
-                _IconToken(label: 'Coach', icon: AppIcons.coach),
+                _IconToken(label: 'Home', icon: Icon(AppIcons.home)),
+                _IconToken(label: 'Learn', icon: Icon(AppIcons.learn)),
+                _IconToken(label: 'Practise', icon: Icon(AppIcons.practise)),
+                _IconToken(label: 'Jobs', icon: Icon(AppIcons.jobs)),
+                _IconToken(label: 'Profile', icon: Icon(AppIcons.profile)),
+                _IconToken(label: 'Coach', icon: CoachMark()),
               ],
             ),
           ),
@@ -353,7 +354,7 @@ class _IconToken extends StatelessWidget {
   const _IconToken({required this.label, required this.icon});
 
   final String label;
-  final IconData icon;
+  final Widget icon;
 
   @override
   Widget build(BuildContext context) {
@@ -361,7 +362,10 @@ class _IconToken extends StatelessWidget {
       width: 64,
       child: Column(
         children: [
-          Icon(icon, semanticLabel: label),
+          Semantics(
+            label: label,
+            child: ExcludeSemantics(child: icon),
+          ),
           const SizedBox(height: AppSpacing.xs),
           Text(
             label,

@@ -3,8 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../app/theme/app_icons.dart';
 import '../../../app/theme/app_spacing.dart';
+import '../../../app/theme/coach_mark.dart';
 import '../../../core/errors/app_failure.dart';
 import '../../../core/widgets/app_chip.dart';
 import '../../../core/widgets/app_state_view.dart';
@@ -125,11 +125,7 @@ class _SplashBrand extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
-                AppIcons.coach,
-                color: Theme.of(context).colorScheme.primary,
-                size: 56,
-              ),
+              CoachMark(color: Theme.of(context).colorScheme.primary, size: 56),
               const SizedBox(height: AppSpacing.lg),
               Text(
                 'Saksham',

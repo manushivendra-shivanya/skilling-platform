@@ -74,7 +74,8 @@ Initial roles:
 24. [Receiving Department Content Specification](docs/24-receiving-department-content-specification.md)
 25. [Job Sourcing, Voice AI and Career Progression Plan](docs/25-job-sourcing-voice-ai-career-progression-plan.md) — Phase H (job sourcing) shipped; Phases I/J have not.
 26. [Sector Pack Rollout](docs/26-sector-pack-rollout.md) — entry point, QC checklist, and dogfooding log for the Lessons/Practise/Certification SectorPack abstraction (ADR-0020); one pack (warehouse) has a design reference, none are wired to live screens yet.
-27. [Current Repository State](docs/generated/current-state.md) and [Block Diagram](docs/generated/block-diagram.md) — the machine-facing ground truth, updated every session per `AGENTS.md`.
+27. [AI Career Coach Plan](docs/27-ai-coach-plan.md) — provider architecture (Gemini active, Claude Sonnet 5 configured fallback), system-prompt scope, and the Phase 2 tool-call backlog (job search, email drafting, resume builder, PDF export) deferred out of v1.
+28. [Current Repository State](docs/generated/current-state.md) and [Block Diagram](docs/generated/block-diagram.md) — the machine-facing ground truth, updated every session per `AGENTS.md`.
 
 ## Actual Monorepo
 ```text

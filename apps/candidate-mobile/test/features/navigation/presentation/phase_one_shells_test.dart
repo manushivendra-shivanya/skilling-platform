@@ -63,7 +63,8 @@ void main() {
   });
 
   testWidgets(
-    'Coach sends local replies, exposes safe placeholders, and resets',
+    'Coach starts a topic thread from the empty state, replies locally, '
+    'and lists it back on the threads screen',
     (tester) async {
       final analytics = InMemoryAnalyticsTracker();
       await tester.pumpCandidateApp(
@@ -75,27 +76,34 @@ void main() {
       await tester.tap(find.text('AI Coach'));
       await tester.pumpAndSettle();
 
+      // Empty state: welcome copy plus starter prompts, no threads yet.
+      expect(find.textContaining('Namaste!'), findsOneWidget);
+
       await tester.enterText(
         find.byType(TextField),
         'How should I report a mismatch?',
       );
       await tester.tap(find.byTooltip('Send message'));
-      await tester.pump();
+      await tester.pumpAndSettle();
+
+      // Sending from the empty state opens the new thread automatically.
+      // The question text appears twice on this screen -- once as the
+      // candidate's message bubble, once as the AppBar title (the thread's
+      // topic label, derived from this same opening question).
       expect(find.textContaining('break the task into steps'), findsOneWidget);
+      expect(find.text('How should I report a mismatch?'), findsNWidgets(2));
       expect(
         analytics.events.map((event) => event.name),
-        contains('local_coach_message_sent'),
+        contains('coach_message_sent'),
       );
 
-      await tester.tap(find.byTooltip('Voice input unavailable'));
-      await tester.pump();
-      expect(find.textContaining('No microphone permission'), findsOneWidget);
+      await tester.pageBack();
+      await tester.pumpAndSettle();
 
-      await tester.tap(find.byTooltip('Reset conversation'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Reset'));
-      await tester.pumpAndSettle();
-      expect(find.text('How should I report a mismatch?'), findsNothing);
+      // Back on the threads list: the new thread is there, topic-labelled
+      // from the opening question.
+      expect(find.text('How should I report a mismatch?'), findsOneWidget);
+      expect(find.textContaining('2 messages'), findsOneWidget);
     },
   );
 

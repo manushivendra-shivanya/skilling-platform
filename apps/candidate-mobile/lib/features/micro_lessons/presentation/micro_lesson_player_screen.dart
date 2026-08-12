@@ -7,6 +7,7 @@ import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_card.dart';
+import '../../coach/presentation/ask_coach_affordance.dart';
 import '../domain/micro_lesson_assessment_attempt.dart';
 import '../domain/micro_lesson_assessment_repository.dart';
 import '../domain/micro_lesson_clip.dart';
@@ -198,6 +199,10 @@ class _MicroLessonPlayerScreenState
           icon: const Icon(Icons.arrow_back),
         ),
         title: Text(clip.title),
+      ),
+      floatingActionButton: AskCoachAffordance(
+        contextLabel: clip.title,
+        contextRef: 'micro_lesson:${clip.id}',
       ),
       body: ListView(
         padding: const EdgeInsets.all(AppSpacing.md),

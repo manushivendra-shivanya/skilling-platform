@@ -12,7 +12,8 @@ import '../../core/widgets/app_error_boundary.dart';
 import '../../features/authentication/presentation/authenticated_placeholder_screen.dart';
 import '../../features/authentication/presentation/email_entry_screen.dart';
 import '../../features/authentication/presentation/otp_entry_screen.dart';
-import '../../features/coach/presentation/coach_screen.dart';
+import '../../features/coach/presentation/coach_thread_screen.dart';
+import '../../features/coach/presentation/coach_threads_screen.dart';
 import '../../features/dev_tools/presentation/design_system_gallery_screen.dart';
 import '../../features/home/presentation/home_dashboard_screen.dart';
 import '../../features/jobs/presentation/jobs_screen.dart';
@@ -95,6 +96,9 @@ const profileRoutePath = '/me';
 const profileRouteName = 'me';
 const aiCoachRoutePath = '/coach';
 const aiCoachRouteName = 'ai-coach';
+const aiCoachThreadRoutePattern = '$aiCoachRoutePath/:threadId';
+const aiCoachThreadRouteName = 'ai-coach-thread';
+String aiCoachThreadPath(String threadId) => '$aiCoachRoutePath/$threadId';
 const notificationsRoutePath = '/notifications';
 const notificationsRouteName = 'notifications';
 const diagnosticRoutePath = '/diagnostic';
@@ -538,7 +542,16 @@ GoRouter createAppRouter({
         parentNavigatorKey: rootNavigatorKey,
         path: aiCoachRoutePath,
         name: aiCoachRouteName,
-        builder: (context, state) => const CoachScreen(),
+        builder: (context, state) => CoachThreadsScreen(
+          onOpenThread: (threadId) => context.push(aiCoachThreadPath(threadId)),
+        ),
+      ),
+      GoRoute(
+        parentNavigatorKey: rootNavigatorKey,
+        path: aiCoachThreadRoutePattern,
+        name: aiCoachThreadRouteName,
+        builder: (context, state) =>
+            CoachThreadScreen(threadId: state.pathParameters['threadId']!),
       ),
       GoRoute(
         parentNavigatorKey: rootNavigatorKey,

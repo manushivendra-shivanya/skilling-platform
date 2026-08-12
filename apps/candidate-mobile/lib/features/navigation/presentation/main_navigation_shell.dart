@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/theme/app_icons.dart';
+import '../../../app/theme/coach_mark.dart';
 import '../../../core/analytics/analytics_event.dart';
 import '../../../core/analytics/analytics_tracker.dart';
 
@@ -64,7 +65,7 @@ class MainNavigationShell extends StatelessWidget {
             );
             onOpenCoach();
           },
-          icon: const Icon(AppIcons.coach),
+          icon: const CoachMark(),
           label: const Text('AI Coach'),
         ),
         floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
