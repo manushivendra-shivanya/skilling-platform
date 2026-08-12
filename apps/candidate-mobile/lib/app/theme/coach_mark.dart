@@ -29,11 +29,27 @@ class CoachMark extends StatelessWidget {
         IconTheme.of(context).color ??
         DefaultTextStyle.of(context).style.color ??
         Colors.black;
+    // `Center` (not just `SizedBox`) is load-bearing: a `SizedBox`'s own
+    // width/height are only *preferred* -- an ancestor that hands down a
+    // tight constraint (a `Column` with `crossAxisAlignment: stretch`, in
+    // particular) overrides them straight through to `CustomPaint`, which
+    // then paints this mark's geometry at that stretched width while
+    // `paint()`'s `size` still reports the correct 56-ish height, blowing
+    // the unclipped path out past the intended box (real-device report: a
+    // giant diagonal arrow across the whole sign-in screen). `Center`
+    // gives its child loosened constraints regardless of what it itself
+    // receives, so the mark always renders at exactly `size`, with any
+    // extra stretched space simply left blank around it.
     return ExcludeSemantics(
-      child: SizedBox(
-        width: size,
-        height: size,
-        child: CustomPaint(painter: _CoachMarkPainter(resolvedColor)),
+      child: Center(
+        child: SizedBox(
+          width: size,
+          height: size,
+          child: CustomPaint(
+            size: Size.square(size),
+            painter: _CoachMarkPainter(resolvedColor),
+          ),
+        ),
       ),
     );
   }
