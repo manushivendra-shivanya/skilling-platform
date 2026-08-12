@@ -9,6 +9,7 @@ import { EmployerModule } from './employer/employer.module';
 import { HealthController } from './health/health.controller';
 import { JobSourcesModule } from './integrations/job-sources/job-sources.module';
 import { JobsModule } from './jobs/jobs.module';
+import { ResumeModule } from './resume/resume.module';
 import { ShiftsModule } from './shifts/shifts.module';
 import { WorkplaceSimulationModule } from './workplace-simulation/workplace-simulation.module';
 
@@ -23,6 +24,7 @@ import { WorkplaceSimulationModule } from './workplace-simulation/workplace-simu
     EmployerModule,
     JobSourcesModule,
     JobsModule,
+    ResumeModule,
     ShiftsModule,
     WorkplaceSimulationModule,
   ],

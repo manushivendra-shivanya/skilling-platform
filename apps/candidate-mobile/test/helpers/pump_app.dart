@@ -29,6 +29,8 @@ import 'package:candidate_mobile/features/micro_lessons/domain/viewed_clips_repo
 import 'package:candidate_mobile/features/onboarding/data/secure_candidate_onboarding_repository.dart';
 import 'package:candidate_mobile/features/onboarding/domain/candidate_onboarding_repository.dart';
 import 'package:candidate_mobile/features/onboarding/domain/onboarding_entry_repository.dart';
+import 'package:candidate_mobile/features/resume/data/unavailable_resume_parsing_repository.dart';
+import 'package:candidate_mobile/features/resume/domain/resume_parsing_repository.dart';
 import 'package:candidate_mobile/features/shifts/data/local_mock_shifts_repository.dart';
 import 'package:candidate_mobile/features/shifts/domain/shifts_repository.dart';
 import 'package:candidate_mobile/features/splash/domain/app_startup_repository.dart';
@@ -58,6 +60,7 @@ extension CandidateAppPump on WidgetTester {
     CertificationExamRepository? certificationExamRepository,
     CertificationExamAttemptRepository? certificationExamAttemptRepository,
     CoachThreadRepository? coachThreadRepository,
+    ResumeParsingRepository? resumeParsingRepository,
     JobsRepository? jobsRepository,
     ShiftsRepository? shiftsRepository,
     SimulationAttemptRepository? simulationAttemptRepository,
@@ -149,6 +152,14 @@ extension CandidateAppPump on WidgetTester {
           coachThreadRepositoryProvider.overrideWithValue(
             coachThreadRepository ??
                 SecureCoachThreadRepository(InMemorySecureKeyValueStore()),
+          ),
+          // Default matches this provider's own real fallback (no live
+          // backend configured in AppConfig.development()), so this is a
+          // no-op for every existing test -- only tests that explicitly
+          // pass resumeParsingRepository see different behaviour.
+          resumeParsingRepositoryProvider.overrideWithValue(
+            resumeParsingRepository ??
+                const UnavailableResumeParsingRepository(),
           ),
           jobsRepositoryProvider.overrideWithValue(
             jobsRepository ??
