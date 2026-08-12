@@ -7,6 +7,7 @@ import '../../../app/theme/app_spacing.dart';
 import '../../../app/theme/coach_mark.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_feedback.dart';
+import '../../../core/widgets/app_loading_progress.dart';
 import '../../../core/widgets/app_state_view.dart';
 import '../../../core/widgets/backend_warmup_banner.dart';
 import '../../authentication/presentation/development_auth_controller.dart';
@@ -31,7 +32,12 @@ class SignInChoiceScreen extends ConsumerWidget {
       appBar: AppBar(),
       body: SafeArea(
         child: selectedLanguage.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
+          loading: () => const Center(
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: AppSpacing.xl),
+              child: AppLoadingProgressBar(label: 'Loading your language…'),
+            ),
+          ),
           error: (error, stackTrace) => AppErrorState(
             title: 'We could not load your language',
             message: 'Go back and select your language again.',
@@ -194,7 +200,10 @@ class _PolicyLink extends StatelessWidget {
     return Semantics(
       link: true,
       label: label,
-      child: TextButton(
+      child: AppButton(
+        label: label,
+        variant: AppButtonVariant.text,
+        expand: false,
         onPressed: () => showAppBottomSheet<void>(
           context: context,
           title: title,
@@ -207,7 +216,6 @@ class _PolicyLink extends StatelessWidget {
             ],
           ),
         ),
-        child: Text(label),
       ),
     );
   }
