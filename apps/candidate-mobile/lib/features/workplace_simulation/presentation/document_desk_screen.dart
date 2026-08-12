@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_card.dart';
+import '../../../core/widgets/app_loading_progress.dart';
 import '../../../core/widgets/app_state_view.dart';
 import '../application/workplace_interaction_contracts.dart';
 import '../application/workplace_simulation_controller.dart';
@@ -48,7 +49,9 @@ class _DocumentDeskScreenState extends ConsumerState<DocumentDeskScreen> {
       ),
       body: SafeArea(
         child: simulation.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
+          loading: () => const Center(
+            child: AppLoadingProgressBar(label: 'Loading your progress…'),
+          ),
           error: (_, _) => AppErrorState(
             title: 'Documents unavailable',
             message: 'Your saved draft is safe. Retry loading the documents.',
@@ -163,11 +166,16 @@ class _DocumentDeskScreenState extends ConsumerState<DocumentDeskScreen> {
                                 ),
                               ),
                               const SizedBox(width: AppSpacing.sm),
-                              OutlinedButton(
+                              AppButton(
+                                // Bare Row child alongside an Expanded
+                                // sibling -- see quarantine_zone_screen
+                                // .dart's identical fix.
+                                expand: false,
+                                variant: AppButtonVariant.secondary,
+                                label: 'Add finding',
                                 onPressed: _saving
                                     ? null
                                     : () => _addFinding(sku),
-                                child: const Text('Add finding'),
                               ),
                             ],
                           ),

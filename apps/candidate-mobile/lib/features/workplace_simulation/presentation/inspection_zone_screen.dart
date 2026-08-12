@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_card.dart';
+import '../../../core/widgets/app_loading_progress.dart';
 import '../../../core/widgets/app_state_view.dart';
 import '../application/workplace_interaction_contracts.dart';
 import '../application/workplace_simulation_controller.dart';
@@ -58,7 +59,9 @@ class _InspectionZoneScreenState extends ConsumerState<InspectionZoneScreen> {
       ),
       body: SafeArea(
         child: simulation.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
+          loading: () => const Center(
+            child: AppLoadingProgressBar(label: 'Loading your progress…'),
+          ),
           error: (_, _) => AppErrorState(
             title: 'Inspection Zone unavailable',
             message: 'Your saved draft is safe. Retry loading the cartons.',
@@ -188,14 +191,17 @@ class _InspectionZoneScreenState extends ConsumerState<InspectionZoneScreen> {
                                           : () => _removeInspection(entry!),
                                       icon: const Icon(Icons.delete_outline),
                                     ),
-                                  OutlinedButton(
+                                  AppButton(
+                                    // Bare Row child alongside an Expanded
+                                    // sibling -- see quarantine_zone
+                                    // _screen.dart's identical fix.
+                                    expand: false,
+                                    variant: AppButtonVariant.secondary,
+                                    label: entry == null ? 'Inspect' : 'Edit',
                                     onPressed: _saving
                                         ? null
                                         : () =>
                                               _editInspection(carton.id, entry),
-                                    child: Text(
-                                      entry == null ? 'Inspect' : 'Edit',
-                                    ),
                                   ),
                                 ],
                               ),
