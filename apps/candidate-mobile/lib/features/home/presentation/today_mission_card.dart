@@ -4,6 +4,7 @@ import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_radius.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../core/widgets/app_button.dart';
+import '../../../core/widgets/app_meter_bar.dart';
 import '../domain/home_dashboard_repository.dart';
 
 /// The one thing Home asks the candidate to do today.
@@ -86,15 +87,7 @@ class TodayMissionCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: AppSpacing.sm),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(AppRadius.pill),
-            child: LinearProgressIndicator(
-              value: mission.progress,
-              minHeight: 6,
-              backgroundColor: AppColors.surfaceMuted,
-              color: AppColors.brand,
-            ),
-          ),
+          AppMeterBar(value: mission.progress),
           const SizedBox(height: AppSpacing.md),
           AppButton(
             label: 'शुरू करें · Start',

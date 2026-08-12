@@ -9,10 +9,12 @@ import '../../../app/theme/app_elevation.dart';
 import '../../../app/theme/app_radius.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../core/errors/app_failure.dart';
+import '../../../core/widgets/app_accent_pill.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_chip.dart';
 import '../../../core/widgets/app_feedback.dart';
 import '../../../core/widgets/app_loading_progress.dart';
+import '../../../core/widgets/app_meter_bar.dart';
 import '../../../core/widgets/app_skeleton.dart';
 import '../../../core/widgets/app_state_view.dart';
 import '../../../core/widgets/app_text_field.dart';
@@ -921,40 +923,21 @@ class _TopMatchRibbon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Semantics(
+    return AppAccentPill(
+      icon: Icons.star_rounded,
       label: 'Top match for you',
-      child: Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.xs,
-          vertical: 4,
+      background: AppColors.brand,
+      foreground: Colors.white,
+      iconSize: 12,
+      fontSize: 10,
+      boxShadow: [
+        BoxShadow(
+          color: AppColors.ink.withValues(alpha: 0.18),
+          blurRadius: 6,
+          offset: const Offset(0, 2),
         ),
-        decoration: BoxDecoration(
-          color: AppColors.brand,
-          borderRadius: BorderRadius.circular(AppRadius.pill),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.ink.withValues(alpha: 0.18),
-              blurRadius: 6,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: const Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.star_rounded, size: 12, color: Colors.white),
-            SizedBox(width: 3),
-            Text(
-              'Top match for you',
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w800,
-                color: Colors.white,
-              ),
-            ),
-          ],
-        ),
-      ),
+      ],
+      semanticLabel: 'Top match for you',
     );
   }
 }
@@ -1060,27 +1043,10 @@ class _MatchMeterBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isTop = score >= 85;
-    return SizedBox(
-      width: double.infinity,
+    return AppMeterBar(
+      value: score / 100,
       height: 4,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(AppRadius.pill),
-        child: Stack(
-          children: [
-            Positioned.fill(child: Container(color: AppColors.surfaceMuted)),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: FractionallySizedBox(
-                widthFactor: (score / 100).clamp(0.0, 1.0),
-                child: Container(
-                  height: 4,
-                  color: isTop ? AppColors.brand : AppColors.accent,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
+      fillColor: isTop ? AppColors.brand : AppColors.accent,
     );
   }
 }

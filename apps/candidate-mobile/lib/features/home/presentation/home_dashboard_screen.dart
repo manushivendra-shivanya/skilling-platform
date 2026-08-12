@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/app_colors.dart';
-import '../../../app/theme/app_radius.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../core/errors/app_failure.dart';
 import '../../../core/widgets/app_card.dart';
+import '../../../core/widgets/app_icon_plate.dart';
+import '../../../core/widgets/app_meter_bar.dart';
 import '../../../core/widgets/app_skeleton.dart';
 import '../../../core/widgets/app_state_view.dart';
 import '../../../core/widgets/app_status_banner.dart';
@@ -218,10 +219,10 @@ class _PathwayRow extends StatelessWidget {
         children: [
           Row(
             children: [
-              _IconPlate(
+              AppIconPlate(
                 icon: Icons.route_outlined,
                 background: AppColors.brandSoft,
-                color: AppColors.brand,
+                foreground: AppColors.brand,
               ),
               const SizedBox(width: AppSpacing.sm),
               Expanded(
@@ -251,15 +252,7 @@ class _PathwayRow extends StatelessWidget {
             ],
           ),
           const SizedBox(height: AppSpacing.sm),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(AppRadius.pill),
-            child: LinearProgressIndicator(
-              value: pathway.fraction,
-              minHeight: 6,
-              backgroundColor: AppColors.surfaceMuted,
-              color: AppColors.brand,
-            ),
-          ),
+          AppMeterBar(value: pathway.fraction),
         ],
       ),
     );
@@ -292,7 +285,11 @@ class _ShortcutRow extends StatelessWidget {
       semanticLabel: '$title. $subtitle',
       child: Row(
         children: [
-          _IconPlate(icon: icon, background: iconBackground, color: iconColor),
+          AppIconPlate(
+            icon: icon,
+            background: iconBackground,
+            foreground: iconColor,
+          ),
           const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: Column(
@@ -320,31 +317,6 @@ class _ShortcutRow extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-class _IconPlate extends StatelessWidget {
-  const _IconPlate({
-    required this.icon,
-    required this.background,
-    required this.color,
-  });
-
-  final IconData icon;
-  final Color background;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 40,
-      height: 40,
-      decoration: BoxDecoration(
-        color: background,
-        borderRadius: AppRadius.mediumBorder,
-      ),
-      child: Icon(icon, size: 20, color: color),
     );
   }
 }

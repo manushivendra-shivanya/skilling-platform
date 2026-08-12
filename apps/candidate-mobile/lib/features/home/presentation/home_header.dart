@@ -3,8 +3,9 @@ import 'package:flutter/material.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_radius.dart';
 import '../../../app/theme/app_spacing.dart';
+import '../../../core/widgets/app_gradient_hero.dart';
+import '../../../core/widgets/app_readiness_ring.dart';
 import '../domain/home_dashboard_repository.dart';
-import 'readiness_ring.dart';
 
 /// The branded block at the top of Home: who the candidate is, what they are
 /// working towards, and how much proof they have so far.
@@ -28,22 +29,14 @@ class HomeHeader extends StatelessWidget {
     // the gradient at every point down the header.
     final onBrandMuted = Colors.white.withValues(alpha: 0.72);
 
-    return Container(
-      width: double.infinity,
+    return AppGradientHero(
       padding: EdgeInsets.fromLTRB(
         AppSpacing.lg,
         AppSpacing.md,
         AppSpacing.lg,
         AppSpacing.lg + bottomInset,
       ),
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF0A7355), AppColors.brand, AppColors.brandDark],
-          stops: [0.0, 0.55, 1.0],
-        ),
-      ),
+      stops: const [0.0, 0.55, 1.0],
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

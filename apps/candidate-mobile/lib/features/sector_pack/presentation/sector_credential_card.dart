@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 
+import '../../../core/widgets/app_meter_bar.dart';
 import '../domain/sector_pack.dart';
 import 'sector_pack_icons.dart';
 import 'sector_pack_typography.dart';
@@ -195,18 +196,12 @@ class SectorCredentialCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 6),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(99),
-            child: LinearProgressIndicator(
-              value: eligibilityFraction!.clamp(0, 1),
-              minHeight: 6,
-              backgroundColor: Colors.white.withValues(alpha: 0.12),
-              valueColor: AlwaysStoppedAnimation(
-                eligibilityFraction! >= 1
-                    ? pack.signalPalette.cleared
-                    : pack.signalPalette.active,
-              ),
-            ),
+          AppMeterBar(
+            value: eligibilityFraction!,
+            trackColor: Colors.white.withValues(alpha: 0.12),
+            fillColor: eligibilityFraction! >= 1
+                ? pack.signalPalette.cleared
+                : pack.signalPalette.active,
           ),
         ],
         if (attemptText != null) ...[
