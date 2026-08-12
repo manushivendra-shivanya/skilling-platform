@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import 'reduced_motion.dart';
+
 /// A single, honest loading affordance for screens whose loading state
 /// used to stack multiple competing indicators (an indeterminate
 /// [LinearProgressIndicator], a separate spinning [CircularProgressIndicator]
@@ -21,6 +23,10 @@ import 'package:flutter/material.dart';
 /// established in backend_warmup_banner.dart (see its doc comment): Timer
 /// callbacks advance together with `tester.pump(duration)`'s fake-async
 /// clock in widget tests the same way real time would.
+///
+/// Respects [prefersReducedMotion]: skips the continuous ease and jumps
+/// straight to the ceiling once instead -- see the reasoning in
+/// [_AppLoadingProgressBarState.didChangeDependencies].
 class AppLoadingProgressBar extends StatefulWidget {
   const AppLoadingProgressBar({
     required this.label,
@@ -59,20 +65,34 @@ class _AppLoadingProgressBarState extends State<AppLoadingProgressBar> {
   bool _isSlow = false;
   Timer? _ticker;
   Timer? _slowTimer;
+  bool _started = false;
 
   @override
-  void initState() {
-    super.initState();
-    _ticker = Timer.periodic(AppLoadingProgressBar._tickInterval, (_) {
-      if (!mounted) return;
-      setState(() {
-        // Exponential ease toward the ceiling: fast while far from it,
-        // slowing as it approaches -- the standard perceived-progress
-        // curve, not a straight ramp that would either finish too early
-        // (looks fake) or crawl the whole time (looks stuck).
-        _progress += (AppLoadingProgressBar._ceiling - _progress) * 0.06;
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_started) return;
+    _started = true;
+    if (prefersReducedMotion(context)) {
+      // No continuous easing under reduce-motion -- jump straight to the
+      // ceiling once. Still communicates "this is genuinely working" (the
+      // whole reason this widget exists over a bare spinner), just without
+      // the ~8s of continuous smooth motion a full ease-in would otherwise
+      // produce -- this is authored, decorative easing, not a real
+      // determinate progress signal, so it doesn't get the usual "real
+      // progress indicators are exempt from reduce-motion" pass.
+      setState(() => _progress = AppLoadingProgressBar._ceiling);
+    } else {
+      _ticker = Timer.periodic(AppLoadingProgressBar._tickInterval, (_) {
+        if (!mounted) return;
+        setState(() {
+          // Exponential ease toward the ceiling: fast while far from it,
+          // slowing as it approaches -- the standard perceived-progress
+          // curve, not a straight ramp that would either finish too early
+          // (looks fake) or crawl the whole time (looks stuck).
+          _progress += (AppLoadingProgressBar._ceiling - _progress) * 0.06;
+        });
       });
-    });
+    }
     if (widget.slowConnectionLabel != null) {
       _slowTimer = Timer(widget.slowConnectionThreshold, () {
         if (mounted) setState(() => _isSlow = true);

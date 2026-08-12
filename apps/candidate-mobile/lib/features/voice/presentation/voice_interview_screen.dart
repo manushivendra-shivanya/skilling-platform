@@ -13,6 +13,7 @@ import '../../../core/widgets/app_feedback.dart';
 import '../../../core/widgets/app_progress.dart';
 import '../../../core/widgets/app_state_view.dart';
 import '../../../core/widgets/app_status_banner.dart';
+import '../../../core/widgets/reduced_motion.dart';
 import '../domain/voice_interview.dart';
 import 'answer_pacing_track.dart';
 import 'voice_interview_controller.dart';
@@ -605,8 +606,7 @@ class _RecordingDotState extends State<_RecordingDot>
 
   @override
   Widget build(BuildContext context) {
-    final still =
-        MediaQuery.maybeDisableAnimationsOf(context) ?? !widget.active;
+    final still = prefersReducedMotion(context) || !widget.active;
     return SizedBox(
       width: 10,
       height: 10,

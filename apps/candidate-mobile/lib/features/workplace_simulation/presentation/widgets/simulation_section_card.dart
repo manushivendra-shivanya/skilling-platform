@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../core/widgets/app_card.dart';
+import '../../../../core/widgets/reduced_motion.dart';
 
 class SimulationSectionCard extends StatelessWidget {
   const SimulationSectionCard({
@@ -85,11 +86,7 @@ class _SimulationScreenRevealState extends State<SimulationScreenReveal>
     super.didChangeDependencies();
     if (_started) return;
     _started = true;
-    if (MediaQuery.disableAnimationsOf(context)) {
-      _controller.value = 1;
-    } else {
-      _controller.forward();
-    }
+    _controller.forwardUnlessReducedMotion(context);
   }
 
   @override

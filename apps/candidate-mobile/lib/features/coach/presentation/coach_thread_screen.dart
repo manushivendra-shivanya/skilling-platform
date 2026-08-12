@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_spacing.dart';
+import '../../../core/widgets/reduced_motion.dart';
 import '../domain/coach_message.dart';
 import 'coach_threads_controller.dart';
 
@@ -142,9 +143,8 @@ class _CoachThreadScreenState extends ConsumerState<CoachThreadScreen> {
 /// kept as a small screen-scoped copy rather than a shared import: Coach
 /// has no dependency on the workplace-simulation feature otherwise, and a
 /// one-message-bubble entrance isn't worth a cross-feature coupling for.
-/// Respects the OS "reduce motion" setting the same way that widget does
-/// -- see `MediaQuery.disableAnimationsOf`'s use in `app_skeleton.dart`
-/// for the same house pattern.
+/// Respects the OS "reduce motion" setting via the shared
+/// `forwardUnlessReducedMotion` (see core/widgets/reduced_motion.dart).
 class _MessageEntrance extends StatefulWidget {
   const _MessageEntrance({required this.child, super.key});
 
@@ -181,11 +181,7 @@ class _MessageEntranceState extends State<_MessageEntrance>
     super.didChangeDependencies();
     if (_started) return;
     _started = true;
-    if (MediaQuery.disableAnimationsOf(context)) {
-      _controller.value = 1;
-    } else {
-      _controller.forward();
-    }
+    _controller.forwardUnlessReducedMotion(context);
   }
 
   @override

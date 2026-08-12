@@ -4,6 +4,7 @@ import 'package:shimmer/shimmer.dart';
 import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_radius.dart';
 import '../../app/theme/app_spacing.dart';
+import 'reduced_motion.dart';
 
 /// The static block every skeleton placeholder is built from -- shimmer is
 /// applied once, around every [AppSkeleton] on a screen together (see
@@ -47,9 +48,9 @@ class AppSkeleton extends StatelessWidget {
 /// one [AppSkeletonGroup] rather than each in its own -- one continuous
 /// sweep across the whole layout, not N unsynchronised ones.
 ///
-/// Respects [MediaQuery.disableAnimations] (the OS "reduce motion"
-/// setting) by skipping the shimmer entirely and rendering the plain
-/// static blocks -- the loading state is still fully legible, just still.
+/// Respects [prefersReducedMotion] (the OS "reduce motion" setting) by
+/// skipping the shimmer entirely and rendering the plain static blocks --
+/// the loading state is still fully legible, just still.
 class AppSkeletonGroup extends StatelessWidget {
   const AppSkeletonGroup({required this.child, super.key});
 
@@ -57,7 +58,7 @@ class AppSkeletonGroup extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (MediaQuery.of(context).disableAnimations) return child;
+    if (prefersReducedMotion(context)) return child;
     return Shimmer.fromColors(
       baseColor: AppColors.surfaceMuted,
       highlightColor: AppColors.surface,

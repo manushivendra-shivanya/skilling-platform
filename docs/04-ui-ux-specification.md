@@ -272,6 +272,30 @@ moment the promise is actually in doubt. Reassurance, disclaimers, and
 status copy belong at the point of doubt, not in a settings page nobody
 reads before they need it.
 
+#### 11. Motion respects the OS "reduce motion" setting
+Every custom `AnimationController` (and any other authored, continuous
+motion effect — see the `AppLoadingProgressBar` case below) must check
+`prefersReducedMotion(context)`
+(`apps/candidate-mobile/lib/core/widgets/reduced_motion.dart`) and skip
+straight to the resting/end state instead of animating there. This is
+the one canonical accessor and the one blessed pattern
+(`controller.forwardUnlessReducedMotion(context)` for the common
+forward-once-on-mount case) — before this helper existed, four
+independent `AnimationController` sites had each spelled the same check
+three different ways
+(`MediaQuery.disableAnimationsOf`/`MediaQuery.of(context).disableAnimations`/
+`MediaQuery.maybeDisableAnimationsOf`), which is exactly the kind of
+drift that leaves the next hand-authored controller with no check at
+all. This isn't limited to `AnimationController`: `AppLoadingProgressBar`
+(`core/widgets/app_loading_progress.dart`) is a `Timer`-driven
+perceived-progress ease with the same obligation — a "real progress
+indicator" argument for exempting it doesn't hold here because the
+progress it shows is authored/decorative, not a true percentage. A
+default-value `Shimmer`/skeleton sweep is the same category too (see
+`AppSkeletonGroup`). Standard, brief Material defaults this system
+didn't author (`InkWell` ripples, default page-route transitions) are
+out of scope — this is about motion this codebase specifically wrote.
+
 ### Checklist for any new or redesigned screen
 
 - [ ] Exactly one filled/primary action, everything else demoted
@@ -284,6 +308,7 @@ reads before they need it.
 - [ ] Live-updating numbers use tabular figures
 - [ ] Copy is written in Hinglish directly, not translated after the fact
 - [ ] Reassurance/disclaimer copy sits at the point of doubt, not a policy page
+- [ ] Any authored motion (AnimationController, Timer-driven easing, shimmer) checks `prefersReducedMotion(context)` and skips straight to the resting state
 
 ### Known screens still below this bar
 

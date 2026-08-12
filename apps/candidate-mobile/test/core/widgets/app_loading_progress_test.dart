@@ -120,4 +120,48 @@ void main() {
     await tester.pump(const Duration(seconds: 10));
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets(
+    'jumps straight to the ceiling with no continuous easing when the OS '
+    'reduces motion',
+    (tester) async {
+      await tester.pumpWidget(
+        MediaQuery(
+          data: const MediaQueryData(disableAnimations: true),
+          child: const MaterialApp(
+            home: Scaffold(
+              body: AppLoadingProgressBar(
+                label: 'Finding jobs for you…',
+                showPercent: true,
+              ),
+            ),
+          ),
+        ),
+      );
+      // A single pump, not several ticks -- if this weren't skipping the
+      // easing it would still read 0% (or barely above) on the first
+      // frame, same as the non-reduced-motion test above does.
+      await tester.pump();
+
+      expect(find.text('92%'), findsOneWidget);
+      final value = tester
+          .widget<LinearProgressIndicator>(find.byType(LinearProgressIndicator))
+          .value;
+      expect(value, 0.92);
+
+      // Confirms it's genuinely static, not just starting from a higher
+      // point and continuing to ease -- a real ceiling-ease would still
+      // creep upward on further pumps, staying under 100%.
+      await tester.pump(const Duration(seconds: 5));
+      expect(
+        tester
+            .widget<LinearProgressIndicator>(
+              find.byType(LinearProgressIndicator),
+            )
+            .value,
+        0.92,
+      );
+      expect(tester.takeException(), isNull);
+    },
+  );
 }

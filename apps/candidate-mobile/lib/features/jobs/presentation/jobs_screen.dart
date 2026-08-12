@@ -15,6 +15,7 @@ import '../../../core/widgets/app_loading_progress.dart';
 import '../../../core/widgets/app_skeleton.dart';
 import '../../../core/widgets/app_state_view.dart';
 import '../../../core/widgets/app_text_field.dart';
+import '../../../core/widgets/reduced_motion.dart';
 import '../domain/jobs_repository.dart';
 import 'job_filters.dart';
 import 'jobs_controller.dart';
@@ -946,7 +947,7 @@ class _StaggeredEntranceState extends State<_StaggeredEntrance>
     super.didChangeDependencies();
     if (_started) return;
     _started = true;
-    if (MediaQuery.of(context).disableAnimations) {
+    if (prefersReducedMotion(context)) {
       _controller.value = 1;
       return;
     }
