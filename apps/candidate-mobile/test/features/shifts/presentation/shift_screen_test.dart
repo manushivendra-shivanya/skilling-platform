@@ -135,6 +135,204 @@ void main() {
     expect(find.text('This shift just filled up.'), findsOneWidget);
     expect(find.text('Accept shift'), findsOneWidget);
   });
+
+  group('shiftUrgencyLabel', () {
+    final reference = DateTime(2026, 8, 12, 12);
+
+    test('is null once the shift has already started', () {
+      expect(
+        shiftUrgencyLabel(
+          reference.subtract(const Duration(minutes: 1)),
+          now: reference,
+        ),
+        isNull,
+      );
+    });
+
+    test('is null when the shift is further out than the window', () {
+      expect(
+        shiftUrgencyLabel(
+          reference.add(const Duration(hours: 6, minutes: 1)),
+          now: reference,
+        ),
+        isNull,
+      );
+    });
+
+    test('reads "Starts in Xh Ym" inside the window', () {
+      expect(
+        shiftUrgencyLabel(
+          reference.add(const Duration(hours: 2, minutes: 30)),
+          now: reference,
+        ),
+        'Starts in 2h 30m',
+      );
+    });
+
+    test('drops the zero component -- "Xh" alone on an exact hour', () {
+      expect(
+        shiftUrgencyLabel(
+          reference.add(const Duration(hours: 3)),
+          now: reference,
+        ),
+        'Starts in 3h',
+      );
+    });
+
+    test('drops the zero component -- "Ym" alone under an hour', () {
+      expect(
+        shiftUrgencyLabel(
+          reference.add(const Duration(minutes: 45)),
+          now: reference,
+        ),
+        'Starts in 45m',
+      );
+    });
+
+    test('respects a custom window', () {
+      expect(
+        shiftUrgencyLabel(
+          reference.add(const Duration(hours: 1)),
+          now: reference,
+          window: const Duration(minutes: 30),
+        ),
+        isNull,
+      );
+    });
+  });
+
+  testWidgets(
+    'the urgency ribbon shows for a best match starting inside the window',
+    (tester) async {
+      final soonShift = _shiftStartingIn(
+        const Duration(hours: 2),
+        id: 'shift-soon',
+      );
+      final container = _buildContainer(_FakeShiftsRepository([soonShift]));
+      addTearDown(container.dispose);
+
+      await tester.pumpWidget(_app(container));
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('Starts in'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'the urgency ribbon is omitted when nothing starts inside the window',
+    (tester) async {
+      final farShift = _shiftStartingIn(
+        const Duration(hours: 12),
+        id: 'shift-far',
+      );
+      final container = _buildContainer(_FakeShiftsRepository([farShift]));
+      addTearDown(container.dispose);
+
+      await tester.pumpWidget(_app(container));
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('Starts in'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'the sticky accept footer shows for an eligible, unapplied best match',
+    (tester) async {
+      final container = _buildContainer(
+        _FakeShiftsRepository([_eligibleShift]),
+      );
+      addTearDown(container.dispose);
+
+      await tester.pumpWidget(_app(container));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Accept shift · ₹650'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'the sticky accept footer is omitted when the best match needs a skill',
+    (tester) async {
+      final container = _buildContainer(_FakeShiftsRepository([_gatedShift]));
+      addTearDown(container.dispose);
+
+      await tester.pumpWidget(_app(container));
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('Accept shift ·'), findsNothing);
+    },
+  );
+
+  testWidgets('the sticky accept footer is omitted when there are no shifts', (
+    tester,
+  ) async {
+    final container = _buildContainer(_FakeShiftsRepository(const []));
+    addTearDown(container.dispose);
+
+    await tester.pumpWidget(_app(container));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('Accept shift ·'), findsNothing);
+  });
+
+  testWidgets(
+    'tapping the sticky accept footer opens the same details sheet a card tap would',
+    (tester) async {
+      final container = _buildContainer(
+        _FakeShiftsRepository([_eligibleShift]),
+      );
+      addTearDown(container.dispose);
+
+      await tester.pumpWidget(_app(container));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Accept shift · ₹650'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Accept shift'), findsOneWidget);
+    },
+  );
+
+  testWidgets('the icon-plate shortcuts trigger their own callbacks', (
+    tester,
+  ) async {
+    final container = _buildContainer(_FakeShiftsRepository([_eligibleShift]));
+    addTearDown(container.dispose);
+    var availabilityOpened = false;
+    var myShiftsOpened = false;
+    var payoutsOpened = false;
+    var grievancesOpened = false;
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp(
+          theme: buildAppTheme(),
+          home: Scaffold(
+            body: ShiftScreen(
+              onOpenAvailability: () => availabilityOpened = true,
+              onOpenMyShifts: () => myShiftsOpened = true,
+              onOpenPayouts: () => payoutsOpened = true,
+              onOpenGrievances: () => grievancesOpened = true,
+              onOpenSkillGap: () {},
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Availability'));
+    await tester.tap(find.text('My shifts'));
+    await tester.tap(find.text('Payouts'));
+    await tester.tap(find.text('Support'));
+    await tester.pumpAndSettle();
+
+    expect(availabilityOpened, isTrue);
+    expect(myShiftsOpened, isTrue);
+    expect(payoutsOpened, isTrue);
+    expect(grievancesOpened, isTrue);
+  });
 }
 
 final _eligibleShift = Shift(
@@ -155,6 +353,32 @@ final _eligibleShift = Shift(
   supervisorContact: null,
   cancellationPolicy: null,
 );
+
+/// A no-required-competency (so automatically eligible) shift starting
+/// [delay] from the moment it's built -- used by the urgency-ribbon tests,
+/// which need a real `DateTime.now()`-relative time rather than the fixed
+/// past dates the other fixtures use.
+Shift _shiftStartingIn(Duration delay, {required String id}) {
+  final startsAt = DateTime.now().add(delay);
+  return Shift(
+    id: id,
+    roleTitle: 'Picker / Packer',
+    siteName: 'Dark store',
+    siteAddress: 'Andheri East',
+    city: 'Mumbai',
+    startsAt: startsAt,
+    endsAt: startsAt.add(const Duration(hours: 5)),
+    reportingTime: startsAt,
+    headcount: 5,
+    payAmount: 650,
+    payCurrency: 'INR',
+    requiredCompetencyIds: const [],
+    description: 'Evening picking and packing.',
+    supervisorName: 'Supervisor A',
+    supervisorContact: null,
+    cancellationPolicy: null,
+  );
+}
 
 final _gatedShift = Shift(
   id: 'shift-gated',
