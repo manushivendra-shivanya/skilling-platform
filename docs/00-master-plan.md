@@ -95,7 +95,13 @@ Expanded logistics roles, partner centre pilot, verified physical assessment, in
 
 ## 11. Explicit Non-Goals for Year One
 - Broad course marketplace
-- Unverified resume database
+- Unverified resume database (a candidate-controlled Professional Persona
+  card -- built only from data the candidate supplied via onboarding or
+  resume parsing, shared only when the candidate chooses, never
+  browsable or searchable by employers -- is in scope; a public or
+  employer-searchable candidate directory is not. Same sharing-boundary
+  philosophy as Career Passport: evidence and self-reported data the
+  candidate controls, not a database anyone can query.)
 - Automated rejection solely from AI score
 - Lending from the platform balance sheet
 - Nationwide physical-centre ownership

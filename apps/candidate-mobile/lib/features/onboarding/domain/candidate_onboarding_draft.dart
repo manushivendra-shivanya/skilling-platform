@@ -1,7 +1,8 @@
 enum CandidateGoal {
   findJob('find_job', 'Find a new job'),
   buildSkills('build_skills', 'Build job-ready skills'),
-  growCareer('grow_career', 'Grow in my current career');
+  growCareer('grow_career', 'Grow in my current career'),
+  buildPersona('build_persona', 'Build my professional profile');
 
   const CandidateGoal(this.id, this.label);
 
@@ -156,6 +157,7 @@ class CandidateOnboardingDraft {
     this.education,
     this.experience,
     this.preferredRoles = const {},
+    this.headline = '',
     this.consents = const {},
     this.isCompleted = false,
   });
@@ -170,6 +172,17 @@ class CandidateOnboardingDraft {
   final EducationLevel? education;
   final ExperienceLevel? experience;
   final Set<LogisticsRole> preferredRoles;
+
+  /// A short, free-text "current/most recent role" line -- e.g. "Warehouse
+  /// Associate at ABC Logistics" -- distinct from the structured [goal] /
+  /// [education] / [experience] / [preferredRoles] fields. Populated only
+  /// from resume-parsing extraction today (see
+  /// `_ResumeUploadStepState._extract` in candidate_onboarding_screen.dart)
+  /// and surfaced on the Professional Persona networking card
+  /// (features/persona/) -- never sent anywhere beyond the candidate's own
+  /// device unless the candidate explicitly shares that card, same
+  /// sharing-boundary philosophy as Career Passport.
+  final String headline;
   final Map<String, ConsentAcceptance> consents;
   final bool isCompleted;
 
@@ -190,6 +203,7 @@ class CandidateOnboardingDraft {
     EducationLevel? education,
     ExperienceLevel? experience,
     Set<LogisticsRole>? preferredRoles,
+    String? headline,
     Map<String, ConsentAcceptance>? consents,
     bool? isCompleted,
   }) {
@@ -204,6 +218,7 @@ class CandidateOnboardingDraft {
       education: education ?? this.education,
       experience: experience ?? this.experience,
       preferredRoles: preferredRoles ?? this.preferredRoles,
+      headline: headline ?? this.headline,
       consents: consents ?? this.consents,
       isCompleted: isCompleted ?? this.isCompleted,
     );
@@ -220,6 +235,7 @@ class CandidateOnboardingDraft {
     'education': education?.id,
     'experience': experience?.id,
     'preferred_roles': preferredRoles.map((role) => role.id).toList(),
+    'headline': headline,
     'consents': consents.map(
       (purpose, acceptance) => MapEntry(purpose, acceptance.toJson()),
     ),
@@ -254,6 +270,7 @@ class CandidateOnboardingDraft {
           .map(LogisticsRole.fromId)
           .whereType<LogisticsRole>()
           .toSet(),
+      headline: json['headline'] as String? ?? '',
       consents: consents.map(
         (purpose, value) => MapEntry(
           purpose,

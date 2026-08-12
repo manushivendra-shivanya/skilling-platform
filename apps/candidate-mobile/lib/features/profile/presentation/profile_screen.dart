@@ -18,6 +18,7 @@ import '../../intelligence/domain/candidate_intelligence.dart';
 import '../../intelligence/presentation/candidate_intelligence_controller.dart';
 import '../../onboarding/domain/candidate_onboarding_draft.dart';
 import '../../onboarding/presentation/candidate_onboarding_controller.dart';
+import '../../persona/presentation/professional_persona_card.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({
@@ -115,6 +116,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             ),
           ],
         ),
+        if (draft.headline.trim().isNotEmpty) ...[
+          const SizedBox(height: AppSpacing.md),
+          ProfessionalPersonaCard(draft: draft),
+        ],
         if (intelligence != null && intelligence.evidence.isNotEmpty) ...[
           const SizedBox(height: AppSpacing.md),
           _Section(

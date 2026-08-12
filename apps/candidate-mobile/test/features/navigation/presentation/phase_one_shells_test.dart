@@ -9,6 +9,7 @@ import 'package:candidate_mobile/features/jobs/data/local_mock_jobs_repository.d
 import 'package:candidate_mobile/features/onboarding/data/secure_candidate_onboarding_repository.dart';
 import 'package:candidate_mobile/features/onboarding/domain/candidate_onboarding_draft.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../../helpers/pump_app.dart';
@@ -323,6 +324,99 @@ void main() {
       isNull,
     );
   });
+
+  testWidgets(
+    'the Professional Persona card does not appear without a headline',
+    (tester) async {
+      // No headline in the seeded draft -- the persona card is real-content
+      // gated (see ProfessionalPersonaCard's doc comment), so it shouldn't
+      // render at all here.
+      await tester.pumpCandidateApp(
+        candidateSessionRepository: sessions,
+        candidateOnboardingRepository: onboarding,
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('My Profile'));
+      await tester.pumpAndSettle();
+      expect(find.text('Professional persona'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'a Professional Persona card with a headline renders its details and '
+    'copies a summary to the clipboard',
+    (tester) async {
+      // Tall surface: the Profile screen's whole scrollable content
+      // (career profile, persona card, career passport, privacy section,
+      // ...) doesn't fit an 800x600 test surface, and scrollUntilVisible's
+      // delta-based scrolling proved to land "Copy persona summary" just
+      // past the viewport edge. A tall surface sidesteps scrolling
+      // entirely, same fix as the resume-upload onboarding step tests.
+      await tester.binding.setSurfaceSize(const Size(800, 2000));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+
+      // Intercepts the platform channel Clipboard.setData ultimately calls,
+      // same mechanism the coach haptic test uses for HapticFeedback.
+      final clipboardCalls = <String>[];
+      tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        SystemChannels.platform,
+        (call) async {
+          if (call.method == 'Clipboard.setData') {
+            final arguments = call.arguments as Map<Object?, Object?>;
+            clipboardCalls.add(arguments['text'] as String);
+          }
+          return null;
+        },
+      );
+      addTearDown(() {
+        tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+          SystemChannels.platform,
+          null,
+        );
+      });
+
+      final withPersona = InMemoryCandidateOnboardingRepository(
+        initialDraft: _completedDraft().copyWith(
+          headline: 'Warehouse Associate at ABC Logistics',
+        ),
+      );
+      await tester.pumpCandidateApp(
+        candidateSessionRepository: sessions,
+        candidateOnboardingRepository: withPersona,
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('My Profile'));
+      await tester.pumpAndSettle();
+
+      await tester.scrollUntilVisible(
+        find.text('Professional persona'),
+        300,
+        scrollable: find.byType(Scrollable).last,
+      );
+      expect(find.text('Professional persona'), findsOneWidget);
+      expect(find.text('Warehouse Associate at ABC Logistics'), findsOneWidget);
+      // Not findsOneWidget: the same "city, state" string also appears
+      // unconditionally in the screen's own header, above and outside the
+      // persona card -- two genuine, separate occurrences.
+      expect(find.text('Lucknow, Uttar Pradesh'), findsNWidgets(2));
+
+      await tester.scrollUntilVisible(
+        find.text('Copy persona summary'),
+        300,
+        scrollable: find.byType(Scrollable).last,
+      );
+      await tester.tap(find.text('Copy persona summary'));
+      await tester.pumpAndSettle();
+
+      expect(clipboardCalls, hasLength(1));
+      expect(clipboardCalls.single, contains('Asha Kumari'));
+      expect(
+        clipboardCalls.single,
+        contains('Warehouse Associate at ABC Logistics'),
+      );
+      expect(find.text('Persona summary copied.'), findsOneWidget);
+    },
+  );
 }
 
 CandidateOnboardingDraft _completedDraft() {
