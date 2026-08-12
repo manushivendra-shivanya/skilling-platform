@@ -8,6 +8,7 @@ import '../../../app/theme/app_spacing.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_feedback.dart';
 import '../../../core/widgets/app_skeleton.dart';
+import '../../../core/widgets/app_loading_progress.dart';
 import '../../../core/widgets/app_state_view.dart';
 import '../application/workplace_simulation_controller.dart';
 import '../application/workplace_simulation_state.dart';
@@ -94,7 +95,9 @@ class _SupervisorBriefingScreenState
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) widget.onOpenWorkplace();
       });
-      return const Center(child: CircularProgressIndicator());
+      return const Center(
+        child: AppLoadingProgressBar(label: 'Loading your progress…'),
+      );
     }
     if (!_openedTracked) {
       _openedTracked = true;

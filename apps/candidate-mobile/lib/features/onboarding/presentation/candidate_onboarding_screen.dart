@@ -299,12 +299,15 @@ class _CandidateOnboardingScreenState
         onFullNameExtracted: _applyExtractedFullName,
         onHeadlineExtracted: _applyExtractedHeadline,
       ),
-      7 => const _PlaceholderStep(
+      7 => const _ComingSoonStep(
         icon: Icons.mic_none_outlined,
         title: 'Voice introduction',
         description:
-            'Voice recording will be added with microphone education and separate recording consent.',
-        status: 'The microphone is not accessed in this phase.',
+            'We plan to add a short voice practice here, with clear '
+            'microphone permission and its own consent step first.',
+        note:
+            "This isn't ready yet, and your microphone is not used on "
+            'this screen.',
       ),
       8 => _ConsentStep(
         termsAccepted: _termsAccepted,
@@ -862,18 +865,25 @@ class _ResumeExtractionSummary extends StatelessWidget {
   }
 }
 
-class _PlaceholderStep extends StatelessWidget {
-  const _PlaceholderStep({
+/// A step whose real content isn't built yet -- says so honestly, in
+/// plain candidate-facing language, rather than the internal word
+/// "placeholder" or instructions phrased as if the candidate were
+/// debugging the app ("skip this placeholder"). [note] is the one thing
+/// worth telling the candidate about *why* this screen is empty (e.g. a
+/// permission that genuinely isn't requested yet); the "nothing to do
+/// here" line below it is constant across every use.
+class _ComingSoonStep extends StatelessWidget {
+  const _ComingSoonStep({
     required this.icon,
     required this.title,
     required this.description,
-    required this.status,
+    required this.note,
   });
 
   final IconData icon;
   final String title;
   final String description;
-  final String status;
+  final String note;
 
   @override
   Widget build(BuildContext context) {
@@ -887,10 +897,10 @@ class _PlaceholderStep extends StatelessWidget {
             children: [
               Icon(icon, size: 56, color: AppColors.brand),
               const SizedBox(height: AppSpacing.md),
-              Text(status, textAlign: TextAlign.center),
+              Text(note, textAlign: TextAlign.center),
               const SizedBox(height: AppSpacing.xs),
               Text(
-                'Choose Save and continue to skip this placeholder.',
+                'Nothing to do here yet -- tap Save and continue to move on.',
                 style: Theme.of(context).textTheme.bodySmall,
                 textAlign: TextAlign.center,
               ),

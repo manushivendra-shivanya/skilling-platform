@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_card.dart';
+import '../../../core/widgets/app_loading_progress.dart';
 import '../../../core/widgets/app_state_view.dart';
 import '../application/workplace_interaction_contracts.dart';
 import '../application/workplace_simulation_controller.dart';
@@ -62,7 +63,9 @@ class _LocationPlanningScreenState
       ),
       body: SafeArea(
         child: simulation.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
+          loading: () => const Center(
+            child: AppLoadingProgressBar(label: 'Loading your progress…'),
+          ),
           error: (_, _) => AppErrorState(
             title: 'Location Planning unavailable',
             message: 'Your saved progress is safe. Retry loading items.',
@@ -286,9 +289,13 @@ class _ItemZoneCard extends StatelessWidget {
                   child: CircularProgressIndicator(strokeWidth: 2),
                 ),
               const Spacer(),
-              TextButton(
+              AppButton(
+                // Bare Row child after a Spacer -- same reason every
+                // other in-body button in this sweep needs expand: false.
+                expand: false,
+                variant: AppButtonVariant.text,
+                label: flagged ? 'Exception flagged' : 'Flag exception',
                 onPressed: disabled || flagged ? null : onFlag,
-                child: Text(flagged ? 'Exception flagged' : 'Flag exception'),
               ),
             ],
           ),

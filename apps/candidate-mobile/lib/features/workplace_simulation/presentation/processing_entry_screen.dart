@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_card.dart';
+import '../../../core/widgets/app_loading_progress.dart';
 import '../../../core/widgets/app_state_view.dart';
 import '../application/workplace_interaction_contracts.dart';
 import '../application/workplace_simulation_controller.dart';
@@ -53,7 +54,9 @@ class _ProcessingEntryScreenState extends ConsumerState<ProcessingEntryScreen> {
       ),
       body: SafeArea(
         child: simulation.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
+          loading: () => const Center(
+            child: AppLoadingProgressBar(label: 'Loading your progress…'),
+          ),
           error: (_, _) => AppErrorState(
             title: 'Processing Entry unavailable',
             message: 'Your saved progress is safe. Retry loading the batch.',

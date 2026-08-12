@@ -5,6 +5,7 @@ import 'package:flutter/rendering.dart' show ScrollDirection;
 
 import '../../../app/theme/app_spacing.dart';
 import '../../../core/widgets/app_feedback.dart';
+import '../../../core/widgets/reduced_motion.dart';
 
 class TodayService {
   const TodayService({
@@ -23,6 +24,19 @@ class TodayService {
   /// Null means "not built yet" -- the tile shows a "Planned" tap response
   /// instead of pretending to navigate somewhere real.
   final VoidCallback? onTap;
+}
+
+/// Whether `_TodayServicesCarouselState` should start its auto-scroll
+/// timer at all -- pulled out as a pure function (rather than inlined
+/// where it's used) so the two independent reasons to skip it, the test
+/// binding and the OS Reduce Motion setting, are each individually
+/// testable without needing to pump a real widget tree and race a
+/// `Timer.periodic`.
+bool shouldAutoScroll({
+  required bool isTestBinding,
+  required bool reducedMotion,
+}) {
+  return !isTestBinding && !reducedMotion;
 }
 
 /// Horizontally auto-scrolling, seamlessly-looping rail of service tiles for
@@ -50,6 +64,7 @@ class _TodayServicesCarouselState extends State<TodayServicesCarousel> {
   Timer? _autoScrollTimer;
   Timer? _resumeTimer;
   bool _userInteracting = false;
+  bool _autoScrollDecided = false;
 
   double get _cycleWidth => widget.services.length * (_tileWidth + _tileGap);
 
@@ -59,6 +74,13 @@ class _TodayServicesCarouselState extends State<TodayServicesCarousel> {
     // Start in the middle of a huge virtual list so scrolling either
     // direction never hits a real end -- the seamless-loop illusion.
     _controller = ScrollController(initialScrollOffset: _cycleWidth * 500);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_autoScrollDecided) return;
+    _autoScrollDecided = true;
     // A perpetual Timer.periodic means a frame is *always* pending, which
     // stops WidgetTester.pumpAndSettle() (used all over this app's test
     // suite) from ever converging -- it has no way to distinguish "still
@@ -67,8 +89,18 @@ class _TodayServicesCarouselState extends State<TodayServicesCarousel> {
     // for `flutter test`, LiveTestWidgets... for on-device test runs);
     // checking that string, rather than importing package:flutter_test
     // into app code, keeps auto-scroll off under test and on everywhere
-    // real users see this screen.
-    if (!WidgetsBinding.instance.runtimeType.toString().contains('Test')) {
+    // real users see this screen. Combined with a reduce-motion check --
+    // this carousel is continuous motion with no informational purpose,
+    // so it's skipped entirely under the OS Reduce Motion setting, same
+    // as every other continuous animation in this app (see
+    // core/widgets/reduced_motion.dart).
+    final isTestBinding = WidgetsBinding.instance.runtimeType
+        .toString()
+        .contains('Test');
+    if (shouldAutoScroll(
+      isTestBinding: isTestBinding,
+      reducedMotion: prefersReducedMotion(context),
+    )) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _startAutoScroll());
     }
   }

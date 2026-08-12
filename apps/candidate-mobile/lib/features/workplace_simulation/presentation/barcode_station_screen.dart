@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_card.dart';
+import '../../../core/widgets/app_loading_progress.dart';
 import '../../../core/widgets/app_state_view.dart';
 import '../application/workplace_interaction_contracts.dart';
 import '../application/workplace_simulation_controller.dart';
@@ -66,7 +67,9 @@ class _BarcodeStationScreenState extends ConsumerState<BarcodeStationScreen> {
       ),
       body: SafeArea(
         child: simulation.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
+          loading: () => const Center(
+            child: AppLoadingProgressBar(label: 'Loading your progress…'),
+          ),
           error: (_, _) => AppErrorState(
             title: 'Barcode Station unavailable',
             message: 'Your saved draft is safe. Retry loading the cartons.',
@@ -188,13 +191,16 @@ class _BarcodeStationScreenState extends ConsumerState<BarcodeStationScreen> {
                                           : () => _removeScan(entry!),
                                       icon: const Icon(Icons.delete_outline),
                                     ),
-                                  OutlinedButton(
+                                  AppButton(
+                                    // Bare Row child alongside an Expanded
+                                    // sibling -- see quarantine_zone
+                                    // _screen.dart's identical fix.
+                                    expand: false,
+                                    variant: AppButtonVariant.secondary,
+                                    label: entry == null ? 'Scan' : 'Edit',
                                     onPressed: _saving
                                         ? null
                                         : () => _scanCarton(carton, entry),
-                                    child: Text(
-                                      entry == null ? 'Scan' : 'Edit',
-                                    ),
                                   ),
                                 ],
                               ),
@@ -345,23 +351,33 @@ class _BarcodeStationScreenState extends ConsumerState<BarcodeStationScreen> {
                         runSpacing: AppSpacing.sm,
                         children: [
                           if (attempts <= _maxRetries)
-                            OutlinedButton(
+                            AppButton(
+                              // Same expand: false as the Save
+                              // draft/Submit scans pair above -- these
+                              // sit side by side in a Wrap, not filling
+                              // its full width each.
+                              expand: false,
+                              variant: AppButtonVariant.secondary,
+                              label: 'Retry scan',
                               onPressed: scan,
-                              child: const Text('Retry scan'),
                             ),
-                          OutlinedButton(
+                          AppButton(
+                            expand: false,
+                            variant: AppButtonVariant.secondary,
+                            label: 'Enter barcode manually',
                             onPressed: () => setDialogState(
                               () => resolutionMethod =
                                   BarcodeResolutionMethod.manualEntry,
                             ),
-                            child: const Text('Enter barcode manually'),
                           ),
-                          OutlinedButton(
+                          AppButton(
+                            expand: false,
+                            variant: AppButtonVariant.secondary,
+                            label: 'Flag for verification',
                             onPressed: () => setDialogState(
                               () => resolutionMethod =
                                   BarcodeResolutionMethod.flagged,
                             ),
-                            child: const Text('Flag for verification'),
                           ),
                         ],
                       ),

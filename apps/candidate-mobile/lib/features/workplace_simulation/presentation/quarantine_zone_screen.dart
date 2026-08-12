@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_card.dart';
+import '../../../core/widgets/app_loading_progress.dart';
 import '../../../core/widgets/app_state_view.dart';
 import '../application/workplace_interaction_contracts.dart';
 import '../application/workplace_simulation_controller.dart';
@@ -49,7 +50,9 @@ class _QuarantineZoneScreenState extends ConsumerState<QuarantineZoneScreen> {
       ),
       body: SafeArea(
         child: simulation.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
+          loading: () => const Center(
+            child: AppLoadingProgressBar(label: 'Loading your progress…'),
+          ),
           error: (_, _) => AppErrorState(
             title: 'Quarantine Zone unavailable',
             message: 'Your saved draft is safe. Retry loading the cartons.',
@@ -198,16 +201,23 @@ class _QuarantineZoneScreenState extends ConsumerState<QuarantineZoneScreen> {
                                       icon: const Icon(Icons.delete_outline),
                                     ),
                                   if (!dispositionsSubmitted)
-                                    OutlinedButton(
+                                    AppButton(
+                                      // Shrink-wraps rather than filling
+                                      // this Row's remaining width -- the
+                                      // sibling text column is already
+                                      // Expanded, and AppButton's default
+                                      // expand: true would ask for
+                                      // infinite width as a bare Row
+                                      // child.
+                                      expand: false,
+                                      variant: AppButtonVariant.secondary,
+                                      label: entry == null ? 'Assign' : 'Edit',
                                       onPressed: _saving
                                           ? null
                                           : () => _editDisposition(
                                               carton.id,
                                               entry,
                                             ),
-                                      child: Text(
-                                        entry == null ? 'Assign' : 'Edit',
-                                      ),
                                     ),
                                 ],
                               ),
@@ -351,18 +361,23 @@ class _QuarantineZoneScreenState extends ConsumerState<QuarantineZoneScreen> {
                                           ),
                                         ),
                                       if (!releaseDecisionsSubmitted)
-                                        OutlinedButton(
+                                        AppButton(
+                                          // Same reasoning as the
+                                          // disposition row above: this
+                                          // sits as a bare (non-Expanded)
+                                          // Row child alongside an
+                                          // Expanded text column.
+                                          expand: false,
+                                          variant: AppButtonVariant.secondary,
+                                          label: entry == null
+                                              ? 'Recommend'
+                                              : 'Edit',
                                           onPressed: _saving
                                               ? null
                                               : () => _editReleaseDecision(
                                                   carton.id,
                                                   entry,
                                                 ),
-                                          child: Text(
-                                            entry == null
-                                                ? 'Recommend'
-                                                : 'Edit',
-                                          ),
                                         ),
                                     ],
                                   ),
