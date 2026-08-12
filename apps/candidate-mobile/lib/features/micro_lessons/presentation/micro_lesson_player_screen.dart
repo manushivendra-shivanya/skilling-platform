@@ -8,6 +8,7 @@ import '../../../app/theme/app_spacing.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../coach/presentation/ask_coach_affordance.dart';
+import '../../sector_pack/application/active_sector_pack_provider.dart';
 import '../domain/micro_lesson_assessment_attempt.dart';
 import '../domain/micro_lesson_assessment_repository.dart';
 import '../domain/micro_lesson_clip.dart';
@@ -191,6 +192,17 @@ class _MicroLessonPlayerScreenState
   Widget build(BuildContext context) {
     final clip = widget.clip;
     final titleStyle = Theme.of(context).textTheme.titleSmall;
+    // This screen is reached by tapping a sector-pack-styled lesson row
+    // (`_ClipRow` in warehouse_clips_section.dart, itself styled like
+    // `SectorIndexRow`), but everything below is the app's plain
+    // AppCard/AppColors idiom -- per docs/adr/0020-sector-pack-abstraction.md
+    // that's correct (this screen is not one of the ADR's four structural
+    // widgets and must not become one), but landing here with zero visual
+    // continuity from the pack-coloured row above reads as a hard skin
+    // change. `pack.primaryAccent` threads into exactly one element (the
+    // strip below) as a deliberate, narrow bridge -- not a font or widget
+    // migration into `SectorPackTypography`/`SectorTaskCard`.
+    final pack = ref.watch(activeSectorPackProvider);
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
@@ -207,6 +219,10 @@ class _MicroLessonPlayerScreenState
       body: ListView(
         padding: const EdgeInsets.all(AppSpacing.md),
         children: [
+          // Thin accent strip bridging the sector-pack list row this screen
+          // was opened from into this screen's own plain AppCard/AppColors
+          // body -- see the `pack` doc note above.
+          Container(height: 3, color: pack.primaryAccent),
           // Clips are shot vertically (720x1280, 9:16) -- forcing a 16:9
           // landscape box here squashed the picture instead of just
           // letterboxing it. The real aspect ratio also happens to be
@@ -281,9 +297,28 @@ class _MicroLessonPlayerScreenState
       );
     }
     if (controller == null) {
+      // Not `AppLoadingProgressBar`: its label/bar colours read from
+      // `colorScheme.onSurfaceVariant` / the theme's primary colour, both
+      // chosen for a normal light page surface (see its own doc comment on
+      // the "reads as frozen" bare-spinner problem it exists to fix). This
+      // is a full-bleed dark video area instead, so reusing it as-is risks
+      // low-contrast text rather than fixing the "looks frozen" problem.
+      // Adding a dark-surface variant/param to that shared widget for this
+      // one call site is the higher-risk change; hand-styling a labelled
+      // spinner here, matching the darkened video surface below, is the
+      // narrower, lower-risk fix.
       return const ColoredBox(
-        color: Colors.black12,
-        child: Center(child: CircularProgressIndicator()),
+        color: Colors.black,
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CircularProgressIndicator(color: Colors.white70),
+              SizedBox(height: AppSpacing.sm),
+              Text('Loading video…', style: TextStyle(color: Colors.white70)),
+            ],
+          ),
+        ),
       );
     }
     return GestureDetector(
