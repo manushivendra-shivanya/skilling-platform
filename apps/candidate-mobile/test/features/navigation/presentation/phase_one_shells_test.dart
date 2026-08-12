@@ -45,7 +45,11 @@ void main() {
       homeDashboardRepository: repository,
     );
     await tester.pumpAndSettle();
-    expect(find.text('साक्षात्कार (इंटरव्यू) अभ्यास'), findsOneWidget);
+    // The default sample dashboard carries an upcoming interview, so
+    // UpcomingInterviewCard's own CTA is on screen -- the interview-practice
+    // shortcut row is deliberately hidden rather than duplicating it (see
+    // home_dashboard_screen_test.dart).
+    expect(find.textContaining('Taiyari karein'), findsOneWidget);
 
     repository.setResponse(const Success(null));
     // Drag from the greeting in the header: it is the one element present

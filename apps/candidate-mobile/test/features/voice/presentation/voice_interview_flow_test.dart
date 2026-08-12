@@ -37,15 +37,19 @@ void main() {
         voiceCaptureRepository: capture,
       );
       await tester.pumpAndSettle();
-      // .first, not .last -- the shell's own scrollables also match; .first
-      // is the main vertical list this row actually lives in, matching the
-      // pattern used everywhere else in this codebase.
+      // The default sample dashboard has an upcoming interview, so
+      // UpcomingInterviewCard's own "Prepare" button is on screen and the
+      // interview-practice shortcut row is hidden rather than duplicating
+      // it (see home_dashboard_screen_test.dart). .first, not .last -- the
+      // shell's own scrollables also match; .first is the main vertical
+      // list this button actually lives in, matching the pattern used
+      // everywhere else in this codebase.
       await tester.scrollUntilVisible(
-        find.text('साक्षात्कार (इंटरव्यू) अभ्यास'),
+        find.textContaining('Taiyari karein'),
         300,
         scrollable: find.byType(Scrollable).first,
       );
-      await tester.tap(find.text('साक्षात्कार (इंटरव्यू) अभ्यास'));
+      await tester.tap(find.textContaining('Taiyari karein'));
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('Allow recording for this practice session'));

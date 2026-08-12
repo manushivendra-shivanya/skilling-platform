@@ -36,23 +36,31 @@ class MainNavigationShell extends StatelessWidget {
         }
       },
       child: Scaffold(
-        appBar: AppBar(
-          title: Text(_titleFor(selectedIndex)),
-          actions: [
-            IconButton(
-              tooltip: 'Notifications',
-              onPressed: () {
-                unawaited(
-                  analyticsTracker.track(
-                    AnalyticsEvent.globalActionOpened('notifications'),
+        // Home is the one tab with its own bespoke header (HomeHeader's
+        // gradient hero) -- giving it this generic AppBar too meant it alone
+        // paid for two headers stacked on top of each other. Every other tab
+        // keeps exactly what it had: a title matching its bottom-nav label,
+        // plus the notifications bell. Home's notifications entry point now
+        // lives inside HomeHeader itself instead.
+        appBar: selectedIndex == 0
+            ? null
+            : AppBar(
+                title: Text(_titleFor(selectedIndex)),
+                actions: [
+                  IconButton(
+                    tooltip: 'Notifications',
+                    onPressed: () {
+                      unawaited(
+                        analyticsTracker.track(
+                          AnalyticsEvent.globalActionOpened('notifications'),
+                        ),
+                      );
+                      onOpenNotifications();
+                    },
+                    icon: const Icon(Icons.notifications_none_outlined),
                   ),
-                );
-                onOpenNotifications();
-              },
-              icon: const Icon(Icons.notifications_none_outlined),
-            ),
-          ],
-        ),
+                ],
+              ),
         body: navigationShell,
         floatingActionButton: FloatingActionButton.extended(
           heroTag: 'global-ai-coach-action',
