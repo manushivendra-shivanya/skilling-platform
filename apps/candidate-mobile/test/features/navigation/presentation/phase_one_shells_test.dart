@@ -6,6 +6,7 @@ import 'package:candidate_mobile/core/repositories/candidate_session_repository.
 import 'package:candidate_mobile/core/storage/secure_key_value_store.dart';
 import 'package:candidate_mobile/features/home/data/mock_home_dashboard_repository.dart';
 import 'package:candidate_mobile/features/jobs/data/local_mock_jobs_repository.dart';
+import 'package:candidate_mobile/features/networking/domain/networking_repository.dart';
 import 'package:candidate_mobile/features/onboarding/data/secure_candidate_onboarding_repository.dart';
 import 'package:candidate_mobile/features/onboarding/domain/candidate_onboarding_draft.dart';
 import 'package:flutter/material.dart';
@@ -417,6 +418,112 @@ void main() {
       expect(find.text('Persona summary copied.'), findsOneWidget);
     },
   );
+
+  testWidgets(
+    'turning on discoverability publishes the persona card fields, and '
+    'both networking screens are reachable',
+    (tester) async {
+      final networking = _FakeNetworkingRepository();
+      await tester.binding.setSurfaceSize(const Size(800, 2000));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await tester.pumpCandidateApp(
+        candidateSessionRepository: sessions,
+        candidateOnboardingRepository: InMemoryCandidateOnboardingRepository(
+          initialDraft: _completedDraft().copyWith(
+            headline: 'Warehouse Associate at ABC Logistics',
+          ),
+        ),
+        networkingRepository: networking,
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('My Profile'));
+      await tester.pumpAndSettle();
+
+      await tester.scrollUntilVisible(
+        find.text('Find other candidates'),
+        300,
+        scrollable: find.byType(Scrollable).last,
+      );
+      expect(find.text('Find other candidates'), findsOneWidget);
+
+      await tester.tap(
+        find.widgetWithText(SwitchListTile, 'Make my profile discoverable'),
+      );
+      await tester.pumpAndSettle();
+
+      expect(networking.publishedProfiles, hasLength(1));
+      final published = networking.publishedProfiles.single;
+      expect(published.fullName, 'Asha Kumari');
+      expect(published.headline, 'Warehouse Associate at ABC Logistics');
+      expect(published.discoverable, isTrue);
+
+      await tester.tap(find.text('Discover candidates'));
+      await tester.pumpAndSettle();
+      expect(find.text('Discover candidates'), findsWidgets);
+      await tester.pageBack();
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('My connections'));
+      await tester.pumpAndSettle();
+      expect(find.text('No connections yet'), findsOneWidget);
+    },
+  );
+}
+
+class _FakeNetworkingRepository implements NetworkingRepository {
+  final publishedProfiles = <NetworkingProfile>[];
+
+  @override
+  Future<Result<NetworkingProfile>> publishProfile({
+    required String fullName,
+    required String headline,
+    required String city,
+    required String state,
+    required List<String> preferredRoles,
+    required bool discoverable,
+  }) async {
+    final profile = NetworkingProfile(
+      discoverable: discoverable,
+      fullName: fullName,
+      headline: headline,
+      city: city,
+      state: state,
+      preferredRoles: preferredRoles,
+    );
+    publishedProfiles.add(profile);
+    return Success(profile);
+  }
+
+  @override
+  Future<Result<List<DiscoveredCandidate>>> discover() async =>
+      const Success([]);
+
+  @override
+  Future<Result<void>> sendConnectionRequest(
+    String recipientCandidateId,
+  ) async => const Success(null);
+
+  @override
+  Future<Result<ConnectionsOverview>> listConnections() async =>
+      const Success(ConnectionsOverview.empty());
+
+  @override
+  Future<Result<void>> respondToConnection(
+    String connectionId,
+    bool accept,
+  ) async => const Success(null);
+
+  @override
+  Future<Result<void>> withdrawConnection(String connectionId) async =>
+      const Success(null);
+
+  @override
+  Future<Result<void>> blockCandidate(String candidateId) async =>
+      const Success(null);
+
+  @override
+  Future<Result<void>> unblockCandidate(String candidateId) async =>
+      const Success(null);
 }
 
 CandidateOnboardingDraft _completedDraft() {
