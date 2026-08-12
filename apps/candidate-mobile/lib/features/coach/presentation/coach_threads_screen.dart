@@ -9,8 +9,11 @@ import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../app/theme/coach_mark.dart';
 import '../../../core/errors/app_failure.dart';
+import '../../../core/widgets/app_card.dart';
+import '../../../core/widgets/app_loading_progress.dart';
 import '../../../core/widgets/app_state_view.dart';
 import '../domain/coach_thread.dart';
+import 'coach_composer.dart';
 import 'coach_threads_controller.dart';
 
 const _starterPrompts = [
@@ -64,7 +67,16 @@ class _CoachThreadsScreenState extends ConsumerState<CoachThreadsScreen> {
             ),
             Expanded(
               child: asyncState.when(
-                loading: () => const Center(child: CircularProgressIndicator()),
+                // Page-level "the thread list hasn't loaded yet" -- a
+                // different state from "the coach is composing a reply"
+                // (see CoachThinkingIndicator's doc comment), so this stays
+                // the app's normal page-load affordance rather than
+                // sharing that widget.
+                loading: () => const Center(
+                  child: AppLoadingProgressBar(
+                    label: 'Loading your conversations…',
+                  ),
+                ),
                 error: (error, _) => AppErrorState(
                   title: 'Coach could not load',
                   message: error is AppFailure
@@ -102,27 +114,12 @@ class _CoachThreadsScreenState extends ConsumerState<CoachThreadsScreen> {
                 AppSpacing.sm,
                 AppSpacing.sm,
               ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _composer,
-                      enabled: !_isStarting,
-                      textInputAction: TextInputAction.send,
-                      onSubmitted: (_) => _send(),
-                      decoration: const InputDecoration(
-                        hintText: 'Ask a new question',
-                        labelText: 'Message',
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.xs),
-                  IconButton(
-                    tooltip: 'Send message',
-                    onPressed: _isStarting ? null : _send,
-                    icon: const Icon(Icons.send),
-                  ),
-                ],
+              child: CoachComposer(
+                controller: _composer,
+                onSend: _send,
+                hint: 'Ask a new question',
+                label: 'Message',
+                isSending: _isStarting,
               ),
             ),
           ],
@@ -239,56 +236,45 @@ class _ThreadRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: AppColors.surface,
-      borderRadius: BorderRadius.circular(12),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(12),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.sm),
-          child: Row(
-            children: [
-              Container(
-                width: 34,
-                height: 34,
-                decoration: const BoxDecoration(
-                  color: AppColors.brandSoft,
-                  shape: BoxShape.circle,
-                ),
-                child: const CoachMark(size: 16, color: AppColors.brand),
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      thread.topicLabel,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.titleSmall,
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      '${thread.messages.length} message'
-                      '${thread.messages.length == 1 ? '' : 's'} • '
-                      '${_relativeTime(thread.lastActivityAt)}',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppColors.inkMuted,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const Icon(
-                Icons.chevron_right,
-                size: 18,
-                color: AppColors.inkMuted,
-              ),
-            ],
+    return AppCard(
+      onTap: onTap,
+      padding: const EdgeInsets.all(AppSpacing.sm),
+      child: Row(
+        children: [
+          Container(
+            width: 34,
+            height: 34,
+            decoration: const BoxDecoration(
+              color: AppColors.brandSoft,
+              shape: BoxShape.circle,
+            ),
+            child: const CoachMark(size: 16, color: AppColors.brand),
           ),
-        ),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  thread.topicLabel,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  '${thread.messages.length} message'
+                  '${thread.messages.length == 1 ? '' : 's'} • '
+                  '${_relativeTime(thread.lastActivityAt)}',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(color: AppColors.inkMuted),
+                ),
+              ],
+            ),
+          ),
+          const Icon(Icons.chevron_right, size: 18, color: AppColors.inkMuted),
+        ],
       ),
     );
   }

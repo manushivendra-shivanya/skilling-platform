@@ -8,8 +8,11 @@ import 'package:go_router/go_router.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../app/theme/coach_mark.dart';
+import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_feedback.dart';
 import '../domain/coach_message.dart';
+import 'coach_composer.dart';
+import 'coach_thinking_indicator.dart';
 import 'coach_threads_controller.dart';
 
 /// Must match `aiCoachRoutePath`/`aiCoachThreadRoutePath` in
@@ -126,16 +129,7 @@ class _AskCoachSheetState extends ConsumerState<_AskCoachSheet> {
           if (_isSending)
             const Padding(
               padding: EdgeInsets.symmetric(vertical: AppSpacing.sm),
-              child: Row(
-                children: [
-                  SizedBox.square(
-                    dimension: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  ),
-                  SizedBox(width: AppSpacing.sm),
-                  Text('Coach is typing…'),
-                ],
-              ),
+              child: CoachThinkingIndicator(),
             ),
           if (hasReply) ...[
             Text(lastMessage.text),
@@ -143,19 +137,20 @@ class _AskCoachSheetState extends ConsumerState<_AskCoachSheet> {
             Row(
               children: [
                 Expanded(
-                  child: OutlinedButton(
+                  child: AppButton(
+                    label: 'Ask something else',
+                    variant: AppButtonVariant.secondary,
                     onPressed: () => FocusScope.of(context).nextFocus(),
-                    child: const Text('Ask something else'),
                   ),
                 ),
                 const SizedBox(width: AppSpacing.xs),
                 Expanded(
-                  child: FilledButton(
+                  child: AppButton(
+                    label: 'Continue in Coach',
                     onPressed: () {
                       Navigator.of(context).pop();
                       context.push(_coachThreadPath(threadId!));
                     },
-                    child: const Text('Continue in Coach'),
                   ),
                 ),
               ],
@@ -170,21 +165,13 @@ class _AskCoachSheetState extends ConsumerState<_AskCoachSheet> {
                 icon: const Icon(Icons.mic_none_outlined),
               ),
               Expanded(
-                child: TextField(
+                child: CoachComposer(
                   controller: _composer,
-                  enabled: !_isSending,
+                  onSend: _send,
+                  hint: 'Message your coach…',
+                  isSending: _isSending,
                   autofocus: true,
-                  textInputAction: TextInputAction.send,
-                  onSubmitted: (_) => _send(),
-                  decoration: const InputDecoration(
-                    hintText: 'Message your coach…',
-                  ),
                 ),
-              ),
-              IconButton(
-                tooltip: 'Send message',
-                onPressed: _isSending ? null : _send,
-                icon: const Icon(Icons.send),
               ),
             ],
           ),

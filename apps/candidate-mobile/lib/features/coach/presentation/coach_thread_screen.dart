@@ -7,9 +7,13 @@ import 'package:flutter/services.dart' show HapticFeedback;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/app_colors.dart';
+import '../../../app/theme/app_radius.dart';
+import '../../../app/theme/app_shadows.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../core/widgets/reduced_motion.dart';
 import '../domain/coach_message.dart';
+import 'coach_composer.dart';
+import 'coach_thinking_indicator.dart';
 import 'coach_threads_controller.dart';
 
 /// A muted, sage-leaning variant of [AppColors.brand] used only as the
@@ -85,7 +89,7 @@ class _CoachThreadScreenState extends ConsumerState<CoachThreadScreen> {
                   if (index == thread.messages.length) {
                     return const _MessageEntrance(
                       key: ValueKey('typing-indicator'),
-                      child: _TypingIndicatorBubble(),
+                      child: _CoachBubbleShell(child: CoachThinkingIndicator()),
                     );
                   }
                   final message = thread.messages[index];
@@ -120,23 +124,16 @@ class _CoachThreadScreenState extends ConsumerState<CoachThreadScreen> {
                 AppSpacing.sm,
                 AppSpacing.sm,
               ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _composer,
-                      enabled: !isSending,
-                      textInputAction: TextInputAction.send,
-                      onSubmitted: (_) => _send(),
-                      decoration: const InputDecoration(
-                        hintText: 'Ask about skills or interviews',
-                        labelText: 'Message',
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.xs),
-                  _SendSparkButton(enabled: !isSending, onSend: _send),
-                ],
+              child: CoachComposer(
+                controller: _composer,
+                onSend: _send,
+                hint: 'Ask about skills or interviews',
+                label: 'Message',
+                isSending: isSending,
+                sendButton: _SendSparkButton(
+                  enabled: !isSending,
+                  onSend: _send,
+                ),
               ),
             ),
           ],
@@ -429,25 +426,58 @@ class _MessageBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isCandidate = message.author == CoachMessageAuthor.candidate;
+    if (message.author != CoachMessageAuthor.candidate) {
+      return _CoachBubbleShell(
+        child: _InkRevealText(
+          text: message.text,
+          style: TextStyle(color: AppColors.ink),
+        ),
+      );
+    }
     return Align(
-      alignment: isCandidate ? Alignment.centerRight : Alignment.centerLeft,
+      alignment: Alignment.centerRight,
       child: Container(
         constraints: const BoxConstraints(maxWidth: 320),
         margin: const EdgeInsets.only(bottom: AppSpacing.sm),
         padding: const EdgeInsets.all(AppSpacing.md),
         decoration: BoxDecoration(
-          color: isCandidate
-              ? _candidateBubbleColor(candidateTurn)
-              : AppColors.surface,
-          borderRadius: BorderRadius.circular(16),
+          color: _candidateBubbleColor(candidateTurn),
+          borderRadius: AppRadius.largeBorder,
         ),
-        child: isCandidate
-            ? Text(message.text, style: const TextStyle(color: Colors.white))
-            : _InkRevealText(
-                text: message.text,
-                style: TextStyle(color: AppColors.ink),
-              ),
+        child: Text(message.text, style: const TextStyle(color: Colors.white)),
+      ),
+    );
+  }
+}
+
+/// The shared coach-side bubble shell: [AppColors.surface] background,
+/// [AppRadius.large] corners (referencing the token explicitly rather than
+/// a raw `circular(16)`, so this can't silently drift from the radius
+/// scale), and a subtle [AppShadows.card] shadow so it reads as an
+/// elevated surface rather than a flat block of colour with nothing to
+/// distinguish it from the page behind it. Shared by an actual coach
+/// reply ([_MessageBubble]) and the "coach is composing" placeholder
+/// ([CoachThinkingIndicator]) -- both are, visually, "an incoming message
+/// from the coach", just with different content inside.
+class _CoachBubbleShell extends StatelessWidget {
+  const _CoachBubbleShell({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 320),
+        margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+        padding: const EdgeInsets.all(AppSpacing.md),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: AppRadius.largeBorder,
+          boxShadow: AppShadows.card,
+        ),
+        child: child,
       ),
     );
   }
@@ -544,40 +574,6 @@ class _InkRevealTextState extends State<_InkRevealText>
       child: Transform.translate(
         offset: Offset(0, (1 - eased) * 2),
         child: word,
-      ),
-    );
-  }
-}
-
-class _TypingIndicatorBubble extends StatelessWidget {
-  const _TypingIndicatorBubble();
-
-  @override
-  Widget build(BuildContext context) {
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: AppSpacing.sm),
-        padding: const EdgeInsets.all(AppSpacing.md),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Semantics(
-          liveRegion: true,
-          label: 'Coach is typing a reply',
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const SizedBox.square(
-                dimension: 14,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              Text('Coach is typing…', style: TextStyle(color: AppColors.ink)),
-            ],
-          ),
-        ),
       ),
     );
   }
