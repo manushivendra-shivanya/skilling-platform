@@ -12,6 +12,7 @@ class AppCard extends StatelessWidget {
     this.padding = const EdgeInsets.all(AppSpacing.md),
     this.semanticLabel,
     this.backgroundColor,
+    this.elevation = AppElevation.low,
     super.key,
   });
 
@@ -21,11 +22,17 @@ class AppCard extends StatelessWidget {
   final String? semanticLabel;
   final Color? backgroundColor;
 
+  /// Defaults to [AppElevation.low], the flat card look every other
+  /// caller relies on. Pass [AppElevation.medium] (or higher) only when a
+  /// card is deliberately meant to read as raised above its surroundings
+  /// -- e.g. a toolbar wrapper sitting on top of ordinary page content.
+  final double elevation;
+
   @override
   Widget build(BuildContext context) {
     final content = Material(
       color: backgroundColor ?? AppColors.surface,
-      elevation: AppElevation.low,
+      elevation: elevation,
       shadowColor: AppColors.ink.withValues(alpha: 0.12),
       shape: const RoundedRectangleBorder(
         borderRadius: AppRadius.largeBorder,
