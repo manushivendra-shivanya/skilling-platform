@@ -64,11 +64,25 @@ class _CoachThreadScreenState extends ConsumerState<CoachThreadScreen> {
               ),
             ),
             Padding(
-              padding: EdgeInsets.fromLTRB(
+              // Bottom inset is deliberately just AppSpacing.sm, not
+              // MediaQuery.viewInsetsOf(context).bottom + AppSpacing.sm.
+              // `context` here is this State's own build context, which
+              // sits *above* the Scaffold this method returns -- Scaffold
+              // only strips the keyboard inset from the MediaQuery its
+              // body subtree sees, not from this outer context, so this
+              // read the full, un-stripped keyboard height. Meanwhile the
+              // Scaffold (default resizeToAvoidBottomInset: true) already
+              // shrinks the body by that same height, so adding it again
+              // here double-counted it -- confirmed via a widget test that
+              // reproduces "RenderFlex overflowed" with this term present
+              // and a realistic keyboard height, matching the real-device
+              // report (see coach_thread_screen_test.dart, and
+              // coach_threads_screen.dart's identical fix).
+              padding: const EdgeInsets.fromLTRB(
                 AppSpacing.sm,
                 AppSpacing.xs,
                 AppSpacing.sm,
-                MediaQuery.viewInsetsOf(context).bottom + AppSpacing.sm,
+                AppSpacing.sm,
               ),
               child: Row(
                 children: [
