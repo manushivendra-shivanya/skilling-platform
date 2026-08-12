@@ -7,6 +7,7 @@ import '../../../app/theme/app_spacing.dart';
 import '../../../app/theme/coach_mark.dart';
 import '../../../core/errors/app_failure.dart';
 import '../../../core/widgets/app_chip.dart';
+import '../../../core/widgets/app_loading_progress.dart';
 import '../../../core/widgets/app_state_view.dart';
 import '../domain/app_startup_state.dart';
 import 'app_startup_controller.dart';
@@ -140,10 +141,7 @@ class _SplashBrand extends StatelessWidget {
               ),
               if (isLoading) ...[
                 const SizedBox(height: AppSpacing.xl),
-                const SizedBox.square(
-                  dimension: 28,
-                  child: CircularProgressIndicator(strokeWidth: 3),
-                ),
+                const AppLoadingProgressBar(label: 'Getting things ready…'),
               ],
               if (isLowDataMode) ...[
                 const SizedBox(height: AppSpacing.lg),

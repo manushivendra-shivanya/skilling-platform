@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../app/dependencies.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_icons.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../core/widgets/app_button.dart';
+import '../../../core/widgets/app_loading_progress.dart';
 import '../../../core/widgets/app_state_view.dart';
 import 'candidate_session_controller.dart';
 import 'development_auth_controller.dart';
@@ -22,11 +24,19 @@ class AuthenticatedPlaceholderScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final sessionState = ref.watch(candidateSessionControllerProvider);
+    final isRealBackend = ref.watch(
+      appConfigProvider.select((config) => config.hasSupabaseConfiguration),
+    );
 
     return Scaffold(
       body: SafeArea(
         child: sessionState.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
+          loading: () => const Center(
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: AppSpacing.xl),
+              child: AppLoadingProgressBar(label: 'Loading your session…'),
+            ),
+          ),
           error: (error, stackTrace) => AppErrorState(
             title: 'We could not load your session',
             message: 'Close and reopen the app, or try signing in again.',
@@ -43,6 +53,7 @@ class AuthenticatedPlaceholderScreen extends ConsumerWidget {
               );
             }
             return _AuthenticatedContent(
+              isRealBackend: isRealBackend,
               onContinueToOnboarding: onContinueToOnboarding,
               onLogout: () async {
                 final failure = await ref
@@ -63,10 +74,12 @@ class AuthenticatedPlaceholderScreen extends ConsumerWidget {
 
 class _AuthenticatedContent extends StatelessWidget {
   const _AuthenticatedContent({
+    required this.isRealBackend,
     required this.onContinueToOnboarding,
     required this.onLogout,
   });
 
+  final bool isRealBackend;
   final VoidCallback onContinueToOnboarding;
   final VoidCallback onLogout;
 
@@ -81,7 +94,9 @@ class _AuthenticatedContent extends StatelessWidget {
             const Icon(AppIcons.success, size: 72, color: AppColors.success),
             const SizedBox(height: AppSpacing.lg),
             Text(
-              'Development sign-in complete',
+              isRealBackend
+                  ? 'Sign-in complete'
+                  : 'Development sign-in complete',
               style: Theme.of(context).textTheme.headlineSmall,
               textAlign: TextAlign.center,
             ),
