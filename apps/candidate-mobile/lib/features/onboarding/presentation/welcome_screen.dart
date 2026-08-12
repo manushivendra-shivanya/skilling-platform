@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../../app/theme/app_colors.dart';
-import '../../../app/theme/app_icons.dart';
 import '../../../app/theme/app_spacing.dart';
+import '../../../app/theme/coach_mark.dart';
 import '../../../core/widgets/app_button.dart';
 
 class WelcomeScreen extends StatelessWidget {
@@ -59,11 +59,7 @@ class WelcomeScreen extends StatelessWidget {
                         color: AppColors.brandSoft,
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(
-                        AppIcons.coach,
-                        size: 52,
-                        color: AppColors.brand,
-                      ),
+                      child: const CoachMark(size: 52, color: AppColors.brand),
                     ),
                     const SizedBox(height: AppSpacing.xl),
                     Text(

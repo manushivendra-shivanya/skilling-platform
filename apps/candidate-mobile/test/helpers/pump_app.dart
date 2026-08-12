@@ -12,6 +12,8 @@ import 'package:candidate_mobile/core/errors/result.dart';
 import 'package:candidate_mobile/features/certification_exam/data/secure_certification_exam_attempt_repository.dart';
 import 'package:candidate_mobile/features/certification_exam/domain/certification_exam.dart';
 import 'package:candidate_mobile/features/certification_exam/domain/certification_exam_repository.dart';
+import 'package:candidate_mobile/features/coach/data/secure_coach_thread_repository.dart';
+import 'package:candidate_mobile/features/coach/domain/coach_thread_repository.dart';
 import 'package:candidate_mobile/features/home/domain/home_dashboard_repository.dart';
 import 'package:candidate_mobile/features/jobs/data/local_mock_jobs_repository.dart';
 import 'package:candidate_mobile/features/jobs/data/secure_saved_jobs_repository.dart';
@@ -55,6 +57,7 @@ extension CandidateAppPump on WidgetTester {
     ViewedClipsRepository? viewedClipsRepository,
     CertificationExamRepository? certificationExamRepository,
     CertificationExamAttemptRepository? certificationExamAttemptRepository,
+    CoachThreadRepository? coachThreadRepository,
     JobsRepository? jobsRepository,
     ShiftsRepository? shiftsRepository,
     SimulationAttemptRepository? simulationAttemptRepository,
@@ -139,6 +142,13 @@ extension CandidateAppPump on WidgetTester {
                 SecureCertificationExamAttemptRepository(
                   InMemorySecureKeyValueStore(),
                 ),
+          ),
+          // Same rationale as microLessonAssessmentRepositoryProvider above:
+          // always overridden so it never falls through to the real
+          // secure-storage-backed provider in the widget test sandbox.
+          coachThreadRepositoryProvider.overrideWithValue(
+            coachThreadRepository ??
+                SecureCoachThreadRepository(InMemorySecureKeyValueStore()),
           ),
           jobsRepositoryProvider.overrideWithValue(
             jobsRepository ??

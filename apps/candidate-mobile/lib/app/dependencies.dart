@@ -22,7 +22,9 @@ import '../features/career_passport/data/wms_career_passport_repository.dart';
 import '../features/career_passport/domain/career_passport_repository.dart';
 import '../features/coach/data/api_coach_repository.dart';
 import '../features/coach/data/local_demo_coach_repository.dart';
+import '../features/coach/data/secure_coach_thread_repository.dart';
 import '../features/coach/domain/coach_repository.dart';
+import '../features/coach/domain/coach_thread_repository.dart';
 import '../features/home/data/mock_home_dashboard_repository.dart';
 import '../features/home/domain/home_dashboard_repository.dart';
 import '../features/intelligence/data/offline_first_candidate_intelligence_repository.dart';
@@ -221,6 +223,13 @@ final coachRepositoryProvider = Provider<CoachRepository>((ref) {
   }
   return const LocalDemoCoachRepository();
 });
+
+// On-device only, always -- Coach threads are local browsing history (see
+// CoachThread's doc comment), not gated by live-backend availability the
+// way ApiCoachRepository is.
+final coachThreadRepositoryProvider = Provider<CoachThreadRepository>(
+  (ref) => SecureCoachThreadRepository(ref.watch(secureKeyValueStoreProvider)),
+);
 
 final jobsRepositoryProvider = Provider<JobsRepository>((ref) {
   final config = ref.watch(appConfigProvider);

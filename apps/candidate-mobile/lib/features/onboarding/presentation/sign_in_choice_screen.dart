@@ -3,8 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/dependencies.dart';
 import '../../../app/theme/app_colors.dart';
-import '../../../app/theme/app_icons.dart';
 import '../../../app/theme/app_spacing.dart';
+import '../../../app/theme/coach_mark.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_feedback.dart';
 import '../../../core/widgets/app_state_view.dart';
@@ -104,7 +104,7 @@ class _SignInChoiceContent extends ConsumerWidget {
           // starts, well before the first real request Home/Jobs/Shift
           // will make once the candidate is in.
           const BackendWarmupBanner(),
-          const Icon(AppIcons.coach, size: 56, color: AppColors.brand),
+          const CoachMark(size: 56, color: AppColors.brand),
           const SizedBox(height: AppSpacing.xl),
           Text(
             copy.title,

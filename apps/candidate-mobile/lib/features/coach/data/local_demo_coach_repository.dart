@@ -3,9 +3,9 @@ import '../domain/coach_message.dart';
 import '../domain/coach_repository.dart';
 
 /// Config-gated fallback when no live backend is configured -- same
-/// posture as `LocalMockJobsRepository`. Keeps the coach screen usable in
-/// a pure local/mock build, with a canned reply that makes no claim of
-/// being AI-generated (see coach_screen.dart's banner, which reads this
+/// posture as `LocalMockJobsRepository`. Keeps Coach usable in a pure
+/// local/mock build, with a canned reply that makes no claim of being
+/// AI-generated (see coach_threads_screen.dart's banner, which reads this
 /// flag via `isLiveData`).
 class LocalDemoCoachRepository implements CoachRepository {
   const LocalDemoCoachRepository();

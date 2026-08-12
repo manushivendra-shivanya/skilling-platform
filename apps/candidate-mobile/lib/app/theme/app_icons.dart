@@ -11,7 +11,9 @@ abstract final class AppIcons {
   static const IconData jobs = Icons.work_outline;
   static const IconData shift = Icons.bolt_outlined;
   static const IconData profile = Icons.person_outline;
-  static const IconData coach = Icons.auto_awesome_outlined;
+  // No `coach` entry: the AI Coach's identity is `CoachMark`
+  // (`app/theme/coach_mark.dart`), a custom-drawn mark, not a bare
+  // Material icon -- see that file's doc comment for why.
 
   static const IconData success = Icons.check_circle_outline;
   static const IconData warning = Icons.warning_amber_rounded;

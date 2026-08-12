@@ -104,9 +104,10 @@ class ApiCoachRepository implements CoachRepository {
     }
     // 403 (forbidden) and 429 (rate-limited) both land as "you can't do
     // this right now" -- PermissionFailure only ever surfaces `.message`
-    // verbatim in this screen (see coach_screen.dart), so the server's own
-    // wording (e.g. "You've reached today's message limit...") carries
-    // through without this repository needing a rate-limit-specific type.
+    // verbatim as a coach-authored message (see coach_thread_screen.dart
+    // and ask_coach_affordance.dart), so the server's own wording (e.g.
+    // "You've reached today's message limit...") carries through without
+    // this repository needing a rate-limit-specific type.
     if (status == 403 || status == 429) {
       return PermissionFailure(message, cause: error, stackTrace: stackTrace);
     }

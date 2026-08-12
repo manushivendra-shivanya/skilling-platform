@@ -123,3 +123,66 @@ already-built-on first):
 
 None of the four are started. This section exists so the next pass at
 the coach doesn't have to re-derive this reasoning from a chat transcript.
+
+## 6. UI redesign: global chrome, topic threads, contextual entry
+
+The shipped chat screen was never actually designed -- default
+`TextField`/`Container` bubbles, described in a widget tree rather than
+drawn. Two corrections shaped the rebuild, both worth keeping in mind for
+any future coach UI work:
+
+- **Coach is global chrome, not a sector widget.** A first design pass
+  gave it a warehouse-specific identity (industrial signage type, a
+  radio-dispatch metaphor). Wrong: `docs/adr/0020-sector-pack-abstraction.md`
+  scopes sector-specific visual identity to widgets that explicitly opt
+  into one trade's world, and Coach is reachable by every candidate
+  regardless of active sector -- including banking, pharma, and field
+  sales, none of which have Flutter screens yet (see `docs/26`'s
+  cross-sector notes). It draws from the app's own shared, sector-blind
+  system (`AppColors`, `AppTypography`'s system-font scale) instead.
+- **First-principles pass: Coach isn't only a destination.** Every screen
+  that could prompt a question already knows the context and previously
+  threw it away -- a candidate stuck on a lesson had to leave, open a
+  blank chat, and re-explain what the app already had on screen. The
+  contextual "Ask" affordance (`ask_coach_affordance.dart`) fixes that:
+  a small floating control, seeded with what the candidate is looking at,
+  that answers in place via a bottom sheet without full navigation.
+  "Continue in Coach" is the only path into the full destination.
+
+What shipped:
+
+- **`CoachMark`** (`app/theme/coach_mark.dart`) -- a custom guided-path
+  glyph replacing `Icons.auto_awesome` (the generic "this is AI" sparkle
+  every product uses) everywhere `AppIcons.coach` used to appear: splash,
+  sign-in, onboarding welcome, the global nav shell's FAB, the dev-tools
+  icon gallery, and both Coach screens below.
+- **Topic threads** (design option B from the v4 design pass) replaced
+  the single endless-scroll conversation: `CoachThread`
+  (`domain/coach_thread.dart`), `CoachThreadRepository` /
+  `SecureCoachThreadRepository` (on-device only -- local browsing
+  history, not the server-side "coach data at rest" the ephemeral-history
+  decision above rules out), `CoachThreadsController`
+  (`AsyncNotifier<CoachThreadsState>`, one `sendingThreadIds` set so
+  threads send independently), `CoachThreadsScreen` (the list + empty
+  state with starter prompts) and `CoachThreadScreen` (one open
+  conversation). The network contract is unchanged -- still one
+  stateless `CoachRepository.sendMessage(message, history)` call per
+  message; a thread's `messages` list *is* that history.
+- **`AskCoachAffordance`** -- wired into `MicroLessonPlayerScreen` first
+  (`floatingActionButton`), tagging new threads with a `contextRef` (e.g.
+  `micro_lesson:clip_putaway_dairy_002`) for future use. **Text-first, not
+  voice-first**, unlike the design reference: this app has no
+  speech-to-text provider anywhere (`voice_interview_screen.dart`'s own
+  "A transcription provider is not connected" state is the precedent) --
+  a live waveform and partial transcript would have been fabricated UI.
+  The mic control degrades the same honest way the old standalone
+  composer already did ("Voice input is not active"). A live-transcription
+  provider is real future scope, not evaluated here.
+- Router: `/coach` now serves `CoachThreadsScreen`; `/coach/:threadId`
+  (new) serves one thread. Both stay on the root navigator, matching the
+  old single `/coach` route's registration.
+
+Not done in this pass: only `MicroLessonPlayerScreen` has the contextual
+affordance -- Practice, Certification, and Jobs are natural next hosts
+once this one proves out. Thread deletion is also out of scope; threads
+only accumulate for now.
