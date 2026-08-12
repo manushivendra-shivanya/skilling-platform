@@ -83,7 +83,7 @@ class DesignSystemGalleryScreen extends StatelessWidget {
               runSpacing: AppSpacing.md,
               children: [
                 _IconToken(label: 'Home', icon: Icon(AppIcons.home)),
-                _IconToken(label: 'Learn', icon: Icon(AppIcons.learn)),
+                _IconToken(label: 'Train', icon: Icon(AppIcons.learn)),
                 _IconToken(label: 'Practise', icon: Icon(AppIcons.practise)),
                 _IconToken(label: 'Jobs', icon: Icon(AppIcons.jobs)),
                 _IconToken(label: 'Profile', icon: Icon(AppIcons.profile)),

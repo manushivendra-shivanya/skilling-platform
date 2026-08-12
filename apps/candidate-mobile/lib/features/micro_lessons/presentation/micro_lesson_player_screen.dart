@@ -271,7 +271,7 @@ class _MicroLessonPlayerScreenState
       // an error, so it gets a plain placeholder rather than an error banner.
       return const ColoredBox(
         color: Colors.black12,
-        child: Center(child: Text('Video not yet available for this clip')),
+        child: Center(child: Text('No video yet — text lesson is ready')),
       );
     }
     if (_loadError != null) {
@@ -324,7 +324,7 @@ class _AssetStateLabel extends StatelessWidget {
       ),
       _ when !clip.hasVideoAsset => (
         Icons.hourglass_empty,
-        'Video not yet produced for this clip',
+        'No video yet • text lesson and assessment ready',
         AppColors.inkMuted,
       ),
       _ when clip.videoUrl!.startsWith('asset://') => (

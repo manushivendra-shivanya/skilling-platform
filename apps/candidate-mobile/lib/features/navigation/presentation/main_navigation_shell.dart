@@ -74,7 +74,7 @@ class MainNavigationShell extends StatelessWidget {
           onDestinationSelected: _selectDestination,
           destinations: const [
             NavigationDestination(icon: Icon(AppIcons.home), label: 'Home'),
-            NavigationDestination(icon: Icon(AppIcons.learn), label: 'Learn'),
+            NavigationDestination(icon: Icon(AppIcons.learn), label: 'Train'),
             NavigationDestination(icon: Icon(AppIcons.jobs), label: 'Jobs'),
             NavigationDestination(icon: Icon(AppIcons.shift), label: 'Shift'),
             NavigationDestination(
@@ -101,7 +101,7 @@ class MainNavigationShell extends StatelessWidget {
 
   String _titleFor(int index) => switch (index) {
     0 => 'Saksham',
-    1 => 'Learn',
+    1 => 'Train',
     2 => 'Jobs',
     3 => 'Shift',
     4 => 'My Profile',

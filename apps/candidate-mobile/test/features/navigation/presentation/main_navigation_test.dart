@@ -51,9 +51,9 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('नमस्ते'), findsOneWidget);
-    await tester.tap(find.text('Learn'));
+    await tester.tap(find.text('Train'));
     await tester.pumpAndSettle();
-    expect(find.text('Your logistics pathway'), findsOneWidget);
+    expect(find.text('Your training pathway'), findsOneWidget);
 
     // The lesson row itself is the tap target now (no separate "Open
     // lesson" button -- see sector_index_row.dart).
@@ -76,14 +76,14 @@ void main() {
       findsOneWidget,
     );
 
-    await tester.tap(find.text('Learn'));
+    await tester.tap(find.text('Train'));
     await tester.pumpAndSettle();
     expect(
       find.textContaining('Completed — tap to mark incomplete'),
       findsOneWidget,
     );
 
-    // Practise now lives as a sub-tab inside Learn rather than its own
+    // Practise now lives as a sub-tab inside Train rather than its own
     // bottom-nav destination.
     await tester.tap(find.text('Practise'));
     await tester.pumpAndSettle();

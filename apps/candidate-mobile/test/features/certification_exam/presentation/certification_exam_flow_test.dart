@@ -116,7 +116,7 @@ void main() {
       certificationExamRepository: _FakeCertificationExamRepository(),
     );
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Learn'));
+    await tester.tap(find.text('Train'));
     await tester.pumpAndSettle();
     await _completeAllLessons(tester);
     await tester.tap(find.text('Certification'));
@@ -146,7 +146,7 @@ void main() {
         certificationExamRepository: _FakeCertificationExamRepository(),
       );
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Learn'));
+      await tester.tap(find.text('Train'));
       await tester.pumpAndSettle();
       await _completeAllLessons(tester);
       await tester.tap(find.text('Certification'));
@@ -277,7 +277,7 @@ Future<void> _openExamQuestionOne(
     certificationExamRepository: _FakeCertificationExamRepository(),
   );
   await tester.pumpAndSettle();
-  await tester.tap(find.text('Learn'));
+  await tester.tap(find.text('Train'));
   await tester.pumpAndSettle();
   await _completeAllLessons(tester);
   await tester.tap(find.text('Certification'));

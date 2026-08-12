@@ -15,10 +15,12 @@ class JourneyStepCard extends StatelessWidget {
 
   final JourneyStep currentStep;
 
-  // "Learning" rather than "Learn": the bottom-nav tab is also labelled
-  // "Learn", and an exact duplicate made this stepper ambiguous to
-  // WidgetTester.tap(find.text('Learn')) across many existing tests
-  // whenever Home (which always shows this card) was the current screen.
+  // "Learning" rather than "Learn": originally chosen because the
+  // bottom-nav tab was also labelled "Learn" and an exact duplicate made
+  // this stepper ambiguous to WidgetTester.tap(find.text('Learn')) across
+  // many existing tests whenever Home (which always shows this card) was
+  // the current screen. The bottom-nav tab is now "Train"
+  // (main_navigation_shell.dart), but "Learning" is kept for its own sake.
   static const _labels = ['Learning', 'Practise', 'Assess', 'Proof', 'Apply'];
 
   @override
