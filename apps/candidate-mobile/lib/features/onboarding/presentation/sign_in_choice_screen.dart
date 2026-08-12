@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/dependencies.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_spacing.dart';
-import '../../../app/theme/coach_mark.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_feedback.dart';
 import '../../../core/widgets/app_loading_progress.dart';
@@ -13,6 +12,7 @@ import '../../../core/widgets/backend_warmup_banner.dart';
 import '../../authentication/presentation/development_auth_controller.dart';
 import '../domain/candidate_language.dart';
 import 'language_selection_controller.dart';
+import 'pre_onboarding_step_chrome.dart';
 
 class SignInChoiceScreen extends ConsumerWidget {
   const SignInChoiceScreen({
@@ -29,7 +29,11 @@ class SignInChoiceScreen extends ConsumerWidget {
     final selectedLanguage = ref.watch(languageSelectionControllerProvider);
 
     return Scaffold(
-      appBar: AppBar(),
+      // Was a bare, untitled AppBar -- the one screen in the pre-onboarding
+      // header set that didn't say where the candidate was. Titled to match
+      // the other 3 (Language, Email, OTP), all of which already carry a
+      // plain step-name title in the default AppBar style.
+      appBar: AppBar(title: const Text('Sign in')),
       body: SafeArea(
         child: selectedLanguage.when(
           loading: () => const Center(
@@ -110,7 +114,14 @@ class _SignInChoiceContent extends ConsumerWidget {
           // starts, well before the first real request Home/Jobs/Shift
           // will make once the candidate is in.
           const BackendWarmupBanner(),
-          const CoachMark(size: 56, color: AppColors.brand),
+          // One consistent small brand mark, matching Language/Email/OTP --
+          // was its own one-off 56px CoachMark before. No step-progress
+          // indicator on this screen: which of the two buttons below the
+          // candidate taps decides whether their total is 2 steps (Google)
+          // or 4 (email), so any number shown here would have to be
+          // silently rewritten the instant they choose. See
+          // `PreOnboardingProgress`'s doc comment for the full reasoning.
+          const PreOnboardingBrandMark(),
           const SizedBox(height: AppSpacing.xl),
           Text(
             copy.title,

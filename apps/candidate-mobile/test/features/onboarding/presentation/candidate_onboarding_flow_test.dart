@@ -1,6 +1,8 @@
 import 'package:candidate_mobile/core/errors/result.dart';
 import 'package:candidate_mobile/core/repositories/candidate_session_repository.dart';
 import 'package:candidate_mobile/core/network/connectivity_status.dart';
+import 'package:candidate_mobile/core/widgets/app_chip.dart';
+import 'package:candidate_mobile/core/widgets/app_icon_plate.dart';
 import 'package:candidate_mobile/features/onboarding/data/secure_candidate_onboarding_repository.dart';
 import 'package:candidate_mobile/features/onboarding/domain/candidate_onboarding_draft.dart';
 import 'package:candidate_mobile/features/resume/domain/resume_parsing_repository.dart';
@@ -145,6 +147,102 @@ void main() {
     );
     expect(find.text('नमस्ते'), findsOneWidget);
   });
+
+  testWidgets(
+    'each step shows an icon matching its content, and consent/review '
+    'status render as status chips reflecting the real booleans',
+    (tester) async {
+      final repository = InMemoryCandidateOnboardingRepository();
+      await tester.pumpCandidateApp(
+        candidateSessionRepository: sessions,
+        candidateOnboardingRepository: repository,
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Continue to profile setup'));
+      await tester.pumpAndSettle();
+
+      // Step 0: goal -- a choice step.
+      expect(_stepHeadingIcon(tester), Icons.checklist_rounded);
+      await _selectAndContinue(tester, 'Find a new job');
+
+      // Step 1: name -- a text-entry step.
+      expect(_stepHeadingIcon(tester), Icons.person_outline);
+      await tester.enterText(
+        find.byKey(const ValueKey('full-name-field')),
+        'Asha Kumari',
+      );
+      await _continue(tester);
+
+      // Step 2: location -- also text-entry, but its own icon (distinct
+      // content, same step type as step 1).
+      expect(_stepHeadingIcon(tester), Icons.edit_outlined);
+      await tester.enterText(
+        find.byKey(const ValueKey('city-field')),
+        'Lucknow',
+      );
+      await tester.enterText(
+        find.byKey(const ValueKey('state-field')),
+        'Uttar Pradesh',
+      );
+      await tester.enterText(
+        find.byKey(const ValueKey('pin-code-field')),
+        '226001',
+      );
+      await _continue(tester);
+
+      // Steps 3-5: education, experience, roles -- all choice steps.
+      expect(_stepHeadingIcon(tester), Icons.checklist_rounded);
+      await _selectAndContinue(tester, 'Class 12 pass');
+      expect(_stepHeadingIcon(tester), Icons.checklist_rounded);
+      await _selectAndContinue(tester, 'Fresher');
+      expect(_stepHeadingIcon(tester), Icons.checklist_rounded);
+      await _selectAndContinue(tester, 'Warehouse Operations Associate');
+
+      // Step 6: resume upload.
+      expect(_stepHeadingIcon(tester), Icons.upload_file_outlined);
+      await _continue(tester);
+
+      // Step 7: coming-soon voice step.
+      expect(_stepHeadingIcon(tester), Icons.mic_none_outlined);
+      await _continue(tester);
+
+      // Step 8: consent -- both checkboxes start unaccepted, each carrying
+      // its own status chip reflecting that same boolean.
+      expect(_stepHeadingIcon(tester), Icons.lock_outline);
+      expect(
+        tester
+            .widgetList<AppStatusChip>(find.byType(AppStatusChip))
+            .map((chip) => chip.label),
+        ['Not yet accepted', 'Not yet accepted'],
+      );
+      await tester.tap(find.text('Platform terms'));
+      await tester.pump();
+      expect(
+        tester
+            .widgetList<AppStatusChip>(find.byType(AppStatusChip))
+            .map((chip) => chip.tone),
+        [AppChipTone.success, AppChipTone.warning],
+      );
+      await tester.tap(find.text('Privacy notice'));
+      await tester.pump();
+      expect(
+        tester
+            .widgetList<AppStatusChip>(find.byType(AppStatusChip))
+            .every((chip) => chip.tone == AppChipTone.success),
+        isTrue,
+      );
+      await _continue(tester);
+
+      // Step 9: review -- the same `hasCurrentRequiredConsents` boolean
+      // the plain-text row used to show, now also carried by a chip.
+      expect(_stepHeadingIcon(tester), Icons.description_outlined);
+      final reviewChip = tester.widget<AppStatusChip>(
+        find.byType(AppStatusChip),
+      );
+      expect(reviewChip.label, 'Accepted with current versions');
+      expect(reviewChip.tone, AppChipTone.success);
+    },
+  );
 
   group('resume upload step', () {
     // Tall viewport for this whole group: the resume step's content plus
@@ -395,6 +493,12 @@ Future<void> _continue(WidgetTester tester) async {
   await tester.tap(find.text('Save and continue'));
   await tester.pump();
   await tester.pumpAndSettle();
+}
+
+/// The current step's `_StepHeading` icon -- one `AppIconPlate` is on
+/// screen per step, so this is unambiguous.
+IconData _stepHeadingIcon(WidgetTester tester) {
+  return tester.widget<AppIconPlate>(find.byType(AppIconPlate)).icon;
 }
 
 /// Walks a fresh draft through steps 0-5 (goal, name, location, education,

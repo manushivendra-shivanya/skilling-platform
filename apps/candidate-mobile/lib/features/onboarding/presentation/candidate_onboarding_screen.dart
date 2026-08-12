@@ -9,6 +9,8 @@ import '../../../core/errors/app_failure.dart';
 import '../../../core/network/connectivity_status.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_card.dart';
+import '../../../core/widgets/app_chip.dart';
+import '../../../core/widgets/app_icon_plate.dart';
 import '../../../core/widgets/app_progress.dart';
 import '../../../core/widgets/app_skeleton.dart';
 import '../../../core/widgets/app_state_view.dart';
@@ -221,9 +223,16 @@ class _CandidateOnboardingScreenState
     );
   }
 
+  // Maps this same currentStep switch to a step-type icon rather than
+  // introducing a second, parallel switch: a choice/select step (goal,
+  // education, experience, roles) gets a checklist icon, a text-entry step
+  // (name, location) gets a person/pencil icon, and the remaining steps --
+  // resume upload, the coming-soon voice step, consent, review -- each get
+  // an icon obvious for their own content. See `_StepHeading`.
   Widget _buildStep(CandidateOnboardingDraft draft) {
     return switch (draft.currentStep) {
       0 => _ChoiceStep<CandidateGoal>(
+        icon: Icons.checklist_rounded,
         title: 'What would you like to achieve?',
         description: 'We will shape your next steps around this goal.',
         values: CandidateGoal.values,
@@ -232,6 +241,7 @@ class _CandidateOnboardingScreenState
         onSelected: (value) => _updateDraft(draft.copyWith(goal: value)),
       ),
       1 => _TextStep(
+        icon: Icons.person_outline,
         title: 'Tell us your name',
         description:
             'Use the name you want employers and training partners to see.',
@@ -246,6 +256,7 @@ class _CandidateOnboardingScreenState
         ],
       ),
       2 => _TextStep(
+        icon: Icons.edit_outlined,
         title: 'Where are you based?',
         description: 'Location helps us show practical opportunities near you.',
         fields: [
@@ -274,6 +285,7 @@ class _CandidateOnboardingScreenState
         ],
       ),
       3 => _ChoiceStep<EducationLevel>(
+        icon: Icons.checklist_rounded,
         title: 'What is your education level?',
         description: 'Choose the closest option. This is self-reported.',
         values: EducationLevel.values,
@@ -282,6 +294,7 @@ class _CandidateOnboardingScreenState
         onSelected: (value) => _updateDraft(draft.copyWith(education: value)),
       ),
       4 => _ChoiceStep<ExperienceLevel>(
+        icon: Icons.checklist_rounded,
         title: 'How much work experience do you have?',
         description:
             'Experience in any role counts. Freshers are welcome here.',
@@ -460,8 +473,13 @@ class _CandidateOnboardingScreenState
 }
 
 class _StepHeading extends StatelessWidget {
-  const _StepHeading({required this.title, required this.description});
+  const _StepHeading({
+    required this.icon,
+    required this.title,
+    required this.description,
+  });
 
+  final IconData icon;
   final String title;
   final String description;
 
@@ -470,6 +488,12 @@ class _StepHeading extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        AppIconPlate(
+          icon: icon,
+          background: AppColors.brandSoft,
+          foreground: AppColors.brand,
+        ),
+        const SizedBox(height: AppSpacing.sm),
         Text(title, style: Theme.of(context).textTheme.headlineSmall),
         const SizedBox(height: AppSpacing.xs),
         Text(
@@ -485,6 +509,7 @@ class _StepHeading extends StatelessWidget {
 
 class _ChoiceStep<T> extends StatelessWidget {
   const _ChoiceStep({
+    required this.icon,
     required this.title,
     required this.description,
     required this.values,
@@ -493,6 +518,7 @@ class _ChoiceStep<T> extends StatelessWidget {
     required this.onSelected,
   });
 
+  final IconData icon;
   final String title;
   final String description;
   final List<T> values;
@@ -505,7 +531,7 @@ class _ChoiceStep<T> extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _StepHeading(title: title, description: description),
+        _StepHeading(icon: icon, title: title, description: description),
         const SizedBox(height: AppSpacing.xl),
         for (final value in values) ...[
           _SelectableCard(
@@ -522,11 +548,13 @@ class _ChoiceStep<T> extends StatelessWidget {
 
 class _TextStep extends StatelessWidget {
   const _TextStep({
+    required this.icon,
     required this.title,
     required this.description,
     required this.fields,
   });
 
+  final IconData icon;
   final String title;
   final String description;
   final List<Widget> fields;
@@ -536,7 +564,7 @@ class _TextStep extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _StepHeading(title: title, description: description),
+        _StepHeading(icon: icon, title: title, description: description),
         const SizedBox(height: AppSpacing.xl),
         for (final field in fields) ...[
           field,
@@ -559,6 +587,7 @@ class _RolesStep extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         const _StepHeading(
+          icon: Icons.checklist_rounded,
           title: 'Which roles interest you?',
           description:
               'Choose one or more logistics roles. You can change these later.',
@@ -676,6 +705,7 @@ class _ResumeUploadStepState extends ConsumerState<_ResumeUploadStep> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         const _StepHeading(
+          icon: Icons.upload_file_outlined,
           title: 'Add your resume',
           description:
               'Paste your resume text and we will use AI to help fill in your profile faster. This step is optional -- you can skip it.',
@@ -890,7 +920,7 @@ class _ComingSoonStep extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _StepHeading(title: title, description: description),
+        _StepHeading(icon: icon, title: title, description: description),
         const SizedBox(height: AppSpacing.xl),
         AppCard(
           child: Column(
@@ -931,34 +961,65 @@ class _ConsentStep extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         const _StepHeading(
+          icon: Icons.lock_outline,
           title: 'Consent centre',
           description:
               'Review and accept each required notice separately. You can manage consent later.',
         ),
         const SizedBox(height: AppSpacing.xl),
         AppCard(
-          child: CheckboxListTile(
-            value: termsAccepted,
-            onChanged: onTermsChanged,
-            contentPadding: EdgeInsets.zero,
-            controlAffinity: ListTileControlAffinity.leading,
-            title: const Text('Platform terms'),
-            subtitle: const Text(
-              'Required • Version ${OnboardingConsentVersions.termsVersion}',
-            ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              CheckboxListTile(
+                value: termsAccepted,
+                onChanged: onTermsChanged,
+                contentPadding: EdgeInsets.zero,
+                controlAffinity: ListTileControlAffinity.leading,
+                title: const Text('Platform terms'),
+                subtitle: const Text(
+                  'Required • Version ${OnboardingConsentVersions.termsVersion}',
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(left: AppSpacing.xl),
+                child: AppStatusChip(
+                  // Same boolean the checkbox above reads -- rendered with
+                  // more visual weight alongside it, not instead of it.
+                  label: termsAccepted ? 'Accepted' : 'Not yet accepted',
+                  tone: termsAccepted
+                      ? AppChipTone.success
+                      : AppChipTone.warning,
+                ),
+              ),
+            ],
           ),
         ),
         const SizedBox(height: AppSpacing.sm),
         AppCard(
-          child: CheckboxListTile(
-            value: privacyAccepted,
-            onChanged: onPrivacyChanged,
-            contentPadding: EdgeInsets.zero,
-            controlAffinity: ListTileControlAffinity.leading,
-            title: const Text('Privacy notice'),
-            subtitle: const Text(
-              'Required • Version ${OnboardingConsentVersions.privacyVersion}',
-            ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              CheckboxListTile(
+                value: privacyAccepted,
+                onChanged: onPrivacyChanged,
+                contentPadding: EdgeInsets.zero,
+                controlAffinity: ListTileControlAffinity.leading,
+                title: const Text('Privacy notice'),
+                subtitle: const Text(
+                  'Required • Version ${OnboardingConsentVersions.privacyVersion}',
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(left: AppSpacing.xl),
+                child: AppStatusChip(
+                  label: privacyAccepted ? 'Accepted' : 'Not yet accepted',
+                  tone: privacyAccepted
+                      ? AppChipTone.success
+                      : AppChipTone.warning,
+                ),
+              ),
+            ],
           ),
         ),
         const SizedBox(height: AppSpacing.md),
@@ -981,6 +1042,7 @@ class _ReviewStep extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         const _StepHeading(
+          icon: Icons.description_outlined,
           title: 'Review your profile',
           description:
               'Check your details before completing setup. Use Back to make changes.',
@@ -1014,6 +1076,18 @@ class _ReviewStep extends StatelessWidget {
                 value: draft.hasCurrentRequiredConsents
                     ? 'Accepted with current versions'
                     : 'Missing',
+                // Same `hasCurrentRequiredConsents` boolean as `value` above,
+                // promoted to a status chip -- this is a hard completion
+                // gate (see `_isCompleteForReview`), so it earns more visual
+                // weight than the plain-text rows around it.
+                valueChip: AppStatusChip(
+                  label: draft.hasCurrentRequiredConsents
+                      ? 'Accepted with current versions'
+                      : 'Missing',
+                  tone: draft.hasCurrentRequiredConsents
+                      ? AppChipTone.success
+                      : AppChipTone.warning,
+                ),
                 showDivider: false,
               ),
             ],
@@ -1028,11 +1102,18 @@ class _ReviewRow extends StatelessWidget {
   const _ReviewRow({
     required this.label,
     required this.value,
+    this.valueChip,
     this.showDivider = true,
   });
 
   final String label;
   final String value;
+
+  /// When set, replaces the plain [value] text with a status chip -- same
+  /// underlying data as [value], just given more visual weight. [value] is
+  /// still required even then, so every row keeps one unambiguous source of
+  /// truth for its own semantics/testing.
+  final Widget? valueChip;
   final bool showDivider;
 
   @override
@@ -1042,7 +1123,12 @@ class _ReviewRow extends StatelessWidget {
       children: [
         Text(label, style: Theme.of(context).textTheme.labelLarge),
         const SizedBox(height: AppSpacing.xxs),
-        Text(value),
+        // `Align` keeps the chip at its natural width -- this Column
+        // stretches its children, which would otherwise force the chip's
+        // visible rounded box to span the full row width.
+        valueChip != null
+            ? Align(alignment: Alignment.centerLeft, child: valueChip)
+            : Text(value),
         if (showDivider) ...[
           const SizedBox(height: AppSpacing.sm),
           const Divider(),
