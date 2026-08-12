@@ -26,6 +26,10 @@ class _FakeNetworkingRepository implements NetworkingRepository {
   }
 
   @override
+  Future<Result<NetworkingProfile>> getMyProfile() async =>
+      throw UnimplementedError();
+
+  @override
   Future<Result<NetworkingProfile>> publishProfile({
     required String fullName,
     required String headline,

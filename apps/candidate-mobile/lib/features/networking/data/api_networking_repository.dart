@@ -24,6 +24,26 @@ class ApiNetworkingRepository implements NetworkingRepository {
   final String _apiBaseUrl;
 
   @override
+  Future<Result<NetworkingProfile>> getMyProfile() {
+    return _call(
+      'Could not load your networking settings. Try again in a moment.',
+      (token) async {
+        final response = await _dio.get<Object?>(
+          '$_apiBaseUrl/networking/profile',
+          options: Options(headers: {'Authorization': 'Bearer $token'}),
+        );
+        final body = response.data;
+        if (body is! Map) {
+          throw const FormatException(
+            'Unexpected networking-profile response shape',
+          );
+        }
+        return _profileFromJson(body);
+      },
+    );
+  }
+
+  @override
   Future<Result<NetworkingProfile>> publishProfile({
     required String fullName,
     required String headline,

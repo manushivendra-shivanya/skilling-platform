@@ -175,6 +175,48 @@ function seedProfile(
   });
 }
 
+describe('NetworkingService.getMyProfile', () => {
+  it('returns all-defaults, not-discoverable when the candidate has never published', async () => {
+    const service = buildService(new FakeSupabaseAdmin());
+
+    const profile = await service.getMyProfile('candidate-1');
+
+    expect(profile).toEqual({
+      discoverable: false,
+      fullName: '',
+      headline: '',
+      city: '',
+      state: '',
+      preferredRoles: [],
+    });
+  });
+
+  it('returns the candidate own persisted row, including discoverable', async () => {
+    const admin = new FakeSupabaseAdmin();
+    seedProfile(admin, {
+      candidate_id: 'candidate-1',
+      discoverable: true,
+      full_name: 'Asha Kumari',
+      headline: 'Warehouse Associate',
+      city: 'Lucknow',
+      state: 'Uttar Pradesh',
+      preferred_roles: ['warehouse_associate'],
+    });
+    const service = buildService(admin);
+
+    const profile = await service.getMyProfile('candidate-1');
+
+    expect(profile).toEqual({
+      discoverable: true,
+      fullName: 'Asha Kumari',
+      headline: 'Warehouse Associate',
+      city: 'Lucknow',
+      state: 'Uttar Pradesh',
+      preferredRoles: ['warehouse_associate'],
+    });
+  });
+});
+
 describe('NetworkingService.publishProfile', () => {
   it('rejects a blank name', async () => {
     const service = buildService(new FakeSupabaseAdmin());

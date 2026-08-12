@@ -106,6 +106,14 @@ class ConnectionsOverview {
 /// and `UnavailableNetworkingRepository` (config-gated fallback), same
 /// posture as `ResumeParsingRepository`.
 abstract interface class NetworkingRepository {
+  /// The candidate's own currently-persisted networking profile, including
+  /// [NetworkingProfile.discoverable] -- the real read path
+  /// `NetworkingSection` needs so its switch reflects the candidate's
+  /// actual setting on first build instead of a hardcoded guess. Backed by
+  /// `GET /v1/networking/profile`; see `NetworkingService.getMyProfile`'s
+  /// doc comment for what a candidate who has never published gets back.
+  Future<Result<NetworkingProfile>> getMyProfile();
+
   Future<Result<NetworkingProfile>> publishProfile({
     required String fullName,
     required String headline,
