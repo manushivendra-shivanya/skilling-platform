@@ -14,6 +14,7 @@ import '../../../core/widgets/app_skeleton.dart';
 import '../../../core/widgets/app_state_view.dart';
 import '../../../core/widgets/app_status_banner.dart';
 import '../../../core/widgets/app_text_field.dart';
+import '../../resume/domain/resume_parsing_repository.dart';
 import '../domain/candidate_onboarding_draft.dart';
 import 'candidate_onboarding_controller.dart';
 
@@ -294,13 +295,7 @@ class _CandidateOnboardingScreenState
         onChanged: (roles) =>
             _updateDraft(draft.copyWith(preferredRoles: roles)),
       ),
-      6 => const _PlaceholderStep(
-        icon: Icons.description_outlined,
-        title: 'Resume upload',
-        description:
-            'Resume upload is coming in a later phase. You can complete your profile without one.',
-        status: 'Nothing will be uploaded now.',
-      ),
+      6 => _ResumeUploadStep(onFullNameExtracted: _applyExtractedFullName),
       7 => const _PlaceholderStep(
         icon: Icons.mic_none_outlined,
         title: 'Voice introduction',
@@ -327,6 +322,15 @@ class _CandidateOnboardingScreenState
       _validationMessage = null;
       _saveMessage = null;
     });
+  }
+
+  /// Bridges a resume-extracted name back onto the same controller step 1
+  /// (Tell us your name) reads from -- only fills it in when the
+  /// candidate hasn't already typed one, so a resume parsed after
+  /// already entering a name never silently overwrites it.
+  void _applyExtractedFullName(String name) {
+    if (_fullNameController.text.trim().isNotEmpty) return;
+    setState(() => _fullNameController.text = name);
   }
 
   CandidateOnboardingDraft _draftWithTextFields(
@@ -587,6 +591,247 @@ class _SelectableCard extends StatelessWidget {
           Icon(
             selected ? Icons.check_circle : Icons.radio_button_unchecked,
             color: selected ? AppColors.brand : AppColors.outline,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Onboarding step 6's real implementation, replacing the former "coming
+/// in a later phase" placeholder. Works on pasted resume text, not a
+/// file upload -- see `ResumeParseRequest.resumeText`'s doc comment for
+/// why file upload isn't in this slice.
+///
+/// Consent here is a single, per-action checkbox
+/// (`_consentVersion`/local `_consentGiven` state), not wired into the
+/// versioned platform consent system (`OnboardingConsentVersions`,
+/// collected at step 8 -- *after* this step). Requiring that consent here
+/// would ask for it before it exists in the flow. A scoped, visible
+/// checkbox gives the candidate real, informed control over this one
+/// action without reordering onboarding or extending the versioned
+/// consent system for a single new purpose.
+///
+/// Only `fullName` is ever written back onto the draft (see
+/// `_CandidateOnboardingScreenState._applyExtractedFullName`). Every
+/// other extracted field is shown for the candidate's own reference only
+/// -- `CandidateOnboardingDraft` has no columns for work history,
+/// skills, or a free-text headline yet, and adding them is a real schema
+/// decision this step doesn't make on its own.
+class _ResumeUploadStep extends ConsumerStatefulWidget {
+  const _ResumeUploadStep({required this.onFullNameExtracted});
+
+  final ValueChanged<String> onFullNameExtracted;
+
+  @override
+  ConsumerState<_ResumeUploadStep> createState() => _ResumeUploadStepState();
+}
+
+class _ResumeUploadStepState extends ConsumerState<_ResumeUploadStep> {
+  static const _consentVersion = 'resume_parse_v1';
+  static const _minResumeLength = 40;
+
+  final _resumeController = TextEditingController();
+  bool _consentGiven = false;
+  bool _isParsing = false;
+  String? _errorMessage;
+  ResumeParseResult? _result;
+
+  @override
+  void dispose() {
+    _resumeController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final canExtract =
+        _consentGiven &&
+        _resumeController.text.trim().length >= _minResumeLength &&
+        !_isParsing;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const _StepHeading(
+          title: 'Add your resume',
+          description:
+              'Paste your resume text and we will use AI to help fill in your profile faster. This step is optional -- you can skip it.',
+        ),
+        const SizedBox(height: AppSpacing.xl),
+        AppTextField(
+          key: const ValueKey('resume-text-field'),
+          label: 'Resume text',
+          hint: 'Paste the text of your resume here',
+          maxLines: 8,
+          controller: _resumeController,
+          semanticLabel: 'Resume text, optional',
+          onChanged: (_) => setState(() {}),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        AppCard(
+          child: CheckboxListTile(
+            value: _consentGiven,
+            onChanged: (value) =>
+                setState(() => _consentGiven = value ?? false),
+            contentPadding: EdgeInsets.zero,
+            controlAffinity: ListTileControlAffinity.leading,
+            title: const Text('Use AI to read this text'),
+            subtitle: const Text(
+              'Saksham sends this text to an AI provider to extract details '
+              'like your name and experience. It is not saved as your '
+              'resume or shared with employers.',
+            ),
+          ),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        AppButton(
+          label: 'Extract details',
+          isLoading: _isParsing,
+          onPressed: canExtract ? _extract : null,
+        ),
+        if (_errorMessage != null) ...[
+          const SizedBox(height: AppSpacing.sm),
+          Semantics(
+            liveRegion: true,
+            child: Text(
+              _errorMessage!,
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: AppColors.error),
+            ),
+          ),
+        ],
+        if (_result != null) ...[
+          const SizedBox(height: AppSpacing.lg),
+          _ResumeExtractionSummary(result: _result!),
+        ],
+        const SizedBox(height: AppSpacing.md),
+        Text(
+          'Choose Save and continue to move on, with or without extracting '
+          'details.',
+          style: Theme.of(context).textTheme.bodySmall,
+          textAlign: TextAlign.center,
+        ),
+      ],
+    );
+  }
+
+  Future<void> _extract() async {
+    setState(() {
+      _isParsing = true;
+      _errorMessage = null;
+    });
+
+    final sessionResult = await ref
+        .read(candidateSessionRepositoryProvider)
+        .readSession();
+    final candidateId = sessionResult.when(
+      success: (session) => session?.candidateId,
+      failure: (_) => null,
+    );
+    if (candidateId == null) {
+      if (!mounted) return;
+      setState(() {
+        _isParsing = false;
+        _errorMessage = 'Sign in again to extract details from your resume.';
+      });
+      return;
+    }
+
+    final result = await ref
+        .read(resumeParsingRepositoryProvider)
+        .parse(
+          ResumeParseRequest(
+            candidateId: candidateId,
+            resumeText: _resumeController.text.trim(),
+            consentVersion: _consentVersion,
+          ),
+        );
+    if (!mounted) return;
+    result.when(
+      success: (parsed) {
+        setState(() {
+          _isParsing = false;
+          _result = parsed;
+        });
+        final extractedName = parsed.fields['fullName']?.trim();
+        if (extractedName != null && extractedName.isNotEmpty) {
+          widget.onFullNameExtracted(extractedName);
+        }
+      },
+      failure: (failure) {
+        setState(() {
+          _isParsing = false;
+          _errorMessage = failure.message;
+        });
+      },
+    );
+  }
+}
+
+class _ResumeExtractionSummary extends StatelessWidget {
+  const _ResumeExtractionSummary({required this.result});
+
+  final ResumeParseResult result;
+
+  static const _fieldLabels = {
+    'fullName': 'Full name',
+    'phone': 'Phone',
+    'email': 'Email',
+    'city': 'City',
+    'headline': 'Current/most recent role',
+    'yearsOfExperience': 'Experience',
+    'education': 'Education',
+    'workHistory': 'Work history',
+    'skills': 'Skills',
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    final populated = _fieldLabels.entries
+        .where((entry) => (result.fields[entry.key]?.trim() ?? '').isNotEmpty)
+        .toList(growable: false);
+
+    return AppCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('What we found', style: Theme.of(context).textTheme.titleMedium),
+          const SizedBox(height: AppSpacing.xs),
+          if (result.requiresCandidateReview)
+            Padding(
+              padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+              child: Text(
+                'We could not confidently read your name -- check and fill '
+                'in step 1 yourself if needed.',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.error,
+                ),
+              ),
+            ),
+          if (populated.isEmpty)
+            const Text('No details could be read from that text.')
+          else
+            for (final entry in populated) ...[
+              Text(
+                _fieldLabels[entry.key]!,
+                style: Theme.of(context).textTheme.labelMedium,
+              ),
+              Text(result.fields[entry.key]!.trim()),
+              const SizedBox(height: AppSpacing.sm),
+            ],
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            result.fields['fullName']?.trim().isNotEmpty ?? false
+                ? 'Your name above has been filled in for step 1. Everything '
+                      'else here is a preview only and is not yet saved to '
+                      'your profile.'
+                : 'This is a preview only -- these details are not yet '
+                      'saved to your profile.',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
           ),
         ],
       ),

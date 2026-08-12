@@ -48,6 +48,9 @@ import '../features/onboarding/data/secure_candidate_onboarding_repository.dart'
 import '../features/onboarding/data/supabase_candidate_onboarding_repository.dart';
 import '../features/onboarding/domain/candidate_onboarding_repository.dart';
 import '../features/onboarding/domain/onboarding_entry_repository.dart';
+import '../features/resume/data/api_resume_parsing_repository.dart';
+import '../features/resume/data/unavailable_resume_parsing_repository.dart';
+import '../features/resume/domain/resume_parsing_repository.dart';
 import '../features/shifts/data/api_shifts_repository.dart';
 import '../features/shifts/data/local_mock_shifts_repository.dart';
 import '../features/shifts/data/supabase_shift_availability_repository.dart';
@@ -230,6 +233,22 @@ final coachRepositoryProvider = Provider<CoachRepository>((ref) {
 final coachThreadRepositoryProvider = Provider<CoachThreadRepository>(
   (ref) => SecureCoachThreadRepository(ref.watch(secureKeyValueStoreProvider)),
 );
+
+final resumeParsingRepositoryProvider = Provider<ResumeParsingRepository>((
+  ref,
+) {
+  final config = ref.watch(appConfigProvider);
+  if (config.hasSupabaseConfiguration &&
+      config.hasApiConfiguration &&
+      ref.watch(canUseLiveBackendProvider)) {
+    return ApiResumeParsingRepository(
+      dio: Dio(),
+      supabaseClient: Supabase.instance.client,
+      apiBaseUrl: config.apiBaseUrl,
+    );
+  }
+  return const UnavailableResumeParsingRepository();
+});
 
 final jobsRepositoryProvider = Provider<JobsRepository>((ref) {
   final config = ref.watch(appConfigProvider);
