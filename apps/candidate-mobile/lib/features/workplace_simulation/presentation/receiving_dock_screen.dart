@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -9,12 +7,12 @@ import '../../../app/theme/app_spacing.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_feedback.dart';
-import '../../../core/widgets/app_loading_progress.dart';
-import '../../../core/widgets/app_state_view.dart';
 import '../application/workplace_interaction_contracts.dart';
 import '../application/workplace_simulation_controller.dart';
+import '../application/workplace_simulation_state.dart';
 import '../domain/simulation_enums.dart';
 import '../domain/workplace_task_drafts.dart';
+import 'widgets/station_scaffold.dart';
 
 class ReceivingDockScreen extends ConsumerStatefulWidget {
   const ReceivingDockScreen({
@@ -37,282 +35,201 @@ class ReceivingDockScreen extends ConsumerStatefulWidget {
 
 class _ReceivingDockScreenState extends ConsumerState<ReceivingDockScreen> {
   bool _saving = false;
-  bool _tracked = false;
 
   @override
   Widget build(BuildContext context) {
-    final simulation = ref.watch(
-      workplaceSimulationControllerProvider(widget.missionId),
+    return StationScaffold(
+      missionId: widget.missionId,
+      workstationId: 'receiving-dock',
+      title: 'Receiving Dock',
+      openedEvent: AttemptAuditEventType.receivingDockOpened,
+      exitedEvent: AttemptAuditEventType.receivingDockExited,
+      onBack: widget.onBack,
+      saving: _saving,
+      contentBuilder: _buildContent,
+      footerBuilder: _buildFooter,
     );
-    return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          tooltip: 'Back to workplace',
-          onPressed: _saving ? null : _exit,
-          icon: const Icon(Icons.arrow_back),
+  }
+
+  Widget _buildContent(BuildContext context, WorkplaceSimulationState value) {
+    final scenario = value.scenario!;
+    final cartons =
+        scenario.resources
+            .where((item) => item.resourceType.name == 'carton')
+            .toList()
+          ..sort((left, right) => left.id.compareTo(right.id));
+    final draft = value.attempt?.receivingCountDraft;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Confirm and count the delivery',
+          style: Theme.of(context).textTheme.headlineSmall,
         ),
-        title: const Text('Receiving Dock'),
-      ),
-      body: SafeArea(
-        child: simulation.when(
-          loading: () => const Center(
-            child: AppLoadingProgressBar(label: 'Loading your progress…'),
-          ),
-          error: (_, _) => AppErrorState(
-            title: 'Receiving Dock unavailable',
-            message: 'Your saved draft is safe. Retry loading the cartons.',
-            actionLabel: 'Retry',
-            onAction: () => ref.invalidate(
-              workplaceSimulationControllerProvider(widget.missionId),
+        const SizedBox(height: AppSpacing.xs),
+        const Text('Apex Consumer Products · PO-2026-001 · DN-2026-001'),
+        const SizedBox(height: AppSpacing.md),
+        Text(
+          'Shipment identity',
+          style: Theme.of(context).textTheme.titleLarge,
+        ),
+        const SizedBox(height: AppSpacing.xs),
+        const Text(
+          'Confirm whether the physical shipment matches these delivery references before submission.',
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        Wrap(
+          spacing: AppSpacing.sm,
+          runSpacing: AppSpacing.sm,
+          children: [
+            AppButton(
+              label: 'Matches expected delivery',
+              variant: draft?.shipmentConfirmed == true
+                  ? AppButtonVariant.primary
+                  : AppButtonVariant.secondary,
+              expand: false,
+              onPressed: _saving ? null : () => _confirmIdentity(true),
+            ),
+            AppButton(
+              label: "Doesn't match — wrong supplier",
+              variant: draft?.shipmentConfirmed == false
+                  ? AppButtonVariant.primary
+                  : AppButtonVariant.secondary,
+              expand: false,
+              onPressed: _saving ? null : () => _confirmIdentity(false),
+            ),
+          ],
+        ),
+        if (draft?.shipmentConfirmed == false) ...[
+          const SizedBox(height: AppSpacing.md),
+          AppCard(
+            backgroundColor: AppColors.warningSoft,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'This does not match the expected delivery',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                const Text(
+                  'Rejecting here ends the shift immediately. '
+                  'No further counting or inspection is needed '
+                  'for stock that should never be accepted '
+                  'onto the dock.',
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                AppButton(
+                  label: 'Reject shipment & end shift',
+                  variant: AppButtonVariant.destructive,
+                  expand: false,
+                  isLoading: _saving,
+                  onPressed: _saving ? null : _rejectShipment,
+                ),
+              ],
             ),
           ),
-          data: (value) {
-            final controller = ref.read(
-              workplaceSimulationControllerProvider(widget.missionId).notifier,
-            );
-            final station = controller.workplaceOverview.workstations
-                .firstWhere((item) => item.workstationId == 'receiving-dock');
-            if (value.mission.id != widget.missionId ||
-                station.status == WorkstationStatus.locked) {
-              return AppErrorState(
-                title: 'Receiving Dock is locked',
-                message: station.supportingText,
-                actionLabel: 'Back to Workplace',
-                onAction: widget.onBack,
-              );
-            }
-            final scenario = value.scenario;
-            if (scenario == null) {
-              return AppErrorState(
-                title: 'Scenario unavailable',
-                message: 'Return to the workplace and retry.',
-                actionLabel: 'Back to Workplace',
-                onAction: widget.onBack,
-              );
-            }
-            if (!_tracked) {
-              _tracked = true;
-              unawaited(
-                ref
-                    .read(
-                      workplaceSimulationControllerProvider(
-                        widget.missionId,
-                      ).notifier,
-                    )
-                    .recordWorkplaceEvent(
-                      AttemptAuditEventType.receivingDockOpened,
-                      screenId: 'receiving-dock',
-                    ),
-              );
-            }
-            final cartons =
-                scenario.resources
-                    .where((item) => item.resourceType.name == 'carton')
-                    .toList()
-                  ..sort((left, right) => left.id.compareTo(right.id));
-            final draft = value.attempt?.receivingCountDraft;
-            return SingleChildScrollView(
-              padding: const EdgeInsets.all(AppSpacing.lg),
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 920),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Confirm and count the delivery',
-                        style: Theme.of(context).textTheme.headlineSmall,
-                      ),
-                      const SizedBox(height: AppSpacing.xs),
-                      const Text(
-                        'Apex Consumer Products · PO-2026-001 · DN-2026-001',
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-                      Text(
-                        'Shipment identity',
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
-                      const SizedBox(height: AppSpacing.xs),
-                      const Text(
-                        'Confirm whether the physical shipment matches these delivery references before submission.',
-                      ),
-                      const SizedBox(height: AppSpacing.sm),
-                      Wrap(
-                        spacing: AppSpacing.sm,
-                        runSpacing: AppSpacing.sm,
-                        children: [
-                          AppButton(
-                            label: 'Matches expected delivery',
-                            variant: draft?.shipmentConfirmed == true
-                                ? AppButtonVariant.primary
-                                : AppButtonVariant.secondary,
-                            expand: false,
-                            onPressed: _saving
-                                ? null
-                                : () => _confirmIdentity(true),
-                          ),
-                          AppButton(
-                            label: "Doesn't match — wrong supplier",
-                            variant: draft?.shipmentConfirmed == false
-                                ? AppButtonVariant.primary
-                                : AppButtonVariant.secondary,
-                            expand: false,
-                            onPressed: _saving
-                                ? null
-                                : () => _confirmIdentity(false),
-                          ),
-                        ],
-                      ),
-                      if (draft?.shipmentConfirmed == false) ...[
-                        const SizedBox(height: AppSpacing.md),
-                        AppCard(
-                          backgroundColor: AppColors.warningSoft,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'This does not match the expected delivery',
-                                style: Theme.of(context).textTheme.titleMedium,
-                              ),
-                              const SizedBox(height: AppSpacing.xs),
-                              const Text(
-                                'Rejecting here ends the shift immediately. '
-                                'No further counting or inspection is needed '
-                                'for stock that should never be accepted '
-                                'onto the dock.',
-                              ),
-                              const SizedBox(height: AppSpacing.sm),
-                              AppButton(
-                                label: 'Reject shipment & end shift',
-                                variant: AppButtonVariant.destructive,
-                                expand: false,
-                                isLoading: _saving,
-                                onPressed: _saving ? null : _rejectShipment,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                      const SizedBox(height: AppSpacing.lg),
-                      Text(
-                        'Carton counts',
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
-                      const Text(
-                        'Count every carton. Expected physical quantities are not shown.',
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-                      for (final carton in cartons) ...[
-                        Builder(
-                          builder: (context) {
-                            ReceivingCountEntry? entry;
-                            for (final item
-                                in draft?.countEntries ??
-                                    const <ReceivingCountEntry>[]) {
-                              if (item.cartonId == carton.id) entry = item;
-                            }
-                            return AppCard(
-                              semanticLabel:
-                                  '${carton.title}, ${carton.content['sku']}',
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          carton.title,
-                                          style: Theme.of(
-                                            context,
-                                          ).textTheme.titleMedium,
-                                        ),
-                                        Text('${carton.content['sku']}'),
-                                        if (entry == null)
-                                          const Text('Not counted')
-                                        else ...[
-                                          Text(
-                                            'Entered ${entry.enteredQuantity} · '
-                                            '${_methodLabel(entry.countMethod)}',
-                                          ),
-                                          Text(
-                                            'Revision ${entry.revisionNumber}',
-                                            style: Theme.of(
-                                              context,
-                                            ).textTheme.labelSmall,
-                                          ),
-                                        ],
-                                      ],
-                                    ),
-                                  ),
-                                  if (entry != null)
-                                    IconButton(
-                                      tooltip: 'Remove ${carton.title} count',
-                                      onPressed: _saving
-                                          ? null
-                                          : () => _removeEntry(entry!),
-                                      icon: const Icon(Icons.delete_outline),
-                                    ),
-                                  AppButton(
-                                    // Bare Row child alongside an Expanded
-                                    // sibling -- see quarantine_zone
-                                    // _screen.dart's identical fix.
-                                    expand: false,
-                                    variant: AppButtonVariant.secondary,
-                                    label: entry == null
-                                        ? 'Record count'
-                                        : 'Edit',
-                                    onPressed: _saving
-                                        ? null
-                                        : () => _editCount(carton.id, entry),
-                                  ),
-                                ],
-                              ),
-                            );
-                          },
-                        ),
-                        const SizedBox(height: AppSpacing.md),
-                      ],
-                      Semantics(
-                        liveRegion: true,
-                        label:
-                            '${draft?.countEntries.length ?? 0} of '
-                            '${cartons.length} cartons counted',
-                        child: Text(
-                          'Count progress: ${draft?.countEntries.length ?? 0} '
-                          'of ${cartons.length} cartons counted',
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-                      Wrap(
-                        spacing: AppSpacing.sm,
-                        runSpacing: AppSpacing.sm,
-                        children: [
-                          AppButton(
-                            label: 'Save draft',
-                            variant: AppButtonVariant.secondary,
-                            expand: false,
-                            isLoading: _saving,
-                            onPressed: _saving ? null : _saveDraft,
-                          ),
-                          AppButton(
-                            label: 'Submit receiving count',
-                            expand: false,
-                            isLoading: _saving,
-                            onPressed: _saving ? null : _submit,
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            );
-          },
+        ],
+        const SizedBox(height: AppSpacing.lg),
+        Text('Carton counts', style: Theme.of(context).textTheme.titleLarge),
+        const Text(
+          'Count every carton. Expected physical quantities are not shown.',
         ),
-      ),
+        const SizedBox(height: AppSpacing.md),
+        for (final carton in cartons) ...[
+          Builder(
+            builder: (context) {
+              ReceivingCountEntry? entry;
+              for (final item
+                  in draft?.countEntries ?? const <ReceivingCountEntry>[]) {
+                if (item.cartonId == carton.id) entry = item;
+              }
+              return AppCard(
+                semanticLabel: '${carton.title}, ${carton.content['sku']}',
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            carton.title,
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                          Text('${carton.content['sku']}'),
+                          if (entry == null)
+                            const Text('Not counted')
+                          else ...[
+                            Text(
+                              'Entered ${entry.enteredQuantity} · '
+                              '${_methodLabel(entry.countMethod)}',
+                            ),
+                            Text(
+                              'Revision ${entry.revisionNumber}',
+                              style: Theme.of(context).textTheme.labelSmall,
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                    if (entry != null)
+                      IconButton(
+                        tooltip: 'Remove ${carton.title} count',
+                        onPressed: _saving ? null : () => _removeEntry(entry!),
+                        icon: const Icon(Icons.delete_outline),
+                      ),
+                    AppButton(
+                      // Bare Row child alongside an Expanded sibling -- see
+                      // quarantine_zone_screen.dart's identical fix.
+                      expand: false,
+                      variant: AppButtonVariant.secondary,
+                      label: entry == null ? 'Record count' : 'Edit',
+                      onPressed: _saving
+                          ? null
+                          : () => _editCount(carton.id, entry),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: AppSpacing.md),
+        ],
+        Semantics(
+          liveRegion: true,
+          label:
+              '${draft?.countEntries.length ?? 0} of '
+              '${cartons.length} cartons counted',
+          child: Text(
+            'Count progress: ${draft?.countEntries.length ?? 0} '
+            'of ${cartons.length} cartons counted',
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFooter(BuildContext context, WorkplaceSimulationState value) {
+    return Wrap(
+      spacing: AppSpacing.sm,
+      runSpacing: AppSpacing.sm,
+      children: [
+        AppButton(
+          label: 'Save draft',
+          variant: AppButtonVariant.secondary,
+          expand: false,
+          isLoading: _saving,
+          onPressed: _saving ? null : _saveDraft,
+        ),
+        AppButton(
+          label: 'Submit receiving count',
+          expand: false,
+          isLoading: _saving,
+          onPressed: _saving ? null : _submit,
+        ),
+      ],
     );
   }
 
@@ -525,16 +442,6 @@ class _ReceivingDockScreenState extends ConsumerState<ReceivingDockScreen> {
       default:
         _showMessage('The receiving count could not be submitted.');
     }
-  }
-
-  Future<void> _exit() async {
-    await ref
-        .read(workplaceSimulationControllerProvider(widget.missionId).notifier)
-        .recordWorkplaceEvent(
-          AttemptAuditEventType.receivingDockExited,
-          screenId: 'receiving-dock',
-        );
-    if (mounted) widget.onBack();
   }
 
   void _showMessage(String message) {
