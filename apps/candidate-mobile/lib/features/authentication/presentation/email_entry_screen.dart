@@ -7,7 +7,9 @@ import '../../../app/theme/app_icons.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_card.dart';
+import '../../../core/widgets/app_progress.dart';
 import '../../../core/widgets/app_text_field.dart';
+import '../../onboarding/presentation/pre_onboarding_step_chrome.dart';
 import 'development_auth_controller.dart';
 
 class EmailEntryScreen extends ConsumerStatefulWidget {
@@ -52,6 +54,18 @@ class _EmailEntryScreenState extends ConsumerState<EmailEntryScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              const PreOnboardingBrandMark(),
+              const SizedBox(height: AppSpacing.md),
+              // Reached only once the candidate has committed to the email
+              // path (Google sign-in skips straight past Email/OTP), so
+              // the real 4-step total is known here -- see
+              // `PreOnboardingProgress`'s doc comment.
+              AppProgress(
+                value: 3 / PreOnboardingProgress.emailPathSteps,
+                label: 'Getting started',
+                detail: 'Step 3 of ${PreOnboardingProgress.emailPathSteps}',
+              ),
+              const SizedBox(height: AppSpacing.lg),
               const Icon(
                 Icons.email_outlined,
                 size: 56,

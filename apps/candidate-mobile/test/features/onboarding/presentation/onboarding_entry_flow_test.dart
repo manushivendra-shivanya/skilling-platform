@@ -108,6 +108,19 @@ void main() {
     await tester.ensureVisible(find.text('Choose your language'));
     await tester.tap(find.text('Choose your language'));
     await tester.pumpAndSettle();
+    // Language's brand mark + step-progress header now shares one
+    // scrollable region with the language list (see
+    // `language_selection_screen.dart`), so on this narrow, heavily scaled
+    // layout Hindi's card can sit far enough down that it isn't even built
+    // yet -- `ensureVisible` alone only scrolls an already-built widget
+    // into view, it can't discover one that hasn't mounted. `scrollUntilVisible`
+    // (same tool `candidate_onboarding_flow_test.dart` already reaches for
+    // in this situation) scrolls incrementally until it exists.
+    await tester.scrollUntilVisible(
+      find.text('हिंदी'),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
     await tester.tap(find.text('हिंदी'));
     await tester.pumpAndSettle();
     await tester.ensureVisible(find.text('Continue'));

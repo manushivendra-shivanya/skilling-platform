@@ -5,10 +5,12 @@ import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_card.dart';
+import '../../../core/widgets/app_progress.dart';
 import '../../../core/widgets/app_skeleton.dart';
 import '../../../core/widgets/app_state_view.dart';
 import '../domain/candidate_language.dart';
 import 'language_selection_controller.dart';
+import 'pre_onboarding_step_chrome.dart';
 
 class LanguageSelectionScreen extends ConsumerWidget {
   const LanguageSelectionScreen({required this.onContinue, super.key});
@@ -66,60 +68,79 @@ class _LanguageSelectionContent extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            'Choose the language you are comfortable with',
-            style: Theme.of(context).textTheme.headlineSmall,
-          ),
-          const SizedBox(height: AppSpacing.xs),
-          Text(
-            'आप इसे बाद में कभी भी बदल सकते हैं।',
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(height: AppSpacing.xl),
           Expanded(
-            child: ListView.separated(
-              itemCount: CandidateLanguage.values.length,
-              separatorBuilder: (context, index) =>
-                  const SizedBox(height: AppSpacing.sm),
-              itemBuilder: (context, index) {
-                final language = CandidateLanguage.values[index];
-                final isSelected = language == selectedLanguage;
-                return AppCard(
-                  key: ValueKey(language.code),
-                  semanticLabel:
-                      '${language.nativeName}. ${language.description}. '
-                      '${isSelected ? 'Selected' : 'Not selected'}',
-                  onTap: () => onSelect(language),
-                  backgroundColor: isSelected
-                      ? AppColors.brandSoft
-                      : AppColors.surface,
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              language.nativeName,
-                              style: Theme.of(context).textTheme.titleMedium,
-                            ),
-                            const SizedBox(height: AppSpacing.xxs),
-                            Text(language.description),
-                          ],
-                        ),
-                      ),
-                      Icon(
-                        isSelected
-                            ? Icons.check_circle
-                            : Icons.radio_button_unchecked,
-                        color: isSelected ? AppColors.brand : AppColors.outline,
-                      ),
-                    ],
+            // The brand mark + progress header used to sit fixed above a
+            // separately-scrolling language list, each competing with the
+            // other for a share of the screen's fixed height. On a narrow,
+            // heavily text-scaled device that fixed split had no give left
+            // -- adding the header pushed the list past a hard overflow
+            // rather than just scrolling further. Folding header and list
+            // into one `ListView` means extra header content (or a larger
+            // text scale) simply scrolls, the way `_buildStep`'s own
+            // `SingleChildScrollView` already absorbs the same widgets in
+            // the onboarding wizard.
+            child: ListView(
+              children: [
+                const PreOnboardingBrandMark(),
+                const SizedBox(height: AppSpacing.md),
+                AppProgress(
+                  value: 1 / PreOnboardingProgress.sharedPrefixSteps,
+                  label: 'Getting started',
+                  detail:
+                      'Step 1 of ${PreOnboardingProgress.sharedPrefixSteps}',
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                Text(
+                  'Choose the language you are comfortable with',
+                  style: Theme.of(context).textTheme.headlineSmall,
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  'आप इसे बाद में कभी भी बदल सकते हैं।',
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
-                );
-              },
+                ),
+                const SizedBox(height: AppSpacing.xl),
+                for (final language in CandidateLanguage.values) ...[
+                  AppCard(
+                    key: ValueKey(language.code),
+                    semanticLabel:
+                        '${language.nativeName}. ${language.description}. '
+                        '${language == selectedLanguage ? 'Selected' : 'Not selected'}',
+                    onTap: () => onSelect(language),
+                    backgroundColor: language == selectedLanguage
+                        ? AppColors.brandSoft
+                        : AppColors.surface,
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                language.nativeName,
+                                style: Theme.of(context).textTheme.titleMedium,
+                              ),
+                              const SizedBox(height: AppSpacing.xxs),
+                              Text(language.description),
+                            ],
+                          ),
+                        ),
+                        Icon(
+                          language == selectedLanguage
+                              ? Icons.check_circle
+                              : Icons.radio_button_unchecked,
+                          color: language == selectedLanguage
+                              ? AppColors.brand
+                              : AppColors.outline,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                ],
+              ],
             ),
           ),
           const SizedBox(height: AppSpacing.md),

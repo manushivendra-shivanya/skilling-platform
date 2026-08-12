@@ -8,7 +8,9 @@ import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_card.dart';
+import '../../../core/widgets/app_progress.dart';
 import '../../../core/widgets/app_text_field.dart';
+import '../../onboarding/presentation/pre_onboarding_step_chrome.dart';
 import 'development_auth_controller.dart';
 
 class OtpEntryScreen extends ConsumerStatefulWidget {
@@ -98,7 +100,11 @@ class _OtpEntryScreenState extends ConsumerState<OtpEntryScreen> {
 
     if (challenge == null) {
       return Scaffold(
-        appBar: AppBar(),
+        // Reachable if this route is opened with no active challenge (e.g.
+        // a direct/cold navigation). Titled to match the loaded state below
+        // rather than left bare -- same header-consistency fix as Sign-in
+        // choice's AppBar.
+        appBar: AppBar(title: const Text('Verify OTP')),
         body: SafeArea(
           child: Center(
             child: Padding(
@@ -126,6 +132,21 @@ class _OtpEntryScreenState extends ConsumerState<OtpEntryScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              const PreOnboardingBrandMark(),
+              const SizedBox(height: AppSpacing.md),
+              // Last pre-onboarding step on the email path (Google skips
+              // straight past this screen), so the real 4-step total is
+              // known here -- see `PreOnboardingProgress`'s doc comment.
+              AppProgress(
+                value:
+                    PreOnboardingProgress.emailPathSteps /
+                    PreOnboardingProgress.emailPathSteps,
+                label: 'Getting started',
+                detail:
+                    'Step ${PreOnboardingProgress.emailPathSteps} of '
+                    '${PreOnboardingProgress.emailPathSteps}',
+              ),
+              const SizedBox(height: AppSpacing.lg),
               Text(
                 'Enter the 6-digit code',
                 style: Theme.of(context).textTheme.headlineSmall,

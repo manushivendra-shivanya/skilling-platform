@@ -23,6 +23,12 @@ void main() {
       find.bySemanticsLabel('Email address'),
       'candidate@example.com',
     );
+    // Email entry's new brand mark + step-progress header (see
+    // `email_entry_screen.dart`) pushes this button below the default test
+    // viewport's fold; the field itself is still eagerly built inside a
+    // `SingleChildScrollView`, so a plain `ensureVisible` (no incremental
+    // scrolling needed) is enough.
+    await tester.ensureVisible(find.text('Send development code'));
     await tester.tap(find.text('Send development code'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
@@ -103,6 +109,12 @@ void main() {
       find.bySemanticsLabel('Email address'),
       'not-an-email',
     );
+    // Email entry's new brand mark + step-progress header (see
+    // `email_entry_screen.dart`) pushes this button below the default test
+    // viewport's fold; the field itself is still eagerly built inside a
+    // `SingleChildScrollView`, so a plain `ensureVisible` (no incremental
+    // scrolling needed) is enough.
+    await tester.ensureVisible(find.text('Send development code'));
     await tester.tap(find.text('Send development code'));
     await tester.pump();
     expect(find.textContaining('valid email'), findsOneWidget);
@@ -111,6 +123,12 @@ void main() {
       find.bySemanticsLabel('Email address'),
       'candidate@example.com',
     );
+    // Email entry's new brand mark + step-progress header (see
+    // `email_entry_screen.dart`) pushes this button below the default test
+    // viewport's fold; the field itself is still eagerly built inside a
+    // `SingleChildScrollView`, so a plain `ensureVisible` (no incremental
+    // scrolling needed) is enough.
+    await tester.ensureVisible(find.text('Send development code'));
     await tester.tap(find.text('Send development code'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
@@ -119,6 +137,9 @@ void main() {
     await tester.tap(find.text('Resend OTP'));
     await tester.pump();
     expect(find.text('Development code for ca***@example.com'), findsOneWidget);
+    // Same reason as the `ensureVisible` above: OTP's new brand mark +
+    // step-progress header pushes this button below the fold too.
+    await tester.ensureVisible(find.text('Change email address'));
     await tester.tap(find.text('Change email address'));
     await tester.pumpAndSettle();
   });
