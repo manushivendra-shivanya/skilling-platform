@@ -244,10 +244,23 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
           echo "signing SHA-1: $sha1"
 
+      # No `retention-days` here used to mean the GitHub default: 90 days.
+      # Every run of this workflow uploads one of these unconditionally
+      # (release publishing below is opt-in via `release_tag`, this isn't),
+      # and a debug APK is tens of MB -- across the many runs this repo has
+      # accumulated, that quietly ate the account's entire 500MB Actions
+      # storage quota (separate from, and in addition to, the included
+      # Actions *minutes* quota exhausted earlier). A published release
+      # asset (the "Publish APK as a release asset" step below) already
+      # gives testers a durable, plain download URL and does NOT count
+      # against this quota -- so this artifact only ever needs to survive
+      # long enough to grab a build's output for a quick look before the
+      # next run replaces it, not 90 days.
       - uses: actions/upload-artifact@v4
         with:
           name: candidate-mobile-debug-apk
           path: apps/candidate-mobile/build/app/outputs/flutter-apk/app-debug.apk
+          retention-days: 3
 
       # An upload-artifact zip needs a GitHub login and expires. A release
       # asset has a plain download URL a tester can open on their phone,
