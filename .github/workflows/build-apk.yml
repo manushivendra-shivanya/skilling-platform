@@ -51,7 +51,17 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    # Was `runs-on: ubuntu-latest`. GitHub only meters GitHub-hosted
+    # runners against the account's included Actions minutes -- a
+    # self-hosted runner's time is free regardless of how long it takes.
+    # scripts/ci/setup-mac-runner.sh registers a Mac with exactly these
+    # labels. If no matching runner is online, the job sits queued (visible
+    # under the Actions tab, cancel it manually if needed) rather than
+    # failing outright -- GitHub has no built-in queue timeout. Revert to
+    # `ubuntu-latest` once the Actions minutes quota resets (2026-09-01) or
+    # affording GitHub-hosted overage stops being a concern.
+    runs-on: [self-hosted, macOS]
+    timeout-minutes: 30
 
     # Needed only by the release step below; pushes never reach it.
     permissions:
