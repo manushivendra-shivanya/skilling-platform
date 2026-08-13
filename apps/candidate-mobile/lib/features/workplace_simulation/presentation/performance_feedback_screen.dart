@@ -3,10 +3,12 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_loading_progress.dart';
+import '../../../core/widgets/app_meter_bar.dart';
 import '../../../core/widgets/app_state_view.dart';
 import '../application/workplace_simulation_controller.dart';
 import '../domain/simulation_content.dart';
@@ -118,11 +120,19 @@ class _PerformanceFeedbackScreenState
                       const SizedBox(height: AppSpacing.sm),
                       for (final entry in result.categoryScores.entries) ...[
                         AppCard(
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(_categoryLabel(entry.key)),
-                              Text('${entry.value.round()}%'),
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(_categoryLabel(entry.key)),
+                                  Text('${entry.value.round()}%'),
+                                ],
+                              ),
+                              const SizedBox(height: AppSpacing.xs),
+                              AppMeterBar(value: entry.value / 100),
                             ],
                           ),
                         ),
@@ -136,16 +146,24 @@ class _PerformanceFeedbackScreenState
                       const SizedBox(height: AppSpacing.sm),
                       for (final score in result.competencyScores) ...[
                         AppCard(
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                _competencyName(
-                                  value.competencies,
-                                  score.competencyId,
-                                ),
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    _competencyName(
+                                      value.competencies,
+                                      score.competencyId,
+                                    ),
+                                  ),
+                                  Text('${score.score}%'),
+                                ],
                               ),
-                              Text('${score.score}%'),
+                              const SizedBox(height: AppSpacing.xs),
+                              AppMeterBar(value: score.score / 100),
                             ],
                           ),
                         ),
@@ -231,10 +249,10 @@ String _statusLabel(MissionStatus status) => switch (status) {
 };
 
 Color _statusColor(MissionStatus status) => switch (status) {
-  MissionStatus.passed => Colors.green,
-  MissionStatus.retryRecommended => Colors.orange,
-  MissionStatus.criticalFailure => Colors.red,
-  MissionStatus.incomplete => Colors.grey,
+  MissionStatus.passed => AppColors.success,
+  MissionStatus.retryRecommended => AppColors.warning,
+  MissionStatus.criticalFailure => AppColors.error,
+  MissionStatus.incomplete => AppColors.inkMuted,
 };
 
 String _categoryLabel(String categoryId) => categoryId

@@ -1,17 +1,15 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/app_spacing.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_card.dart';
-import '../../../core/widgets/app_loading_progress.dart';
-import '../../../core/widgets/app_state_view.dart';
 import '../application/workplace_interaction_contracts.dart';
 import '../application/workplace_simulation_controller.dart';
+import '../application/workplace_simulation_state.dart';
 import '../domain/simulation_enums.dart';
 import '../domain/workplace_task_drafts.dart';
+import 'widgets/station_scaffold.dart';
 
 class QuarantineZoneScreen extends ConsumerStatefulWidget {
   const QuarantineZoneScreen({
@@ -32,406 +30,316 @@ class QuarantineZoneScreen extends ConsumerStatefulWidget {
 
 class _QuarantineZoneScreenState extends ConsumerState<QuarantineZoneScreen> {
   bool _saving = false;
-  bool _tracked = false;
 
   @override
   Widget build(BuildContext context) {
-    final simulation = ref.watch(
-      workplaceSimulationControllerProvider(widget.missionId),
+    return StationScaffold(
+      missionId: widget.missionId,
+      workstationId: 'quarantine-zone',
+      title: 'Quarantine Zone',
+      openedEvent: AttemptAuditEventType.quarantineZoneOpened,
+      exitedEvent: AttemptAuditEventType.quarantineZoneExited,
+      onBack: widget.onBack,
+      saving: _saving,
+      contentBuilder: _buildContent,
+      footerBuilder: _buildFooter,
     );
-    return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          tooltip: 'Back to workplace',
-          onPressed: _saving ? null : _exit,
-          icon: const Icon(Icons.arrow_back),
+  }
+
+  Widget _buildContent(BuildContext context, WorkplaceSimulationState value) {
+    final scenario = value.scenario!;
+    final cartons =
+        scenario.resources
+            .where((item) => item.resourceType.name == 'carton')
+            .toList()
+          ..sort((left, right) => left.id.compareTo(right.id));
+    final draft = value.attempt?.dispositionDraft;
+    final dispositionsSubmitted =
+        draft?.status == OperationalDraftStatus.submitted;
+    final quarantineConfirmed =
+        value.attempt?.completedTaskIds.contains('confirm-quarantine') ?? false;
+    final heldCartonIds = (draft?.entries ?? const [])
+        .where(
+          (entry) =>
+              entry.disposition == DispositionType.quarantine ||
+              entry.disposition == DispositionType.holdForVerification,
+        )
+        .map((entry) => entry.cartonId)
+        .toSet();
+    final heldCartons = cartons
+        .where((carton) => heldCartonIds.contains(carton.id))
+        .toList();
+    final releaseDraft = value.attempt?.quarantineReleaseDraft;
+    final releaseDecisionsSubmitted =
+        releaseDraft?.status == OperationalDraftStatus.submitted;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Assign a disposition to every carton',
+          style: Theme.of(context).textTheme.headlineSmall,
         ),
-        title: const Text('Quarantine Zone'),
-      ),
-      body: SafeArea(
-        child: simulation.when(
-          loading: () => const Center(
-            child: AppLoadingProgressBar(label: 'Loading your progress…'),
-          ),
-          error: (_, _) => AppErrorState(
-            title: 'Quarantine Zone unavailable',
-            message: 'Your saved draft is safe. Retry loading the cartons.',
-            actionLabel: 'Retry',
-            onAction: () => ref.invalidate(
-              workplaceSimulationControllerProvider(widget.missionId),
-            ),
-          ),
-          data: (value) {
-            final controller = ref.read(
-              workplaceSimulationControllerProvider(widget.missionId).notifier,
-            );
-            final station = controller.workplaceOverview.workstations
-                .firstWhere((item) => item.workstationId == 'quarantine-zone');
-            if (value.mission.id != widget.missionId ||
-                station.status == WorkstationStatus.locked) {
-              return AppErrorState(
-                title: 'Quarantine Zone is locked',
-                message: station.supportingText,
-                actionLabel: 'Back to Workplace',
-                onAction: widget.onBack,
-              );
-            }
-            final scenario = value.scenario;
-            if (scenario == null) {
-              return AppErrorState(
-                title: 'Scenario unavailable',
-                message: 'Return to the workplace and retry.',
-                actionLabel: 'Back to Workplace',
-                onAction: widget.onBack,
-              );
-            }
-            if (!_tracked) {
-              _tracked = true;
-              unawaited(
-                ref
-                    .read(
-                      workplaceSimulationControllerProvider(
-                        widget.missionId,
-                      ).notifier,
-                    )
-                    .recordWorkplaceEvent(
-                      AttemptAuditEventType.quarantineZoneOpened,
-                      screenId: 'quarantine-zone',
-                    ),
-              );
-            }
-            final cartons =
-                scenario.resources
-                    .where((item) => item.resourceType.name == 'carton')
-                    .toList()
-                  ..sort((left, right) => left.id.compareTo(right.id));
-            final draft = value.attempt?.dispositionDraft;
-            final dispositionsSubmitted =
-                draft?.status == OperationalDraftStatus.submitted;
-            final quarantineConfirmed =
-                value.attempt?.completedTaskIds.contains(
-                  'confirm-quarantine',
-                ) ??
-                false;
-            final heldCartonIds = (draft?.entries ?? const [])
-                .where(
-                  (entry) =>
-                      entry.disposition == DispositionType.quarantine ||
-                      entry.disposition == DispositionType.holdForVerification,
-                )
-                .map((entry) => entry.cartonId)
-                .toSet();
-            final heldCartons = cartons
-                .where((carton) => heldCartonIds.contains(carton.id))
-                .toList();
-            final releaseDraft = value.attempt?.quarantineReleaseDraft;
-            final releaseDecisionsSubmitted =
-                releaseDraft?.status == OperationalDraftStatus.submitted;
-            return SingleChildScrollView(
-              padding: const EdgeInsets.all(AppSpacing.lg),
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 920),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Assign a disposition to every carton',
-                        style: Theme.of(context).textTheme.headlineSmall,
-                      ),
-                      const SizedBox(height: AppSpacing.xs),
-                      const Text(
-                        'Keep problematic stock out of available inventory. A reason is required for every disposition except Accept.',
-                      ),
-                      const SizedBox(height: AppSpacing.lg),
-                      for (final carton in cartons) ...[
-                        Builder(
-                          builder: (context) {
-                            DispositionEntry? entry;
-                            for (final item
-                                in draft?.entries ??
-                                    const <DispositionEntry>[]) {
-                              if (item.cartonId == carton.id) entry = item;
-                            }
-                            return AppCard(
-                              semanticLabel:
-                                  '${carton.title}, ${carton.content['sku']}',
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          carton.title,
-                                          style: Theme.of(
-                                            context,
-                                          ).textTheme.titleMedium,
-                                        ),
-                                        Text('${carton.content['sku']}'),
-                                        if (entry == null)
-                                          const Text('Not assigned')
-                                        else ...[
-                                          Text(
-                                            _dispositionLabel(
-                                              entry.disposition,
-                                            ),
-                                          ),
-                                          if (entry.reason.isNotEmpty)
-                                            Text(entry.reason),
-                                          Text(
-                                            'Revision ${entry.revisionNumber}',
-                                            style: Theme.of(
-                                              context,
-                                            ).textTheme.labelSmall,
-                                          ),
-                                        ],
-                                      ],
-                                    ),
-                                  ),
-                                  if (entry != null && !dispositionsSubmitted)
-                                    IconButton(
-                                      tooltip:
-                                          'Remove ${carton.title} disposition',
-                                      onPressed: _saving
-                                          ? null
-                                          : () => _removeDisposition(entry!),
-                                      icon: const Icon(Icons.delete_outline),
-                                    ),
-                                  if (!dispositionsSubmitted)
-                                    AppButton(
-                                      // Shrink-wraps rather than filling
-                                      // this Row's remaining width -- the
-                                      // sibling text column is already
-                                      // Expanded, and AppButton's default
-                                      // expand: true would ask for
-                                      // infinite width as a bare Row
-                                      // child.
-                                      expand: false,
-                                      variant: AppButtonVariant.secondary,
-                                      label: entry == null ? 'Assign' : 'Edit',
-                                      onPressed: _saving
-                                          ? null
-                                          : () => _editDisposition(
-                                              carton.id,
-                                              entry,
-                                            ),
-                                    ),
-                                ],
-                              ),
-                            );
-                          },
-                        ),
-                        const SizedBox(height: AppSpacing.md),
-                      ],
-                      Semantics(
-                        liveRegion: true,
-                        label:
-                            '${draft?.entries.length ?? 0} of '
-                            '${cartons.length} cartons assigned',
-                        child: Text(
-                          'Disposition progress: ${draft?.entries.length ?? 0} '
-                          'of ${cartons.length} cartons assigned',
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-                      if (!dispositionsSubmitted)
-                        Wrap(
-                          spacing: AppSpacing.sm,
-                          runSpacing: AppSpacing.sm,
-                          children: [
-                            AppButton(
-                              label: 'Save draft',
-                              variant: AppButtonVariant.secondary,
-                              expand: false,
-                              isLoading: _saving,
-                              onPressed: _saving ? null : _saveDraft,
-                            ),
-                            AppButton(
-                              label: 'Submit dispositions',
-                              expand: false,
-                              isLoading: _saving,
-                              onPressed: _saving ? null : _submitDispositions,
-                            ),
-                          ],
-                        )
-                      else ...[
-                        const SizedBox(height: AppSpacing.lg),
-                        Text(
-                          'Confirm separation',
-                          style: Theme.of(context).textTheme.titleLarge,
-                        ),
-                        const SizedBox(height: AppSpacing.sm),
-                        const Text(
-                          'Confirm every problematic carton has been physically moved to the quarantine cage.',
-                        ),
-                        const SizedBox(height: AppSpacing.md),
-                        AppButton(
-                          label: quarantineConfirmed
-                              ? 'Separation confirmed'
-                              : 'Confirm all exceptions separated',
-                          expand: false,
-                          isLoading: _saving,
-                          onPressed: quarantineConfirmed || _saving
-                              ? null
-                              : _confirmQuarantine,
-                        ),
-                      ],
-                      if (quarantineConfirmed) ...[
-                        const SizedBox(height: AppSpacing.lg),
-                        Text(
-                          'Request supervisor release decisions',
-                          style: Theme.of(context).textTheme.titleLarge,
-                        ),
-                        const SizedBox(height: AppSpacing.sm),
-                        const Text(
-                          'Releasing held stock to available inventory is a '
-                          'supervisor-approval decision. Recommend an outcome '
-                          'for every carton still quarantined or on hold, and '
-                          'justify it.',
-                        ),
-                        const SizedBox(height: AppSpacing.md),
-                        if (heldCartons.isEmpty)
-                          const Text(
-                            'Nothing is currently quarantined or on hold.',
-                          )
-                        else ...[
-                          for (final carton in heldCartons) ...[
-                            Builder(
-                              builder: (context) {
-                                QuarantineReleaseEntry? entry;
-                                for (final item
-                                    in releaseDraft?.entries ??
-                                        const <QuarantineReleaseEntry>[]) {
-                                  if (item.cartonId == carton.id) entry = item;
-                                }
-                                return AppCard(
-                                  semanticLabel:
-                                      '${carton.title}, ${carton.content['sku']}',
-                                  child: Row(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              carton.title,
-                                              style: Theme.of(
-                                                context,
-                                              ).textTheme.titleMedium,
-                                            ),
-                                            Text('${carton.content['sku']}'),
-                                            if (entry == null)
-                                              const Text('Not recommended')
-                                            else ...[
-                                              Text(
-                                                _releaseDecisionLabel(
-                                                  entry.decision,
-                                                ),
-                                              ),
-                                              Text(entry.justification),
-                                              Text(
-                                                'Revision ${entry.revisionNumber}',
-                                                style: Theme.of(
-                                                  context,
-                                                ).textTheme.labelSmall,
-                                              ),
-                                            ],
-                                          ],
-                                        ),
-                                      ),
-                                      if (entry != null &&
-                                          !releaseDecisionsSubmitted)
-                                        IconButton(
-                                          tooltip:
-                                              'Remove ${carton.title} release recommendation',
-                                          onPressed: _saving
-                                              ? null
-                                              : () => _removeReleaseDecision(
-                                                  entry!,
-                                                ),
-                                          icon: const Icon(
-                                            Icons.delete_outline,
-                                          ),
-                                        ),
-                                      if (!releaseDecisionsSubmitted)
-                                        AppButton(
-                                          // Same reasoning as the
-                                          // disposition row above: this
-                                          // sits as a bare (non-Expanded)
-                                          // Row child alongside an
-                                          // Expanded text column.
-                                          expand: false,
-                                          variant: AppButtonVariant.secondary,
-                                          label: entry == null
-                                              ? 'Recommend'
-                                              : 'Edit',
-                                          onPressed: _saving
-                                              ? null
-                                              : () => _editReleaseDecision(
-                                                  carton.id,
-                                                  entry,
-                                                ),
-                                        ),
-                                    ],
-                                  ),
-                                );
-                              },
-                            ),
-                            const SizedBox(height: AppSpacing.md),
-                          ],
-                          Semantics(
-                            liveRegion: true,
-                            label:
-                                '${releaseDraft?.entries.length ?? 0} of '
-                                '${heldCartons.length} release decisions recommended',
-                            child: Text(
-                              'Release progress: '
-                              '${releaseDraft?.entries.length ?? 0} of '
-                              '${heldCartons.length} recommended',
-                              style: Theme.of(context).textTheme.titleMedium,
-                            ),
+        const SizedBox(height: AppSpacing.xs),
+        const Text(
+          'Keep problematic stock out of available inventory. A reason is required for every disposition except Accept.',
+        ),
+        const SizedBox(height: AppSpacing.lg),
+        for (final carton in cartons) ...[
+          Builder(
+            builder: (context) {
+              DispositionEntry? entry;
+              for (final item in draft?.entries ?? const <DispositionEntry>[]) {
+                if (item.cartonId == carton.id) entry = item;
+              }
+              return AppCard(
+                semanticLabel: '${carton.title}, ${carton.content['sku']}',
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            carton.title,
+                            style: Theme.of(context).textTheme.titleMedium,
                           ),
-                          const SizedBox(height: AppSpacing.md),
+                          Text('${carton.content['sku']}'),
+                          if (entry == null)
+                            const Text('Not assigned')
+                          else ...[
+                            Text(_dispositionLabel(entry.disposition)),
+                            if (entry.reason.isNotEmpty) Text(entry.reason),
+                            Text(
+                              'Revision ${entry.revisionNumber}',
+                              style: Theme.of(context).textTheme.labelSmall,
+                            ),
+                          ],
                         ],
-                        if (!releaseDecisionsSubmitted)
-                          Wrap(
-                            spacing: AppSpacing.sm,
-                            runSpacing: AppSpacing.sm,
+                      ),
+                    ),
+                    if (entry != null && !dispositionsSubmitted)
+                      IconButton(
+                        tooltip: 'Remove ${carton.title} disposition',
+                        onPressed: _saving
+                            ? null
+                            : () => _removeDisposition(entry!),
+                        icon: const Icon(Icons.delete_outline),
+                      ),
+                    if (!dispositionsSubmitted)
+                      AppButton(
+                        // Shrink-wraps rather than filling this Row's
+                        // remaining width -- the sibling text column is
+                        // already Expanded, and AppButton's default
+                        // expand: true would ask for infinite width as a
+                        // bare Row child.
+                        expand: false,
+                        variant: AppButtonVariant.secondary,
+                        label: entry == null ? 'Assign' : 'Edit',
+                        onPressed: _saving
+                            ? null
+                            : () => _editDisposition(carton.id, entry),
+                      ),
+                  ],
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: AppSpacing.md),
+        ],
+        Semantics(
+          liveRegion: true,
+          label:
+              '${draft?.entries.length ?? 0} of '
+              '${cartons.length} cartons assigned',
+          child: Text(
+            'Disposition progress: ${draft?.entries.length ?? 0} '
+            'of ${cartons.length} cartons assigned',
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
+        ),
+        if (dispositionsSubmitted) ...[
+          const SizedBox(height: AppSpacing.lg),
+          Text(
+            'Confirm separation',
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          const Text(
+            'Confirm every problematic carton has been physically moved to the quarantine cage.',
+          ),
+          if (quarantineConfirmed) ...[
+            const SizedBox(height: AppSpacing.md),
+            const AppButton(
+              label: 'Separation confirmed',
+              expand: false,
+              onPressed: null,
+            ),
+          ],
+        ],
+        if (quarantineConfirmed) ...[
+          const SizedBox(height: AppSpacing.lg),
+          Text(
+            'Request supervisor release decisions',
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          const Text(
+            'Releasing held stock to available inventory is a '
+            'supervisor-approval decision. Recommend an outcome '
+            'for every carton still quarantined or on hold, and '
+            'justify it.',
+          ),
+          const SizedBox(height: AppSpacing.md),
+          if (heldCartons.isEmpty)
+            const Text('Nothing is currently quarantined or on hold.')
+          else ...[
+            for (final carton in heldCartons) ...[
+              Builder(
+                builder: (context) {
+                  QuarantineReleaseEntry? entry;
+                  for (final item
+                      in releaseDraft?.entries ??
+                          const <QuarantineReleaseEntry>[]) {
+                    if (item.cartonId == carton.id) entry = item;
+                  }
+                  return AppCard(
+                    semanticLabel: '${carton.title}, ${carton.content['sku']}',
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              AppButton(
-                                label: 'Save draft',
-                                variant: AppButtonVariant.secondary,
-                                expand: false,
-                                isLoading: _saving,
-                                onPressed: _saving ? null : _saveReleaseDraft,
+                              Text(
+                                carton.title,
+                                style: Theme.of(context).textTheme.titleMedium,
                               ),
-                              AppButton(
-                                label: 'Submit release decisions',
-                                expand: false,
-                                isLoading: _saving,
-                                onPressed: _saving
-                                    ? null
-                                    : _submitQuarantineRelease,
-                              ),
+                              Text('${carton.content['sku']}'),
+                              if (entry == null)
+                                const Text('Not recommended')
+                              else ...[
+                                Text(_releaseDecisionLabel(entry.decision)),
+                                Text(entry.justification),
+                                Text(
+                                  'Revision ${entry.revisionNumber}',
+                                  style: Theme.of(context).textTheme.labelSmall,
+                                ),
+                              ],
                             ],
                           ),
+                        ),
+                        if (entry != null && !releaseDecisionsSubmitted)
+                          IconButton(
+                            tooltip:
+                                'Remove ${carton.title} release recommendation',
+                            onPressed: _saving
+                                ? null
+                                : () => _removeReleaseDecision(entry!),
+                            icon: const Icon(Icons.delete_outline),
+                          ),
+                        if (!releaseDecisionsSubmitted)
+                          AppButton(
+                            // Same reasoning as the disposition row above:
+                            // this sits as a bare (non-Expanded) Row child
+                            // alongside an Expanded text column.
+                            expand: false,
+                            variant: AppButtonVariant.secondary,
+                            label: entry == null ? 'Recommend' : 'Edit',
+                            onPressed: _saving
+                                ? null
+                                : () => _editReleaseDecision(carton.id, entry),
+                          ),
                       ],
-                    ],
-                  ),
-                ),
+                    ),
+                  );
+                },
               ),
-            );
-          },
-        ),
-      ),
+              const SizedBox(height: AppSpacing.md),
+            ],
+            Semantics(
+              liveRegion: true,
+              label:
+                  '${releaseDraft?.entries.length ?? 0} of '
+                  '${heldCartons.length} release decisions recommended',
+              child: Text(
+                'Release progress: '
+                '${releaseDraft?.entries.length ?? 0} of '
+                '${heldCartons.length} recommended',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+            ),
+          ],
+        ],
+      ],
     );
+  }
+
+  Widget? _buildFooter(BuildContext context, WorkplaceSimulationState value) {
+    final draft = value.attempt?.dispositionDraft;
+    final dispositionsSubmitted =
+        draft?.status == OperationalDraftStatus.submitted;
+    final quarantineConfirmed =
+        value.attempt?.completedTaskIds.contains('confirm-quarantine') ?? false;
+    final releaseDraft = value.attempt?.quarantineReleaseDraft;
+    final releaseDecisionsSubmitted =
+        releaseDraft?.status == OperationalDraftStatus.submitted;
+
+    if (!dispositionsSubmitted) {
+      return Wrap(
+        spacing: AppSpacing.sm,
+        runSpacing: AppSpacing.sm,
+        children: [
+          AppButton(
+            label: 'Save draft',
+            variant: AppButtonVariant.secondary,
+            expand: false,
+            isLoading: _saving,
+            onPressed: _saving ? null : _saveDraft,
+          ),
+          AppButton(
+            label: 'Submit dispositions',
+            expand: false,
+            isLoading: _saving,
+            onPressed: _saving ? null : _submitDispositions,
+          ),
+        ],
+      );
+    }
+    if (!quarantineConfirmed) {
+      return AppButton(
+        label: 'Confirm all exceptions separated',
+        expand: false,
+        isLoading: _saving,
+        onPressed: _saving ? null : _confirmQuarantine,
+      );
+    }
+    if (!releaseDecisionsSubmitted) {
+      return Wrap(
+        spacing: AppSpacing.sm,
+        runSpacing: AppSpacing.sm,
+        children: [
+          AppButton(
+            label: 'Save draft',
+            variant: AppButtonVariant.secondary,
+            expand: false,
+            isLoading: _saving,
+            onPressed: _saving ? null : _saveReleaseDraft,
+          ),
+          AppButton(
+            label: 'Submit release decisions',
+            expand: false,
+            isLoading: _saving,
+            onPressed: _saving ? null : _submitQuarantineRelease,
+          ),
+        ],
+      );
+    }
+    // Both dispositions and release decisions are submitted -- nothing left
+    // to act on from this screen; onOpenReceivingOffice already fired from
+    // _submitQuarantineRelease's success case.
+    return null;
   }
 
   Future<void> _editDisposition(
@@ -780,16 +688,6 @@ class _QuarantineZoneScreenState extends ConsumerState<QuarantineZoneScreen> {
       default:
         _showMessage('The release decisions could not be submitted.');
     }
-  }
-
-  Future<void> _exit() async {
-    await ref
-        .read(workplaceSimulationControllerProvider(widget.missionId).notifier)
-        .recordWorkplaceEvent(
-          AttemptAuditEventType.quarantineZoneExited,
-          screenId: 'quarantine-zone',
-        );
-    if (mounted) widget.onBack();
   }
 
   void _showMessage(String message) {
