@@ -40,10 +40,22 @@ class HomeHeader extends StatelessWidget {
     // the gradient at every point down the header.
     final onBrandMuted = Colors.white.withValues(alpha: 0.72);
 
+    // Home is the one tab with no AppBar (see `MainNavigationShell`), so
+    // unlike every other tab's hero/header this one has nothing upstream
+    // already consuming the top system-bar inset -- AppBar does that for
+    // free via its own `primary: true` default. Without adding it back
+    // here, the greeting and notification bell painted right under the
+    // status bar, sometimes overlapping its icons/clock on edge-to-edge
+    // Android builds (targetSdk 36 enforces edge-to-edge). The gradient
+    // itself still bleeds all the way to y=0 for the intended full-bleed
+    // look -- only the content padding grows, via MediaQuery rather than a
+    // wrapping SafeArea, so the background keeps painting behind the bar.
+    final topInset = MediaQuery.of(context).padding.top;
+
     return AppGradientHero(
       padding: EdgeInsets.fromLTRB(
         AppSpacing.lg,
-        AppSpacing.md,
+        topInset + AppSpacing.md,
         AppSpacing.lg,
         AppSpacing.lg + bottomInset,
       ),
