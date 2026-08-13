@@ -73,17 +73,54 @@ if ! command -v gh >/dev/null 2>&1; then
   fi
 fi
 
-# flutter build apk needs an Android SDK on PATH via ANDROID_HOME /
-# ANDROID_SDK_ROOT. GitHub-hosted ubuntu-latest images bundle one; a
-# developer Mac usually already has one from local Flutter/Android work --
-# this only warns, it doesn't try to install a multi-GB SDK for you.
-if [ -z "${ANDROID_HOME:-${ANDROID_SDK_ROOT:-}}" ]; then
-  echo "::warning:: ANDROID_HOME/ANDROID_SDK_ROOT is not set in this shell." >&2
-  echo "  If you already have Android Studio or the Android SDK installed" >&2
-  echo "  from local Flutter dev, make sure ANDROID_HOME is exported in" >&2
-  echo "  the shell profile launchd loads (see the bottom of this script's" >&2
-  echo "  output) -- otherwise 'flutter build apk' will fail on this" >&2
-  echo "  runner even though it registers fine." >&2
+# flutter build apk needs an Android SDK with its command-line tools and
+# accepted licenses. This repo currently targets compileSdk/targetSdk 36
+# with AGP 9.0.1 (apps/candidate-mobile/android/app/build.gradle.kts,
+# settings.gradle.kts) -- both recent enough that Gradle's own SDK
+# auto-download (sdk.dir pointed at a valid root with cmdline-tools present
+# + licenses accepted) can pull down whichever exact build-tools/NDK
+# version it wants at build time, so this doesn't hardcode those versions
+# and doesn't need to be kept in sync with them by hand.
+ANDROID_SDK_PATH="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-}}"
+if [ -z "$ANDROID_SDK_PATH" ] && [ -d "$HOME/Library/Android/sdk" ]; then
+  ANDROID_SDK_PATH="$HOME/Library/Android/sdk"
+  echo "Found an existing Android SDK at the default Android Studio location: $ANDROID_SDK_PATH"
+fi
+
+if [ -z "$ANDROID_SDK_PATH" ]; then
+  if command -v brew >/dev/null 2>&1; then
+    echo "No Android SDK found -- installing command-line tools via Homebrew (this pulls ~1-2 GB)..."
+    brew install --cask android-commandlinetools
+    # The cask installs into a Homebrew-prefix-relative path that differs
+    # between Apple Silicon and Intel; ask Homebrew where it actually put
+    # it instead of guessing.
+    ANDROID_SDK_PATH="$(brew --prefix)/share/android-commandlinetools"
+  else
+    echo "::warning:: No Android SDK found and Homebrew isn't installed." >&2
+    echo "  'flutter build apk' will fail on this runner until one exists." >&2
+    echo "  Install Homebrew (https://brew.sh) and re-run this script, or" >&2
+    echo "  install Android Studio / the command-line tools manually and" >&2
+    echo "  export ANDROID_HOME before re-running." >&2
+  fi
+fi
+
+if [ -n "$ANDROID_SDK_PATH" ]; then
+  SDKMANAGER="$(find "$ANDROID_SDK_PATH/cmdline-tools" -name sdkmanager -type f 2>/dev/null | sort -r | head -1)"
+  if [ -n "$SDKMANAGER" ]; then
+    echo "Accepting Android SDK licenses (required for Gradle's own auto-download to work headlessly)..."
+    yes | "$SDKMANAGER" --licenses >/dev/null 2>&1 || true
+    # Best-effort pre-warm so the very first real build doesn't spend its
+    # whole 30-minute timeout downloading the SDK -- not fatal if the exact
+    # package names below have moved on by the time this runs; Gradle's
+    # own auto-download at build time is the real safety net regardless.
+    "$SDKMANAGER" --install "platform-tools" "platforms;android-36" >/dev/null 2>&1 || true
+  else
+    echo "::warning:: Found $ANDROID_SDK_PATH but no cmdline-tools/sdkmanager inside it." >&2
+    echo "  Gradle's SDK auto-download needs those to accept licenses" >&2
+    echo "  headlessly. Open Android Studio -> SDK Manager -> SDK Tools ->" >&2
+    echo "  check 'Android SDK Command-line Tools', or re-run this script" >&2
+    echo "  after installing Homebrew so it can fetch them for you." >&2
+  fi
 fi
 
 mkdir -p "$RUNNER_DIR"
@@ -129,6 +166,22 @@ echo "==> Registering with $REPO_URL as '$RUNNER_NAME' (labels: $LABELS)"
   --unattended \
   --replace
 
+# launchd services don't load your shell profile (.zshrc/.bash_profile),
+# so an ANDROID_HOME exported there is invisible to the runner process --
+# a real, easy-to-miss gap, not a hypothetical one. .env is the
+# actions-runner's own supported mechanism for this and gets loaded on
+# every job automatically once the service is (re)started, which is why
+# this is written before ./svc.sh start below, not after.
+if [ -n "$ANDROID_SDK_PATH" ]; then
+  if ! grep -q '^ANDROID_HOME=' .env 2>/dev/null; then
+    echo "ANDROID_HOME=$ANDROID_SDK_PATH" >> .env
+  fi
+  if ! grep -q '^ANDROID_SDK_ROOT=' .env 2>/dev/null; then
+    echo "ANDROID_SDK_ROOT=$ANDROID_SDK_PATH" >> .env
+  fi
+  echo "Wrote ANDROID_HOME/ANDROID_SDK_ROOT=$ANDROID_SDK_PATH to $RUNNER_DIR/.env"
+fi
+
 echo "==> Installing as a launchd service (survives reboots and logouts)"
 ./svc.sh install
 ./svc.sh start
@@ -147,13 +200,19 @@ Useful commands from $RUNNER_DIR:
                       # --url/--token registration stays; re-run ./svc.sh
                       # install to bring it back)
 
-If ANDROID_HOME warned above: launchd services don't load your shell
-profile (.zshrc/.bash_profile), so exporting it there isn't enough --
-set it in $RUNNER_DIR/.env instead (create the file if it doesn't
-exist), e.g.:
-  echo 'ANDROID_HOME=/Users/you/Library/Android/sdk' >> $RUNNER_DIR/.env
-then './svc.sh stop && ./svc.sh start' to pick it up.
+EOF
+if [ -z "$ANDROID_SDK_PATH" ]; then
+  cat <<EOF
+No Android SDK was found or installed above (see the warning), so
+'flutter build apk' will fail on this runner until one exists. Once you
+have one, set it manually:
+  echo "ANDROID_HOME=/path/to/sdk" >> $RUNNER_DIR/.env
+  echo "ANDROID_SDK_ROOT=/path/to/sdk" >> $RUNNER_DIR/.env
+  cd $RUNNER_DIR && ./svc.sh stop && ./svc.sh start
 
+EOF
+fi
+cat <<EOF
 Once the Actions minutes quota resets on 2026-09-01 (or whenever
 GitHub-hosted builds are affordable again), either leave the runner
 running (it costs nothing extra to keep registered) or:
