@@ -37,10 +37,17 @@ on:
         description: 'Override GOOGLE_WEB_CLIENT_ID. Web application client ID.'
         required: false
         default: ''
+  # Was `push: branches: [feature/flutter-foundation, main]` -- every ordinary
+  # merge to main triggered a full native Android build on a GitHub-hosted
+  # runner, which is exactly what exhausted this account's included Actions
+  # minutes. workflow_dispatch already covers "build me an APK right now"
+  # (with a release_tag to publish it); a tag push covers "cut a review
+  # build for this point in history" without spending minutes on every
+  # routine feature-branch merge. Revert to the branch-push trigger above if
+  # every main push should build automatically again.
   push:
-    branches:
-      - feature/flutter-foundation
-      - main
+    tags:
+      - 'v*'
 
 jobs:
   build:
@@ -62,9 +69,22 @@ jobs:
           distribution: temurin
           java-version: '21'
 
+      # Pinned, not `channel: stable` -- that floated to whatever Flutter
+      # release was current on the runner that day (3.47.0 at the time this
+      # was pinned), which had already drifted from the 3.44.9 every
+      # contributor and CI-adjacent tooling in this repo develops against.
+      # The drift wasn't cosmetic: a newer Dart SDK re-resolved 5 pub
+      # dependencies away from the committed pubspec.lock and, with them,
+      # started flagging `unawaited_return_in_try_block` in
+      # jobs_controller.dart -- a warning `flutter analyze` never produces
+      # on 3.44.9, and `flutter analyze` fails the whole job on any warning.
+      # Every push-triggered run for hours failed at this exact step, before
+      # Android compilation ever started. Bump this version deliberately,
+      # in its own commit, when the team's pinned Flutter version changes --
+      # never let it float again.
       - uses: subosito/flutter-action@v2
         with:
-          channel: stable
+          flutter-version: '3.44.9'
           cache: true
 
       - run: flutter pub get
