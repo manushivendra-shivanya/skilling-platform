@@ -15,6 +15,7 @@ import '../../../core/widgets/app_progress.dart';
 import '../../../core/widgets/app_skeleton.dart';
 import '../../../core/widgets/app_state_view.dart';
 import '../../../core/widgets/app_status_banner.dart';
+import '../../../core/widgets/app_sticky_footer.dart';
 import '../../../core/widgets/app_text_field.dart';
 import '../../resume/domain/resume_parsing_repository.dart';
 import '../domain/candidate_onboarding_draft.dart';
@@ -158,65 +159,59 @@ class _CandidateOnboardingScreenState
             child: _buildStep(draft),
           ),
         ),
-        DecoratedBox(
-          decoration: const BoxDecoration(
-            color: AppColors.surface,
-            border: Border(top: BorderSide(color: AppColors.surfaceMuted)),
+        AppStickyFooter(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.xl,
+            AppSpacing.sm,
+            AppSpacing.xl,
+            AppSpacing.md,
           ),
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.xl,
-              AppSpacing.sm,
-              AppSpacing.xl,
-              AppSpacing.md,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                if (_validationMessage != null || _saveMessage != null)
-                  Semantics(
-                    liveRegion: true,
-                    child: Text(
-                      _validationMessage ?? _saveMessage!,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.error,
-                      ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (_validationMessage != null || _saveMessage != null)
+                Semantics(
+                  liveRegion: true,
+                  child: Text(
+                    _validationMessage ?? _saveMessage!,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Theme.of(context).colorScheme.error,
                     ),
                   ),
-                if (_validationMessage != null || _saveMessage != null)
-                  const SizedBox(height: AppSpacing.xs),
-                Row(
-                  children: [
-                    if (draft.currentStep > 0) ...[
-                      Expanded(
-                        child: AppButton(
-                          label: 'Back',
-                          variant: AppButtonVariant.secondary,
-                          isLoading: false,
-                          onPressed: _isSaving ? null : _goBack,
-                        ),
-                      ),
-                      const SizedBox(width: AppSpacing.sm),
-                    ],
+                ),
+              if (_validationMessage != null || _saveMessage != null)
+                const SizedBox(height: AppSpacing.xs),
+              Row(
+                children: [
+                  if (draft.currentStep > 0) ...[
                     Expanded(
-                      flex: draft.currentStep > 0 ? 1 : 2,
                       child: AppButton(
-                        label: draft.currentStep == 9
-                            ? 'Complete profile'
-                            : 'Save and continue',
-                        isLoading: _isSaving,
-                        onPressed: _isSaving ? null : _continue,
+                        label: 'Back',
+                        variant: AppButtonVariant.secondary,
+                        isLoading: false,
+                        onPressed: _isSaving ? null : _goBack,
                       ),
                     ),
+                    const SizedBox(width: AppSpacing.sm),
                   ],
-                ),
-                const SizedBox(height: AppSpacing.xs),
-                const Text(
-                  'Saved securely on this device after every step.',
-                  textAlign: TextAlign.center,
-                ),
-              ],
-            ),
+                  Expanded(
+                    flex: draft.currentStep > 0 ? 1 : 2,
+                    child: AppButton(
+                      label: draft.currentStep == 9
+                          ? 'Complete profile'
+                          : 'Save and continue',
+                      isLoading: _isSaving,
+                      onPressed: _isSaving ? null : _continue,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.xs),
+              const Text(
+                'Saved securely on this device after every step.',
+                textAlign: TextAlign.center,
+              ),
+            ],
           ),
         ),
       ],

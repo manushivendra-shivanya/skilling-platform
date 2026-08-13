@@ -61,6 +61,14 @@ class AskCoachAffordance extends StatelessWidget {
       onPressed: () => showModalBottomSheet<void>(
         context: context,
         isScrollControlled: true,
+        // Matches the app's other bottom sheets (`showAppBottomSheet`,
+        // `showJobDetailsSheet`) -- without this, the composer/reply
+        // buttons at the sheet's bottom sit flush against the system nav
+        // bar on edge-to-edge Android once the keyboard is dismissed,
+        // since `_AskCoachSheet`'s own bottom padding only accounts for
+        // `viewInsets.bottom` (the keyboard), not the device's resting
+        // bottom inset.
+        useSafeArea: true,
         builder: (_) =>
             _AskCoachSheet(contextLabel: contextLabel, contextRef: contextRef),
       ),
