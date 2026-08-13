@@ -153,7 +153,18 @@ jobs:
             exit 0
           fi
           path="$RUNNER_TEMP/flora-review.keystore"
-          printf '%s' "$KEYSTORE_B64" | base64 -d > "$path"
+          # GNU coreutils base64 (every GitHub-hosted Linux runner) decodes
+          # with `-d`. Apple's own /usr/bin/base64 on macOS (the
+          # self-hosted runner) has no -d at all -- only -D -- and fails
+          # with an unrecognized-option error instead of silently doing the
+          # wrong thing, which is at least loud, but still breaks the
+          # step. $RUNNER_OS is set by Actions itself, not uname, so this
+          # doesn't depend on how any given shell reports the platform.
+          if [ "$RUNNER_OS" = "macOS" ]; then
+            printf '%s' "$KEYSTORE_B64" | base64 -D > "$path"
+          else
+            printf '%s' "$KEYSTORE_B64" | base64 -d > "$path"
+          fi
           echo "FLORA_REVIEW_KEYSTORE=$path" >> "$GITHUB_ENV"
           echo "restored review keystore"
 
@@ -209,9 +220,15 @@ jobs:
             echo "No keystore at $keystore -- build did not reach signing."
             exit 0
           fi
+          # `\s` is a GNU/PCRE extension, not POSIX ERE -- GNU grep/sed
+          # (GitHub-hosted Linux) accept it, but there's no guarantee BSD
+          # grep/sed (macOS, the self-hosted runner) parses it the same
+          # way. `[[:space:]]` is the POSIX character class every `-E`
+          # implementation actually has to support, on either OS.
           sha1=$(keytool -list -v -keystore "$keystore" \
             -alias "$alias" -storepass "$storepass" 2>/dev/null \
-            | grep -E '^\s*SHA1:' | head -1 | sed -E 's/.*SHA1:\s*//')
+            | grep -E '^[[:space:]]*SHA1:' | head -1 \
+            | sed -E 's/.*SHA1:[[:space:]]*//')
           echo "signed with: $kind"
           {
             echo "### Signing fingerprint"

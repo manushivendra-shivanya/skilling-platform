@@ -1,13 +1,23 @@
 name: Build and Test API
 
+# No `pull_request` trigger exists in this repo for either workflow, so
+# that side of the account's Actions usage is already at zero -- every job
+# that has ever run came from `push` or `workflow_dispatch`.
+#
+# Was `push: branches: [main], paths: [apps/api/**, ...]` -- still ran on
+# GitHub-hosted ubuntu-latest, so it still counted against the same
+# exhausted included-minutes pool build-apk.yml was burning through, even
+# though this workflow itself is cheap (Node build+test, no native Android
+# compile). Scoped to tags only, matching build-apk.yml, so an ordinary
+# merge to main doesn't spend minutes here either. workflow_dispatch still
+# covers running it on demand. Revert to the branch-push trigger above
+# (paths filter included) for automatic regression coverage on every
+# apps/api change again.
 on:
   workflow_dispatch:
   push:
-    branches:
-      - main
-    paths:
-      - 'apps/api/**'
-      - '.github/workflows/build-api.yml'
+    tags:
+      - 'v*'
 
 jobs:
   build:
