@@ -5,8 +5,10 @@ import 'package:video_player/video_player.dart';
 import '../../../app/dependencies.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_spacing.dart';
+import '../../../core/errors/app_failure_localization.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_card.dart';
+import '../../../l10n/generated/app_localizations.dart';
 import '../../coach/presentation/ask_coach_affordance.dart';
 import '../../sector_pack/application/active_sector_pack_provider.dart';
 import '../domain/micro_lesson_assessment_attempt.dart';
@@ -155,7 +157,7 @@ class _MicroLessonPlayerScreenState
       if (mounted) {
         setState(() {
           _isSubmitting = false;
-          _submissionError = 'Sign in again to record this attempt.';
+          _submissionError = AppLocalizations.of(context).clipSignInAgain;
         });
       }
       return;
@@ -168,6 +170,7 @@ class _MicroLessonPlayerScreenState
           selectedAnswerId: answerId,
         );
     if (!mounted) return;
+    final l10n = AppLocalizations.of(context);
     result.when(
       success: (attempt) => setState(() {
         _isSubmitting = false;
@@ -176,7 +179,7 @@ class _MicroLessonPlayerScreenState
       }),
       failure: (failure) => setState(() {
         _isSubmitting = false;
-        _submissionError = failure.message;
+        _submissionError = failure.localizedMessage(l10n);
       }),
     );
   }
@@ -190,6 +193,7 @@ class _MicroLessonPlayerScreenState
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final clip = widget.clip;
     final titleStyle = Theme.of(context).textTheme.titleSmall;
     // This screen is reached by tapping a sector-pack-styled lesson row
@@ -206,7 +210,7 @@ class _MicroLessonPlayerScreenState
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
-          tooltip: 'Back',
+          tooltip: l10n.clipBackTooltip,
           onPressed: widget.onBack,
           icon: const Icon(Icons.arrow_back),
         ),
@@ -245,16 +249,16 @@ class _MicroLessonPlayerScreenState
           const SizedBox(height: AppSpacing.xs),
           Text(clip.description, style: Theme.of(context).textTheme.bodyLarge),
           const SizedBox(height: AppSpacing.md),
-          Text('What to look for', style: titleStyle),
+          Text(l10n.clipWhatToLookFor, style: titleStyle),
           Text(clip.expectedObservation),
           const SizedBox(height: AppSpacing.sm),
-          Text('What to decide', style: titleStyle),
+          Text(l10n.clipWhatToDecide, style: titleStyle),
           Text(clip.expectedDecision),
           const SizedBox(height: AppSpacing.sm),
-          Text('Lesson', style: titleStyle),
+          Text(l10n.clipLessonLabel, style: titleStyle),
           Text(clip.lessonContent),
           const SizedBox(height: AppSpacing.sm),
-          Text('Transcript', style: titleStyle),
+          Text(l10n.clipTranscriptLabel, style: titleStyle),
           Text(clip.transcript),
           const SizedBox(height: AppSpacing.xl),
           const NotEmployerEvidenceBanner(),
@@ -281,19 +285,20 @@ class _MicroLessonPlayerScreenState
   }
 
   Widget _buildVideoArea() {
+    final l10n = AppLocalizations.of(context);
     final controller = _controller;
     if (!widget.clip.hasVideoAsset) {
       // No clip produced yet for this catalogue entry -- a real state, not
       // an error, so it gets a plain placeholder rather than an error banner.
-      return const ColoredBox(
+      return ColoredBox(
         color: Colors.black12,
-        child: Center(child: Text('No video yet — text lesson is ready')),
+        child: Center(child: Text(l10n.clipNoVideoPlaceholder)),
       );
     }
     if (_loadError != null) {
       return ColoredBox(
         color: Colors.black12,
-        child: Center(child: Text('Playback failed: $_loadError')),
+        child: Center(child: Text(l10n.clipPlaybackFailed(_loadError!))),
       );
     }
     if (controller == null) {
@@ -307,15 +312,18 @@ class _MicroLessonPlayerScreenState
       // one call site is the higher-risk change; hand-styling a labelled
       // spinner here, matching the darkened video surface below, is the
       // narrower, lower-risk fix.
-      return const ColoredBox(
+      return ColoredBox(
         color: Colors.black,
         child: Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              CircularProgressIndicator(color: Colors.white70),
-              SizedBox(height: AppSpacing.sm),
-              Text('Loading video…', style: TextStyle(color: Colors.white70)),
+              const CircularProgressIndicator(color: Colors.white70),
+              const SizedBox(height: AppSpacing.sm),
+              Text(
+                l10n.clipLoadingVideo,
+                style: const TextStyle(color: Colors.white70),
+              ),
             ],
           ),
         ),
@@ -351,23 +359,24 @@ class _AssetStateLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final (icon, label, color) = switch (true) {
       _ when hasError => (
         Icons.error_outline,
-        'Playback failed',
+        l10n.clipStateFailedLabel,
         AppColors.error,
       ),
       _ when !clip.hasVideoAsset => (
         Icons.hourglass_empty,
-        'No video yet • text lesson and assessment ready',
+        l10n.clipStateNoVideoLabel,
         AppColors.inkMuted,
       ),
       _ when clip.videoUrl!.startsWith('asset://') => (
         Icons.download_done,
-        'Bundled with the app • works offline',
+        l10n.clipStateBundledLabel,
         AppColors.success,
       ),
-      _ => (Icons.cloud_outlined, 'Streamed', AppColors.info),
+      _ => (Icons.cloud_outlined, l10n.clipStateStreamedLabel, AppColors.info),
     };
     return Row(
       children: [
@@ -395,6 +404,7 @@ class _PracticeQuestion extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final selected = selectedAnswerId == null
         ? null
         : clip.answerOptions.firstWhere((o) => o.id == selectedAnswerId);
@@ -410,8 +420,12 @@ class _PracticeQuestion extends StatelessWidget {
         for (final option in clip.answerOptions) ...[
           AppCard(
             onTap: () => onSelect(option.id),
-            semanticLabel:
-                '${option.label}. ${selectedAnswerId == option.id ? 'Selected' : 'Not selected'}',
+            semanticLabel: l10n.practiceOptionSemantic(
+              option.label,
+              selectedAnswerId == option.id
+                  ? l10n.practiceOptionSelected
+                  : l10n.practiceOptionNotSelected,
+            ),
             backgroundColor: selectedAnswerId == option.id
                 ? AppColors.brandSoft
                 : AppColors.surface,
@@ -477,12 +491,13 @@ class _AssessmentSubmission extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final used = attemptsUsed;
     final titleStyle = Theme.of(context).textTheme.titleMedium;
     if (used == null) {
       return Row(
         children: [
-          Text('Assessment', style: titleStyle),
+          Text(l10n.assessmentTitle, style: titleStyle),
           const SizedBox(width: AppSpacing.sm),
           const SizedBox(
             width: 14,
@@ -497,12 +512,13 @@ class _AssessmentSubmission extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text('Assessment', style: titleStyle),
+        Text(l10n.assessmentTitle, style: titleStyle),
         const SizedBox(height: AppSpacing.xs),
         Text(
-          'Submitting counts toward your Career Passport evidence for this '
-          'clip -- ${remaining.clamp(0, maxAssessmentAttemptsPerClip)} of '
-          '$maxAssessmentAttemptsPerClip attempts remaining.',
+          l10n.assessmentRemainingLine(
+            remaining.clamp(0, maxAssessmentAttemptsPerClip),
+            maxAssessmentAttemptsPerClip,
+          ),
         ),
         if (lastAttempt != null) ...[
           const SizedBox(height: AppSpacing.sm),
@@ -522,8 +538,8 @@ class _AssessmentSubmission extends StatelessWidget {
                 Expanded(
                   child: Text(
                     lastAttempt.isCorrect
-                        ? 'Recorded -- correct answer.'
-                        : 'Recorded -- incorrect answer.',
+                        ? l10n.assessmentRecordedCorrect
+                        : l10n.assessmentRecordedIncorrect,
                   ),
                 ),
               ],
@@ -534,16 +550,16 @@ class _AssessmentSubmission extends StatelessWidget {
         if (remaining > 0)
           AppButton(
             label: isSubmitting
-                ? 'Submitting...'
+                ? l10n.assessmentSubmittingLabel
                 : lastAttempt == null
-                ? 'Submit for Career Passport evidence'
-                : 'Submit another attempt',
+                ? l10n.assessmentSubmitFirstLabel
+                : l10n.assessmentSubmitAnotherLabel,
             onPressed: (selectedAnswerId == null || isSubmitting)
                 ? null
                 : onSubmit,
           )
         else
-          const Text('No attempts remaining for this clip.'),
+          Text(l10n.assessmentNoAttemptsRemaining),
         if (submissionError != null) ...[
           const SizedBox(height: AppSpacing.xs),
           Text(

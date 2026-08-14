@@ -421,5 +421,61 @@
   "practiceOptionNotSelected": "चयनित नहीं",
   "practiceOptionSemantic": "{label}। {state}",
 
-  "notEmployerEvidenceDefault": "केवल अभ्यास फ़ीडबैक — अभी नियोक्ता साक्ष्य नहीं है।"
+  "notEmployerEvidenceDefault": "केवल अभ्यास फ़ीडबैक — अभी नियोक्ता साक्ष्य नहीं है।",
+
+  "clipsHeadline": "वेयरहाउस प्रोसेस क्लिप्स",
+  "clipsSubtitle": "10-सेकंड की असली प्रोसेस क्लिप्स: क्या देखना है, क्या तय करना है, और एक त्वरित अभ्यास सवाल।",
+
+  "clipsLoadErrorTitle": "क्लिप्स लोड नहीं हो सकीं",
+  "clipsLoadErrorFallback": "क्लिप कैटलॉग फ़िलहाल उपलब्ध नहीं है।",
+
+  "clipsEmptyTitle": "अभी कोई क्लिप नहीं",
+  "clipsEmptyMessage": "प्रकाशित होने पर वेयरहाउस प्रोसेस क्लिप्स यहां दिखेंगी।",
+
+  "clipDomainReceiving": "प्राप्ति",
+  "clipDomainInspection": "निरीक्षण",
+  "clipDomainPutAway": "स्टॉक व्यवस्थापन",
+  "clipDomainProcessing": "प्रोसेसिंग",
+  "clipDomainPicking": "पिकिंग",
+  "clipDomainDispatch": "डिस्पैच",
+  "clipDomainDelivery": "डिलीवरी",
+  "clipDomainSupervisor": "सुपरवाइज़र / रिटर्न",
+  "clipDomainInventory": "इन्वेंटरी",
+  "clipDomainSafety": "सुरक्षा",
+
+  "clipStatusDownloaded": "{duration}सेकंड · {processArea} · डाउनलोड हुआ",
+  "clipStatusDownloadedWatched": "{duration}सेकंड · {processArea} · डाउनलोड हुआ · देखा गया",
+  "clipStatusNoVideo": "वीडियो अभी उपलब्ध नहीं · {processArea}",
+
+  "clipPractiseSimulation": "{label} सिमुलेशन का अभ्यास करें",
+
+  "clipBackTooltip": "वापस",
+
+  "clipSignInAgain": "यह प्रयास दर्ज करने के लिए दोबारा साइन इन करें।",
+
+  "clipNoVideoPlaceholder": "अभी कोई वीडियो नहीं — टेक्स्ट पाठ तैयार है",
+  "clipPlaybackFailed": "प्लेबैक विफल: {error}",
+  "clipLoadingVideo": "वीडियो लोड हो रहा है…",
+
+  "clipWhatToLookFor": "क्या देखना है",
+  "clipWhatToDecide": "क्या तय करना है",
+  "clipLessonLabel": "पाठ",
+  "clipTranscriptLabel": "ट्रांसक्रिप्ट",
+
+  "clipStateFailedLabel": "प्लेबैक विफल",
+  "clipStateNoVideoLabel": "अभी कोई वीडियो नहीं • टेक्स्ट पाठ और मूल्यांकन तैयार है",
+  "clipStateBundledLabel": "ऐप के साथ बंडल किया गया • ऑफ़लाइन काम करता है",
+  "clipStateStreamedLabel": "स्ट्रीम किया गया",
+
+  "assessmentTitle": "मूल्यांकन",
+
+  "assessmentRemainingLine": "जमा करना इस क्लिप के लिए आपके करियर पासपोर्ट साक्ष्य में गिना जाता है -- {max} में से {remaining} प्रयास बाकी।",
+
+  "assessmentRecordedCorrect": "दर्ज हुआ -- सही उत्तर।",
+  "assessmentRecordedIncorrect": "दर्ज हुआ -- गलत उत्तर।",
+
+  "assessmentSubmittingLabel": "जमा हो रहा है...",
+  "assessmentSubmitFirstLabel": "करियर पासपोर्ट साक्ष्य के लिए जमा करें",
+  "assessmentSubmitAnotherLabel": "एक और प्रयास जमा करें",
+  "assessmentNoAttemptsRemaining": "इस क्लिप के लिए कोई प्रयास बाकी नहीं है।"
 }

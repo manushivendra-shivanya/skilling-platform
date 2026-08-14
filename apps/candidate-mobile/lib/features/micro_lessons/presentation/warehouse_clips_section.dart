@@ -3,8 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/app_spacing.dart';
 import '../../../core/errors/app_failure.dart';
+import '../../../core/errors/app_failure_localization.dart';
 import '../../../core/widgets/app_skeleton.dart';
 import '../../../core/widgets/app_state_view.dart';
+import '../../../l10n/generated/app_localizations.dart';
 import '../../sector_pack/application/active_sector_pack_provider.dart';
 import '../../sector_pack/domain/sector_pack.dart';
 import '../../sector_pack/presentation/sector_pack_icons.dart';
@@ -41,53 +43,52 @@ class WarehouseClipsSection extends ConsumerWidget {
     MicroLessonDomain.safety,
   ];
 
-  static String _domainLabel(MicroLessonDomain domain) => switch (domain) {
-    MicroLessonDomain.receiving => 'Receiving',
-    MicroLessonDomain.inspection => 'Inspection',
-    MicroLessonDomain.putAway => 'Put-away',
-    MicroLessonDomain.processing => 'Processing',
-    MicroLessonDomain.picking => 'Picking',
-    MicroLessonDomain.dispatch => 'Dispatch',
-    MicroLessonDomain.delivery => 'Delivery',
-    MicroLessonDomain.supervisor => 'Supervisor / returns',
-    MicroLessonDomain.inventory => 'Inventory',
-    MicroLessonDomain.safety => 'Safety',
-  };
+  static String _domainLabel(MicroLessonDomain domain, AppLocalizations l10n) =>
+      switch (domain) {
+        MicroLessonDomain.receiving => l10n.clipDomainReceiving,
+        MicroLessonDomain.inspection => l10n.clipDomainInspection,
+        MicroLessonDomain.putAway => l10n.clipDomainPutAway,
+        MicroLessonDomain.processing => l10n.clipDomainProcessing,
+        MicroLessonDomain.picking => l10n.clipDomainPicking,
+        MicroLessonDomain.dispatch => l10n.clipDomainDispatch,
+        MicroLessonDomain.delivery => l10n.clipDomainDelivery,
+        MicroLessonDomain.supervisor => l10n.clipDomainSupervisor,
+        MicroLessonDomain.inventory => l10n.clipDomainInventory,
+        MicroLessonDomain.safety => l10n.clipDomainSafety,
+      };
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
     final state = ref.watch(microLessonClipControllerProvider);
     final pack = ref.watch(activeSectorPackProvider);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          'Warehouse process clips',
+          l10n.clipsHeadline,
           style: Theme.of(context).textTheme.headlineSmall,
         ),
         const SizedBox(height: AppSpacing.xs),
-        const Text(
-          '10-second real-process clips: what to notice, what to decide, and a quick practice question.',
-        ),
+        Text(l10n.clipsSubtitle),
         const SizedBox(height: AppSpacing.sm),
         const NotEmployerEvidenceBanner(),
         const SizedBox(height: AppSpacing.md),
         state.when(
           loading: () => const _ClipsLoadingView(),
           error: (error, stackTrace) => AppErrorState(
-            title: 'Clips could not be loaded',
+            title: l10n.clipsLoadErrorTitle,
             message: error is AppFailure
-                ? error.message
-                : 'The clip catalogue is temporarily unavailable.',
+                ? error.localizedMessage(l10n)
+                : l10n.clipsLoadErrorFallback,
             onAction: () =>
                 ref.read(microLessonClipControllerProvider.notifier).retry(),
           ),
           data: (data) {
             if (data.clips.isEmpty) {
-              return const AppEmptyState(
-                title: 'No clips yet',
-                message:
-                    'Warehouse process clips will appear here once published.',
+              return AppEmptyState(
+                title: l10n.clipsEmptyTitle,
+                message: l10n.clipsEmptyMessage,
               );
             }
             final populatedDomains = _domainOrder
@@ -100,7 +101,7 @@ class WarehouseClipsSection extends ConsumerWidget {
                   _DomainGroup(
                     pack: pack,
                     domain: domain,
-                    label: _domainLabel(domain),
+                    label: _domainLabel(domain, l10n),
                     clips: data.clipsForDomain(domain),
                     viewedClipIds: data.viewedClipIds,
                     onOpenSimulation: onOpenSimulation,
@@ -187,15 +188,20 @@ class _ClipRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final hasVideo = clip.hasVideoAsset;
     final ink = Theme.of(context).colorScheme.onSurface;
     final inkSoft = Theme.of(context).colorScheme.onSurfaceVariant;
-    final statusText = hasVideo
-        ? '${clip.durationSeconds}s · ${clip.processArea} · Downloaded'
-              '${viewed ? ' · Watched' : ''}'
-        : 'Video not yet available · ${clip.processArea}';
+    final statusText = !hasVideo
+        ? l10n.clipStatusNoVideo(clip.processArea)
+        : viewed
+        ? l10n.clipStatusDownloadedWatched(
+            clip.durationSeconds,
+            clip.processArea,
+          )
+        : l10n.clipStatusDownloaded(clip.durationSeconds, clip.processArea);
     final statusColor = viewed ? pack.signalPalette.cleared : inkSoft;
-    final simulation = _simulationForClip(clip);
+    final simulation = _simulationForClip(clip, l10n);
 
     return Container(
       decoration: BoxDecoration(
@@ -283,7 +289,7 @@ class _ClipRow extends StatelessWidget {
                   child: OutlinedButton.icon(
                     onPressed: () => onOpenSimulation!(simulation.missionId),
                     icon: const Icon(Icons.precision_manufacturing_outlined),
-                    label: Text('Practise ${simulation.label} simulation'),
+                    label: Text(l10n.clipPractiseSimulation(simulation.label)),
                   ),
                 ),
               ),
@@ -305,15 +311,18 @@ class _SimulationLink {
   final String missionId;
 }
 
-_SimulationLink? _simulationForClip(MicroLessonClip clip) {
+_SimulationLink? _simulationForClip(
+  MicroLessonClip clip,
+  AppLocalizations l10n,
+) {
   return switch (clip.domain) {
     MicroLessonDomain.receiving ||
-    MicroLessonDomain.inspection => const _SimulationLink(
-      label: 'Receiving',
+    MicroLessonDomain.inspection => _SimulationLink(
+      label: l10n.clipDomainReceiving,
       missionId: 'receive-incoming-shipment-01',
     ),
-    MicroLessonDomain.putAway => const _SimulationLink(
-      label: 'Put-away',
+    MicroLessonDomain.putAway => _SimulationLink(
+      label: l10n.clipDomainPutAway,
       missionId: 'put-away-incoming-stock-01',
     ),
     _ => null,

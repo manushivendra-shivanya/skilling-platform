@@ -1003,5 +1003,120 @@
   "notEmployerEvidenceDefault": "Practice feedback only — not employer evidence yet.",
   "@notEmployerEvidenceDefault": {
     "description": "Default wording of NotEmployerEvidenceBanner, shown wherever a caller doesn't override it with its own wording."
-  }
+  },
+
+  "clipsHeadline": "Warehouse process clips",
+  "clipsSubtitle": "10-second real-process clips: what to notice, what to decide, and a quick practice question.",
+  "@clipsHeadline": { "description": "Headline above the micro-lesson clips section." },
+  "@clipsSubtitle": { "description": "Subtitle under the clips section headline." },
+
+  "clipsLoadErrorTitle": "Clips could not be loaded",
+  "clipsLoadErrorFallback": "The clip catalogue is temporarily unavailable.",
+  "@clipsLoadErrorTitle": { "description": "Title of the clips section's error state." },
+  "@clipsLoadErrorFallback": { "description": "Fallback message when the load failure isn't an AppFailure." },
+
+  "clipsEmptyTitle": "No clips yet",
+  "clipsEmptyMessage": "Warehouse process clips will appear here once published.",
+  "@clipsEmptyTitle": { "description": "Title of the clips section's empty state." },
+  "@clipsEmptyMessage": { "description": "Message of the clips section's empty state." },
+
+  "clipDomainReceiving": "Receiving",
+  "clipDomainInspection": "Inspection",
+  "clipDomainPutAway": "Put-away",
+  "clipDomainProcessing": "Processing",
+  "clipDomainPicking": "Picking",
+  "clipDomainDispatch": "Dispatch",
+  "clipDomainDelivery": "Delivery",
+  "clipDomainSupervisor": "Supervisor / returns",
+  "clipDomainInventory": "Inventory",
+  "clipDomainSafety": "Safety",
+  "@clipDomainReceiving": { "description": "Micro-lesson clip domain group label." },
+  "@clipDomainInspection": { "description": "Micro-lesson clip domain group label." },
+  "@clipDomainPutAway": { "description": "Micro-lesson clip domain group label." },
+  "@clipDomainProcessing": { "description": "Micro-lesson clip domain group label." },
+  "@clipDomainPicking": { "description": "Micro-lesson clip domain group label." },
+  "@clipDomainDispatch": { "description": "Micro-lesson clip domain group label." },
+  "@clipDomainDelivery": { "description": "Micro-lesson clip domain group label." },
+  "@clipDomainSupervisor": { "description": "Micro-lesson clip domain group label." },
+  "@clipDomainInventory": { "description": "Micro-lesson clip domain group label." },
+  "@clipDomainSafety": { "description": "Micro-lesson clip domain group label." },
+
+  "clipStatusDownloaded": "{duration}s · {processArea} · Downloaded",
+  "clipStatusDownloadedWatched": "{duration}s · {processArea} · Downloaded · Watched",
+  "clipStatusNoVideo": "Video not yet available · {processArea}",
+  "@clipStatusDownloaded": {
+    "description": "Status line on a clip row, downloaded but not watched.",
+    "placeholders": { "duration": { "type": "int" }, "processArea": { "type": "String" } }
+  },
+  "@clipStatusDownloadedWatched": {
+    "description": "Status line on a clip row, downloaded and watched.",
+    "placeholders": { "duration": { "type": "int" }, "processArea": { "type": "String" } }
+  },
+  "@clipStatusNoVideo": {
+    "description": "Status line on a clip row with no video yet.",
+    "placeholders": { "processArea": { "type": "String" } }
+  },
+
+  "clipPractiseSimulation": "Practise {label} simulation",
+  "@clipPractiseSimulation": {
+    "description": "Button that hands off from a clip to its matching Workplace Simulation mission.",
+    "placeholders": { "label": { "type": "String" } }
+  },
+
+  "clipBackTooltip": "Back",
+  "@clipBackTooltip": { "description": "Tooltip on the clip player screen's back button." },
+
+  "clipSignInAgain": "Sign in again to record this attempt.",
+  "@clipSignInAgain": { "description": "Shown when an assessment attempt is submitted without a signed-in session." },
+
+  "clipNoVideoPlaceholder": "No video yet — text lesson is ready",
+  "clipPlaybackFailed": "Playback failed: {error}",
+  "clipLoadingVideo": "Loading video…",
+  "@clipNoVideoPlaceholder": { "description": "Placeholder shown in the video area when a clip has no video yet." },
+  "@clipPlaybackFailed": {
+    "description": "Placeholder shown in the video area when playback fails.",
+    "placeholders": { "error": { "type": "String" } }
+  },
+  "@clipLoadingVideo": { "description": "Loading caption shown in the video area." },
+
+  "clipWhatToLookFor": "What to look for",
+  "clipWhatToDecide": "What to decide",
+  "clipLessonLabel": "Lesson",
+  "clipTranscriptLabel": "Transcript",
+  "@clipWhatToLookFor": { "description": "Section label on the clip detail screen." },
+  "@clipWhatToDecide": { "description": "Section label on the clip detail screen." },
+  "@clipLessonLabel": { "description": "Section label on the clip detail screen." },
+  "@clipTranscriptLabel": { "description": "Section label on the clip detail screen." },
+
+  "clipStateFailedLabel": "Playback failed",
+  "clipStateNoVideoLabel": "No video yet • text lesson and assessment ready",
+  "clipStateBundledLabel": "Bundled with the app • works offline",
+  "clipStateStreamedLabel": "Streamed",
+  "@clipStateFailedLabel": { "description": "Small state label under the clip video area." },
+  "@clipStateNoVideoLabel": { "description": "Small state label under the clip video area." },
+  "@clipStateBundledLabel": { "description": "Small state label under the clip video area." },
+  "@clipStateStreamedLabel": { "description": "Small state label under the clip video area." },
+
+  "assessmentTitle": "Assessment",
+  "@assessmentTitle": { "description": "Section title above the clip's scored-attempt submission block." },
+
+  "assessmentRemainingLine": "Submitting counts toward your Career Passport evidence for this clip -- {remaining} of {max} attempts remaining.",
+  "@assessmentRemainingLine": {
+    "description": "Explains how many scored attempts remain for this clip.",
+    "placeholders": { "remaining": { "type": "int" }, "max": { "type": "int" } }
+  },
+
+  "assessmentRecordedCorrect": "Recorded -- correct answer.",
+  "assessmentRecordedIncorrect": "Recorded -- incorrect answer.",
+  "@assessmentRecordedCorrect": { "description": "Shown after a correct scored attempt is recorded." },
+  "@assessmentRecordedIncorrect": { "description": "Shown after an incorrect scored attempt is recorded." },
+
+  "assessmentSubmittingLabel": "Submitting...",
+  "assessmentSubmitFirstLabel": "Submit for Career Passport evidence",
+  "assessmentSubmitAnotherLabel": "Submit another attempt",
+  "assessmentNoAttemptsRemaining": "No attempts remaining for this clip.",
+  "@assessmentSubmittingLabel": { "description": "Submit button label while the request is in flight." },
+  "@assessmentSubmitFirstLabel": { "description": "Submit button label before any attempt has been recorded." },
+  "@assessmentSubmitAnotherLabel": { "description": "Submit button label after at least one attempt has been recorded." },
+  "@assessmentNoAttemptsRemaining": { "description": "Shown once every scored attempt for this clip has been used." }
 }
