@@ -661,5 +661,97 @@
 
   "coachConversationUnavailable": "Yeh conversation available nahi hai.",
 
-  "coachAskSkillsInterviewsHint": "Skills ya interviews ke baare mein poochein"
+  "coachAskSkillsInterviewsHint": "Skills ya interviews ke baare mein poochein",
+
+  "welcomeSkipToHomeDev": "Home par jump karein (dev)",
+  "welcomeHeadline": "Skills banayein. Apni readiness prove karein. Behtar kaam paayein.",
+  "welcomeSubtitle": "Logistics career ke liye practical guidance, aapki pasandeeda language mein.",
+  "welcomeChooseLanguageButton": "Apni language choose karein",
+  "welcomeViewDesignSystemDev": "Design system dekhein",
+  "welcomeWms3dPreviewDev": "WMS 3D preview (dev)",
+
+  "onboardingGettingStartedLabel": "Shuruaat karte hain",
+
+  "languageSelectionHeadline": "Woh language choose karein jisme aap comfortable hon",
+
+  "languageLoadErrorTitle": "Hum aapki language load nahi kar paaye",
+
+  "languageSelectionLoadErrorMessage": "Please dobara try karein. Aapka selection isi device par save rehta hai.",
+
+  "languageSelectionCardSelected": "Selected",
+  "languageSelectionCardNotSelected": "Selected nahi",
+
+  "languageSelectionContinueButton": "Jaari rakhein",
+
+  "languageSelectionContinueDisabledSemantic": "Jaari rakhein, pehle ek language choose karein",
+
+  "languageSelectionContinueWithSemantic": "{language} ke saath jaari rakhein",
+
+  "signInAppBarTitle": "Sign in karein",
+
+  "signInLoadingLanguageLabel": "Aapki language load ho rahi hai…",
+
+  "signInLanguageErrorMessage": "Wapas jaayein aur apni language dobara choose karein.",
+
+  "signInLanguageErrorReloadAction": "Dobara load karein",
+
+  "signInNoLanguageTitle": "Pehle ek language choose karein",
+  "signInNoLanguageMessage": "Wapas jaayein aur English, Hindi, ya Hinglish choose karein.",
+
+  "signInTermsTitle": "Terms of Use",
+  "signInTermsMessage": "Account banane se pehle poori, versioned terms dikhayi jaayengi. Is phase mein koi account nahi banaya jaata.",
+
+  "signInPrivacyTitle": "Privacy summary",
+  "signInPrivacyMessage": "Hum sirf aapki skilling aur employment journey ke liye zaroori jaankari collect karte hain, clear consent aur visibility control ke saath.",
+
+  "emailEntryAppBarTitle": "Email sign-in",
+
+  "emailEntryHeadline": "Apna email address enter karein",
+
+  "emailEntryRealBackendSubtitle": "Hum is address ko verify karne ke liye ek one-time code email karenge.",
+  "emailEntryDevSubtitle": "Hum isse sirf development OTP flow dikhane ke liye use karenge.",
+
+  "emailEntryRealBackendCardSemantic": "Email sign-in ke liye backend par mail delivery enable hona zaroori hai. Agar code nahi aata, to iske bajaye Google sign-in use karein.",
+  "emailEntryRealBackendCardText": "Agar aapka code kabhi nahi aata, to wapas jaayein aur iske bajaye Google sign-in use karein.",
+
+  "emailEntryDevCardSemantic": "Development mode. Koi email nahi bheja jaata aur koi production authentication service connect nahi hai.",
+  "emailEntryDevCardText": "Development mode: koi email nahi bheja jaata. Yeh flow bina network connection ke bhi kaam karta hai.",
+
+  "emailEntryFieldLabel": "Email address",
+  "emailEntryFieldHint": "name@example.com",
+
+  "emailEntrySendCodeButton": "Code bhejein",
+  "emailEntrySendDevCodeButton": "Development code bhejein",
+
+  "emailEntryConsentReal": "Aapka email hamare servers par bheja jaata hai taaki aapko ek one-time code bheja ja sake, aur iska use aapki profile banane ya resume karne ke liye kiya jaata hai.",
+  "emailEntryConsentDev": "Aapka email is mock sign-in ke liye sirf memory mein rakha jaata hai aur server par nahi bheja jaata.",
+
+  "otpEntryAppBarTitle": "OTP verify karein",
+
+  "otpEntryEnterPhoneButton": "Phone number enter karein",
+
+  "otpEntryHeadline": "6-digit code enter karein",
+
+  "otpEntryCodeSentTo": "{email} par code bheja gaya",
+  "otpEntryDevCodeFor": "{email} ke liye development code",
+
+  "otpEntryRealBackendCardSemantic": "Email sign-in ke liye backend par ek real mail provider enable hona zaroori hai. Agar yeh code kabhi nahi aata, to iske bajaye Google sign-in use karein.",
+  "otpEntryRealBackendCardText": "Humne aapko 6-digit code email kiya hai. Agar yeh nahi aata, to iske bajaye Google sign-in use karein.",
+
+  "otpEntryDevCardSemantic": "Development code 123456 hai. Koi email nahi bheja gaya hai.",
+  "otpEntryDevCardText": "Development code: 123456\nKoi email nahi bheja gaya hai.",
+
+  "otpEntryFieldLabel": "OTP",
+  "otpEntryFieldHint": "123456",
+  "otpEntryFieldSemantic": "Chhah digit ka one-time password",
+
+  "otpEntryCodeExpired": "Code expire ho gaya",
+  "otpEntryCodeExpiresIn": "Code {seconds} second mein expire ho jaayega",
+
+  "otpEntryVerifyButton": "Verify karein aur jaari rakhein",
+
+  "otpEntryResendButton": "OTP dobara bhejein",
+  "otpEntryResendAvailableIn": "{seconds} second mein dobara bhejna available hoga",
+
+  "otpEntryChangeEmailButton": "Email address badlein"
 }

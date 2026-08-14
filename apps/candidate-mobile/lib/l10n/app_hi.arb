@@ -661,5 +661,97 @@
 
   "coachConversationUnavailable": "यह बातचीत उपलब्ध नहीं है।",
 
-  "coachAskSkillsInterviewsHint": "कौशल या साक्षात्कार के बारे में पूछें"
+  "coachAskSkillsInterviewsHint": "कौशल या साक्षात्कार के बारे में पूछें",
+
+  "welcomeSkipToHomeDev": "होम पर जाएं (डेव)",
+  "welcomeHeadline": "कौशल बनाएं। अपनी तैयारी साबित करें। बेहतर काम पाएं।",
+  "welcomeSubtitle": "लॉजिस्टिक्स करियर के लिए व्यावहारिक मार्गदर्शन, आपकी पसंदीदा भाषा में।",
+  "welcomeChooseLanguageButton": "अपनी भाषा चुनें",
+  "welcomeViewDesignSystemDev": "डिज़ाइन सिस्टम देखें",
+  "welcomeWms3dPreviewDev": "WMS 3D पूर्वावलोकन (डेव)",
+
+  "onboardingGettingStartedLabel": "शुरुआत करते हैं",
+
+  "languageSelectionHeadline": "वह भाषा चुनें जिसमें आप सहज हों",
+
+  "languageLoadErrorTitle": "हम आपकी भाषा लोड नहीं कर सके",
+
+  "languageSelectionLoadErrorMessage": "कृपया फिर से कोशिश करें। आपका चुनाव इसी डिवाइस पर सेव रहता है।",
+
+  "languageSelectionCardSelected": "चयनित",
+  "languageSelectionCardNotSelected": "चयनित नहीं",
+
+  "languageSelectionContinueButton": "जारी रखें",
+
+  "languageSelectionContinueDisabledSemantic": "जारी रखें, पहले एक भाषा चुनें",
+
+  "languageSelectionContinueWithSemantic": "{language} के साथ जारी रखें",
+
+  "signInAppBarTitle": "साइन इन करें",
+
+  "signInLoadingLanguageLabel": "आपकी भाषा लोड हो रही है…",
+
+  "signInLanguageErrorMessage": "वापस जाएं और अपनी भाषा फिर से चुनें।",
+
+  "signInLanguageErrorReloadAction": "फिर लोड करें",
+
+  "signInNoLanguageTitle": "पहले एक भाषा चुनें",
+  "signInNoLanguageMessage": "वापस जाएं और अंग्रेज़ी, हिंदी या हिंग्लिश चुनें।",
+
+  "signInTermsTitle": "उपयोग की शर्तें",
+  "signInTermsMessage": "खाता बनाने से पहले पूरी, संस्करण-सहित शर्तें दिखाई जाएंगी। इस चरण में कोई खाता नहीं बनाया जाता।",
+
+  "signInPrivacyTitle": "गोपनीयता सारांश",
+  "signInPrivacyMessage": "हम केवल आपकी स्किलिंग और रोज़गार यात्रा के लिए ज़रूरी जानकारी एकत्र करते हैं, स्पष्ट सहमति और दृश्यता नियंत्रण के साथ।",
+
+  "emailEntryAppBarTitle": "ईमेल से साइन इन",
+
+  "emailEntryHeadline": "अपना ईमेल पता दर्ज करें",
+
+  "emailEntryRealBackendSubtitle": "हम इस पते को सत्यापित करने के लिए एक बार का कोड ईमेल करेंगे।",
+  "emailEntryDevSubtitle": "हम इसका इस्तेमाल केवल डेवलपमेंट OTP फ़्लो दिखाने के लिए करेंगे।",
+
+  "emailEntryRealBackendCardSemantic": "ईमेल से साइन इन के लिए बैकएंड पर मेल डिलीवरी चालू होना ज़रूरी है। अगर कोड नहीं आता, तो इसके बजाय Google साइन-इन इस्तेमाल करें।",
+  "emailEntryRealBackendCardText": "अगर आपका कोड कभी नहीं आता, तो वापस जाएं और इसके बजाय Google साइन-इन इस्तेमाल करें।",
+
+  "emailEntryDevCardSemantic": "डेवलपमेंट मोड। कोई ईमेल नहीं भेजा जाता और कोई प्रोडक्शन ऑथेंटिकेशन सेवा कनेक्ट नहीं है।",
+  "emailEntryDevCardText": "डेवलपमेंट मोड: कोई ईमेल नहीं भेजा जाता। यह फ़्लो बिना नेटवर्क कनेक्शन के भी काम करता है।",
+
+  "emailEntryFieldLabel": "ईमेल पता",
+  "emailEntryFieldHint": "name@example.com",
+
+  "emailEntrySendCodeButton": "कोड भेजें",
+  "emailEntrySendDevCodeButton": "डेवलपमेंट कोड भेजें",
+
+  "emailEntryConsentReal": "आपका ईमेल हमारे सर्वर पर भेजा जाता है ताकि आपको एक बार का कोड भेजा जा सके, और इसका उपयोग आपकी प्रोफ़ाइल बनाने या जारी रखने के लिए किया जाता है।",
+  "emailEntryConsentDev": "आपका ईमेल इस मॉक साइन-इन के लिए केवल मेमोरी में रखा जाता है और सर्वर पर नहीं भेजा जाता।",
+
+  "otpEntryAppBarTitle": "OTP सत्यापित करें",
+
+  "otpEntryEnterPhoneButton": "फ़ोन नंबर दर्ज करें",
+
+  "otpEntryHeadline": "6 अंकों का कोड दर्ज करें",
+
+  "otpEntryCodeSentTo": "{email} पर कोड भेजा गया",
+  "otpEntryDevCodeFor": "{email} के लिए डेवलपमेंट कोड",
+
+  "otpEntryRealBackendCardSemantic": "ईमेल से साइन इन के लिए बैकएंड पर असली मेल प्रोवाइडर चालू होना ज़रूरी है। अगर यह कोड कभी नहीं आता, तो इसके बजाय Google साइन-इन इस्तेमाल करें।",
+  "otpEntryRealBackendCardText": "हमने आपको 6 अंकों का कोड ईमेल किया है। अगर यह नहीं आता, तो इसके बजाय Google साइन-इन इस्तेमाल करें।",
+
+  "otpEntryDevCardSemantic": "डेवलपमेंट कोड 123456 है। कोई ईमेल नहीं भेजा गया है।",
+  "otpEntryDevCardText": "डेवलपमेंट कोड: 123456\nकोई ईमेल नहीं भेजा गया है।",
+
+  "otpEntryFieldLabel": "OTP",
+  "otpEntryFieldHint": "123456",
+  "otpEntryFieldSemantic": "छह अंकों का एक बार का पासवर्ड",
+
+  "otpEntryCodeExpired": "कोड की समय-सीमा खत्म",
+  "otpEntryCodeExpiresIn": "कोड {seconds} सेकंड में समाप्त हो जाएगा",
+
+  "otpEntryVerifyButton": "सत्यापित करें और जारी रखें",
+
+  "otpEntryResendButton": "OTP फिर से भेजें",
+  "otpEntryResendAvailableIn": "{seconds} सेकंड में फिर से भेजें उपलब्ध होगा",
+
+  "otpEntryChangeEmailButton": "ईमेल पता बदलें"
 }

@@ -26,7 +26,11 @@ void main() {
 
       await tester.tap(find.text('हिंदी'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Continue'));
+      // Not 'Continue': the app locale switches to Hindi the moment the
+      // card is tapped (see appLocaleProvider, which watches this same
+      // selection), before this button is ever pressed, so its own label
+      // is already "जारी रखें" by the time it's tappable here.
+      await tester.tap(find.text('जारी रखें'));
       await tester.pumpAndSettle();
 
       expect(find.text('आप कैसे आगे बढ़ना चाहेंगे?'), findsOneWidget);
@@ -44,8 +48,12 @@ void main() {
       await tester.tap(find.byType(BackButton));
       await tester.pumpAndSettle();
 
+      // "चयनित" ("Selected"), not the English literal: this label's
+      // trailing word is now genuinely localized (languageSelectionCardSelected)
+      // rather than always-English, and by this point in the test Hindi is
+      // the active app locale (selected via the card tap above).
       expect(
-        find.bySemanticsLabel('हिंदी. हिंदी में आगे बढ़ें. Selected'),
+        find.bySemanticsLabel('हिंदी. हिंदी में आगे बढ़ें. चयनित'),
         findsOneWidget,
       );
       expect(
@@ -128,8 +136,10 @@ void main() {
     );
     await tester.tap(find.text('हिंदी'));
     await tester.pumpAndSettle();
-    await tester.ensureVisible(find.text('Continue'));
-    await tester.tap(find.text('Continue'));
+    // Not 'Continue': see the other Hindi test above for why this button
+    // already reads "जारी रखें" by this point.
+    await tester.ensureVisible(find.text('जारी रखें'));
+    await tester.tap(find.text('जारी रखें'));
     await tester.pumpAndSettle();
 
     expect(find.text('आप कैसे आगे बढ़ना चाहेंगे?'), findsOneWidget);

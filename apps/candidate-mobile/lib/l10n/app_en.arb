@@ -1500,5 +1500,169 @@
   "@coachConversationUnavailable": { "description": "Shown when an open-thread deep link points at a thread that no longer exists." },
 
   "coachAskSkillsInterviewsHint": "Ask about skills or interviews",
-  "@coachAskSkillsInterviewsHint": { "description": "Composer hint on an open Coach thread." }
+  "@coachAskSkillsInterviewsHint": { "description": "Composer hint on an open Coach thread." },
+
+  "welcomeSkipToHomeDev": "Skip to home (dev)",
+  "welcomeHeadline": "Build skills. Prove your readiness. Find better work.",
+  "welcomeSubtitle": "Practical guidance for logistics careers, in the language you prefer.",
+  "welcomeChooseLanguageButton": "Choose your language",
+  "welcomeViewDesignSystemDev": "View design system",
+  "welcomeWms3dPreviewDev": "WMS 3D preview (dev)",
+  "@welcomeSkipToHomeDev": { "description": "Dev-only button, top-right of Welcome, that bypasses onboarding entirely." },
+  "@welcomeHeadline": { "description": "Welcome screen's main pitch line." },
+  "@welcomeSubtitle": { "description": "Welcome screen's supporting line under the headline." },
+  "@welcomeChooseLanguageButton": { "description": "Primary button that starts the onboarding flow." },
+  "@welcomeViewDesignSystemDev": { "description": "Dev-only button that opens the component gallery." },
+  "@welcomeWms3dPreviewDev": { "description": "Dev-only button that opens the WMS 3D preview." },
+
+  "onboardingGettingStartedLabel": "Getting started",
+  "@onboardingGettingStartedLabel": { "description": "Shared progress-bar label on Language, Email, and OTP -- the pre-onboarding steps before the candidate is signed in." },
+
+  "languageSelectionHeadline": "Choose the language you are comfortable with",
+  "@languageSelectionHeadline": { "description": "Headline on the language-selection screen." },
+
+  "languageLoadErrorTitle": "We could not load your language",
+  "@languageLoadErrorTitle": { "description": "Shared error-state title on both the language-selection screen and Sign-in choice, when the saved language preference fails to load." },
+
+  "languageSelectionLoadErrorMessage": "Please try again. Your selection stays on this device.",
+  "@languageSelectionLoadErrorMessage": { "description": "Error-state message on the language-selection screen." },
+
+  "languageSelectionCardSelected": "Selected",
+  "languageSelectionCardNotSelected": "Not selected",
+  "@languageSelectionCardSelected": { "description": "Appended to a language card's semantic label when it is the current selection." },
+  "@languageSelectionCardNotSelected": { "description": "Appended to a language card's semantic label when it is not the current selection." },
+
+  "languageSelectionContinueButton": "Continue",
+  "@languageSelectionContinueButton": { "description": "Primary button on the language-selection screen." },
+
+  "languageSelectionContinueDisabledSemantic": "Continue, choose a language first",
+  "@languageSelectionContinueDisabledSemantic": { "description": "Semantic label for the Continue button before a language is chosen." },
+
+  "languageSelectionContinueWithSemantic": "Continue with {language}",
+  "@languageSelectionContinueWithSemantic": {
+    "description": "Semantic label for the Continue button once a language is chosen.",
+    "placeholders": { "language": { "type": "String" } }
+  },
+
+  "signInAppBarTitle": "Sign in",
+  "@signInAppBarTitle": { "description": "App bar title on the Sign-in choice screen." },
+
+  "signInLoadingLanguageLabel": "Loading your language…",
+  "@signInLoadingLanguageLabel": { "description": "Loading-state label on Sign-in choice while the saved language preference loads." },
+
+  "signInLanguageErrorMessage": "Go back and select your language again.",
+  "@signInLanguageErrorMessage": { "description": "Error-state message on Sign-in choice when the saved language preference fails to load." },
+
+  "signInLanguageErrorReloadAction": "Reload",
+  "@signInLanguageErrorReloadAction": { "description": "Error-state action button on Sign-in choice's language-load failure." },
+
+  "signInNoLanguageTitle": "Choose a language first",
+  "signInNoLanguageMessage": "Go back to select English, Hindi, or Hinglish.",
+  "@signInNoLanguageTitle": { "description": "Shown on Sign-in choice if reached with no language ever selected." },
+  "@signInNoLanguageMessage": { "description": "Message accompanying signInNoLanguageTitle." },
+
+  "signInTermsTitle": "Terms of Use",
+  "signInTermsMessage": "The complete versioned terms will be presented before account creation. No account is created in this phase.",
+  "@signInTermsTitle": { "description": "Title of the bottom sheet opened by the Terms link on Sign-in choice." },
+  "@signInTermsMessage": { "description": "Body of the Terms of Use bottom sheet." },
+
+  "signInPrivacyTitle": "Privacy summary",
+  "signInPrivacyMessage": "We collect only the information needed for your skilling and employment journey, with clear consent and visibility controls.",
+  "@signInPrivacyTitle": { "description": "Title of the bottom sheet opened by the Privacy Policy link on Sign-in choice." },
+  "@signInPrivacyMessage": { "description": "Body of the Privacy summary bottom sheet." },
+
+  "emailEntryAppBarTitle": "Email sign-in",
+  "@emailEntryAppBarTitle": { "description": "App bar title on the email-entry screen." },
+
+  "emailEntryHeadline": "Enter your email address",
+  "@emailEntryHeadline": { "description": "Headline on the email-entry screen." },
+
+  "emailEntryRealBackendSubtitle": "We will email a one-time code to verify this address.",
+  "emailEntryDevSubtitle": "We will use this only to demonstrate the development OTP flow.",
+  "@emailEntryRealBackendSubtitle": { "description": "Subtitle shown when a real Supabase backend is configured." },
+  "@emailEntryDevSubtitle": { "description": "Subtitle shown in development mode (no backend configured)." },
+
+  "emailEntryRealBackendCardSemantic": "Email sign-in requires mail delivery to be enabled on the backend. If no code arrives, use Google sign-in instead.",
+  "emailEntryRealBackendCardText": "If your code never arrives, go back and use Google sign-in instead.",
+  "@emailEntryRealBackendCardSemantic": { "description": "Semantic label on the info card shown with a real backend configured." },
+  "@emailEntryRealBackendCardText": { "description": "Visible text on the info card shown with a real backend configured." },
+
+  "emailEntryDevCardSemantic": "Development mode. No email is sent and no production authentication service is connected.",
+  "emailEntryDevCardText": "Development mode: no email is sent. This flow works without a network connection.",
+  "@emailEntryDevCardSemantic": { "description": "Semantic label on the info card shown in development mode." },
+  "@emailEntryDevCardText": { "description": "Visible text on the info card shown in development mode." },
+
+  "emailEntryFieldLabel": "Email address",
+  "emailEntryFieldHint": "name@example.com",
+  "@emailEntryFieldLabel": { "description": "Label and semantic label of the email text field." },
+  "@emailEntryFieldHint": { "description": "Hint text of the email text field." },
+
+  "emailEntrySendCodeButton": "Send code",
+  "emailEntrySendDevCodeButton": "Send development code",
+  "@emailEntrySendCodeButton": { "description": "Submit button with a real backend configured." },
+  "@emailEntrySendDevCodeButton": { "description": "Submit button in development mode." },
+
+  "emailEntryConsentReal": "Your email is sent to our servers to send you a one-time code, and is used to create or resume your profile.",
+  "emailEntryConsentDev": "Your email is kept only in memory for this mock sign-in and is not sent to a server.",
+  "@emailEntryConsentReal": { "description": "Consent copy under the submit button with a real backend configured." },
+  "@emailEntryConsentDev": { "description": "Consent copy under the submit button in development mode." },
+
+  "otpEntryAppBarTitle": "Verify OTP",
+  "@otpEntryAppBarTitle": { "description": "App bar title on the OTP-entry screen." },
+
+  "otpEntryEnterPhoneButton": "Enter phone number",
+  "@otpEntryEnterPhoneButton": { "description": "Button shown when OTP entry is reached with no active challenge (e.g. a cold navigation)." },
+
+  "otpEntryHeadline": "Enter the 6-digit code",
+  "@otpEntryHeadline": { "description": "Headline on the OTP-entry screen." },
+
+  "otpEntryCodeSentTo": "Code sent to {email}",
+  "otpEntryDevCodeFor": "Development code for {email}",
+  "@otpEntryCodeSentTo": {
+    "description": "Subtitle with a real backend configured.",
+    "placeholders": { "email": { "type": "String" } }
+  },
+  "@otpEntryDevCodeFor": {
+    "description": "Subtitle in development mode.",
+    "placeholders": { "email": { "type": "String" } }
+  },
+
+  "otpEntryRealBackendCardSemantic": "Email sign-in requires a real mail provider to be enabled on the backend. Use Google sign-in instead if this code never arrives.",
+  "otpEntryRealBackendCardText": "We emailed you a 6-digit code. If it does not arrive, use Google sign-in instead.",
+  "@otpEntryRealBackendCardSemantic": { "description": "Semantic label on the info card shown with a real backend configured." },
+  "@otpEntryRealBackendCardText": { "description": "Visible text on the info card shown with a real backend configured." },
+
+  "otpEntryDevCardSemantic": "Development code is 123456. No email has been sent.",
+  "otpEntryDevCardText": "Development code: 123456\nNo email has been sent.",
+  "@otpEntryDevCardSemantic": { "description": "Semantic label on the info card shown in development mode." },
+  "@otpEntryDevCardText": { "description": "Visible text on the info card shown in development mode." },
+
+  "otpEntryFieldLabel": "OTP",
+  "otpEntryFieldHint": "123456",
+  "otpEntryFieldSemantic": "Six digit one time password",
+  "@otpEntryFieldLabel": { "description": "Label of the OTP text field." },
+  "@otpEntryFieldHint": { "description": "Hint text of the OTP text field." },
+  "@otpEntryFieldSemantic": { "description": "Semantic label of the OTP text field." },
+
+  "otpEntryCodeExpired": "Code expired",
+  "otpEntryCodeExpiresIn": "Code expires in {seconds} seconds",
+  "@otpEntryCodeExpired": { "description": "Helper text once the OTP challenge has expired." },
+  "@otpEntryCodeExpiresIn": {
+    "description": "Helper text counting down to OTP expiry.",
+    "placeholders": { "seconds": { "type": "int" } }
+  },
+
+  "otpEntryVerifyButton": "Verify and continue",
+  "@otpEntryVerifyButton": { "description": "Primary submit button on OTP entry." },
+
+  "otpEntryResendButton": "Resend OTP",
+  "otpEntryResendAvailableIn": "Resend available in {seconds} seconds",
+  "@otpEntryResendButton": { "description": "Resend button once the resend cooldown has elapsed." },
+  "@otpEntryResendAvailableIn": {
+    "description": "Resend button label during the resend cooldown.",
+    "placeholders": { "seconds": { "type": "int" } }
+  },
+
+  "otpEntryChangeEmailButton": "Change email address",
+  "@otpEntryChangeEmailButton": { "description": "Button that returns to email entry." }
 }

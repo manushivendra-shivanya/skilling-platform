@@ -6,10 +6,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/dependencies.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_spacing.dart';
+import '../../../core/errors/app_failure_localization.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_progress.dart';
 import '../../../core/widgets/app_text_field.dart';
+import '../../../l10n/generated/app_localizations.dart';
 import '../../onboarding/presentation/pre_onboarding_step_chrome.dart';
 import 'development_auth_controller.dart';
 
@@ -86,6 +88,7 @@ class _OtpEntryScreenState extends ConsumerState<OtpEntryScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final authState = ref.watch(developmentAuthControllerProvider);
     _syncChallenge(authState);
     final challenge = authState.challenge;
@@ -104,13 +107,13 @@ class _OtpEntryScreenState extends ConsumerState<OtpEntryScreen> {
         // a direct/cold navigation). Titled to match the loaded state below
         // rather than left bare -- same header-consistency fix as Sign-in
         // choice's AppBar.
-        appBar: AppBar(title: const Text('Verify OTP')),
+        appBar: AppBar(title: Text(l10n.otpEntryAppBarTitle)),
         body: SafeArea(
           child: Center(
             child: Padding(
               padding: const EdgeInsets.all(AppSpacing.xl),
               child: AppButton(
-                label: 'Enter phone number',
+                label: l10n.otpEntryEnterPhoneButton,
                 onPressed: widget.onRequestNewOtp,
                 expand: false,
               ),
@@ -125,7 +128,7 @@ class _OtpEntryScreenState extends ConsumerState<OtpEntryScreen> {
     final maskedEmail = _maskEmail(challenge.contact);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Verify OTP')),
+      appBar: AppBar(title: Text(l10n.otpEntryAppBarTitle)),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(AppSpacing.xl),
@@ -141,81 +144,77 @@ class _OtpEntryScreenState extends ConsumerState<OtpEntryScreen> {
                 value:
                     PreOnboardingProgress.emailPathSteps /
                     PreOnboardingProgress.emailPathSteps,
-                label: 'Getting started',
-                detail:
-                    'Step ${PreOnboardingProgress.emailPathSteps} of '
-                    '${PreOnboardingProgress.emailPathSteps}',
+                label: l10n.onboardingGettingStartedLabel,
+                detail: l10n.homeMissionStep(
+                  PreOnboardingProgress.emailPathSteps,
+                  PreOnboardingProgress.emailPathSteps,
+                ),
               ),
               const SizedBox(height: AppSpacing.lg),
               Text(
-                'Enter the 6-digit code',
+                l10n.otpEntryHeadline,
                 style: Theme.of(context).textTheme.headlineSmall,
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: AppSpacing.sm),
               Text(
                 isRealBackend
-                    ? 'Code sent to $maskedEmail'
-                    : 'Development code for $maskedEmail',
+                    ? l10n.otpEntryCodeSentTo(maskedEmail)
+                    : l10n.otpEntryDevCodeFor(maskedEmail),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: AppSpacing.xl),
               if (isRealBackend)
-                const AppCard(
+                AppCard(
                   backgroundColor: AppColors.warningSoft,
-                  semanticLabel:
-                      'Email sign-in requires a real mail provider to be '
-                      'enabled on the backend. Use Google sign-in instead if '
-                      'this code never arrives.',
+                  semanticLabel: l10n.otpEntryRealBackendCardSemantic,
                   child: Text(
-                    'We emailed you a 6-digit code. If it does not arrive, '
-                    'use Google sign-in instead.',
+                    l10n.otpEntryRealBackendCardText,
                     textAlign: TextAlign.center,
                   ),
                 )
               else
-                const AppCard(
+                AppCard(
                   backgroundColor: AppColors.warningSoft,
-                  semanticLabel:
-                      'Development code is 123456. No email has been sent.',
+                  semanticLabel: l10n.otpEntryDevCardSemantic,
                   child: Text(
-                    'Development code: 123456\nNo email has been sent.',
+                    l10n.otpEntryDevCardText,
                     textAlign: TextAlign.center,
                   ),
                 ),
               const SizedBox(height: AppSpacing.xl),
               AppTextField(
-                label: 'OTP',
+                label: l10n.otpEntryFieldLabel,
                 controller: _otpController,
-                hint: '123456',
-                errorText: authState.failure?.message,
+                hint: l10n.otpEntryFieldHint,
+                errorText: authState.failure?.localizedMessage(l10n),
                 helperText: expirySeconds == 0
-                    ? 'Code expired'
-                    : 'Code expires in $expirySeconds seconds',
+                    ? l10n.otpEntryCodeExpired
+                    : l10n.otpEntryCodeExpiresIn(expirySeconds),
                 keyboardType: TextInputType.number,
                 textInputAction: TextInputAction.done,
                 leadingIcon: Icons.password_outlined,
                 enabled: !authState.isVerifying,
                 obscureText: true,
-                semanticLabel: 'Six digit one time password',
+                semanticLabel: l10n.otpEntryFieldSemantic,
                 onSubmitted: (_) => _verifyOtp(),
               ),
               const SizedBox(height: AppSpacing.xl),
               AppButton(
-                label: 'Verify and continue',
+                label: l10n.otpEntryVerifyButton,
                 isLoading: authState.isVerifying,
                 onPressed: expirySeconds == 0 ? null : _verifyOtp,
               ),
               const SizedBox(height: AppSpacing.sm),
               AppButton(
                 label: resendSeconds == 0
-                    ? 'Resend OTP'
-                    : 'Resend available in $resendSeconds seconds',
+                    ? l10n.otpEntryResendButton
+                    : l10n.otpEntryResendAvailableIn(resendSeconds),
                 variant: AppButtonVariant.text,
                 onPressed: resendSeconds == 0 ? _resendOtp : null,
               ),
               AppButton(
-                label: 'Change email address',
+                label: l10n.otpEntryChangeEmailButton,
                 variant: AppButtonVariant.text,
                 onPressed: widget.onRequestNewOtp,
               ),

@@ -8,6 +8,7 @@ import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_progress.dart';
 import '../../../core/widgets/app_skeleton.dart';
 import '../../../core/widgets/app_state_view.dart';
+import '../../../l10n/generated/app_localizations.dart';
 import '../domain/candidate_language.dart';
 import 'language_selection_controller.dart';
 import 'pre_onboarding_step_chrome.dart';
@@ -19,16 +20,23 @@ class LanguageSelectionScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
     final selectedLanguage = ref.watch(languageSelectionControllerProvider);
 
     return Scaffold(
+      // Deliberately left as a fixed bilingual literal, not run through
+      // AppLocalizations -- this title is the one place in the app shown
+      // *before* any language has been chosen, so it always reads in both
+      // English and Devanagari regardless of locale, on purpose (same
+      // reasoning as the bilingual "प्रमाणन (सर्टिफिकेशन)" caption on the
+      // Certification exam card).
       appBar: AppBar(title: const Text('Language / भाषा')),
       body: SafeArea(
         child: selectedLanguage.when(
           loading: () => const _LanguageLoadingView(),
           error: (error, stackTrace) => AppErrorState(
-            title: 'We could not load your language',
-            message: 'Please try again. Your selection stays on this device.',
+            title: l10n.languageLoadErrorTitle,
+            message: l10n.languageSelectionLoadErrorMessage,
             onAction: () =>
                 ref.read(languageSelectionControllerProvider.notifier).retry(),
           ),
@@ -58,6 +66,7 @@ class _LanguageSelectionContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Padding(
       padding: const EdgeInsets.fromLTRB(
         AppSpacing.xl,
@@ -85,17 +94,23 @@ class _LanguageSelectionContent extends StatelessWidget {
                 const SizedBox(height: AppSpacing.md),
                 AppProgress(
                   value: 1 / PreOnboardingProgress.sharedPrefixSteps,
-                  label: 'Getting started',
-                  detail:
-                      'Step 1 of ${PreOnboardingProgress.sharedPrefixSteps}',
+                  label: l10n.onboardingGettingStartedLabel,
+                  detail: l10n.homeMissionStep(
+                    1,
+                    PreOnboardingProgress.sharedPrefixSteps,
+                  ),
                 ),
                 const SizedBox(height: AppSpacing.lg),
                 Text(
-                  'Choose the language you are comfortable with',
+                  l10n.languageSelectionHeadline,
                   style: Theme.of(context).textTheme.headlineSmall,
                 ),
                 const SizedBox(height: AppSpacing.xs),
                 Text(
+                  // Deliberately fixed in Devanagari regardless of locale --
+                  // reached before any language has been chosen, so this
+                  // hint speaks to a Hindi-reading candidate on purpose, the
+                  // same way the AppBar title above does.
                   'आप इसे बाद में कभी भी बदल सकते हैं।',
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -107,7 +122,7 @@ class _LanguageSelectionContent extends StatelessWidget {
                     key: ValueKey(language.code),
                     semanticLabel:
                         '${language.nativeName}. ${language.description}. '
-                        '${language == selectedLanguage ? 'Selected' : 'Not selected'}',
+                        '${language == selectedLanguage ? l10n.languageSelectionCardSelected : l10n.languageSelectionCardNotSelected}',
                     onTap: () => onSelect(language),
                     backgroundColor: language == selectedLanguage
                         ? AppColors.brandSoft
@@ -145,11 +160,13 @@ class _LanguageSelectionContent extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.md),
           AppButton(
-            label: 'Continue',
+            label: l10n.languageSelectionContinueButton,
             onPressed: selectedLanguage == null ? null : onContinue,
             semanticLabel: selectedLanguage == null
-                ? 'Continue, choose a language first'
-                : 'Continue with ${selectedLanguage!.nativeName}',
+                ? l10n.languageSelectionContinueDisabledSemantic
+                : l10n.languageSelectionContinueWithSemantic(
+                    selectedLanguage!.nativeName,
+                  ),
           ),
         ],
       ),

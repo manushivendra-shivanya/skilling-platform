@@ -9,6 +9,7 @@ import '../../../core/widgets/app_feedback.dart';
 import '../../../core/widgets/app_loading_progress.dart';
 import '../../../core/widgets/app_state_view.dart';
 import '../../../core/widgets/backend_warmup_banner.dart';
+import '../../../l10n/generated/app_localizations.dart';
 import '../../authentication/presentation/development_auth_controller.dart';
 import '../domain/candidate_language.dart';
 import 'language_selection_controller.dart';
@@ -26,6 +27,7 @@ class SignInChoiceScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
     final selectedLanguage = ref.watch(languageSelectionControllerProvider);
 
     return Scaffold(
@@ -33,27 +35,29 @@ class SignInChoiceScreen extends ConsumerWidget {
       // header set that didn't say where the candidate was. Titled to match
       // the other 3 (Language, Email, OTP), all of which already carry a
       // plain step-name title in the default AppBar style.
-      appBar: AppBar(title: const Text('Sign in')),
+      appBar: AppBar(title: Text(l10n.signInAppBarTitle)),
       body: SafeArea(
         child: selectedLanguage.when(
-          loading: () => const Center(
+          loading: () => Center(
             child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: AppSpacing.xl),
-              child: AppLoadingProgressBar(label: 'Loading your language…'),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
+              child: AppLoadingProgressBar(
+                label: l10n.signInLoadingLanguageLabel,
+              ),
             ),
           ),
           error: (error, stackTrace) => AppErrorState(
-            title: 'We could not load your language',
-            message: 'Go back and select your language again.',
-            actionLabel: 'Reload',
+            title: l10n.languageLoadErrorTitle,
+            message: l10n.signInLanguageErrorMessage,
+            actionLabel: l10n.signInLanguageErrorReloadAction,
             onAction: () =>
                 ref.read(languageSelectionControllerProvider.notifier).retry(),
           ),
           data: (language) {
             if (language == null) {
-              return const AppErrorState(
-                title: 'Choose a language first',
-                message: 'Go back to select English, Hindi, or Hinglish.',
+              return AppErrorState(
+                title: l10n.signInNoLanguageTitle,
+                message: l10n.signInNoLanguageMessage,
                 actionLabel: null,
               );
             }
@@ -91,6 +95,7 @@ class _SignInChoiceContent extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
     final copy = SignInCopy.forLanguage(language);
     final isGoogleConfigured = ref.watch(
       appConfigProvider.select((config) => config.hasGoogleSignInConfiguration),
@@ -175,16 +180,14 @@ class _SignInChoiceContent extends ConsumerWidget {
               Text('${copy.privacyLead} '),
               _PolicyLink(
                 label: copy.termsLabel,
-                title: 'Terms of Use',
-                message:
-                    'The complete versioned terms will be presented before account creation. No account is created in this phase.',
+                title: l10n.signInTermsTitle,
+                message: l10n.signInTermsMessage,
               ),
               Text(' ${copy.andLabel} '),
               _PolicyLink(
                 label: copy.privacyLabel,
-                title: 'Privacy summary',
-                message:
-                    'We collect only the information needed for your skilling and employment journey, with clear consent and visibility controls.',
+                title: l10n.signInPrivacyTitle,
+                message: l10n.signInPrivacyMessage,
               ),
               const Text('.'),
             ],
