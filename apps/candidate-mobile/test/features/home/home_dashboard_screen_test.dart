@@ -1,11 +1,11 @@
 import 'package:candidate_mobile/app/dependencies.dart';
 import 'package:candidate_mobile/core/errors/result.dart';
 import 'package:candidate_mobile/core/widgets/app_card.dart';
-import 'package:candidate_mobile/core/widgets/app_meter_bar.dart';
 import 'package:candidate_mobile/features/home/data/mock_home_dashboard_repository.dart';
 import 'package:candidate_mobile/features/home/domain/home_dashboard_repository.dart';
 import 'package:candidate_mobile/features/home/presentation/home_dashboard_screen.dart';
 import 'package:candidate_mobile/features/home/presentation/home_header.dart';
+import 'package:candidate_mobile/features/home/presentation/journey_timeline_card.dart';
 import 'package:candidate_mobile/features/home/presentation/today_mission_card.dart';
 import 'package:candidate_mobile/l10n/generated/app_localizations.dart';
 import 'package:flutter/material.dart';
@@ -95,6 +95,8 @@ void main() {
           evidence: sample.evidence,
           learningProgress: sample.learningProgress,
           pendingSyncCount: 0,
+          certificationStatus: sample.certificationStatus,
+          applicationsSentThisMonth: sample.applicationsSentThisMonth,
           todayMission: sample.todayMission,
           pathway: sample.pathway,
         ),
@@ -120,6 +122,8 @@ void main() {
           evidence: sample.evidence,
           learningProgress: sample.learningProgress,
           pendingSyncCount: 0,
+          certificationStatus: sample.certificationStatus,
+          applicationsSentThisMonth: sample.applicationsSentThisMonth,
         ),
       ),
     );
@@ -146,6 +150,8 @@ void main() {
           evidence: sample.evidence,
           learningProgress: sample.learningProgress,
           pendingSyncCount: sample.pendingSyncCount,
+          certificationStatus: sample.certificationStatus,
+          applicationsSentThisMonth: sample.applicationsSentThisMonth,
           todayMission: sample.todayMission,
           pathway: sample.pathway,
         ),
@@ -194,6 +200,8 @@ void main() {
             evidence: sample.evidence,
             learningProgress: sample.learningProgress,
             pendingSyncCount: sample.pendingSyncCount,
+            certificationStatus: sample.certificationStatus,
+            applicationsSentThisMonth: sample.applicationsSentThisMonth,
             todayMission: sample.todayMission,
             pathway: sample.pathway,
           ),
@@ -230,58 +238,55 @@ void main() {
     expect(find.textContaining('2 items waiting to sync'), findsOneWidget);
   });
 
-  testWidgets('surfaces overall learning progress on the pathway row', (
-    tester,
-  ) async {
+  testWidgets("shows the Journey card's four checkpoints for the sample "
+      'dashboard', (tester) async {
     await tester.pumpWidget(
       wrap(MockHomeDashboardRepository.sampleDashboard()),
     );
     await tester.pumpAndSettle();
 
-    // sampleDashboard.learningProgress is 0.33 -- a real, distinct value
-    // from pathway.fraction (4/12 completed units), so this guards against
-    // the field being silently dropped rather than merely rendered.
-    expect(find.text('Overall learning journey'), findsOneWidget);
-    expect(find.text('33%'), findsOneWidget);
+    expect(find.text('Training'), findsOneWidget);
+    expect(find.text('Certification'), findsOneWidget);
+    expect(find.text('Applications'), findsOneWidget);
+    expect(find.text('Interview'), findsOneWidget);
 
-    // Two meters on the pathway row itself: the pathway's own completed/
-    // total fraction, and this overall learning-journey figure beside it.
-    // Not a bare find.byType(AppMeterBar) count -- TodayMissionCard above
-    // it renders one of its own, so this scopes to the pathway row's card.
-    final pathwayCard = find.ancestor(
-      of: find.text('Overall learning journey'),
-      matching: find.byType(AppCard),
-    );
-    expect(pathwayCard, findsOneWidget);
+    // All four checkpoints sit inside one JourneyTimelineCard's AppCard,
+    // not four separate cards -- the whole card is a single tap target.
+    expect(find.byType(JourneyTimelineCard), findsOneWidget);
     expect(
-      find.descendant(of: pathwayCard, matching: find.byType(AppMeterBar)),
-      findsNWidgets(2),
+      find.descendant(
+        of: find.byType(JourneyTimelineCard),
+        matching: find.byType(AppCard),
+      ),
+      findsOneWidget,
     );
   });
 
-  testWidgets(
-    'surfaces plain-language insight lines instead of bare numbers alone',
-    (tester) async {
-      await tester.pumpWidget(
-        wrap(MockHomeDashboardRepository.sampleDashboard()),
-      );
-      await tester.pumpAndSettle();
+  testWidgets("surfaces each Journey checkpoint's plain-language status, "
+      'not a bare number or enum name', (tester) async {
+    await tester.pumpWidget(
+      wrap(MockHomeDashboardRepository.sampleDashboard()),
+    );
+    await tester.pumpAndSettle();
 
-      // sampleDashboard: readinessProgress 0.62 (Building, 13% short of the
-      // 0.75 Job-ready threshold), mission step 3 of 8 at 6 min/step, and a
-      // pathway 4/12 units complete.
-      expect(find.textContaining('13% to Job ready'), findsOneWidget);
-      expect(
-        find.textContaining('5 more steps after this one'),
-        findsOneWidget,
-      );
-      expect(find.textContaining('about 30 min'), findsOneWidget);
-      expect(
-        find.textContaining('8 lessons left to finish Receiving & Put-away'),
-        findsOneWidget,
-      );
-    },
-  );
+    // sampleDashboard: pathway 4/12 lessons, certificationStatus.notStarted,
+    // 2 applications sent this month, and a scheduled interview with
+    // Delhivery Hub in Ghaziabad.
+    expect(find.text('4 / 12 lessons'), findsOneWidget);
+    expect(find.text('Not started yet'), findsOneWidget);
+    expect(find.text('2 applications sent this month'), findsOneWidget);
+
+    // Scoped to the Journey card, not a bare findsOneWidget: sampleDashboard
+    // also has an UpcomingInterviewCard above it that repeats the same
+    // location text, so the unscoped text legitimately appears twice.
+    expect(
+      find.descendant(
+        of: find.byType(JourneyTimelineCard),
+        matching: find.textContaining('Ghaziabad'),
+      ),
+      findsOneWidget,
+    );
+  });
 
   testWidgets('omits the readiness-band note once already job ready -- nothing '
       'further to point toward', (tester) async {
@@ -295,6 +300,8 @@ void main() {
           evidence: sample.evidence,
           learningProgress: sample.learningProgress,
           pendingSyncCount: sample.pendingSyncCount,
+          certificationStatus: sample.certificationStatus,
+          applicationsSentThisMonth: sample.applicationsSentThisMonth,
           todayMission: sample.todayMission,
           pathway: sample.pathway,
         ),

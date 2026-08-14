@@ -29,14 +29,26 @@
   "homeInterviewTitle": "साक्षात्कार · {employer}",
   "homeInterviewPrepare": "तैयारी करें",
 
-  "homeContinueSectionTitle": "जारी रखें",
+  "homeJourneySectionTitle": "आपकी यात्रा",
 
   "homeInterviewPracticeTitle": "साक्षात्कार अभ्यास",
   "homeInterviewPracticeSubtitle": "पहला सवाल · अपना परिचय",
 
   "homePathwayLessons": "{completed} / {total} पाठ",
-  "homePathwayOverallLabel": "समग्र सीखने की यात्रा",
-  "homePathwayRemaining": "{title} पूरा करने के लिए {count, plural, one{{count} पाठ} other{{count} पाठ}} बाकी",
+
+  "homeJourneyTrainingLabel": "प्रशिक्षण",
+  "homeJourneyTrainingNotStarted": "अभी शुरू नहीं हुआ",
+
+  "homeJourneyCertificationLabel": "प्रमाणन",
+  "homeJourneyCertificationNotStarted": "अभी शुरू नहीं हुआ",
+  "homeJourneyCertificationInProgress": "परीक्षा जारी है",
+  "homeJourneyCertificationPassed": "प्रमाणित",
+
+  "homeJourneyApplicationsLabel": "आवेदन",
+  "homeJourneyApplicationsSubtitle": "{count, plural, =0{इस महीने अभी तक कोई आवेदन नहीं} one{इस महीने {count} आवेदन भेजा गया} other{इस महीने {count} आवेदन भेजे गए}}",
+
+  "homeJourneyInterviewLabel": "साक्षात्कार",
+  "homeJourneyInterviewPending": "अभी तय नहीं हुआ",
 
   "homeSyncBanner": "{count, plural, one{{count} आइटम} other{{count} आइटम}} सिंक होने के लिए बाकी।",
 
@@ -59,8 +71,6 @@
   "homeEmptyMessage": "अपनी प्रोफ़ाइल सेटअप पूरा करें, ताकि आपको रोज़ का काम और रास्ता मिल सके।",
 
   "homeNoMissionSemantic": "आज कोई काम नहीं। करियर डायग्नोस्टिक खोलें।",
-
-  "homePathwaySemantic": "{title} पथ जारी रखें। {total} में से {completed} पाठ पूरे। आपकी सीखने की यात्रा का {percent}% पूरा।",
 
   "coachPopupText": "मैं यहाँ हूं, कुछ भी पूछें",
   "coachPopupSemantic": "AI कोच यहां है। सवाल पूछने के लिए टैप करें।",
