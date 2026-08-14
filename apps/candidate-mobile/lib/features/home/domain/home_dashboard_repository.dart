@@ -9,12 +9,28 @@ import '../../../core/errors/result.dart';
 /// `MockHomeDashboardRepository` for the real API is a data-source change
 /// and not a redesign.
 ///
+/// There is no `GET /home/dashboard` endpoint in `apps/api` yet -- every
+/// field on this class, not just the ones below, is served exclusively by
+/// `MockHomeDashboardRepository` today, regardless of whether a real backend
+/// is configured (see `docs/generated/current-state.md`'s note on Home).
+/// [certificationStatus] and [applicationsSentThisMonth] follow that same
+/// convention rather than a special-cased exception to it.
+///
 /// Backend readiness (see supabase/migrations):
-/// - Five of the six fields are derivable from tables that already exist.
-/// - [nextInterview] is the one genuine gap: `job_applications.status` is
-///   limited to submitted/withdrawn/shortlisted/rejected, and carries no
-///   scheduled time or location. It is nullable here so Home renders
-///   correctly until that is modelled.
+/// - Most fields are derivable from tables that already exist.
+/// - [nextInterview] is a genuine gap: `job_applications.status` is limited
+///   to submitted/withdrawn/shortlisted/rejected, and carries no scheduled
+///   time or location. It is nullable here so Home renders correctly until
+///   that is modelled.
+/// - [certificationStatus] is a second, deeper gap: certification exam
+///   attempts are not persisted server-side at all today (see
+///   `SecureCertificationExamAttemptRepository`, which keeps them in
+///   on-device secure storage only) -- deriving this field for real would
+///   need a new table, not just a new query against an existing one.
+/// - [applicationsSentThisMonth] is the shallowest of the three new-ish
+///   fields: `job_applications` already has `created_at` and a
+///   `(candidate_id, created_at desc)` index shaped for exactly this count,
+///   it just isn't queried yet.
 class HomeDashboard {
   const HomeDashboard({
     required this.candidateFirstName,
@@ -23,6 +39,8 @@ class HomeDashboard {
     required this.evidence,
     required this.learningProgress,
     required this.pendingSyncCount,
+    required this.certificationStatus,
+    required this.applicationsSentThisMonth,
     this.todayMission,
     this.pathway,
     this.nextInterview,
@@ -50,6 +68,16 @@ class HomeDashboard {
 
   /// Existing field. Locally queued simulation events not yet accepted.
   final int pendingSyncCount;
+
+  /// Whether the candidate has attempted/passed a certification exam for
+  /// their goal role. See the class doc for why this can't be derived from
+  /// a real backend query today -- attempts live in on-device storage only.
+  final CertificationJourneyStatus certificationStatus;
+
+  /// Count of `job_applications` rows for this candidate created in the
+  /// current calendar month. See the class doc: the query this needs
+  /// doesn't exist yet, but the table and index already do.
+  final int applicationsSentThisMonth;
 
   /// Lowest-sequence `learning_units` row for the active pathway that is not
   /// in `candidate_learning_state.completed_unit_ids`. Null when the pathway
@@ -109,6 +137,12 @@ class HomeDashboard {
 }
 
 enum ReadinessBand { starting, building, jobReady }
+
+/// Where the candidate stands on their goal role's certification exam.
+/// Mirrors the three states `CertificationExamAttempt` can actually be in
+/// on-device (see that class's own `passed(threshold)` getter) -- this
+/// enum doesn't invent a state the underlying data can't support.
+enum CertificationJourneyStatus { notStarted, inProgress, passed }
 
 /// How much proof of competence the candidate has accumulated, and over what
 /// window. The window travels with the count because a bare number invites

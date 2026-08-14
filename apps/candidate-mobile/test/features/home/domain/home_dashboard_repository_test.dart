@@ -10,6 +10,8 @@ void main() {
       evidence: const EvidenceSummary(count: 7, windowDays: 30),
       learningProgress: 0.33,
       pendingSyncCount: 0,
+      certificationStatus: CertificationJourneyStatus.notStarted,
+      applicationsSentThisMonth: 0,
     );
 
     test('points toward Building while starting out', () {

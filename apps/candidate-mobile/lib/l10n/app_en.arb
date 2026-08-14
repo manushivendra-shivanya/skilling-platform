@@ -125,9 +125,9 @@
     "description": "Button label on the upcoming-interview card."
   },
 
-  "homeContinueSectionTitle": "Keep going",
-  "@homeContinueSectionTitle": {
-    "description": "Section header above the pathway-progress row / interview-practice shortcut."
+  "homeJourneySectionTitle": "Your Journey",
+  "@homeJourneySectionTitle": {
+    "description": "Section header above the Journey timeline card / interview-practice shortcut."
   },
 
   "homeInterviewPracticeTitle": "Interview practice",
@@ -142,25 +142,64 @@
 
   "homePathwayLessons": "{completed} / {total} lessons",
   "@homePathwayLessons": {
-    "description": "Completed-of-total lesson count on the pathway-progress row.",
+    "description": "Completed-of-total lesson count. Used as the Journey card's Training checkpoint subtitle.",
     "placeholders": {
       "completed": { "type": "int" },
       "total": { "type": "int" }
     }
   },
 
-  "homePathwayOverallLabel": "Overall learning journey",
-  "@homePathwayOverallLabel": {
-    "description": "Label above the second, account-wide progress bar on the pathway row."
+  "homeJourneyTrainingLabel": "Training",
+  "@homeJourneyTrainingLabel": {
+    "description": "Title of the Journey card's Training checkpoint."
   },
 
-  "homePathwayRemaining": "{count, plural, one{{count} lesson left to finish {title}} other{{count} lessons left to finish {title}}}",
-  "@homePathwayRemaining": {
-    "description": "Insight line under the pathway-progress row's bars.",
+  "homeJourneyTrainingNotStarted": "Not started yet",
+  "@homeJourneyTrainingNotStarted": {
+    "description": "Journey card Training checkpoint subtitle when no pathway is assigned yet."
+  },
+
+  "homeJourneyCertificationLabel": "Certification",
+  "@homeJourneyCertificationLabel": {
+    "description": "Title of the Journey card's Certification checkpoint."
+  },
+
+  "homeJourneyCertificationNotStarted": "Not started yet",
+  "@homeJourneyCertificationNotStarted": {
+    "description": "Journey card Certification checkpoint subtitle when no exam attempt has been made."
+  },
+
+  "homeJourneyCertificationInProgress": "Exam in progress",
+  "@homeJourneyCertificationInProgress": {
+    "description": "Journey card Certification checkpoint subtitle while an exam attempt is underway."
+  },
+
+  "homeJourneyCertificationPassed": "Certified",
+  "@homeJourneyCertificationPassed": {
+    "description": "Journey card Certification checkpoint subtitle once the exam has been passed."
+  },
+
+  "homeJourneyApplicationsLabel": "Applications",
+  "@homeJourneyApplicationsLabel": {
+    "description": "Title of the Journey card's Applications checkpoint."
+  },
+
+  "homeJourneyApplicationsSubtitle": "{count, plural, =0{No applications yet this month} one{{count} application sent this month} other{{count} applications sent this month}}",
+  "@homeJourneyApplicationsSubtitle": {
+    "description": "Journey card Applications checkpoint subtitle.",
     "placeholders": {
-      "count": { "type": "int" },
-      "title": { "type": "String" }
+      "count": { "type": "int" }
     }
+  },
+
+  "homeJourneyInterviewLabel": "Interview",
+  "@homeJourneyInterviewLabel": {
+    "description": "Title of the Journey card's Interview checkpoint."
+  },
+
+  "homeJourneyInterviewPending": "Not scheduled yet",
+  "@homeJourneyInterviewPending": {
+    "description": "Journey card Interview checkpoint subtitle when there is no upcoming interview."
   },
 
   "homeSyncBanner": "{count, plural, one{{count} item waiting to sync.} other{{count} items waiting to sync.}}",
@@ -236,17 +275,6 @@
   "homeNoMissionSemantic": "No mission today. Open the career diagnostic.",
   "@homeNoMissionSemantic": {
     "description": "Semantic label on the no-mission card, read by a screen reader in place of its visible text."
-  },
-
-  "homePathwaySemantic": "Continue pathway {title}. {completed} of {total} lessons done. {percent}% of your learning journey done.",
-  "@homePathwaySemantic": {
-    "description": "Semantic label on the pathway-progress row.",
-    "placeholders": {
-      "title": { "type": "String" },
-      "completed": { "type": "int" },
-      "total": { "type": "int" },
-      "percent": { "type": "int" }
-    }
   },
 
   "coachPopupText": "I'm here — Ask me anything",

@@ -11,8 +11,6 @@ import '../../../core/errors/app_failure.dart';
 import '../../../core/errors/app_failure_localization.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_icon_plate.dart';
-import '../../../core/widgets/app_insight_line.dart';
-import '../../../core/widgets/app_meter_bar.dart';
 import '../../../core/widgets/app_skeleton.dart';
 import '../../../core/widgets/app_state_view.dart';
 import '../../../core/widgets/app_status_banner.dart';
@@ -20,6 +18,7 @@ import '../../../l10n/generated/app_localizations.dart';
 import '../domain/home_dashboard_repository.dart';
 import 'home_dashboard_controller.dart';
 import 'home_header.dart';
+import 'journey_timeline_card.dart';
 import 'today_mission_card.dart';
 import 'upcoming_interview_card.dart';
 
@@ -115,7 +114,6 @@ class _HomeContent extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final mission = dashboard.todayMission;
     final interview = dashboard.nextInterview;
-    final pathway = dashboard.pathway;
 
     return RefreshIndicator(
       onRefresh: onRefresh,
@@ -191,21 +189,15 @@ class _HomeContent extends StatelessWidget {
                 ],
 
                 Text(
-                  l10n.homeContinueSectionTitle,
+                  l10n.homeJourneySectionTitle,
                   style: Theme.of(
                     context,
                   ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
                 ),
                 const SizedBox(height: AppSpacing.xs),
 
-                if (pathway != null) ...[
-                  _PathwayRow(
-                    pathway: pathway,
-                    learningProgress: dashboard.learningProgress,
-                    onTap: onOpenPathway,
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                ],
+                JourneyTimelineCard(dashboard: dashboard, onTap: onOpenPathway),
+                const SizedBox(height: AppSpacing.sm),
 
                 // Only one row, and it never duplicates a bottom-nav tab or
                 // a CTA already on screen above it. Jobs, Coach, the Career
@@ -227,113 +219,6 @@ class _HomeContent extends StatelessWidget {
               ],
             ),
           ),
-        ],
-      ),
-    );
-  }
-}
-
-class _PathwayRow extends StatelessWidget {
-  const _PathwayRow({
-    required this.pathway,
-    required this.learningProgress,
-    required this.onTap,
-  });
-
-  final PathwayProgress pathway;
-
-  /// `dashboard.learningProgress` -- overall progress through the candidate's
-  /// learning state, distinct from [pathway]'s own completed/total unit
-  /// count above it.
-  final double learningProgress;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final overallPercent = (learningProgress * 100).round();
-
-    return AppCard(
-      onTap: onTap,
-      semanticLabel: l10n.homePathwaySemantic(
-        pathway.title,
-        pathway.completedUnits,
-        pathway.totalUnits,
-        overallPercent,
-      ),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              AppIconPlate(
-                icon: Icons.route_outlined,
-                background: AppColors.brandSoft,
-                foreground: AppColors.brand,
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      pathway.title,
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    Text(
-                      l10n.homePathwayLessons(
-                        pathway.completedUnits,
-                        pathway.totalUnits,
-                      ),
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppColors.inkMuted,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const Icon(
-                Icons.arrow_forward_rounded,
-                size: 18,
-                color: AppColors.brand,
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          AppMeterBar(value: pathway.fraction),
-          const SizedBox(height: AppSpacing.sm),
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  l10n.homePathwayOverallLabel,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.labelSmall?.copyWith(color: AppColors.inkMuted),
-                ),
-              ),
-              Text(
-                '$overallPercent%',
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: AppColors.inkMuted,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.xxs),
-          AppMeterBar(value: learningProgress),
-          // Zero once the pathway is finished -- nothing left to count down.
-          if (pathway.remainingUnits > 0) ...[
-            const SizedBox(height: AppSpacing.sm),
-            AppInsightLine(
-              text: l10n.homePathwayRemaining(
-                pathway.remainingUnits,
-                pathway.title,
-              ),
-            ),
-          ],
         ],
       ),
     );

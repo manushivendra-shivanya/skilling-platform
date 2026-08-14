@@ -29,14 +29,26 @@
   "homeInterviewTitle": "Interview · {employer}",
   "homeInterviewPrepare": "Taiyari karein",
 
-  "homeContinueSectionTitle": "Jaari rakhein",
+  "homeJourneySectionTitle": "Aapki yatra",
 
   "homeInterviewPracticeTitle": "Interview practice",
   "homeInterviewPracticeSubtitle": "Pehla sawaal · apna parichay",
 
   "homePathwayLessons": "{completed} / {total} lessons",
-  "homePathwayOverallLabel": "Aapki poori learning journey",
-  "homePathwayRemaining": "{title} poora karne ke liye {count, plural, one{{count} lesson} other{{count} lessons}} baaki",
+
+  "homeJourneyTrainingLabel": "Training",
+  "homeJourneyTrainingNotStarted": "Abhi shuru nahi hua",
+
+  "homeJourneyCertificationLabel": "Certification",
+  "homeJourneyCertificationNotStarted": "Abhi shuru nahi hua",
+  "homeJourneyCertificationInProgress": "Exam chal raha hai",
+  "homeJourneyCertificationPassed": "Certified",
+
+  "homeJourneyApplicationsLabel": "Applications",
+  "homeJourneyApplicationsSubtitle": "{count, plural, =0{Is mahine abhi tak koi application nahi} one{Is mahine {count} application bheja gaya} other{Is mahine {count} application bheje gaye}}",
+
+  "homeJourneyInterviewLabel": "Interview",
+  "homeJourneyInterviewPending": "Abhi tay nahi hua",
 
   "homeSyncBanner": "{count, plural, one{{count} item} other{{count} items}} sync hone ke liye baaki.",
 
@@ -59,8 +71,6 @@
   "homeEmptyMessage": "Apni profile setup poori karein, taaki aapko roz ka kaam aur raasta mil sake.",
 
   "homeNoMissionSemantic": "Aaj koi kaam nahi. Career diagnostic kholein.",
-
-  "homePathwaySemantic": "{title} path jaari rakhein. {total} mein se {completed} lesson poore. Aapki learning journey ka {percent}% poora.",
 
   "coachPopupText": "Main yahan hoon, kuch bhi poochein",
   "coachPopupSemantic": "AI Coach yahan hai. Sawaal poochne ke liye tap karein.",

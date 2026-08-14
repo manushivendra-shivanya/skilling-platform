@@ -74,7 +74,7 @@ class UpcomingInterviewCard extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      '${_formatWhen(interview.scheduledAt, isHindi)} · '
+                      '${formatInterviewWhen(interview.scheduledAt, isHindi)} · '
                       '${interview.location}',
                       style: Theme.of(
                         context,
@@ -107,7 +107,11 @@ class UpcomingInterviewCard extends StatelessWidget {
 /// Devanagari weekday names from locale data are correct, but this app has
 /// no other `intl`-formatted dates to be consistent with, and a plain
 /// lookup table needs no locale-data initialization to get right in tests.
-String _formatWhen(DateTime when, bool isHindi) {
+///
+/// Public (not `_formatWhen`) so `journey_timeline_card.dart`'s Interview
+/// checkpoint can reuse the exact same formatting instead of a second,
+/// possibly-drifting copy.
+String formatInterviewWhen(DateTime when, bool isHindi) {
   const englishDays = <String>[
     'Monday',
     'Tuesday',
