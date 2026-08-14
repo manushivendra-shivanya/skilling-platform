@@ -79,3 +79,23 @@ jobs:
           gh api "repos/${{ github.repository }}/actions/cache/usage" \
             --jq '"Cache usage: \(.active_caches_size_in_bytes / 1048576 | floor)MB across \(.active_caches_count) cache(s)."' \
             || echo "Could not read cache usage (this only reports Actions cache, not artifact storage -- artifact storage has no equivalent API endpoint; check the repo's Settings -> Actions -> General page for the current total)."
+
+      # Breaks the aggregate number above down by individual cache entry --
+      # separate from the artifact purge above (GET/DELETE .../actions/caches
+      # is a distinct API from .../actions/artifacts), so this only reports,
+      # it never deletes. subosito/flutter-action@v2's `cache: true` in
+      # build-apk.yml is the one thing in this repo that writes an Actions
+      # cache, so every entry here should trace back to that -- if it
+      # doesn't, that's worth knowing too. GitHub already LRU-evicts this
+      # pool once a repo crosses 10GB, so it isn't the thing actively
+      # blocking new artifact uploads, but it's the next thing to look at
+      # once two repos' caches are competing for headroom.
+      - name: List individual caches
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh api "repos/${{ github.repository }}/actions/caches" --paginate \
+            --jq '.actions_caches | sort_by(-.size_in_bytes) | .[] | "\(.size_in_bytes / 1048576 | floor)MB\tref=\(.ref)\tlast_used=\(.last_accessed_at)\tkey=\(.key)"' \
+            || echo "Could not list individual caches."
