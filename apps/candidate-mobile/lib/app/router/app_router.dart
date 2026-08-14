@@ -33,6 +33,7 @@ import '../../features/shifts/presentation/shift_grievance_screen.dart';
 import '../../features/shifts/presentation/shift_payout_screen.dart';
 import '../../features/shifts/presentation/shift_screen.dart';
 import '../../features/profile/presentation/profile_screen.dart';
+import '../../features/profile_details/presentation/detailed_profile_screen.dart';
 import '../../features/splash/presentation/app_startup_screen.dart';
 import '../../features/voice/presentation/voice_interview_screen.dart';
 import '../../features/workplace_simulation/presentation/simulation_entry_screen.dart';
@@ -94,6 +95,8 @@ const shiftGrievanceRoutePath = '/shift/support';
 const shiftGrievanceRouteName = 'shift-support';
 const profileRoutePath = '/me';
 const profileRouteName = 'me';
+const detailedProfileRoutePath = '/me/detailed-profile';
+const detailedProfileRouteName = 'detailed-profile';
 const aiCoachRoutePath = '/coach';
 const aiCoachRouteName = 'ai-coach';
 const aiCoachThreadRoutePattern = '$aiCoachRoutePath/:threadId';
@@ -529,6 +532,8 @@ GoRouter createAppRouter({
                 builder: (context, state) => ProfileScreen(
                   onLoggedOut: () => context.go(welcomeRoutePath),
                   onOpenDiagnostic: () => context.push(diagnosticRoutePath),
+                  onOpenDetailedProfile: () =>
+                      context.push(detailedProfileRoutePath),
                 ),
               ),
             ],
@@ -567,6 +572,12 @@ GoRouter createAppRouter({
         path: diagnosticRoutePath,
         name: diagnosticRouteName,
         builder: (context, state) => const DiagnosticScreen(),
+      ),
+      GoRoute(
+        parentNavigatorKey: rootNavigatorKey,
+        path: detailedProfileRoutePath,
+        name: detailedProfileRouteName,
+        builder: (context, state) => const DetailedProfileScreen(),
       ),
       GoRoute(
         parentNavigatorKey: rootNavigatorKey,
@@ -1066,6 +1077,7 @@ const _mainAndGlobalRoutePaths = {
   jobsRoutePath,
   shiftRoutePath,
   profileRoutePath,
+  detailedProfileRoutePath,
   aiCoachRoutePath,
   notificationsRoutePath,
   diagnosticRoutePath,

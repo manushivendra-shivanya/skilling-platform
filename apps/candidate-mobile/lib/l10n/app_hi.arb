@@ -915,5 +915,73 @@
   "onboardingValidationExperience": "अपना काम का अनुभव चुनें।",
   "onboardingValidationRoles": "कम से कम एक पसंदीदा भूमिका चुनें।",
   "onboardingValidationConsent": "आगे बढ़ने के लिए दोनों आवश्यक सूचनाएं स्वीकार करें।",
-  "onboardingValidationReviewIncomplete": "कुछ आवश्यक प्रोफ़ाइल जानकारी गुम है। वापस जाएं और उसे देखें।"
+  "onboardingValidationReviewIncomplete": "कुछ आवश्यक प्रोफ़ाइल जानकारी गुम है। वापस जाएं और उसे देखें।",
+
+  "profileDetailsScreenTitle": "मेरी प्रोफ़ाइल",
+  "profileDetailsCompletionLabel": "{percent}% पूरा",
+
+  "profileDetailsContactSectionTitle": "संपर्क",
+  "profileDetailsPhoneLabel": "फ़ोन",
+  "profileDetailsEmailLabel": "ईमेल",
+
+  "profileDetailsSkillsSectionTitle": "कौशल",
+  "profileDetailsAddSkillHint": "कौशल जोड़ें और एंटर दबाएं",
+  "profileDetailsSkillsEmpty": "अभी तक कोई कौशल नहीं जोड़ा गया",
+
+  "profileDetailsExperienceSectionTitle": "अनुभव",
+  "profileDetailsExperienceEmpty": "अभी तक कोई अनुभव नहीं जोड़ा गया",
+  "profileDetailsAddExperienceButton": "अनुभव जोड़ें",
+
+  "profileDetailsEducationSectionTitle": "शिक्षा",
+  "profileDetailsEducationEmpty": "अभी तक कोई शिक्षा नहीं जोड़ी गई",
+  "profileDetailsAddEducationButton": "शिक्षा जोड़ें",
+
+  "profileDetailsCertificationsSectionTitle": "प्रमाणन",
+  "profileDetailsCertificationsEmpty": "अभी तक कोई प्रमाणन नहीं जोड़ा गया",
+  "profileDetailsAddCertificationButton": "प्रमाणन जोड़ें",
+
+  "profileDetailsProjectsSectionTitle": "प्रोजेक्ट",
+  "profileDetailsProjectsEmpty": "अभी तक कोई प्रोजेक्ट नहीं जोड़ा गया",
+  "profileDetailsAddProjectButton": "प्रोजेक्ट जोड़ें",
+
+  "profileDetailsSaveButton": "सेव करें",
+  "profileDetailsDeleteButton": "हटाएं",
+  "profileDetailsEditSemantic": "{title} बदलें",
+  "profileDetailsDeleteSemantic": "{title} हटाएं",
+  "profileDetailsDeleteConfirmTitle": "यह प्रविष्टि हटाएं?",
+  "profileDetailsDeleteConfirmMessage": "इसे वापस नहीं लाया जा सकता।",
+
+  "profileDetailsTitleFieldLabel": "पद",
+  "profileDetailsCompanyFieldLabel": "कंपनी",
+  "profileDetailsLocationFieldLabel": "स्थान",
+  "profileDetailsCurrentRoleLabel": "मैं अभी यहां काम करता/करती हूं",
+
+  "profileDetailsInstitutionFieldLabel": "संस्थान",
+  "profileDetailsDegreeFieldLabel": "डिग्री",
+  "profileDetailsFieldOfStudyFieldLabel": "विषय",
+  "profileDetailsGradeFieldLabel": "ग्रेड",
+
+  "profileDetailsCertificationNameFieldLabel": "प्रमाणन का नाम",
+  "profileDetailsIssuingOrgFieldLabel": "जारी करने वाली संस्था",
+  "profileDetailsCredentialIdFieldLabel": "क्रेडेंशियल आईडी",
+  "profileDetailsCredentialUrlFieldLabel": "क्रेडेंशियल यूआरएल",
+
+  "profileDetailsRoleFieldLabel": "आपकी भूमिका",
+  "profileDetailsDescriptionFieldLabel": "विवरण",
+  "profileDetailsProjectUrlFieldLabel": "प्रोजेक्ट यूआरएल",
+  "profileDetailsOngoingProjectLabel": "यह जारी है",
+
+  "profileDetailsStartMonthFieldLabel": "शुरुआत का महीना",
+  "profileDetailsStartYearFieldLabel": "शुरुआत का साल",
+  "profileDetailsEndMonthFieldLabel": "अंत का महीना",
+  "profileDetailsEndYearFieldLabel": "अंत का साल",
+  "profileDetailsIssueMonthFieldLabel": "जारी होने का महीना",
+  "profileDetailsIssueYearFieldLabel": "जारी होने का साल",
+  "profileDetailsExpiryMonthFieldLabel": "समाप्ति का महीना",
+  "profileDetailsExpiryYearFieldLabel": "समाप्ति का साल",
+
+  "profileDetailsDateRange": "{start} - {end}",
+  "profileDetailsPresent": "अभी तक",
+
+  "profileDetailsOpenDetailedProfile": "मेरी पूरी प्रोफ़ाइल देखें"
 }
