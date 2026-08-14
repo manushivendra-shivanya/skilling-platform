@@ -5,6 +5,7 @@ import '../../../app/dependencies.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../core/errors/app_failure.dart';
+import '../../../core/errors/app_failure_localization.dart';
 import '../../../core/network/connectivity_status.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_feedback.dart';
@@ -12,6 +13,7 @@ import '../../../core/widgets/app_progress.dart';
 import '../../../core/widgets/app_skeleton.dart';
 import '../../../core/widgets/app_state_view.dart';
 import '../../../core/widgets/app_status_banner.dart';
+import '../../../l10n/generated/app_localizations.dart';
 import '../../micro_lessons/presentation/warehouse_clips_section.dart';
 import '../../sector_pack/application/active_sector_pack_provider.dart';
 import '../../sector_pack/domain/sector_pack.dart';
@@ -29,20 +31,21 @@ class LearningScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(learningControllerProvider);
+    final l10n = AppLocalizations.of(context);
     return state.when(
       loading: () => const _LearningLoadingView(),
       error: (error, stackTrace) => AppErrorState(
-        title: 'Learning could not be loaded',
+        title: l10n.learningLoadErrorTitle,
         message: error is AppFailure
-            ? error.message
-            : 'The local pathway is temporarily unavailable.',
+            ? error.localizedMessage(l10n)
+            : l10n.learningLoadErrorFallback,
         onAction: () => ref.read(learningControllerProvider.notifier).retry(),
       ),
       data: (value) {
         if (value.units.isEmpty) {
-          return const AppEmptyState(
-            title: 'No lessons yet',
-            message: 'Your pathway will appear here when content is assigned.',
+          return AppEmptyState(
+            title: l10n.learningEmptyTitle,
+            message: l10n.learningEmptyMessage,
           );
         }
         return _LearningContent(
@@ -62,6 +65,7 @@ class _LearningContent extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
     final pack = ref.watch(activeSectorPackProvider);
     return ListView(
       padding: const EdgeInsets.fromLTRB(
@@ -78,35 +82,31 @@ class _LearningContent extends ConsumerWidget {
             if (snapshot.data != ConnectivityStatus.offline) {
               return const SizedBox.shrink();
             }
-            return const Padding(
-              padding: EdgeInsets.only(bottom: AppSpacing.md),
-              child: AppOfflineBanner(
-                message:
-                    'Offline: only lessons marked Downloaded are available.',
-              ),
+            return Padding(
+              padding: const EdgeInsets.only(bottom: AppSpacing.md),
+              child: AppOfflineBanner(message: l10n.learningOfflineBanner),
             );
           },
         ),
         Text(
-          'Your training pathway',
+          l10n.learningHeadline,
           style: Theme.of(context).textTheme.headlineSmall,
         ),
         const SizedBox(height: AppSpacing.sm),
         AppProgress(
           value: state.progress,
-          label: 'Local lesson progress',
-          detail: '${state.completedIds.length} of ${state.units.length}',
+          label: l10n.learningProgressLabel,
+          detail: l10n.learningProgressDetail(
+            state.completedIds.length,
+            state.units.length,
+          ),
         ),
         const SizedBox(height: AppSpacing.xs),
-        const Text(
-          'Progress is stored securely, works offline, and syncs when a configured backend is available. Completion alone is not an employer qualification.',
-        ),
+        Text(l10n.learningProgressDisclaimer),
         const SizedBox(height: AppSpacing.md),
-        const AppCard(
+        AppCard(
           backgroundColor: AppColors.brandSoft,
-          child: Text(
-            'Train flow: short lesson → real warehouse clip or text fallback → decision check → matching simulation where available.',
-          ),
+          child: Text(l10n.learningTrainFlowCard),
         ),
         const SizedBox(height: AppSpacing.xl),
         for (final entry in state.units.indexed) ...[
@@ -163,12 +163,13 @@ class _LessonRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final base = '${unit.durationMinutes} min · Content v${unit.version}';
+    final l10n = AppLocalizations.of(context);
+    final base = l10n.learningLessonMeta(unit.durationMinutes, unit.version);
     final statusText = completed
-        ? '$base · Completed — tap to mark incomplete'
+        ? l10n.learningLessonStatusCompleted(base)
         : downloaded
-        ? '$base · Downloaded'
-        : '$base · Tap to open';
+        ? l10n.learningLessonStatusDownloaded(base)
+        : l10n.learningLessonStatusOpen(base);
     return SectorIndexRow(
       pack: pack,
       indexLabel: indexLabel,
@@ -180,11 +181,11 @@ class _LessonRow extends StatelessWidget {
           : downloaded
           ? SectorSignalState.active
           : null,
-      missionLabel: unit.isDailyMission ? "TODAY'S MISSION" : null,
+      missionLabel: unit.isDailyMission ? l10n.homeTodayMissionLabel : null,
       onTap: completed ? onMarkIncomplete : onOpen,
       semanticLabel: completed
-          ? '${unit.title}. Completed. Tap to mark incomplete.'
-          : '${unit.title}. Tap to open lesson.',
+          ? l10n.learningLessonSemanticCompleted(unit.title)
+          : l10n.learningLessonSemanticOpen(unit.title),
       trailing: _DownloadUtilityButton(
         downloaded: downloaded,
         onPressed: onDownload,
@@ -204,9 +205,12 @@ class _DownloadUtilityButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final divider = Theme.of(context).dividerColor;
     return Tooltip(
-      message: downloaded ? 'Downloaded' : 'Download for offline',
+      message: downloaded
+          ? l10n.learningDownloadedTooltip
+          : l10n.learningDownloadTooltip,
       child: Material(
         color: Colors.transparent,
         child: InkWell(
@@ -247,6 +251,7 @@ class _DownloadUtilityButton extends StatelessWidget {
 }
 
 Future<void> _showLesson(BuildContext context, LearningUnit unit) async {
+  final l10n = AppLocalizations.of(context);
   await showAppBottomSheet<void>(
     context: context,
     title: unit.title,
@@ -255,15 +260,11 @@ Future<void> _showLesson(BuildContext context, LearningUnit unit) async {
       children: [
         Text(unit.content),
         const SizedBox(height: AppSpacing.lg),
-        const Text(
-          'Checkpoint: Which action preserves an audit trail during an exception?',
-        ),
+        Text(l10n.learningCheckpointQuestion),
         const SizedBox(height: AppSpacing.sm),
-        const AppCard(
+        AppCard(
           backgroundColor: AppColors.successSoft,
-          child: Text(
-            'Record the original and observed values before escalating or correcting.',
-          ),
+          child: Text(l10n.learningCheckpointAnswer),
         ),
         const SizedBox(height: AppSpacing.md),
         const AppBottomSheetCloseButton(),

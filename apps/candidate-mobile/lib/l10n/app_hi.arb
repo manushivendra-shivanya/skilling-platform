@@ -256,5 +256,57 @@
   "payoutStatusProcessing": "प्रक्रिया में",
   "payoutStatusPaid": "भुगतान हो गया",
   "payoutStatusFailed": "विफल",
-  "payoutStatusDisputed": "विवादित"
+  "payoutStatusDisputed": "विवादित",
+
+  "learningLoadErrorTitle": "लर्निंग लोड नहीं हो सकी",
+  "learningLoadErrorFallback": "स्थानीय पाठ्यक्रम फ़िलहाल उपलब्ध नहीं है।",
+
+  "learningEmptyTitle": "अभी कोई पाठ नहीं",
+  "learningEmptyMessage": "कंटेंट असाइन होने पर आपका पाठ्यक्रम यहां दिखेगा।",
+
+  "learningOfflineBanner": "ऑफ़लाइन: केवल डाउनलोड किए गए पाठ ही उपलब्ध हैं।",
+
+  "learningHeadline": "आपका प्रशिक्षण पाठ्यक्रम",
+
+  "learningProgressLabel": "स्थानीय पाठ प्रगति",
+  "learningProgressDetail": "{total} में से {completed}",
+
+  "learningProgressDisclaimer": "प्रगति सुरक्षित रूप से सेव होती है, ऑफ़लाइन काम करती है, और कॉन्फ़िगर बैकएंड उपलब्ध होने पर सिंक होती है। केवल पूरा करना नियोक्ता की योग्यता नहीं है।",
+
+  "learningTrainFlowCard": "ट्रेन फ़्लो: छोटा पाठ → असली वेयरहाउस क्लिप या टेक्स्ट विकल्प → निर्णय जांच → उपलब्ध होने पर मिलती-जुलती सिमुलेशन।",
+
+  "learningLessonMeta": "{minutes} मिनट · कंटेंट v{version}",
+
+  "learningLessonStatusCompleted": "{base} · पूरा हुआ — अधूरा चिह्नित करने के लिए टैप करें",
+  "learningLessonStatusDownloaded": "{base} · डाउनलोड हुआ",
+  "learningLessonStatusOpen": "{base} · खोलने के लिए टैप करें",
+
+  "learningLessonSemanticCompleted": "{title}. पूरा हुआ। अधूरा चिह्नित करने के लिए टैप करें।",
+  "learningLessonSemanticOpen": "{title}. पाठ खोलने के लिए टैप करें।",
+
+  "learningDownloadedTooltip": "डाउनलोड हुआ",
+  "learningDownloadTooltip": "ऑफ़लाइन के लिए डाउनलोड करें",
+
+  "learningCheckpointQuestion": "चेकपॉइंट: अपवाद के दौरान कौन सी कार्रवाई ऑडिट ट्रेल को सुरक्षित रखती है?",
+  "learningCheckpointAnswer": "आगे बढ़ाने या सुधारने से पहले मूल और देखे गए मूल्यों को दर्ज करें।",
+
+  "learnTabLessons": "पाठ",
+  "learnTabPractise": "अभ्यास",
+  "learnTabCertification": "प्रमाणन",
+
+  "learnStateUnavailable": "अनुपलब्ध",
+  "learnStateLoading": "लोड हो रहा है…",
+
+  "learnLessonsClearedCount": "{total} में से {completed} पूरे",
+
+  "learnPractiseMissionsReady": "{count, plural, one{{count} मिशन तैयार} other{{count} मिशन तैयार}}",
+
+  "learnPractiseSomeReady": "{total} में से {ready} तैयार",
+
+  "learnCertLocked": "लॉक",
+  "learnCertEligible": "योग्य",
+  "learnCertPassed": "पास हुआ",
+  "learnCertRetryAvailable": "दोबारा कोशिश करें",
+
+  "learnTabSemanticLabel": "{label}। {stateText}। टैब {total} में से {index}।"
 }
