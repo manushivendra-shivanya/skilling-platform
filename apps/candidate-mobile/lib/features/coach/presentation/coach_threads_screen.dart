@@ -9,18 +9,14 @@ import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../app/theme/coach_mark.dart';
 import '../../../core/errors/app_failure.dart';
+import '../../../core/errors/app_failure_localization.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_loading_progress.dart';
 import '../../../core/widgets/app_state_view.dart';
+import '../../../l10n/generated/app_localizations.dart';
 import '../domain/coach_thread.dart';
 import 'coach_composer.dart';
 import 'coach_threads_controller.dart';
-
-const _starterPrompts = [
-  'Explain a lesson term',
-  'Practice interview answers',
-  'What should I say about my experience?',
-];
 
 /// Coach's own home: a list of past conversations ("Topic threads" --
 /// design option B in docs/27-ai-coach-plan.md) plus a composer that
@@ -46,11 +42,12 @@ class _CoachThreadsScreenState extends ConsumerState<CoachThreadsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final asyncState = ref.watch(coachThreadsControllerProvider);
     final isLiveData = ref.watch(coachRepositoryProvider).isLiveData;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('AI Career Coach')),
+      appBar: AppBar(title: Text(l10n.coachAppBarTitle)),
       body: SafeArea(
         child: Column(
           children: [
@@ -60,8 +57,8 @@ class _CoachThreadsScreenState extends ConsumerState<CoachThreadsScreen> {
               padding: const EdgeInsets.all(AppSpacing.sm),
               child: Text(
                 isLiveData
-                    ? 'AI-generated guidance • Verify anything important with your training officer.'
-                    : 'Local demo only • No production AI is connected. Do not share sensitive information.',
+                    ? l10n.coachLiveDataBanner
+                    : l10n.coachDemoDataBanner,
                 textAlign: TextAlign.center,
               ),
             ),
@@ -72,16 +69,16 @@ class _CoachThreadsScreenState extends ConsumerState<CoachThreadsScreen> {
                 // (see CoachThinkingIndicator's doc comment), so this stays
                 // the app's normal page-load affordance rather than
                 // sharing that widget.
-                loading: () => const Center(
+                loading: () => Center(
                   child: AppLoadingProgressBar(
-                    label: 'Loading your conversations…',
+                    label: l10n.coachLoadingConversations,
                   ),
                 ),
                 error: (error, _) => AppErrorState(
-                  title: 'Coach could not load',
+                  title: l10n.coachLoadErrorTitle,
                   message: error is AppFailure
-                      ? error.message
-                      : 'Your past conversations are temporarily unavailable.',
+                      ? error.localizedMessage(l10n)
+                      : l10n.coachLoadErrorFallback,
                   onAction: () =>
                       ref.invalidate(coachThreadsControllerProvider),
                 ),
@@ -117,8 +114,8 @@ class _CoachThreadsScreenState extends ConsumerState<CoachThreadsScreen> {
               child: CoachComposer(
                 controller: _composer,
                 onSend: _send,
-                hint: 'Ask a new question',
-                label: 'Message',
+                hint: l10n.coachNewQuestionHint,
+                label: l10n.coachMessageLabel,
                 isSending: _isStarting,
               ),
             ),
@@ -158,6 +155,12 @@ class _WelcomeView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final starterPrompts = [
+      l10n.coachPromptExplainTerm,
+      l10n.coachPromptPracticeInterview,
+      l10n.coachPromptExperience,
+    ];
     return Center(
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(AppSpacing.xl),
@@ -175,14 +178,13 @@ class _WelcomeView extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.lg),
             Text(
-              'Namaste! Ask me about a lesson, an interview, or what to do '
-              'next — I’m here whenever you need it.',
+              l10n.coachWelcomeGreeting,
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.titleMedium,
             ),
             const SizedBox(height: AppSpacing.sm),
             Text(
-              'Nothing you share here is scored or shown to an employer.',
+              l10n.coachWelcomeDisclaimer,
               textAlign: TextAlign.center,
               style: Theme.of(
                 context,
@@ -194,7 +196,7 @@ class _WelcomeView extends StatelessWidget {
               spacing: AppSpacing.xs,
               runSpacing: AppSpacing.xs,
               children: [
-                for (final prompt in _starterPrompts)
+                for (final prompt in starterPrompts)
                   ActionChip(
                     label: Text(prompt),
                     onPressed: () => onPromptTap(prompt),
@@ -236,6 +238,7 @@ class _ThreadRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return AppCard(
       onTap: onTap,
       padding: const EdgeInsets.all(AppSpacing.sm),
@@ -263,9 +266,8 @@ class _ThreadRow extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  '${thread.messages.length} message'
-                  '${thread.messages.length == 1 ? '' : 's'} • '
-                  '${_relativeTime(thread.lastActivityAt)}',
+                  '${l10n.coachMessageCount(thread.messages.length)} • '
+                  '${_relativeTime(thread.lastActivityAt, l10n)}',
                   style: Theme.of(
                     context,
                   ).textTheme.bodySmall?.copyWith(color: AppColors.inkMuted),
@@ -280,13 +282,13 @@ class _ThreadRow extends StatelessWidget {
   }
 }
 
-String _relativeTime(DateTime at) {
+String _relativeTime(DateTime at, AppLocalizations l10n) {
   final diff = DateTime.now().difference(at);
-  if (diff.inMinutes < 1) return 'Just now';
-  if (diff.inMinutes < 60) return '${diff.inMinutes} min ago';
-  if (diff.inHours < 24) return '${diff.inHours} hr ago';
+  if (diff.inMinutes < 1) return l10n.coachTimeJustNow;
+  if (diff.inMinutes < 60) return l10n.coachTimeMinutesAgo(diff.inMinutes);
+  if (diff.inHours < 24) return l10n.coachTimeHoursAgo(diff.inHours);
   if (diff.inDays < 7) {
-    return '${diff.inDays} day${diff.inDays == 1 ? '' : 's'} ago';
+    return l10n.coachTimeDaysAgo(diff.inDays);
   }
   return '${at.day}/${at.month}/${at.year}';
 }

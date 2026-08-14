@@ -7,6 +7,7 @@ import 'package:candidate_mobile/features/coach/domain/coach_message.dart';
 import 'package:candidate_mobile/features/coach/domain/coach_repository.dart';
 import 'package:candidate_mobile/features/coach/domain/coach_thread.dart';
 import 'package:candidate_mobile/features/coach/presentation/coach_thread_screen.dart';
+import 'package:candidate_mobile/l10n/generated/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -77,8 +78,10 @@ void main() {
             ),
             coachThreadRepositoryProvider.overrideWithValue(threadRepository),
           ],
-          child: const MaterialApp(
-            home: CoachThreadScreen(threadId: 'thread-1'),
+          child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: const CoachThreadScreen(threadId: 'thread-1'),
           ),
         ),
       );
@@ -175,8 +178,10 @@ void main() {
             coachThreadRepositoryProvider.overrideWithValue(threadRepository),
             coachRepositoryProvider.overrideWithValue(_FakeCoachRepository()),
           ],
-          child: const MaterialApp(
-            home: CoachThreadScreen(threadId: 'thread-1'),
+          child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: const CoachThreadScreen(threadId: 'thread-1'),
           ),
         ),
       );
@@ -265,8 +270,10 @@ void main() {
           ],
           child: MediaQuery(
             data: const MediaQueryData(disableAnimations: true),
-            child: const MaterialApp(
-              home: CoachThreadScreen(threadId: 'thread-1'),
+            child: MaterialApp(
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              home: const CoachThreadScreen(threadId: 'thread-1'),
             ),
           ),
         ),

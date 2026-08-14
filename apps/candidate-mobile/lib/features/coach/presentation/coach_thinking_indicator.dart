@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_spacing.dart';
+import '../../../l10n/generated/app_localizations.dart';
 
 /// The shared "coach is composing a reply right now" visual: a small
 /// spinner plus "Coach is typing…" copy, announced once via a live
@@ -25,9 +26,10 @@ class CoachThinkingIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Semantics(
       liveRegion: true,
-      label: 'Coach is typing a reply',
+      label: l10n.coachTypingSemantic,
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -36,7 +38,7 @@ class CoachThinkingIndicator extends StatelessWidget {
             child: CircularProgressIndicator(strokeWidth: 2),
           ),
           const SizedBox(width: AppSpacing.sm),
-          Text('Coach is typing…', style: TextStyle(color: AppColors.ink)),
+          Text(l10n.coachTypingLabel, style: TextStyle(color: AppColors.ink)),
         ],
       ),
     );

@@ -11,6 +11,7 @@ import '../../../app/theme/app_radius.dart';
 import '../../../app/theme/app_shadows.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../core/widgets/reduced_motion.dart';
+import '../../../l10n/generated/app_localizations.dart';
 import '../domain/coach_message.dart';
 import 'coach_composer.dart';
 import 'coach_thinking_indicator.dart';
@@ -47,6 +48,7 @@ class _CoachThreadScreenState extends ConsumerState<CoachThreadScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final threadsState = ref.watch(coachThreadsControllerProvider).valueOrNull;
     final thread = threadsState?.threadById(widget.threadId);
     final isSending =
@@ -57,8 +59,8 @@ class _CoachThreadScreenState extends ConsumerState<CoachThreadScreen> {
       // -- rather than crash on a null lookup, show a plain not-found
       // state instead of a fabricated conversation.
       return Scaffold(
-        appBar: AppBar(title: const Text('AI Career Coach')),
-        body: const Center(child: Text('This conversation is not available.')),
+        appBar: AppBar(title: Text(l10n.coachAppBarTitle)),
+        body: Center(child: Text(l10n.coachConversationUnavailable)),
       );
     }
 
@@ -127,8 +129,8 @@ class _CoachThreadScreenState extends ConsumerState<CoachThreadScreen> {
               child: CoachComposer(
                 controller: _composer,
                 onSend: _send,
-                hint: 'Ask about skills or interviews',
-                label: 'Message',
+                hint: l10n.coachAskSkillsInterviewsHint,
+                label: l10n.coachMessageLabel,
                 isSending: isSending,
                 sendButton: _SendSparkButton(
                   enabled: !isSending,
@@ -346,7 +348,7 @@ class _SendSparkButtonState extends State<_SendSparkButton>
               );
             },
             child: IconButton(
-              tooltip: 'Send message',
+              tooltip: AppLocalizations.of(context).coachSendTooltip,
               onPressed: widget.enabled ? _fire : null,
               icon: const Icon(Icons.send),
             ),

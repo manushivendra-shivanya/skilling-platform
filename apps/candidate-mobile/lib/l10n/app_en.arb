@@ -1407,5 +1407,98 @@
   "@personaOpenToRoles": {
     "description": "Line in the copied persona summary text listing preferred roles.",
     "placeholders": { "roles": { "type": "String" } }
-  }
+  },
+
+  "coachAppBarTitle": "AI Career Coach",
+  "@coachAppBarTitle": { "description": "AppBar title on both the Coach threads list and an open thread." },
+
+  "coachLiveDataBanner": "AI-generated guidance • Verify anything important with your training officer.",
+  "coachDemoDataBanner": "Local demo only • No production AI is connected. Do not share sensitive information.",
+  "@coachLiveDataBanner": { "description": "Banner on the Coach threads screen when a real AI backend is connected." },
+  "@coachDemoDataBanner": { "description": "Banner on the Coach threads screen when only the local demo repository is active." },
+
+  "coachLoadingConversations": "Loading your conversations…",
+  "@coachLoadingConversations": { "description": "Loading caption on the Coach threads screen." },
+
+  "coachLoadErrorTitle": "Coach could not load",
+  "coachLoadErrorFallback": "Your past conversations are temporarily unavailable.",
+  "@coachLoadErrorTitle": { "description": "Title of the Coach threads screen's error state." },
+  "@coachLoadErrorFallback": { "description": "Fallback message when the load failure isn't an AppFailure." },
+
+  "coachNewQuestionHint": "Ask a new question",
+  "coachMessageLabel": "Message",
+  "@coachNewQuestionHint": { "description": "Composer hint on the Coach threads screen, starting a new thread." },
+  "@coachMessageLabel": { "description": "Composer floating label, shared by the threads screen and an open thread." },
+
+  "coachWelcomeGreeting": "Namaste! Ask me about a lesson, an interview, or what to do next — I’m here whenever you need it.",
+  "coachWelcomeDisclaimer": "Nothing you share here is scored or shown to an employer.",
+  "@coachWelcomeGreeting": { "description": "Greeting shown when the candidate has no Coach threads yet." },
+  "@coachWelcomeDisclaimer": { "description": "Disclaimer under the welcome greeting." },
+
+  "coachPromptExplainTerm": "Explain a lesson term",
+  "coachPromptPracticeInterview": "Practice interview answers",
+  "coachPromptExperience": "What should I say about my experience?",
+  "@coachPromptExplainTerm": { "description": "Starter prompt chip on the Coach welcome view." },
+  "@coachPromptPracticeInterview": { "description": "Starter prompt chip on the Coach welcome view." },
+  "@coachPromptExperience": { "description": "Starter prompt chip on the Coach welcome view." },
+
+  "coachMessageCount": "{count, plural, one{{count} message} other{{count} messages}}",
+  "@coachMessageCount": {
+    "description": "Message count on a thread row, combined with a relative-time string.",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "coachTimeJustNow": "Just now",
+  "coachTimeMinutesAgo": "{minutes} min ago",
+  "coachTimeHoursAgo": "{hours} hr ago",
+  "coachTimeDaysAgo": "{days, plural, one{{days} day ago} other{{days} days ago}}",
+  "@coachTimeJustNow": { "description": "Relative-time label on a thread row, under a minute old." },
+  "@coachTimeMinutesAgo": {
+    "description": "Relative-time label on a thread row, under an hour old.",
+    "placeholders": { "minutes": { "type": "int" } }
+  },
+  "@coachTimeHoursAgo": {
+    "description": "Relative-time label on a thread row, under a day old.",
+    "placeholders": { "hours": { "type": "int" } }
+  },
+  "@coachTimeDaysAgo": {
+    "description": "Relative-time label on a thread row, under a week old.",
+    "placeholders": { "days": { "type": "int" } }
+  },
+
+  "coachSendTooltip": "Send message",
+  "@coachSendTooltip": { "description": "Tooltip on the composer's send button, shared across every Coach entry point." },
+
+  "coachTypingSemantic": "Coach is typing a reply",
+  "coachTypingLabel": "Coach is typing…",
+  "@coachTypingSemantic": { "description": "Screen-reader semantic label for the thinking indicator." },
+  "@coachTypingLabel": { "description": "Visible text of the thinking indicator." },
+
+  "coachAskFabLabel": "Ask",
+  "@coachAskFabLabel": { "description": "Label on the floating Ask Coach affordance." },
+
+  "coachAskingAboutChip": "Asking about: {label}",
+  "@coachAskingAboutChip": {
+    "description": "Context chip on the quick-ask sheet.",
+    "placeholders": { "label": { "type": "String" } }
+  },
+
+  "coachAskSomethingElseButton": "Ask something else",
+  "coachContinueInCoachButton": "Continue in Coach",
+  "@coachAskSomethingElseButton": { "description": "Button on the quick-ask sheet after a reply arrives." },
+  "@coachContinueInCoachButton": { "description": "Button on the quick-ask sheet after a reply arrives, opens the full thread." },
+
+  "coachVoiceUnavailableTooltip": "Voice input unavailable",
+  "coachVoiceInactiveSnackbar": "Voice input is not active. No microphone permission was requested.",
+  "@coachVoiceUnavailableTooltip": { "description": "Tooltip on the quick-ask sheet's mic button." },
+  "@coachVoiceInactiveSnackbar": { "description": "Snackbar shown when tapping the quick-ask sheet's mic button." },
+
+  "coachMessageYourCoachHint": "Message your coach…",
+  "@coachMessageYourCoachHint": { "description": "Composer hint on the quick-ask sheet." },
+
+  "coachConversationUnavailable": "This conversation is not available.",
+  "@coachConversationUnavailable": { "description": "Shown when an open-thread deep link points at a thread that no longer exists." },
+
+  "coachAskSkillsInterviewsHint": "Ask about skills or interviews",
+  "@coachAskSkillsInterviewsHint": { "description": "Composer hint on an open Coach thread." }
 }
