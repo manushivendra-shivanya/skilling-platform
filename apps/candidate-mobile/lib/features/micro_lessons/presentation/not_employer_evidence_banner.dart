@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_spacing.dart';
+import '../../../l10n/generated/app_localizations.dart';
 
 /// Standing disclaimer for micro-lesson content and practice questions
 /// (v0.1): nothing shown alongside this banner is scored, recorded, or
@@ -31,7 +32,7 @@ class NotEmployerEvidenceBanner extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
       ),
       child: Text(
-        message ?? 'Practice feedback only — not employer evidence yet.',
+        message ?? AppLocalizations.of(context).notEmployerEvidenceDefault,
         style: const TextStyle(fontWeight: FontWeight.w600),
       ),
     );

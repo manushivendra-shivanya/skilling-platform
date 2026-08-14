@@ -6,6 +6,7 @@ import 'package:candidate_mobile/features/practice/presentation/practice_screen.
 import 'package:candidate_mobile/features/workplace_simulation/application/workplace_simulation_controller.dart';
 import 'package:candidate_mobile/features/workplace_simulation/data/asset_simulation_content_repository.dart';
 import 'package:candidate_mobile/features/workplace_simulation/data/local_simulation_attempt_repository.dart';
+import 'package:candidate_mobile/l10n/generated/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -44,6 +45,8 @@ void main() {
         ],
         child: MaterialApp(
           theme: buildAppTheme(),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: PracticeScreen(
             onOpenWorkplaceSimulation: (missionId) =>
                 openedMissionId = missionId,
