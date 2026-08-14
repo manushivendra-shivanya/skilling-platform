@@ -41,6 +41,17 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+
+  # Enables `flutter gen-l10n`, configured via l10n.yaml at the repo root --
+  # generates lib/l10n/generated/app_localizations.dart from
+  # lib/l10n/app_*.arb automatically on every `flutter pub get` / `analyze`
+  # / `test` / `build`. Real ARB-based localization, not a hand-rolled
+  # per-screen switch: MaterialApp reads the candidate's saved language
+  # preference (already collected at onboarding -- see
+  # `languageSelectionControllerProvider`) and every localized string comes
+  # from AppLocalizations.of(context) instead of being hardcoded per screen.
+  generate: true
+
   assets:
     - assets/micro_lessons/
     - assets/micro_lessons/videos/

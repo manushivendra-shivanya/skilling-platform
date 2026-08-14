@@ -36,7 +36,12 @@ void main() {
         findsOneWidget,
       );
 
-      await tester.pageBack();
+      // Not tester.pageBack(): it locates the AppBar's back button by its
+      // English-only "Back" tooltip, which -- correctly, now that Hindi is
+      // a real, fully-wired locale -- Flutter's own Material localizations
+      // no longer supply once Hindi is selected. find.byType finds the
+      // same button locale-independently.
+      await tester.tap(find.byType(BackButton));
       await tester.pumpAndSettle();
 
       expect(

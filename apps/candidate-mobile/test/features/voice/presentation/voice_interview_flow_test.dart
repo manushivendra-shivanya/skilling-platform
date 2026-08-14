@@ -45,11 +45,11 @@ void main() {
       // list this button actually lives in, matching the pattern used
       // everywhere else in this codebase.
       await tester.scrollUntilVisible(
-        find.textContaining('Taiyari karein'),
+        find.text('Prepare'),
         300,
         scrollable: find.byType(Scrollable).first,
       );
-      await tester.tap(find.textContaining('Taiyari karein'));
+      await tester.tap(find.text('Prepare'));
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('Allow recording for this practice session'));

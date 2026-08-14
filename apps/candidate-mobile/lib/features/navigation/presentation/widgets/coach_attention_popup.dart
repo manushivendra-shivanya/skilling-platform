@@ -8,6 +8,7 @@ import '../../../../app/theme/app_radius.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/coach_mark.dart';
 import '../../../../core/widgets/reduced_motion.dart';
+import '../../../../l10n/generated/app_localizations.dart';
 
 /// A brief, self-dismissing speech bubble above the AI Coach FAB, shown
 /// once the first time Home appears in a session -- so the coach entry
@@ -210,9 +211,10 @@ class _Bubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Semantics(
       button: true,
-      label: 'AI Coach is here. Tap to ask a question.',
+      label: l10n.coachPopupSemantic,
       child: Container(
         padding: const EdgeInsets.symmetric(
           horizontal: AppSpacing.md,
@@ -238,7 +240,7 @@ class _Bubble extends StatelessWidget {
             const SizedBox(width: AppSpacing.xs),
             Flexible(
               child: Text(
-                'Poocho mujhse! · Ask me anything',
+                l10n.coachPopupText,
                 style: Theme.of(
                   context,
                 ).textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w600),

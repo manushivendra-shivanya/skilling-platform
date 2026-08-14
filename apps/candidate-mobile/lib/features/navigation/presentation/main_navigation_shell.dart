@@ -7,6 +7,7 @@ import '../../../app/theme/app_icons.dart';
 import '../../../app/theme/coach_mark.dart';
 import '../../../core/analytics/analytics_event.dart';
 import '../../../core/analytics/analytics_tracker.dart';
+import '../../../l10n/generated/app_localizations.dart';
 import 'widgets/coach_attention_popup.dart';
 
 class MainNavigationShell extends StatelessWidget {
@@ -27,6 +28,7 @@ class MainNavigationShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final selectedIndex = navigationShell.currentIndex;
 
     return PopScope(
@@ -46,10 +48,10 @@ class MainNavigationShell extends StatelessWidget {
         appBar: selectedIndex == 0
             ? null
             : AppBar(
-                title: Text(_titleFor(selectedIndex)),
+                title: Text(_titleFor(l10n, selectedIndex)),
                 actions: [
                   IconButton(
-                    tooltip: 'Notifications',
+                    tooltip: l10n.homeNotifications,
                     onPressed: () {
                       unawaited(
                         analyticsTracker.track(
@@ -63,19 +65,31 @@ class MainNavigationShell extends StatelessWidget {
                 ],
               ),
         body: navigationShell,
-        floatingActionButton: _buildFab(selectedIndex),
+        floatingActionButton: _buildFab(context, selectedIndex),
         floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
         bottomNavigationBar: NavigationBar(
           selectedIndex: selectedIndex,
           onDestinationSelected: _selectDestination,
-          destinations: const [
-            NavigationDestination(icon: Icon(AppIcons.home), label: 'Home'),
-            NavigationDestination(icon: Icon(AppIcons.learn), label: 'Train'),
-            NavigationDestination(icon: Icon(AppIcons.jobs), label: 'Jobs'),
-            NavigationDestination(icon: Icon(AppIcons.shift), label: 'Shift'),
+          destinations: [
             NavigationDestination(
-              icon: Icon(AppIcons.profile),
-              label: 'My Profile',
+              icon: const Icon(AppIcons.home),
+              label: l10n.navHome,
+            ),
+            NavigationDestination(
+              icon: const Icon(AppIcons.learn),
+              label: l10n.navTrain,
+            ),
+            NavigationDestination(
+              icon: const Icon(AppIcons.jobs),
+              label: l10n.navJobs,
+            ),
+            NavigationDestination(
+              icon: const Icon(AppIcons.shift),
+              label: l10n.navShift,
+            ),
+            NavigationDestination(
+              icon: const Icon(AppIcons.profile),
+              label: l10n.navProfile,
             ),
           ],
         ),
@@ -98,13 +112,14 @@ class MainNavigationShell extends StatelessWidget {
   /// widget itself is what stays mounted (and its dismiss timer keeps
   /// running) once already shown; it isn't rebuilt from scratch and
   /// re-triggered by returning to Home from another tab.
-  Widget _buildFab(int selectedIndex) {
+  Widget _buildFab(BuildContext context, int selectedIndex) {
+    final l10n = AppLocalizations.of(context);
     final fab = FloatingActionButton.extended(
       heroTag: 'global-ai-coach-action',
-      tooltip: 'Open AI Career Coach',
+      tooltip: l10n.coachFabTooltip,
       onPressed: () => _openCoach('ai_coach'),
       icon: const CoachMark(),
-      label: const Text('AI Coach'),
+      label: Text(l10n.coachFabLabel),
     );
 
     if (selectedIndex != 0) return fab;
@@ -141,12 +156,11 @@ class MainNavigationShell extends StatelessWidget {
     );
   }
 
-  String _titleFor(int index) => switch (index) {
-    0 => 'Saksham',
-    1 => 'Train',
-    2 => 'Jobs',
-    3 => 'Shift',
-    4 => 'My Profile',
-    _ => 'Saksham',
+  String _titleFor(AppLocalizations l10n, int index) => switch (index) {
+    1 => l10n.navTrain,
+    2 => l10n.navJobs,
+    3 => l10n.navShift,
+    4 => l10n.navProfile,
+    _ => l10n.appTitle,
   };
 }

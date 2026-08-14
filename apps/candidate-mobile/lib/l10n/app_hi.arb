@@ -1,0 +1,72 @@
+{
+  "@@locale": "hi",
+
+  "homeGreeting": "नमस्ते",
+  "homeReadinessLabel": "तैयारी",
+
+  "readinessBandStarting": "शुरुआत",
+  "readinessBandBuilding": "प्रगति में",
+  "readinessBandJobReady": "नौकरी के लिए तैयार",
+
+  "homeReadinessProgressNote": "{bandLabel} तक {percent}% बाकी",
+
+  "homeEvidenceSummary": "पिछले {windowDays} दिनों में {count, plural, one{{count} प्रमाण} other{{count} प्रमाण}}",
+
+  "homeNotifications": "सूचनाएं",
+  "homeChangeLanguage": "भाषा बदलें",
+
+  "homeTodayMissionLabel": "आज का काम",
+  "homeMissionStart": "शुरू करें",
+  "homeMissionStartSemantic": "आज का काम शुरू करें: {title}। {minutes} मिनट।",
+  "homeMissionDuration": "{minutes} मिनट",
+  "homeMissionStep": "चरण {step} / {total}",
+  "homeMissionStepsRemaining": "इसके बाद {steps, plural, one{{steps} और चरण} other{{steps} और चरण}} बाकी · लगभग {minutes} मिनट",
+
+  "homeNoMissionTitle": "आज कोई काम नहीं",
+  "homeNoMissionBody": "अपना करियर डायग्नोस्टिक पूरा करें, हम आपके लिए अगला कदम चुनेंगे।",
+
+  "homeInterviewLabel": "आने वाला",
+  "homeInterviewTitle": "साक्षात्कार · {employer}",
+  "homeInterviewPrepare": "तैयारी करें",
+
+  "homeContinueSectionTitle": "जारी रखें",
+
+  "homeInterviewPracticeTitle": "साक्षात्कार अभ्यास",
+  "homeInterviewPracticeSubtitle": "पहला सवाल · अपना परिचय",
+
+  "homePathwayLessons": "{completed} / {total} पाठ",
+  "homePathwayOverallLabel": "समग्र सीखने की यात्रा",
+  "homePathwayRemaining": "{title} पूरा करने के लिए {count, plural, one{{count} पाठ} other{{count} पाठ}} बाकी",
+
+  "homeSyncBanner": "{count, plural, one{{count} आइटम} other{{count} आइटम}} सिंक होने के लिए बाकी।",
+
+  "actionView": "देखें",
+  "actionRefresh": "रीफ़्रेश करें",
+
+  "homeLoadErrorTitle": "होम लोड नहीं हो सका",
+  "homeLoadErrorMessage": "आपका डैशबोर्ड फ़िलहाल उपलब्ध नहीं है।",
+
+  "homeEmptyTitle": "आपकी यात्रा यहां से शुरू होती है",
+  "homeEmptyMessage": "अपनी प्रोफ़ाइल सेटअप पूरा करें, ताकि आपको रोज़ का काम और रास्ता मिल सके।",
+
+  "homeNoMissionSemantic": "आज कोई काम नहीं। करियर डायग्नोस्टिक खोलें।",
+
+  "homePathwaySemantic": "{title} पथ जारी रखें। {total} में से {completed} पाठ पूरे। आपकी सीखने की यात्रा का {percent}% पूरा।",
+
+  "coachPopupText": "मैं यहाँ हूं, कुछ भी पूछें",
+  "coachPopupSemantic": "AI कोच यहां है। सवाल पूछने के लिए टैप करें।",
+  "coachFabLabel": "AI कोच",
+  "coachFabTooltip": "AI करियर कोच खोलें",
+
+  "navHome": "होम",
+  "navTrain": "सीखें",
+  "navJobs": "नौकरियां",
+  "navShift": "शिफ्ट",
+  "navProfile": "मेरी प्रोफ़ाइल",
+
+  "appTitle": "सक्षम",
+
+  "languagePickerTitle": "अपनी भाषा चुनें",
+  "languageEnglish": "English",
+  "languageHindi": "हिंदी"
+}

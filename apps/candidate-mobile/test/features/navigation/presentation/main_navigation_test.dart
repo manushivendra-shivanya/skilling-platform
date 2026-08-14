@@ -8,6 +8,7 @@ import 'package:candidate_mobile/features/jobs/data/local_mock_jobs_repository.d
 import 'package:candidate_mobile/features/jobs/data/secure_saved_jobs_repository.dart';
 import 'package:candidate_mobile/features/onboarding/data/secure_candidate_onboarding_repository.dart';
 import 'package:candidate_mobile/features/onboarding/domain/candidate_onboarding_draft.dart';
+import 'package:candidate_mobile/l10n/generated/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -50,7 +51,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('नमस्ते'), findsOneWidget);
+    expect(find.text('Hello'), findsOneWidget);
     await tester.tap(find.text('Train'));
     await tester.pumpAndSettle();
     expect(find.text('Your training pathway'), findsOneWidget);
@@ -168,13 +169,13 @@ void main() {
     await tester.pumpAndSettle();
 
     await tester.scrollUntilVisible(
-      find.text('नमस्ते'),
+      find.text('Hello'),
       200,
       scrollable: find.byType(Scrollable).first,
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('नमस्ते'), findsOneWidget);
+    expect(find.text('Hello'), findsOneWidget);
   });
 
   testWidgets('global Coach and notifications routes return to selected tab', (
@@ -241,7 +242,12 @@ void main() {
             const NoEvidenceCareerPassportRepository(),
           ),
         ],
-        child: MaterialApp.router(theme: buildAppTheme(), routerConfig: router),
+        child: MaterialApp.router(
+          theme: buildAppTheme(),
+          routerConfig: router,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+        ),
       ),
     );
     await tester.pumpAndSettle();
@@ -267,7 +273,12 @@ void main() {
 
     await tester.pumpWidget(
       ProviderScope(
-        child: MaterialApp.router(theme: buildAppTheme(), routerConfig: router),
+        child: MaterialApp.router(
+          theme: buildAppTheme(),
+          routerConfig: router,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+        ),
       ),
     );
     await tester.pumpAndSettle();

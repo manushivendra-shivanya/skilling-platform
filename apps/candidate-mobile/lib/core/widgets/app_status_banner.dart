@@ -4,6 +4,7 @@ import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_icons.dart';
 import '../../app/theme/app_radius.dart';
 import '../../app/theme/app_spacing.dart';
+import '../../l10n/generated/app_localizations.dart';
 
 class AppOfflineBanner extends StatelessWidget {
   const AppOfflineBanner({
@@ -40,13 +41,13 @@ class AppPendingSyncBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final itemLabel = pendingCount == 1 ? 'item' : 'items';
+    final l10n = AppLocalizations.of(context);
     return _AppStatusBanner(
       icon: AppIcons.pendingSync,
-      message: '$pendingCount $itemLabel waiting to sync.',
+      message: l10n.homeSyncBanner(pendingCount),
       backgroundColor: AppColors.infoSoft,
       foregroundColor: AppColors.info,
-      actionLabel: onViewDetails == null ? null : 'View',
+      actionLabel: onViewDetails == null ? null : l10n.actionView,
       onAction: onViewDetails,
     );
   }

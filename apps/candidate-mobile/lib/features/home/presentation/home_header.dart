@@ -1,11 +1,25 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../app/localization/app_locale.dart';
+import '../../../app/localization/language_picker_sheet.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_radius.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../core/widgets/app_gradient_hero.dart';
 import '../../../core/widgets/app_readiness_ring.dart';
+import '../../../l10n/generated/app_localizations.dart';
 import '../domain/home_dashboard_repository.dart';
+
+/// [ReadinessBand] is a domain enum on purpose (see its own doc comment) --
+/// it owns the threshold logic, not display strings in any language. This
+/// is where that gets translated back into something a candidate reads.
+String _readinessBandLabel(AppLocalizations l10n, ReadinessBand band) =>
+    switch (band) {
+      ReadinessBand.starting => l10n.readinessBandStarting,
+      ReadinessBand.building => l10n.readinessBandBuilding,
+      ReadinessBand.jobReady => l10n.readinessBandJobReady,
+    };
 
 /// The branded block at the top of Home: who the candidate is, what they are
 /// working towards, and how much proof they have so far.
@@ -36,6 +50,8 @@ class HomeHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     // Tinted white rather than a fixed grey: it keeps its relationship with
     // the gradient at every point down the header.
     final onBrandMuted = Colors.white.withValues(alpha: 0.72);
@@ -71,7 +87,7 @@ class HomeHeader extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'नमस्ते',
+                      l10n.homeGreeting,
                       style: Theme.of(
                         context,
                       ).textTheme.labelMedium?.copyWith(color: onBrandMuted),
@@ -116,7 +132,7 @@ class HomeHeader extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'TAIYARI · READINESS',
+                      l10n.homeReadinessLabel,
                       style: Theme.of(context).textTheme.labelSmall?.copyWith(
                         color: onBrandMuted,
                         letterSpacing: 1.1,
@@ -124,7 +140,7 @@ class HomeHeader extends StatelessWidget {
                     ),
                     const SizedBox(height: AppSpacing.xxs),
                     Text(
-                      dashboard.readinessBand.label,
+                      _readinessBandLabel(l10n, dashboard.readinessBand),
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(
                         color: Colors.white,
                         fontWeight: FontWeight.w700,
@@ -143,8 +159,10 @@ class HomeHeader extends StatelessWidget {
                         const SizedBox(width: AppSpacing.xxs),
                         Expanded(
                           child: Text(
-                            '${dashboard.evidence.count} proof items · '
-                            'last ${dashboard.evidence.windowDays} days',
+                            l10n.homeEvidenceSummary(
+                              dashboard.evidence.count,
+                              dashboard.evidence.windowDays,
+                            ),
                             style: Theme.of(context).textTheme.bodySmall
                                 ?.copyWith(color: onBrandMuted),
                           ),
@@ -154,12 +172,23 @@ class HomeHeader extends StatelessWidget {
                     // Turns the band label into something actionable rather
                     // than a bare status word -- null once already at
                     // ReadinessBand.jobReady, which is the one state that
-                    // has nothing further to point toward.
-                    if (dashboard.readinessBandProgressNote
-                        case final note?) ...[
+                    // has nothing further to point toward. The model only
+                    // exposes the raw percent + next band; the sentence
+                    // itself is built here so its word order can differ
+                    // correctly per language (see app_hi.arb's
+                    // homeReadinessProgressNote for why English and Hindi
+                    // don't share one template).
+                    if (dashboard.percentToNextReadinessBand
+                        case final percent?) ...[
                       const SizedBox(height: AppSpacing.xxs),
                       Text(
-                        note,
+                        l10n.homeReadinessProgressNote(
+                          percent,
+                          _readinessBandLabel(
+                            l10n,
+                            dashboard.nextReadinessBand!,
+                          ),
+                        ),
                         style: Theme.of(context).textTheme.labelSmall?.copyWith(
                           color: Colors.white,
                           fontWeight: FontWeight.w700,
@@ -230,7 +259,7 @@ class _NotificationsButton extends StatelessWidget {
         border: Border.all(color: Colors.white.withValues(alpha: 0.22)),
       ),
       child: IconButton(
-        tooltip: 'Notifications',
+        tooltip: AppLocalizations.of(context).homeNotifications,
         onPressed: onPressed,
         icon: const Icon(Icons.notifications_none_outlined),
         color: Colors.white,
@@ -243,29 +272,44 @@ class _NotificationsButton extends StatelessWidget {
   }
 }
 
-class _LanguageChip extends StatelessWidget {
+/// Was purely decorative -- a static "हिं · EN" label with no `onTap` at
+/// all, wired to nothing. Now a real toggle: shows the active language's
+/// short code and opens [showLanguagePickerSheet] on tap, the same picker
+/// every future "change language" entry point in the app should reuse
+/// rather than re-implementing its own switch statement.
+class _LanguageChip extends ConsumerWidget {
   const _LanguageChip();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
+    final isHindi = ref.watch(appLocaleProvider).languageCode == 'hi';
+
     return Semantics(
       button: true,
-      label: 'Change language. Hindi or English.',
-      child: Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.xs,
-          vertical: 6,
-        ),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.14),
-          borderRadius: AppRadius.smallBorder,
-          border: Border.all(color: Colors.white.withValues(alpha: 0.22)),
-        ),
-        child: Text(
-          'हिं · EN',
-          style: Theme.of(context).textTheme.labelSmall?.copyWith(
-            color: Colors.white,
-            fontWeight: FontWeight.w700,
+      label: l10n.homeChangeLanguage,
+      child: InkWell(
+        onTap: () => showLanguagePickerSheet(context),
+        borderRadius: AppRadius.smallBorder,
+        child: Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.xs,
+            vertical: 6,
+          ),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.14),
+            borderRadius: AppRadius.smallBorder,
+            border: Border.all(color: Colors.white.withValues(alpha: 0.22)),
+          ),
+          child: Text(
+            // Both codes shown regardless of which is active -- "EN" /
+            // "हिं" -- with the active one leading, so the chip still reads
+            // as a toggle rather than a fixed label naming only itself.
+            isHindi ? 'हिं · EN' : 'EN · हिं',
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.w700,
+            ),
           ),
         ),
       ),

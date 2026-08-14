@@ -15,6 +15,7 @@ import '../../../core/widgets/app_meter_bar.dart';
 import '../../../core/widgets/app_skeleton.dart';
 import '../../../core/widgets/app_state_view.dart';
 import '../../../core/widgets/app_status_banner.dart';
+import '../../../l10n/generated/app_localizations.dart';
 import '../domain/home_dashboard_repository.dart';
 import 'home_dashboard_controller.dart';
 import 'home_header.dart';
@@ -40,6 +41,7 @@ class HomeDashboardScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
     final dashboard = ref.watch(homeDashboardControllerProvider);
     void openNotifications() {
       unawaited(
@@ -53,20 +55,19 @@ class HomeDashboardScreen extends ConsumerWidget {
     return dashboard.when(
       loading: () => const _HomeLoadingView(),
       error: (error, stackTrace) => AppErrorState(
-        title: 'Home could not be loaded',
+        title: l10n.homeLoadErrorTitle,
         message: error is AppFailure
             ? error.message
-            : 'Your local dashboard is temporarily unavailable.',
+            : l10n.homeLoadErrorMessage,
         onAction: () =>
             ref.read(homeDashboardControllerProvider.notifier).refresh(),
       ),
       data: (value) {
         if (value == null) {
           return AppEmptyState(
-            title: 'Your journey starts here',
-            message:
-                'Complete profile setup to receive a daily mission and pathway.',
-            actionLabel: 'Refresh',
+            title: l10n.homeEmptyTitle,
+            message: l10n.homeEmptyMessage,
+            actionLabel: l10n.actionRefresh,
             onAction: () =>
                 ref.read(homeDashboardControllerProvider.notifier).refresh(),
           );
@@ -110,6 +111,7 @@ class _HomeContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final mission = dashboard.todayMission;
     final interview = dashboard.nextInterview;
     final pathway = dashboard.pathway;
@@ -162,21 +164,17 @@ class _HomeContent extends StatelessWidget {
                   AppCard(
                     backgroundColor: AppColors.brandSoft,
                     onTap: onOpenDiagnostic,
-                    semanticLabel:
-                        'No mission today. Open the career diagnostic.',
+                    semanticLabel: l10n.homeNoMissionSemantic,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Aaj koi mission nahi',
+                          l10n.homeNoMissionTitle,
                           style: Theme.of(context).textTheme.titleSmall
                               ?.copyWith(fontWeight: FontWeight.w700),
                         ),
                         const SizedBox(height: AppSpacing.xxs),
-                        const Text(
-                          'Apna career diagnostic poora karein, hum aapke '
-                          'liye agla step chunenge.',
-                        ),
+                        Text(l10n.homeNoMissionBody),
                       ],
                     ),
                   ),
@@ -192,7 +190,7 @@ class _HomeContent extends StatelessWidget {
                 ],
 
                 Text(
-                  'Jaari rakhein',
+                  l10n.homeContinueSectionTitle,
                   style: Theme.of(
                     context,
                   ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
@@ -221,8 +219,8 @@ class _HomeContent extends StatelessWidget {
                     icon: Icons.mic_none_outlined,
                     iconBackground: AppColors.infoSoft,
                     iconColor: AppColors.info,
-                    title: 'साक्षात्कार (इंटरव्यू) अभ्यास',
-                    subtitle: 'पहला सवाल · अपना परिचय',
+                    title: l10n.homeInterviewPracticeTitle,
+                    subtitle: l10n.homeInterviewPracticeSubtitle,
                     onTap: onOpenVoiceInterview,
                   ),
               ],
@@ -251,12 +249,17 @@ class _PathwayRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final overallPercent = (learningProgress * 100).round();
+
     return AppCard(
       onTap: onTap,
-      semanticLabel:
-          'Continue pathway ${pathway.title}. '
-          '${pathway.completedUnits} of ${pathway.totalUnits} lessons done. '
-          '${(learningProgress * 100).round()}% of your learning journey done.',
+      semanticLabel: l10n.homePathwaySemantic(
+        pathway.title,
+        pathway.completedUnits,
+        pathway.totalUnits,
+        overallPercent,
+      ),
       child: Column(
         children: [
           Row(
@@ -278,7 +281,10 @@ class _PathwayRow extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      '${pathway.completedUnits} / ${pathway.totalUnits} lessons',
+                      l10n.homePathwayLessons(
+                        pathway.completedUnits,
+                        pathway.totalUnits,
+                      ),
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: AppColors.inkMuted,
                       ),
@@ -300,14 +306,14 @@ class _PathwayRow extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  'Overall learning journey',
+                  l10n.homePathwayOverallLabel,
                   style: Theme.of(
                     context,
                   ).textTheme.labelSmall?.copyWith(color: AppColors.inkMuted),
                 ),
               ),
               Text(
-                '${(learningProgress * 100).round()}%',
+                '$overallPercent%',
                 style: Theme.of(context).textTheme.labelSmall?.copyWith(
                   color: AppColors.inkMuted,
                   fontWeight: FontWeight.w700,
@@ -321,9 +327,10 @@ class _PathwayRow extends StatelessWidget {
           if (pathway.remainingUnits > 0) ...[
             const SizedBox(height: AppSpacing.sm),
             AppInsightLine(
-              text:
-                  '${pathway.remainingUnits} lessons left to finish '
-                  '${pathway.title}',
+              text: l10n.homePathwayRemaining(
+                pathway.remainingUnits,
+                pathway.title,
+              ),
             ),
           ],
         ],

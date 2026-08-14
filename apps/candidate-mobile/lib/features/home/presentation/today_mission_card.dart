@@ -6,6 +6,7 @@ import '../../../app/theme/app_spacing.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_insight_line.dart';
 import '../../../core/widgets/app_meter_bar.dart';
+import '../../../l10n/generated/app_localizations.dart';
 import '../domain/home_dashboard_repository.dart';
 
 /// The one thing Home asks the candidate to do today.
@@ -25,6 +26,8 @@ class TodayMissionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(AppSpacing.md),
@@ -43,7 +46,7 @@ class TodayMissionCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            'आज का काम · AAJ KA KAAM',
+            l10n.homeTodayMissionLabel,
             style: Theme.of(context).textTheme.labelSmall?.copyWith(
               color: AppColors.inkMuted,
               letterSpacing: 1.1,
@@ -78,10 +81,13 @@ class TodayMissionCard extends StatelessWidget {
             children: [
               _MetaChip(
                 icon: Icons.schedule_outlined,
-                label: '${mission.durationMinutes} min',
+                label: l10n.homeMissionDuration(mission.durationMinutes),
               ),
               _MetaChip(
-                label: 'Step ${mission.stepNumber} of ${mission.totalSteps}',
+                label: l10n.homeMissionStep(
+                  mission.stepNumber,
+                  mission.totalSteps,
+                ),
                 background: AppColors.accentSoft,
                 foreground: AppColors.accent,
               ),
@@ -94,20 +100,21 @@ class TodayMissionCard extends StatelessWidget {
           if (mission.stepsRemainingAfterThis > 0) ...[
             const SizedBox(height: AppSpacing.sm),
             AppInsightLine(
-              text:
-                  '${mission.stepsRemainingAfterThis} more steps after this '
-                  'one · about ${mission.estimatedMinutesRemainingAfterThis} '
-                  'min',
+              text: l10n.homeMissionStepsRemaining(
+                mission.stepsRemainingAfterThis,
+                mission.estimatedMinutesRemainingAfterThis,
+              ),
             ),
           ],
           const SizedBox(height: AppSpacing.md),
           AppButton(
-            label: 'शुरू करें · Start',
+            label: l10n.homeMissionStart,
             leadingIcon: Icons.play_arrow_rounded,
             onPressed: onStart,
-            semanticLabel:
-                'Start today\'s mission: ${mission.title}. '
-                '${mission.durationMinutes} minutes.',
+            semanticLabel: l10n.homeMissionStartSemantic(
+              mission.title,
+              mission.durationMinutes,
+            ),
           ),
         ],
       ),
