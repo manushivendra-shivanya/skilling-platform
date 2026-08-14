@@ -141,11 +141,11 @@ void main() {
     await tester.tap(find.text('Go to home'));
     await tester.pumpAndSettle();
     await tester.scrollUntilVisible(
-      find.text('नमस्ते'),
+      find.text('Hello'),
       200,
       scrollable: find.byType(Scrollable).first,
     );
-    expect(find.text('नमस्ते'), findsOneWidget);
+    expect(find.text('Hello'), findsOneWidget);
   });
 
   testWidgets(

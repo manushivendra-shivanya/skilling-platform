@@ -4,6 +4,7 @@ import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_radius.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../core/widgets/app_button.dart';
+import '../../../l10n/generated/app_localizations.dart';
 import '../domain/home_dashboard_repository.dart';
 
 /// A scheduled, real-world commitment.
@@ -24,6 +25,9 @@ class UpcomingInterviewCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final isHindi = Localizations.localeOf(context).languageCode == 'hi';
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(AppSpacing.md),
@@ -55,7 +59,7 @@ class UpcomingInterviewCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'AANE WALA · UPCOMING',
+                      l10n.homeInterviewLabel,
                       style: Theme.of(context).textTheme.labelSmall?.copyWith(
                         color: AppColors.accent,
                         letterSpacing: 1.1,
@@ -64,13 +68,13 @@ class UpcomingInterviewCard extends StatelessWidget {
                     ),
                     const SizedBox(height: AppSpacing.xxs),
                     Text(
-                      'Interview · ${interview.employerName}',
+                      l10n.homeInterviewTitle(interview.employerName),
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.w700,
                       ),
                     ),
                     Text(
-                      '${_formatWhen(interview.scheduledAt)} · '
+                      '${_formatWhen(interview.scheduledAt, isHindi)} · '
                       '${interview.location}',
                       style: Theme.of(
                         context,
@@ -83,7 +87,7 @@ class UpcomingInterviewCard extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.sm),
           AppButton(
-            label: 'Taiyari karein · Prepare',
+            label: l10n.homeInterviewPrepare,
             variant: AppButtonVariant.secondary,
             onPressed: onPrepare,
           ),
@@ -93,21 +97,36 @@ class UpcomingInterviewCard extends StatelessWidget {
   }
 }
 
-/// Weekday and time, in the Hinglish register the rest of Home uses.
+/// Weekday and time.
 ///
-/// Deliberately not `intl`'s locale formatting: the day names are the ones a
-/// supervisor says on a shift floor, and mixing a localised date into
-/// romanised Hindi copy reads as machine-translated.
-String _formatWhen(DateTime when) {
-  const days = <String>[
-    'Somvar',
-    'Mangalvar',
-    'Budhvar',
-    'Guruvar',
-    'Shukravar',
-    'Shanivar',
-    'Ravivar',
+/// Was a single hardcoded romanised-Hindi list ("Somvar, Mangalvar, ...")
+/// regardless of language -- the app's old permanent-Hinglish default. Now
+/// that the language toggle is real, each locale gets its own real weekday
+/// names rather than the app defaulting to Hinglish's romanisation for
+/// English too. Still not `intl`'s `DateFormat` for the Hindi case: proper
+/// Devanagari weekday names from locale data are correct, but this app has
+/// no other `intl`-formatted dates to be consistent with, and a plain
+/// lookup table needs no locale-data initialization to get right in tests.
+String _formatWhen(DateTime when, bool isHindi) {
+  const englishDays = <String>[
+    'Monday',
+    'Tuesday',
+    'Wednesday',
+    'Thursday',
+    'Friday',
+    'Saturday',
+    'Sunday',
   ];
+  const hindiDays = <String>[
+    'सोमवार',
+    'मंगलवार',
+    'बुधवार',
+    'गुरुवार',
+    'शुक्रवार',
+    'शनिवार',
+    'रविवार',
+  ];
+  final days = isHindi ? hindiDays : englishDays;
   final day = days[(when.weekday - 1).clamp(0, 6)];
   final hour = when.hour.toString().padLeft(2, '0');
   final minute = when.minute.toString().padLeft(2, '0');

@@ -1,0 +1,18 @@
+# Config for `flutter gen-l10n`, which runs automatically as part of
+# `flutter pub get` / `flutter analyze` / `flutter test` / `flutter build`
+# whenever `generate: true` is set under `flutter:` in pubspec.yaml (see
+# there for why this project uses the official ARB pipeline rather than a
+# hand-rolled per-screen "CopyForLanguage" switch, the way the pre-existing
+# onboarding sign-in flow does).
+#
+# app_en.arb is the template: every key candidates see anywhere in the app
+# must exist there first with an @-metadata description, then get a
+# matching entry in every other ARB file. `flutter gen-l10n` fails loudly
+# (a real build error, not a silent fallback) if a non-template file is
+# missing a key the template defines.
+arb-dir: lib/l10n
+template-arb-file: app_en.arb
+output-localization-file: app_localizations.dart
+output-class: AppLocalizations
+nullable-getter: false
+output-dir: lib/l10n/generated

@@ -7,6 +7,7 @@ import 'package:candidate_mobile/features/home/domain/home_dashboard_repository.
 import 'package:candidate_mobile/features/home/presentation/home_dashboard_screen.dart';
 import 'package:candidate_mobile/features/home/presentation/home_header.dart';
 import 'package:candidate_mobile/features/home/presentation/today_mission_card.dart';
+import 'package:candidate_mobile/l10n/generated/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -20,6 +21,8 @@ void main() {
         ),
       ],
       child: MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(
           body: HomeDashboardScreen(
             onOpenDiagnostic: () {},
@@ -59,7 +62,7 @@ void main() {
     // The spec asks for a today card with one primary CTA. Any second
     // FilledButton means the hierarchy has regressed.
     expect(find.byType(FilledButton), findsOneWidget);
-    expect(find.textContaining('शुरू करें'), findsOneWidget);
+    expect(find.text('Start'), findsOneWidget);
   });
 
   testWidgets('every control on Home is enabled', (tester) async {
@@ -122,7 +125,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Aaj koi mission nahi'), findsOneWidget);
+    expect(find.text('No mission today'), findsOneWidget);
     // No mission means no primary button at all, rather than a disabled one.
     expect(find.byType(FilledButton), findsNothing);
   });
@@ -157,7 +160,7 @@ void main() {
     expect(find.text('Career Coach se poochein'), findsNothing);
     expect(find.text('Aapke proof'), findsNothing);
     expect(find.text('Career diagnostic'), findsNothing);
-    expect(find.text('साक्षात्कार (इंटरव्यू) अभ्यास'), findsOneWidget);
+    expect(find.text('Interview practice'), findsOneWidget);
   });
 
   testWidgets(
@@ -172,8 +175,8 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('साक्षात्कार (इंटरव्यू) अभ्यास'), findsNothing);
-      expect(find.textContaining('Taiyari karein'), findsOneWidget);
+      expect(find.text('Interview practice'), findsNothing);
+      expect(find.text('Prepare'), findsOneWidget);
     },
   );
 
@@ -198,8 +201,8 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('साक्षात्कार (इंटरव्यू) अभ्यास'), findsOneWidget);
-      expect(find.textContaining('Taiyari karein'), findsNothing);
+      expect(find.text('Interview practice'), findsOneWidget);
+      expect(find.text('Prepare'), findsNothing);
     },
   );
 

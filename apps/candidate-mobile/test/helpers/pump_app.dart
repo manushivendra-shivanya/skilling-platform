@@ -1,6 +1,7 @@
 import 'package:candidate_mobile/app/app.dart';
 import 'package:candidate_mobile/app/dependencies.dart';
 import 'package:candidate_mobile/app/theme/app_theme.dart';
+import 'package:candidate_mobile/l10n/generated/app_localizations.dart';
 import 'package:candidate_mobile/core/analytics/analytics_tracker.dart';
 import 'package:candidate_mobile/core/config/app_environment.dart';
 import 'package:candidate_mobile/core/network/connectivity_status.dart';
@@ -221,6 +222,12 @@ extension CandidateAppPump on WidgetTester {
     return pumpWidget(
       MaterialApp(
         theme: buildAppTheme(),
+        // A handful of core/widgets (AppPendingSyncBanner and anything
+        // localized after it) read AppLocalizations.of(context) directly --
+        // without these two, that throws in any test using this helper,
+        // not just ones that already know they touch a localized widget.
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         home: MediaQuery(
           data: MediaQueryData(textScaler: textScaler),
           child: Scaffold(body: child),

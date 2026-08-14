@@ -75,43 +75,40 @@ class HomeDashboard {
   static const double _buildingThreshold = 0.34;
   static const double _jobReadyThreshold = 0.75;
 
-  /// A short, plain-language nudge toward the next [ReadinessBand] -- e.g.
-  /// "13% to Job ready" -- shown alongside the coarse band above so the
-  /// screen says something a candidate can act on, not just a label. Null
-  /// once already at [ReadinessBand.jobReady]: there is no further band to
-  /// point toward.
+  /// The next [ReadinessBand] up from the current one -- e.g.
+  /// [ReadinessBand.jobReady] while [readinessBand] is
+  /// [ReadinessBand.building]. Null once already at [ReadinessBand.jobReady]:
+  /// there is no further band to point toward.
+  ///
+  /// Paired with [percentToNextReadinessBand] so the presentation layer can
+  /// build a localized nudge (e.g. "13% to Job ready") without this model
+  /// owning any display string itself -- the model exposes what changed,
+  /// the widget decides how to say it in the candidate's language.
+  ReadinessBand? get nextReadinessBand => switch (readinessBand) {
+    ReadinessBand.starting => ReadinessBand.building,
+    ReadinessBand.building => ReadinessBand.jobReady,
+    ReadinessBand.jobReady => null,
+  };
+
+  /// Whole percentage points of [readinessProgress] still needed to reach
+  /// [nextReadinessBand]. Null exactly when [nextReadinessBand] is null.
   ///
   /// Computed from [readinessProgress] alone, the same field the coarse band
   /// already reads -- no new data source, just a second way of saying it.
-  String? get readinessBandProgressNote {
-    final ReadinessBand next;
-    final double threshold;
-    switch (readinessBand) {
-      case ReadinessBand.starting:
-        next = ReadinessBand.building;
-        threshold = _buildingThreshold;
-      case ReadinessBand.building:
-        next = ReadinessBand.jobReady;
-        threshold = _jobReadyThreshold;
-      case ReadinessBand.jobReady:
-        return null;
-    }
+  int? get percentToNextReadinessBand {
+    final threshold = switch (readinessBand) {
+      ReadinessBand.starting => _buildingThreshold,
+      ReadinessBand.building => _jobReadyThreshold,
+      ReadinessBand.jobReady => null,
+    };
+    if (threshold == null) return null;
     // Rounds up, not to nearest: "0% to Job ready" while still one point
     // short of the threshold would read as done when it isn't.
-    final percent = ((threshold - readinessProgress) * 100).ceil();
-    return '$percent% to ${next.label}';
+    return ((threshold - readinessProgress) * 100).ceil();
   }
 }
 
-enum ReadinessBand {
-  starting('Starting out'),
-  building('Building'),
-  jobReady('Job ready');
-
-  const ReadinessBand(this.label);
-
-  final String label;
-}
+enum ReadinessBand { starting, building, jobReady }
 
 /// How much proof of competence the candidate has accumulated, and over what
 /// window. The window travels with the count because a bare number invites

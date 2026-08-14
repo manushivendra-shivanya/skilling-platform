@@ -1,0 +1,263 @@
+{
+  "@@locale": "en",
+
+  "homeGreeting": "Hello",
+  "@homeGreeting": {
+    "description": "Greeting shown above the candidate's first name on Home's header."
+  },
+
+  "homeReadinessLabel": "READINESS",
+  "@homeReadinessLabel": {
+    "description": "Small eyebrow label above the readiness band on Home's header."
+  },
+
+  "readinessBandStarting": "Starting out",
+  "readinessBandBuilding": "Building",
+  "readinessBandJobReady": "Job ready",
+  "@readinessBandStarting": {
+    "description": "Coarse readiness band label -- lowest of three."
+  },
+  "@readinessBandBuilding": {
+    "description": "Coarse readiness band label -- middle of three."
+  },
+  "@readinessBandJobReady": {
+    "description": "Coarse readiness band label -- highest of three, terminal."
+  },
+
+  "homeReadinessProgressNote": "{percent}% to {bandLabel}",
+  "@homeReadinessProgressNote": {
+    "description": "Nudge toward the next readiness band, shown under the band label. Null (not shown) once already at the highest band.",
+    "placeholders": {
+      "percent": { "type": "int" },
+      "bandLabel": { "type": "String" }
+    }
+  },
+
+  "homeEvidenceSummary": "{count, plural, one{{count} proof item} other{{count} proof items}} · last {windowDays} days",
+  "@homeEvidenceSummary": {
+    "description": "Evidence count and its recency window, shown on Home's header.",
+    "placeholders": {
+      "count": { "type": "int" },
+      "windowDays": { "type": "int" }
+    }
+  },
+
+  "homeNotifications": "Notifications",
+  "@homeNotifications": {
+    "description": "Tooltip/semantic label on the notifications bell."
+  },
+
+  "homeChangeLanguage": "Change language",
+  "@homeChangeLanguage": {
+    "description": "Semantic label on Home's language chip."
+  },
+
+  "homeTodayMissionLabel": "TODAY'S MISSION",
+  "@homeTodayMissionLabel": {
+    "description": "Eyebrow label above today's mission card title."
+  },
+
+  "homeMissionStart": "Start",
+  "@homeMissionStart": {
+    "description": "Label on today's mission card's primary button."
+  },
+
+  "homeMissionStartSemantic": "Start today's mission: {title}. {minutes} minutes.",
+  "@homeMissionStartSemantic": {
+    "description": "Full semantic label read by a screen reader for the mission's Start button.",
+    "placeholders": {
+      "title": { "type": "String" },
+      "minutes": { "type": "int" }
+    }
+  },
+
+  "homeMissionDuration": "{minutes} min",
+  "@homeMissionDuration": {
+    "description": "Duration chip on today's mission card.",
+    "placeholders": {
+      "minutes": { "type": "int" }
+    }
+  },
+
+  "homeMissionStep": "Step {step} of {total}",
+  "@homeMissionStep": {
+    "description": "Step-position chip on today's mission card.",
+    "placeholders": {
+      "step": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+
+  "homeMissionStepsRemaining": "{steps, plural, one{{steps} more step after this one} other{{steps} more steps after this one}} · about {minutes} min",
+  "@homeMissionStepsRemaining": {
+    "description": "Insight line under the mission card's progress bar, estimating what's left.",
+    "placeholders": {
+      "steps": { "type": "int" },
+      "minutes": { "type": "int" }
+    }
+  },
+
+  "homeNoMissionTitle": "No mission today",
+  "@homeNoMissionTitle": {
+    "description": "Title of the card shown when the candidate has no pathway or has finished it."
+  },
+
+  "homeNoMissionBody": "Complete your career diagnostic and we'll choose your next step.",
+  "@homeNoMissionBody": {
+    "description": "Body of the no-mission card."
+  },
+
+  "homeInterviewLabel": "UPCOMING",
+  "@homeInterviewLabel": {
+    "description": "Eyebrow label on the upcoming-interview card."
+  },
+
+  "homeInterviewTitle": "Interview · {employer}",
+  "@homeInterviewTitle": {
+    "description": "Title on the upcoming-interview card.",
+    "placeholders": {
+      "employer": { "type": "String" }
+    }
+  },
+
+  "homeInterviewPrepare": "Prepare",
+  "@homeInterviewPrepare": {
+    "description": "Button label on the upcoming-interview card."
+  },
+
+  "homeContinueSectionTitle": "Keep going",
+  "@homeContinueSectionTitle": {
+    "description": "Section header above the pathway-progress row / interview-practice shortcut."
+  },
+
+  "homeInterviewPracticeTitle": "Interview practice",
+  "@homeInterviewPracticeTitle": {
+    "description": "Title of the interview-practice shortcut row."
+  },
+
+  "homeInterviewPracticeSubtitle": "First question · introduce yourself",
+  "@homeInterviewPracticeSubtitle": {
+    "description": "Subtitle of the interview-practice shortcut row."
+  },
+
+  "homePathwayLessons": "{completed} / {total} lessons",
+  "@homePathwayLessons": {
+    "description": "Completed-of-total lesson count on the pathway-progress row.",
+    "placeholders": {
+      "completed": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+
+  "homePathwayOverallLabel": "Overall learning journey",
+  "@homePathwayOverallLabel": {
+    "description": "Label above the second, account-wide progress bar on the pathway row."
+  },
+
+  "homePathwayRemaining": "{count, plural, one{{count} lesson left to finish {title}} other{{count} lessons left to finish {title}}}",
+  "@homePathwayRemaining": {
+    "description": "Insight line under the pathway-progress row's bars.",
+    "placeholders": {
+      "count": { "type": "int" },
+      "title": { "type": "String" }
+    }
+  },
+
+  "homeSyncBanner": "{count, plural, one{{count} item waiting to sync.} other{{count} items waiting to sync.}}",
+  "@homeSyncBanner": {
+    "description": "Banner shown when local work is queued for sync. Used by the shared AppPendingSyncBanner, not just Home.",
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+
+  "actionView": "View",
+  "@actionView": {
+    "description": "Generic 'view details' action label, e.g. on the pending-sync banner."
+  },
+
+  "actionRefresh": "Refresh",
+  "@actionRefresh": {
+    "description": "Generic retry/refresh action label."
+  },
+
+  "homeLoadErrorTitle": "Home could not be loaded",
+  "homeLoadErrorMessage": "Your local dashboard is temporarily unavailable.",
+  "@homeLoadErrorTitle": {
+    "description": "Title of Home's error state."
+  },
+  "@homeLoadErrorMessage": {
+    "description": "Fallback message of Home's error state, used when the failure carries no message of its own."
+  },
+
+  "homeEmptyTitle": "Your journey starts here",
+  "homeEmptyMessage": "Complete profile setup to receive a daily mission and pathway.",
+  "@homeEmptyTitle": {
+    "description": "Title of Home's empty state, shown before a dashboard exists."
+  },
+  "@homeEmptyMessage": {
+    "description": "Message of Home's empty state."
+  },
+
+  "homeNoMissionSemantic": "No mission today. Open the career diagnostic.",
+  "@homeNoMissionSemantic": {
+    "description": "Semantic label on the no-mission card, read by a screen reader in place of its visible text."
+  },
+
+  "homePathwaySemantic": "Continue pathway {title}. {completed} of {total} lessons done. {percent}% of your learning journey done.",
+  "@homePathwaySemantic": {
+    "description": "Semantic label on the pathway-progress row.",
+    "placeholders": {
+      "title": { "type": "String" },
+      "completed": { "type": "int" },
+      "total": { "type": "int" },
+      "percent": { "type": "int" }
+    }
+  },
+
+  "coachPopupText": "I'm here — Ask me anything",
+  "@coachPopupText": {
+    "description": "Text inside the brief attention-popup bubble above the AI Coach FAB."
+  },
+
+  "coachPopupSemantic": "AI Coach is here. Tap to ask a question.",
+  "@coachPopupSemantic": {
+    "description": "Semantic label on the AI Coach attention-popup bubble."
+  },
+
+  "coachFabLabel": "AI Coach",
+  "@coachFabLabel": {
+    "description": "Label on the global AI Coach floating action button."
+  },
+
+  "coachFabTooltip": "Open AI Career Coach",
+  "@coachFabTooltip": {
+    "description": "Tooltip on the global AI Coach floating action button."
+  },
+
+  "navHome": "Home",
+  "navTrain": "Train",
+  "navJobs": "Jobs",
+  "navShift": "Shift",
+  "navProfile": "My Profile",
+  "@navHome": { "description": "Bottom navigation destination label." },
+  "@navTrain": { "description": "Bottom navigation destination label." },
+  "@navJobs": { "description": "Bottom navigation destination label." },
+  "@navShift": { "description": "Bottom navigation destination label." },
+  "@navProfile": { "description": "Bottom navigation destination label." },
+
+  "appTitle": "Saksham",
+  "@appTitle": {
+    "description": "App/brand name, shown as every non-Home tab's AppBar title."
+  },
+
+  "languagePickerTitle": "Choose your language",
+  "@languagePickerTitle": {
+    "description": "Title of the language-picker sheet opened from Home's language chip."
+  },
+
+  "languageEnglish": "English",
+  "languageHindi": "हिंदी",
+  "@languageEnglish": { "description": "Language option label." },
+  "@languageHindi": { "description": "Language option label, in its own script." }
+}

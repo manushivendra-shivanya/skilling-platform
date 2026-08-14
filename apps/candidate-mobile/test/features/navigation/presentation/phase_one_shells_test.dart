@@ -49,13 +49,13 @@ void main() {
     // UpcomingInterviewCard's own CTA is on screen -- the interview-practice
     // shortcut row is deliberately hidden rather than duplicating it (see
     // home_dashboard_screen_test.dart).
-    expect(find.textContaining('Taiyari karein'), findsOneWidget);
+    expect(find.text('Prepare'), findsOneWidget);
 
     repository.setResponse(const Success(null));
     // Drag from the greeting in the header: it is the one element present
     // for every dashboard shape, so it cannot be pushed below the fold by
     // an optional card above it.
-    await tester.drag(find.text('नमस्ते'), const Offset(0, 500));
+    await tester.drag(find.text('Hello'), const Offset(0, 500));
     await tester.pump();
     await tester.pumpAndSettle();
     expect(find.text('Your journey starts here'), findsOneWidget);
