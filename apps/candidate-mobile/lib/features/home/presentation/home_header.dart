@@ -283,7 +283,18 @@ class _LanguageChip extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
-    final isHindi = ref.watch(appLocaleProvider).languageCode == 'hi';
+    final locale = ref.watch(appLocaleProvider);
+
+    // A two-way "EN · हिं" toggle hint doesn't have anywhere honest to put
+    // a third state, so this shows the *active* language's own short code
+    // instead -- a label, not a pairwise hint -- now that
+    // Locale.fromSubtags(languageCode: 'hi', scriptCode: 'Latn') (Hinglish)
+    // is a real third option alongside plain 'en' and 'hi'.
+    final shortCode = switch (locale.scriptCode) {
+      'Latn' => 'Hg',
+      _ when locale.languageCode == 'hi' => 'हिं',
+      _ => 'EN',
+    };
 
     return Semantics(
       button: true,
@@ -302,10 +313,7 @@ class _LanguageChip extends ConsumerWidget {
             border: Border.all(color: Colors.white.withValues(alpha: 0.22)),
           ),
           child: Text(
-            // Both codes shown regardless of which is active -- "EN" /
-            // "हिं" -- with the active one leading, so the chip still reads
-            // as a toggle rather than a fixed label naming only itself.
-            isHindi ? 'हिं · EN' : 'EN · हिं',
+            shortCode,
             style: Theme.of(context).textTheme.labelSmall?.copyWith(
               color: Colors.white,
               fontWeight: FontWeight.w700,

@@ -42,6 +42,15 @@
 
   "actionView": "देखें",
   "actionRefresh": "रीफ़्रेश करें",
+  "actionTryAgain": "फिर से कोशिश करें",
+
+  "failureNetwork": "इंटरनेट कनेक्शन नहीं है। नेटवर्क जांचें और फिर से कोशिश करें।",
+  "failureStorage": "आपके डिवाइस पर सेव करने में समस्या हुई।",
+  "failureValidation": "यह सही नहीं लग रहा। कृपया जांचें और फिर से कोशिश करें।",
+  "failureAuthentication": "जारी रखने के लिए कृपया दोबारा साइन इन करें।",
+  "failurePermission": "इसके लिए एक अनुमति चाहिए जो अभी नहीं दी गई है।",
+  "failureTimeout": "इसमें बहुत समय लग गया। कृपया फिर से कोशिश करें।",
+  "failureUnexpected": "कुछ अप्रत्याशित गड़बड़ी हुई।",
 
   "homeLoadErrorTitle": "होम लोड नहीं हो सका",
   "homeLoadErrorMessage": "आपका डैशबोर्ड फ़िलहाल उपलब्ध नहीं है।",
@@ -68,5 +77,6 @@
 
   "languagePickerTitle": "अपनी भाषा चुनें",
   "languageEnglish": "English",
-  "languageHindi": "हिंदी"
+  "languageHindi": "हिंदी",
+  "languageHinglish": "Hinglish"
 }

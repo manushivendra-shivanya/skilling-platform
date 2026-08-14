@@ -3,6 +3,7 @@ import 'package:candidate_mobile/core/errors/app_failure.dart';
 import 'package:candidate_mobile/core/errors/result.dart';
 import 'package:candidate_mobile/features/networking/domain/networking_repository.dart';
 import 'package:candidate_mobile/features/networking/presentation/discover_candidates_screen.dart';
+import 'package:candidate_mobile/l10n/generated/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -67,7 +68,11 @@ void main() {
     return tester.pumpWidget(
       ProviderScope(
         overrides: [networkingRepositoryProvider.overrideWithValue(repo)],
-        child: const MaterialApp(home: DiscoverCandidatesScreen()),
+        child: const MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: DiscoverCandidatesScreen(),
+        ),
       ),
     );
   }

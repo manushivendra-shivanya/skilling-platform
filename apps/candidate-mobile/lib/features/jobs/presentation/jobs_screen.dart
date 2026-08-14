@@ -9,6 +9,7 @@ import '../../../app/theme/app_elevation.dart';
 import '../../../app/theme/app_radius.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../core/errors/app_failure.dart';
+import '../../../core/errors/app_failure_localization.dart';
 import '../../../core/widgets/app_accent_pill.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_chip.dart';
@@ -20,6 +21,7 @@ import '../../../core/widgets/app_skeleton.dart';
 import '../../../core/widgets/app_state_view.dart';
 import '../../../core/widgets/app_text_field.dart';
 import '../../../core/widgets/reduced_motion.dart';
+import '../../../l10n/generated/app_localizations.dart';
 import '../domain/jobs_repository.dart';
 import 'job_filters.dart';
 import 'jobs_controller.dart';
@@ -35,7 +37,7 @@ class JobsScreen extends ConsumerWidget {
       error: (error, stackTrace) => AppErrorState(
         title: 'Jobs could not be loaded',
         message: error is AppFailure
-            ? error.message
+            ? error.localizedMessage(AppLocalizations.of(context))
             : 'The local demo job feed is unavailable.',
         onAction: () => ref.read(jobsControllerProvider.notifier).retry(),
       ),

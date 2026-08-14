@@ -36,11 +36,16 @@ void main() {
       expect(find.text('Hello'), findsOneWidget);
       expect(find.text('Start'), findsOneWidget);
       expect(find.text('नमस्ते'), findsNothing);
+      expect(find.text('EN'), findsOneWidget);
 
-      await tester.tap(find.text('EN · हिं'));
+      await tester.tap(find.text('EN'));
       await tester.pumpAndSettle();
 
       expect(find.text('Choose your language'), findsOneWidget);
+      // All three real locales are offered, not just English/Hindi --
+      // Hinglish is Locale.fromSubtags(languageCode: 'hi', scriptCode:
+      // 'Latn'), a real ARB locale now, not a silent fallback to English.
+      expect(find.text('Hinglish'), findsOneWidget);
       await tester.tap(find.text('हिंदी'));
       await tester.pumpAndSettle();
 
@@ -49,7 +54,19 @@ void main() {
       expect(find.text('नमस्ते'), findsOneWidget);
       expect(find.text('शुरू करें'), findsOneWidget);
       expect(find.text('Hello'), findsNothing);
-      expect(find.text('हिं · EN'), findsOneWidget);
+      expect(find.text('हिं'), findsOneWidget);
+
+      await tester.tap(find.text('हिं'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Hinglish'));
+      await tester.pumpAndSettle();
+
+      // Hinglish gets its own real, distinct translation -- not a fallback
+      // to English or a re-use of the Hindi Devanagari copy.
+      expect(find.text('Namaste'), findsOneWidget);
+      expect(find.text('Shuru karein'), findsOneWidget);
+      expect(find.text('नमस्ते'), findsNothing);
+      expect(find.text('Hg'), findsOneWidget);
     },
   );
 }

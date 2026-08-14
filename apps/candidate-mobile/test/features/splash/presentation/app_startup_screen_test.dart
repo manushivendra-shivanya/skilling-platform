@@ -6,6 +6,7 @@ import 'package:candidate_mobile/features/splash/data/mock_app_startup_repositor
 import 'package:candidate_mobile/features/splash/domain/app_startup_state.dart';
 import 'package:candidate_mobile/features/splash/presentation/app_startup_controller.dart';
 import 'package:candidate_mobile/features/splash/presentation/app_startup_screen.dart';
+import 'package:candidate_mobile/l10n/generated/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -24,7 +25,13 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('We could not prepare the app'), findsOneWidget);
-    expect(find.text('You appear to be offline.'), findsOneWidget);
+    // Not the raw 'You appear to be offline.' internal message: AppFailure's
+    // own `message` is English-only developer/log text -- the screen shows
+    // a localized, generic message keyed off the failure's type instead.
+    expect(
+      find.text('No internet connection. Check your network and try again.'),
+      findsOneWidget,
+    );
     expect(find.text('Try again'), findsOneWidget);
 
     repository.setResponse(const Success(AppStartupState(isLowDataMode: true)));
@@ -49,6 +56,8 @@ void main() {
           ),
         ],
         child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: AppStartupScreen(onReady: (state) => readyState = state),
         ),
       ),

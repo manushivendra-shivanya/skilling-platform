@@ -181,6 +181,40 @@
     "description": "Generic retry/refresh action label."
   },
 
+  "actionTryAgain": "Try again",
+  "@actionTryAgain": {
+    "description": "Default action label on AppErrorState -- shown across nearly every screen's error state unless a screen passes its own more specific label."
+  },
+
+  "failureNetwork": "No internet connection. Check your network and try again.",
+  "failureStorage": "Something went wrong saving this on your device.",
+  "failureValidation": "That doesn't look right. Please check and try again.",
+  "failureAuthentication": "Please sign in again to continue.",
+  "failurePermission": "This needs a permission that hasn't been granted yet.",
+  "failureTimeout": "That took too long. Please try again.",
+  "failureUnexpected": "Something unexpected went wrong.",
+  "@failureNetwork": {
+    "description": "Generic user-facing message for AppFailure.NetworkFailure -- shown instead of the failure's own internal `message` field, which is English-only developer/log text, not translated copy."
+  },
+  "@failureStorage": {
+    "description": "Generic user-facing message for AppFailure.StorageFailure."
+  },
+  "@failureValidation": {
+    "description": "Generic user-facing message for AppFailure.ValidationFailure."
+  },
+  "@failureAuthentication": {
+    "description": "Generic user-facing message for AppFailure.AuthenticationFailure."
+  },
+  "@failurePermission": {
+    "description": "Generic user-facing message for AppFailure.PermissionFailure."
+  },
+  "@failureTimeout": {
+    "description": "Generic user-facing message for AppFailure.TimeoutFailure."
+  },
+  "@failureUnexpected": {
+    "description": "Generic user-facing message for AppFailure.UnexpectedFailure, and the fallback for any error that isn't an AppFailure at all."
+  },
+
   "homeLoadErrorTitle": "Home could not be loaded",
   "homeLoadErrorMessage": "Your local dashboard is temporarily unavailable.",
   "@homeLoadErrorTitle": {
@@ -258,6 +292,10 @@
 
   "languageEnglish": "English",
   "languageHindi": "हिंदी",
+  "languageHinglish": "Hinglish",
   "@languageEnglish": { "description": "Language option label." },
-  "@languageHindi": { "description": "Language option label, in its own script." }
+  "@languageHindi": { "description": "Language option label, in its own script." },
+  "@languageHinglish": {
+    "description": "Language option label for the romanised-Hindi register (Locale.fromSubtags(languageCode: 'hi', scriptCode: 'Latn')) -- matches CandidateLanguage.hinglish, onboarding's own third language choice."
+  }
 }

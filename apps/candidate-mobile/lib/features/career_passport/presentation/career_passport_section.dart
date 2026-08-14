@@ -7,6 +7,7 @@ import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_shadows.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../core/errors/app_failure.dart';
+import '../../../core/errors/app_failure_localization.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_chip.dart';
@@ -15,6 +16,7 @@ import '../../../core/widgets/app_icon_plate.dart';
 import '../../../core/widgets/app_initials_avatar.dart';
 import '../../../core/widgets/app_meter_bar.dart';
 import '../../../core/widgets/app_skeleton.dart';
+import '../../../l10n/generated/app_localizations.dart';
 import '../../workplace_simulation/domain/simulation_enums.dart';
 import '../../workplace_simulation/domain/simulation_runtime.dart';
 import '../domain/career_passport.dart';
@@ -77,7 +79,7 @@ class CareerPassportSection extends ConsumerWidget {
             loading: () => const AppSkeleton(height: 96),
             error: (error, _) => _CareerPassportError(
               message: error is AppFailure
-                  ? error.message
+                  ? error.localizedMessage(AppLocalizations.of(context))
                   : 'Your Career Passport could not be loaded.',
               onRetry: () =>
                   ref.read(careerPassportControllerProvider.notifier).retry(),
