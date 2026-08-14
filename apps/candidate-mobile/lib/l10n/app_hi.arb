@@ -540,5 +540,78 @@
 
   "examNotAnswered": "उत्तर नहीं दिया",
   "examYourAnswer": "आपका उत्तर: {label}",
-  "examCorrectAnswer": "सही उत्तर: {label}"
+  "examCorrectAnswer": "सही उत्तर: {label}",
+
+  "profileLoadErrorTitle": "प्रोफ़ाइल लोड नहीं हो सकी",
+  "profileLoadErrorFallback": "आपकी सुरक्षित लोकल प्रोफ़ाइल फ़िलहाल उपलब्ध नहीं है।",
+
+  "profileEditDetailsButton": "व्यक्तिगत विवरण संपादित करें",
+
+  "profileCareerSectionTitle": "करियर प्रोफ़ाइल",
+
+  "profileGoalLabel": "लक्ष्य",
+  "profileEducationLabel": "शिक्षा",
+  "profileExperienceLabel": "अनुभव",
+  "profilePreferredRolesLabel": "पसंदीदा भूमिकाएं",
+  "profileEvidenceLabel": "साक्ष्य",
+
+  "profileNotSet": "सेट नहीं है",
+
+  "profileNoEvidenceYet": "अभी कोई मूल्यांकित साक्ष्य नहीं",
+  "profileEvidenceCount": "{count, plural, one{{count} व्याख्या योग्य रिकॉर्ड} other{{count} व्याख्या योग्य रिकॉर्ड}}",
+
+  "profileCareerDiagnosticTitle": "करियर डायग्नोस्टिक",
+  "profileCareerDiagnosticSubtitle": "अपनी तैयारी दोबारा जांचें",
+
+  "profileReadinessEvidenceTitle": "तैयारी साक्ष्य",
+  "profileEvidenceDisclaimer": "साक्ष्य देखे गए प्लेटफ़ॉर्म कार्य को दिखाता है। यह व्यक्तित्व स्कोर नहीं है और अस्वीकृति का एकमात्र आधार नहीं हो सकता।",
+
+  "profilePrivacySectionTitle": "गोपनीयता और सहमति",
+
+  "profilePlatformTermsLabel": "प्लेटफ़ॉर्म शर्तें",
+  "profilePrivacyNoticeLabel": "गोपनीयता सूचना",
+  "profileNotAccepted": "स्वीकार नहीं किया गया",
+
+  "profileVoiceSharingLabel": "वॉइस साझा करना",
+  "profileVoiceSharingValue": "उस सुविधा के उपयोग पर अलग से अनुरोध किया जाता है",
+  "profileEmployerSharingLabel": "नियोक्ता साझा करना",
+  "profileEmployerSharingValue": "ऊपर करियर पासपोर्ट सेक्शन में नियंत्रित होता है",
+
+  "profilePreferencesSectionTitle": "प्राथमिकताएं और सहायता",
+
+  "profileLanguageLabel": "भाषा",
+
+  "profileNotificationPrefTitle": "सूचना प्राथमिकता",
+  "profileNotificationPrefSubtitle": "केवल प्राथमिकता के रूप में सेव है। अभी कोई पुश टोकन पंजीकृत नहीं है।",
+
+  "profileHelpSupportTitle": "सहायता और समर्थन",
+  "profileSupportSnackbar": "सपोर्ट संपर्क वर्कफ़्लो बाद के चरण में जोड़ा जाएगा।",
+
+  "profileDeleteAccountTitle": "खाता हटाने का अनुरोध करें",
+  "profileDeleteAccountSubtitle": "प्लेसहोल्डर • कोई अनुरोध नहीं भेजा गया",
+
+  "profileDeletionDialogTitle": "खाता हटाना अभी जुड़ा नहीं है",
+  "profileDeletionDialogMessage": "फेज़ 1 में कोई अनुरोध नहीं भेजा जाएगा। इसे सक्रिय करने से पहले एक सत्यापित डिलीशन वर्कफ़्लो और रिकवरी विंडो ज़रूरी है।",
+  "profileDeletionConfirmLabel": "समझ गया",
+  "profileDeletionCancelLabel": "बंद करें",
+
+  "profileLogoutButton": "लॉग आउट",
+
+  "profileFullNameLabel": "पूरा नाम",
+  "profileCityLabel": "शहर या ज़िला",
+
+  "profileNameCityValidation": "एक मान्य नाम और शहर दर्ज करें।",
+
+  "profileSaveChangesButton": "बदलाव सेव करें",
+  "profileSavedSnackbar": "प्रोफ़ाइल इस डिवाइस पर सुरक्षित रूप से सेव हो गई।",
+
+  "personaCardTitle": "प्रोफेशनल पर्सोना",
+  "personaSelfReportedChip": "स्व-घोषित",
+
+  "personaCardDescription": "आपके द्वारा बताई गई जानकारी से बना -- Flora इसे कभी खुद होस्ट या साझा नहीं करता। इसे कॉपी करके किसी संदेश, आवेदन, या अपनी प्रोफ़ाइल में पेस्ट करें।",
+
+  "personaCopyButton": "पर्सोना सारांश कॉपी करें",
+  "personaCopiedSnackbar": "पर्सोना सारांश कॉपी हो गया।",
+
+  "personaOpenToRoles": "इच्छुक: {roles}"
 }

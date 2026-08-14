@@ -1280,5 +1280,132 @@
   "@examCorrectAnswer": {
     "description": "Shown on an incorrect question-result row with the right answer.",
     "placeholders": { "label": { "type": "String" } }
+  },
+
+  "profileLoadErrorTitle": "Profile could not be loaded",
+  "profileLoadErrorFallback": "Your secure local profile is temporarily unavailable.",
+  "@profileLoadErrorTitle": { "description": "Title of the Profile screen's error state." },
+  "@profileLoadErrorFallback": { "description": "Fallback message when the load failure isn't an AppFailure." },
+
+  "profileEditDetailsButton": "Edit personal details",
+  "@profileEditDetailsButton": { "description": "Button on Profile, and title of the edit-details bottom sheet it opens." },
+
+  "profileCareerSectionTitle": "Career profile",
+  "@profileCareerSectionTitle": { "description": "Section header on Profile." },
+
+  "profileGoalLabel": "Goal",
+  "profileEducationLabel": "Education",
+  "profileExperienceLabel": "Experience",
+  "profilePreferredRolesLabel": "Preferred roles",
+  "profileEvidenceLabel": "Evidence",
+  "@profileGoalLabel": { "description": "Detail row label in the Career profile section." },
+  "@profileEducationLabel": { "description": "Detail row label in the Career profile section." },
+  "@profileExperienceLabel": { "description": "Detail row label in the Career profile section." },
+  "@profilePreferredRolesLabel": { "description": "Detail row label in the Career profile section." },
+  "@profileEvidenceLabel": { "description": "Detail row label in the Career profile section." },
+
+  "profileNotSet": "Not set",
+  "@profileNotSet": { "description": "Fallback value for a detail row with no value yet." },
+
+  "profileNoEvidenceYet": "No assessed evidence yet",
+  "profileEvidenceCount": "{count, plural, one{{count} explainable record} other{{count} explainable records}}",
+  "@profileNoEvidenceYet": { "description": "Evidence detail row value when there's no evidence yet." },
+  "@profileEvidenceCount": {
+    "description": "Evidence detail row value once evidence exists.",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "profileCareerDiagnosticTitle": "Career diagnostic",
+  "profileCareerDiagnosticSubtitle": "Recheck your readiness",
+  "@profileCareerDiagnosticTitle": { "description": "List tile title that opens the career diagnostic." },
+  "@profileCareerDiagnosticSubtitle": { "description": "List tile subtitle under Career diagnostic." },
+
+  "profileReadinessEvidenceTitle": "Readiness evidence",
+  "profileEvidenceDisclaimer": "Evidence shows observed platform work. It is not a personality score and cannot be the sole basis for rejection.",
+  "@profileReadinessEvidenceTitle": { "description": "Section header on Profile." },
+  "@profileEvidenceDisclaimer": { "description": "Disclaimer under the readiness-evidence list." },
+
+  "profilePrivacySectionTitle": "Privacy and consent",
+  "@profilePrivacySectionTitle": { "description": "Section header on Profile." },
+
+  "profilePlatformTermsLabel": "Platform terms",
+  "profilePrivacyNoticeLabel": "Privacy notice",
+  "profileNotAccepted": "Not accepted",
+  "@profilePlatformTermsLabel": { "description": "Detail row label in the Privacy and consent section." },
+  "@profilePrivacyNoticeLabel": { "description": "Detail row label in the Privacy and consent section." },
+  "@profileNotAccepted": { "description": "Detail row value when a consent hasn't been accepted." },
+
+  "profileVoiceSharingLabel": "Voice sharing",
+  "profileVoiceSharingValue": "Requested separately when that feature is used",
+  "profileEmployerSharingLabel": "Employer sharing",
+  "profileEmployerSharingValue": "Controlled in the Career Passport section above",
+  "@profileVoiceSharingLabel": { "description": "Detail row label in the Privacy and consent section." },
+  "@profileVoiceSharingValue": { "description": "Detail row value for Voice sharing." },
+  "@profileEmployerSharingLabel": { "description": "Detail row label in the Privacy and consent section." },
+  "@profileEmployerSharingValue": { "description": "Detail row value for Employer sharing." },
+
+  "profilePreferencesSectionTitle": "Preferences and support",
+  "@profilePreferencesSectionTitle": { "description": "Section header on Profile." },
+
+  "profileLanguageLabel": "Language",
+  "@profileLanguageLabel": { "description": "Detail row label showing the app's current display language." },
+
+  "profileNotificationPrefTitle": "Notification preference",
+  "profileNotificationPrefSubtitle": "Stored as a preference only. No push token is registered yet.",
+  "@profileNotificationPrefTitle": { "description": "Switch tile title in the Preferences section." },
+  "@profileNotificationPrefSubtitle": { "description": "Switch tile subtitle in the Preferences section." },
+
+  "profileHelpSupportTitle": "Help and support",
+  "profileSupportSnackbar": "Support contact workflow will be connected in a later phase.",
+  "@profileHelpSupportTitle": { "description": "List tile title in the Preferences section." },
+  "@profileSupportSnackbar": { "description": "Snackbar shown when tapping Help and support." },
+
+  "profileDeleteAccountTitle": "Request account deletion",
+  "profileDeleteAccountSubtitle": "Placeholder • no request is sent",
+  "@profileDeleteAccountTitle": { "description": "List tile title in the Preferences section." },
+  "@profileDeleteAccountSubtitle": { "description": "List tile subtitle in the Preferences section." },
+
+  "profileDeletionDialogTitle": "Account deletion is not connected",
+  "profileDeletionDialogMessage": "No request will be sent in Phase 1. A verified deletion workflow and recovery window are required before this becomes active.",
+  "profileDeletionConfirmLabel": "I understand",
+  "profileDeletionCancelLabel": "Close",
+  "@profileDeletionDialogTitle": { "description": "Title of the account-deletion placeholder dialog." },
+  "@profileDeletionDialogMessage": { "description": "Message of the account-deletion placeholder dialog." },
+  "@profileDeletionConfirmLabel": { "description": "Confirm button on the account-deletion placeholder dialog." },
+  "@profileDeletionCancelLabel": { "description": "Cancel button on the account-deletion placeholder dialog." },
+
+  "profileLogoutButton": "Log out",
+  "@profileLogoutButton": { "description": "Button at the bottom of Profile." },
+
+  "profileFullNameLabel": "Full name",
+  "profileCityLabel": "City or district",
+  "@profileFullNameLabel": { "description": "Text field label on the edit-details form." },
+  "@profileCityLabel": { "description": "Text field label on the edit-details form." },
+
+  "profileNameCityValidation": "Enter a valid name and city.",
+  "@profileNameCityValidation": { "description": "Inline validation error on the edit-details form." },
+
+  "profileSaveChangesButton": "Save changes",
+  "profileSavedSnackbar": "Profile saved securely on this device.",
+  "@profileSaveChangesButton": { "description": "Submit button on the edit-details form." },
+  "@profileSavedSnackbar": { "description": "Fallback success snackbar when saving the profile succeeds." },
+
+  "personaCardTitle": "Professional persona",
+  "personaSelfReportedChip": "Self-reported",
+  "@personaCardTitle": { "description": "Title of the Professional Persona networking card." },
+  "@personaSelfReportedChip": { "description": "Status chip on the Professional Persona card." },
+
+  "personaCardDescription": "Built from what you told us -- never hosted or shared by Flora on its own. Copy it to paste into a message, an application, or your own profile elsewhere.",
+  "@personaCardDescription": { "description": "Description under the Professional Persona card's title." },
+
+  "personaCopyButton": "Copy persona summary",
+  "personaCopiedSnackbar": "Persona summary copied.",
+  "@personaCopyButton": { "description": "Button on the Professional Persona card." },
+  "@personaCopiedSnackbar": { "description": "Snackbar shown after copying the persona summary." },
+
+  "personaOpenToRoles": "Open to: {roles}",
+  "@personaOpenToRoles": {
+    "description": "Line in the copied persona summary text listing preferred roles.",
+    "placeholders": { "roles": { "type": "String" } }
   }
 }
