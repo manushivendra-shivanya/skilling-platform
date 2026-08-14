@@ -7,6 +7,7 @@ import '../../../app/theme/app_radius.dart';
 import '../../../app/theme/app_shadows.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../core/errors/app_failure.dart';
+import '../../../core/errors/app_failure_localization.dart';
 import '../../../core/widgets/app_accent_pill.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_card.dart';
@@ -16,6 +17,7 @@ import '../../../core/widgets/app_icon_plate.dart';
 import '../../../core/widgets/app_skeleton.dart';
 import '../../../core/widgets/app_state_view.dart';
 import '../../../core/widgets/app_sticky_footer.dart';
+import '../../../l10n/generated/app_localizations.dart';
 import '../domain/shift_match.dart';
 import '../domain/shifts_repository.dart';
 import 'shifts_controller.dart';
@@ -44,13 +46,14 @@ class ShiftScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(shiftsControllerProvider);
+    final l10n = AppLocalizations.of(context);
     return state.when(
       loading: () => const _ShiftLoadingView(),
       error: (error, stackTrace) => AppErrorState(
-        title: 'Shifts could not be loaded',
+        title: l10n.shiftLoadErrorTitle,
         message: error is AppFailure
-            ? error.message
-            : 'Shifts are temporarily unavailable.',
+            ? error.localizedMessage(l10n)
+            : l10n.shiftLoadErrorFallback,
         onAction: () => ref.read(shiftsControllerProvider.notifier).retry(),
       ),
       data: (value) => _ShiftContent(
@@ -73,6 +76,7 @@ class ShiftScreen extends ConsumerWidget {
 /// urgency the data doesn't back up.
 String? shiftUrgencyLabel(
   DateTime startsAt, {
+  required AppLocalizations l10n,
   DateTime? now,
   Duration window = const Duration(hours: 6),
 }) {
@@ -81,12 +85,11 @@ String? shiftUrgencyLabel(
   if (diff.inMinutes <= 0 || diff > window) return null;
   final hours = diff.inMinutes ~/ 60;
   final minutes = diff.inMinutes % 60;
-  final duration = switch ((hours, minutes)) {
-    (0, final m) => '${m}m',
-    (final h, 0) => '${h}h',
-    (final h, final m) => '${h}h ${m}m',
+  return switch ((hours, minutes)) {
+    (0, final m) => l10n.shiftStartsInMinutes(m),
+    (final h, 0) => l10n.shiftStartsInHours(h),
+    (final h, final m) => l10n.shiftStartsInHoursMinutes(h, m),
   };
-  return 'Starts in $duration';
 }
 
 class _ShiftContent extends ConsumerWidget {
@@ -108,6 +111,7 @@ class _ShiftContent extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
     final startingSoon = [...state.shifts]
       ..sort((a, b) => a.startsAt.compareTo(b.startsAt));
     final bestMatch = [...state.shifts]
@@ -132,7 +136,7 @@ class _ShiftContent extends ConsumerWidget {
         (bestMatchMatch?.isEligible ?? false);
     final urgencyLabel = bestMatchShift == null
         ? null
-        : shiftUrgencyLabel(bestMatchShift.startsAt);
+        : shiftUrgencyLabel(bestMatchShift.startsAt, l10n: l10n);
 
     return Column(
       children: [
@@ -150,14 +154,14 @@ class _ShiftContent extends ConsumerWidget {
                 const SizedBox(height: AppSpacing.md),
               ],
               Text(
-                'My Shift',
+                l10n.shiftHeadline,
                 style: Theme.of(context).textTheme.headlineSmall,
               ),
               const SizedBox(height: AppSpacing.xs),
               Text(
                 state.isLiveData
-                    ? '${state.shifts.length} shift${state.shifts.length == 1 ? '' : 's'} near you today'
-                    : 'Demo shifts • No live employer connection',
+                    ? l10n.shiftCountNearYou(state.shifts.length)
+                    : l10n.shiftDemoDataCaption,
                 style: const TextStyle(color: AppColors.inkMuted),
               ),
               const SizedBox(height: AppSpacing.md),
@@ -169,17 +173,16 @@ class _ShiftContent extends ConsumerWidget {
               ),
               const SizedBox(height: AppSpacing.lg),
               if (state.shifts.isEmpty)
-                const SizedBox(
+                SizedBox(
                   height: 220,
                   child: AppEmptyState(
-                    title: 'No shifts right now',
-                    message:
-                        'Check back soon, or set your availability so Flora knows when you can work.',
+                    title: l10n.shiftEmptyTitle,
+                    message: l10n.shiftEmptyMessage,
                   ),
                 )
               else ...[
                 Text(
-                  'Best match',
+                  l10n.shiftBestMatchLabel,
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
                 const SizedBox(height: AppSpacing.sm),
@@ -198,7 +201,7 @@ class _ShiftContent extends ConsumerWidget {
                 ),
                 const SizedBox(height: AppSpacing.lg),
                 Text(
-                  'Starts soon',
+                  l10n.shiftStartsSoonLabel,
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
                 const SizedBox(height: AppSpacing.sm),
@@ -219,12 +222,9 @@ class _ShiftContent extends ConsumerWidget {
                 ],
               ],
               const SizedBox(height: AppSpacing.lg),
-              const AppCard(
+              AppCard(
                 backgroundColor: AppColors.infoSoft,
-                child: Text(
-                  'Flora facilitates these shifts. Final attendance and payout '
-                  'approval follows the company’s shift policy.',
-                ),
+                child: Text(l10n.shiftListDisclaimer),
               ),
             ],
           ),
@@ -389,6 +389,7 @@ class _ShiftCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final timeFormat = DateFormat('h:mm a');
     final content = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -421,14 +422,14 @@ class _ShiftCard extends StatelessWidget {
           children: [
             if (application != null)
               AppStatusChip(
-                label: _statusLabel(application!.status),
+                label: _statusLabel(application!.status, l10n),
                 tone: _statusTone(application!.status),
               )
             else
               AppStatusChip(
                 label: match.isEligible
-                    ? 'You match: ${match.matchPercent}%'
-                    : 'Skills needed',
+                    ? l10n.shiftMatchPercent(match.matchPercent)
+                    : l10n.shiftSkillsNeeded,
                 tone: match.isEligible
                     ? AppChipTone.success
                     : AppChipTone.warning,
@@ -461,9 +462,9 @@ class _ShiftCard extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: AppSpacing.xs),
-                  const Text(
-                    'estimated',
-                    style: TextStyle(color: AppColors.inkMuted),
+                  Text(
+                    l10n.shiftEstimatedLabel,
+                    style: const TextStyle(color: AppColors.inkMuted),
                   ),
                 ],
               ),
@@ -476,7 +477,10 @@ class _ShiftCard extends StatelessWidget {
     if (!isHero) {
       return AppCard(
         onTap: onTap,
-        semanticLabel: 'Open ${shift.roleTitle} at ${shift.siteName}',
+        semanticLabel: l10n.shiftCardSemanticLabel(
+          shift.roleTitle,
+          shift.siteName,
+        ),
         child: content,
       );
     }
@@ -492,7 +496,7 @@ class _ShiftCard extends StatelessWidget {
     return Semantics(
       container: true,
       button: true,
-      label: 'Open ${shift.roleTitle} at ${shift.siteName}',
+      label: l10n.shiftCardSemanticLabel(shift.roleTitle, shift.siteName),
       child: ExcludeSemantics(
         child: Container(
           decoration: BoxDecoration(
@@ -529,27 +533,28 @@ class _AcceptShiftFooter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final amount = shift.payAmount.toStringAsFixed(0);
     return AppStickyFooter(
       child: AppButton(
-        label: 'Accept shift · ₹${shift.payAmount.toStringAsFixed(0)}',
+        label: l10n.shiftAcceptFooterLabel(amount),
         onPressed: onTap,
-        semanticLabel:
-            'Accept ${shift.roleTitle} shift for '
-            '₹${shift.payAmount.toStringAsFixed(0)}',
+        semanticLabel: l10n.shiftAcceptFooterSemantic(shift.roleTitle, amount),
       ),
     );
   }
 }
 
-String _statusLabel(ShiftApplicationStatus status) => switch (status) {
-  ShiftApplicationStatus.accepted => 'Accepted',
-  ShiftApplicationStatus.confirmed => 'Confirmed',
-  ShiftApplicationStatus.checkedIn => 'Checked in',
-  ShiftApplicationStatus.completed => 'Completed',
-  ShiftApplicationStatus.noShow => 'No show',
-  ShiftApplicationStatus.cancelled => 'Cancelled',
-  ShiftApplicationStatus.disputed => 'Disputed',
-};
+String _statusLabel(ShiftApplicationStatus status, AppLocalizations l10n) =>
+    switch (status) {
+      ShiftApplicationStatus.accepted => l10n.shiftStatusAccepted,
+      ShiftApplicationStatus.confirmed => l10n.shiftStatusConfirmed,
+      ShiftApplicationStatus.checkedIn => l10n.shiftStatusCheckedIn,
+      ShiftApplicationStatus.completed => l10n.shiftStatusCompleted,
+      ShiftApplicationStatus.noShow => l10n.shiftStatusNoShow,
+      ShiftApplicationStatus.cancelled => l10n.shiftStatusCancelled,
+      ShiftApplicationStatus.disputed => l10n.shiftStatusDisputed,
+    };
 
 AppChipTone _statusTone(ShiftApplicationStatus status) => switch (status) {
   ShiftApplicationStatus.accepted ||
@@ -588,6 +593,7 @@ class _ShiftDetailsState extends State<_ShiftDetails> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final shift = widget.shift;
     final dateFormat = DateFormat('EEE, d MMM • h:mm a');
     return Column(
@@ -597,20 +603,29 @@ class _ShiftDetailsState extends State<_ShiftDetails> {
         const SizedBox(height: AppSpacing.xxs),
         Text(shift.siteAddress),
         const SizedBox(height: AppSpacing.md),
-        Text('Shift', style: Theme.of(context).textTheme.titleMedium),
+        Text(
+          l10n.shiftDetailShiftLabel,
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
         const SizedBox(height: AppSpacing.xs),
         Text(dateFormat.format(shift.startsAt)),
-        Text('Ends ${dateFormat.format(shift.endsAt)}'),
+        Text(l10n.shiftDetailEndsAt(dateFormat.format(shift.endsAt))),
         const SizedBox(height: AppSpacing.md),
-        Text('Pay', style: Theme.of(context).textTheme.titleMedium),
+        Text(
+          l10n.shiftDetailPayLabel,
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
         const SizedBox(height: AppSpacing.xs),
         Text(
-          '₹${shift.payAmount.toStringAsFixed(0)} ${shift.payCurrency} (estimated)',
+          l10n.shiftDetailPayValue(
+            '₹${shift.payAmount.toStringAsFixed(0)}',
+            shift.payCurrency,
+          ),
         ),
         if (shift.description != null) ...[
           const SizedBox(height: AppSpacing.md),
           Text(
-            'About this shift',
+            l10n.shiftDetailAboutLabel,
             style: Theme.of(context).textTheme.titleMedium,
           ),
           const SizedBox(height: AppSpacing.xs),
@@ -618,42 +633,46 @@ class _ShiftDetailsState extends State<_ShiftDetails> {
         ],
         if (shift.supervisorName != null) ...[
           const SizedBox(height: AppSpacing.md),
-          Text('Supervisor', style: Theme.of(context).textTheme.titleMedium),
+          Text(
+            l10n.shiftDetailSupervisorLabel,
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
           const SizedBox(height: AppSpacing.xs),
           Text(shift.supervisorName!),
         ],
         if (shift.cancellationPolicy != null) ...[
           const SizedBox(height: AppSpacing.md),
           Text(
-            'Cancellation policy',
+            l10n.shiftDetailCancellationPolicyLabel,
             style: Theme.of(context).textTheme.titleMedium,
           ),
           const SizedBox(height: AppSpacing.xs),
           Text(shift.cancellationPolicy!),
         ],
         const SizedBox(height: AppSpacing.md),
-        const AppCard(
+        AppCard(
           backgroundColor: AppColors.infoSoft,
-          child: Text(
-            'Flora is facilitating this shift. Final attendance and payout '
-            'approval follows the company’s shift policy.',
-          ),
+          child: Text(l10n.shiftDetailsDisclaimer),
         ),
         const SizedBox(height: AppSpacing.md),
         if (widget.application != null)
           AppCard(
             child: Text(
-              'You have already ${_statusLabel(widget.application!.status).toLowerCase()} this shift. Open "My shifts" to check in or out.',
+              l10n.shiftDetailAlreadyApplied(
+                _statusLabel(widget.application!.status, l10n).toLowerCase(),
+              ),
             ),
           )
         else if (!widget.match.isEligible) ...[
           Text(
-            'Before accepting this shift',
+            l10n.shiftDetailBeforeAcceptingLabel,
             style: Theme.of(context).textTheme.titleMedium,
           ),
           const SizedBox(height: AppSpacing.xs),
           Text(
-            'Complete: ${widget.match.missingCompetencyIds.map(_displayName).join(', ')}',
+            l10n.shiftDetailCompleteRequirement(
+              widget.match.missingCompetencyIds.map(_displayName).join(', '),
+            ),
           ),
           const SizedBox(height: AppSpacing.md),
           FilledButton(
@@ -661,7 +680,7 @@ class _ShiftDetailsState extends State<_ShiftDetails> {
               Navigator.of(context).pop();
               widget.onOpenSkillGap();
             },
-            child: const Text('Complete required skill'),
+            child: Text(l10n.shiftDetailCompleteSkillButton),
           ),
         ] else ...[
           if (_error != null)
@@ -674,7 +693,11 @@ class _ShiftDetailsState extends State<_ShiftDetails> {
             ),
           FilledButton(
             onPressed: _accepting ? null : _accept,
-            child: Text(_accepting ? 'Accepting…' : 'Accept shift'),
+            child: Text(
+              _accepting
+                  ? l10n.shiftDetailAcceptingLabel
+                  : l10n.shiftDetailAcceptButton,
+            ),
           ),
         ],
         const SizedBox(height: AppSpacing.sm),
@@ -687,17 +710,18 @@ class _ShiftDetailsState extends State<_ShiftDetails> {
     setState(() => _accepting = true);
     final failure = await widget.onAccept();
     if (!mounted) return;
+    final l10n = AppLocalizations.of(context);
     if (failure == null) {
       showAppSnackBar(
         context: context,
-        message: 'Shift accepted.',
+        message: l10n.shiftAcceptedSnackbar,
         tone: AppMessageTone.success,
       );
       Navigator.of(context).pop();
     } else {
       setState(() {
         _accepting = false;
-        _error = failure.message;
+        _error = failure.localizedMessage(l10n);
       });
     }
   }

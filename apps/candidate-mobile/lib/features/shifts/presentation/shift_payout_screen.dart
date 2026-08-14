@@ -5,10 +5,12 @@ import 'package:intl/intl.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../core/errors/app_failure.dart';
+import '../../../core/errors/app_failure_localization.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_chip.dart';
 import '../../../core/widgets/app_loading_progress.dart';
 import '../../../core/widgets/app_state_view.dart';
+import '../../../l10n/generated/app_localizations.dart';
 import '../domain/shift_payout.dart';
 import 'shift_payout_controller.dart';
 
@@ -18,25 +20,26 @@ class ShiftPayoutScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(shiftPayoutControllerProvider);
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('Payouts')),
+      appBar: AppBar(title: Text(l10n.payoutsTitle)),
       body: SafeArea(
         child: state.when(
-          loading: () => const Center(
-            child: AppLoadingProgressBar(label: 'Loading your payouts…'),
+          loading: () => Center(
+            child: AppLoadingProgressBar(label: l10n.payoutsLoadingLabel),
           ),
           error: (error, stackTrace) => AppErrorState(
-            title: 'Payouts could not be loaded',
+            title: l10n.payoutsLoadErrorTitle,
             message: error is AppFailure
-                ? error.message
-                : 'Payouts are temporarily unavailable.',
+                ? error.localizedMessage(l10n)
+                : l10n.payoutsLoadErrorFallback,
             onAction: () =>
                 ref.read(shiftPayoutControllerProvider.notifier).retry(),
           ),
           data: (payouts) => payouts.isEmpty
-              ? const AppEmptyState(
-                  title: 'No payouts yet',
-                  message: 'Payouts appear here once you check out of a shift.',
+              ? AppEmptyState(
+                  title: l10n.payoutsEmptyTitle,
+                  message: l10n.payoutsEmptyMessage,
                 )
               : _PayoutList(payouts: payouts),
         ),
@@ -52,6 +55,7 @@ class _PayoutList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final dateFormat = DateFormat('d MMM yyyy');
     return ListView(
       padding: const EdgeInsets.fromLTRB(
@@ -61,20 +65,19 @@ class _PayoutList extends StatelessWidget {
         AppSpacing.xl,
       ),
       children: [
-        Text('Payouts', style: Theme.of(context).textTheme.headlineSmall),
+        Text(
+          l10n.payoutsTitle,
+          style: Theme.of(context).textTheme.headlineSmall,
+        ),
         const SizedBox(height: AppSpacing.xs),
         Text(
-          '${payouts.length} payout${payouts.length == 1 ? '' : 's'}',
+          l10n.payoutsCount(payouts.length),
           style: const TextStyle(color: AppColors.inkMuted),
         ),
         const SizedBox(height: AppSpacing.md),
-        const AppCard(
+        AppCard(
           backgroundColor: AppColors.infoSoft,
-          child: Text(
-            'This is a status ledger, not a wallet -- Flora does not move '
-            'money directly yet. Approved payouts are disbursed by the '
-            'company according to its own payout policy.',
-          ),
+          child: Text(l10n.payoutsDisclaimer),
         ),
         const SizedBox(height: AppSpacing.md),
         for (final payout in payouts) ...[
@@ -92,21 +95,29 @@ class _PayoutList extends StatelessWidget {
                       ),
                     ),
                     AppStatusChip(
-                      label: _statusLabel(payout.status),
+                      label: _statusLabel(payout.status, l10n),
                       tone: _statusTone(payout.status),
                     ),
                   ],
                 ),
                 const SizedBox(height: AppSpacing.xs),
-                Text('Base pay: ₹${payout.basePay.toStringAsFixed(0)}'),
+                Text(
+                  l10n.payoutsBasePayLabel(payout.basePay.toStringAsFixed(0)),
+                ),
                 if (payout.bonus > 0)
-                  Text('Bonus: ₹${payout.bonus.toStringAsFixed(0)}'),
+                  Text(l10n.payoutsBonusLabel(payout.bonus.toStringAsFixed(0))),
                 if (payout.deductions > 0)
-                  Text('Deductions: ₹${payout.deductions.toStringAsFixed(0)}'),
+                  Text(
+                    l10n.payoutsDeductionsLabel(
+                      payout.deductions.toStringAsFixed(0),
+                    ),
+                  ),
                 if (payout.expectedPayoutDate != null) ...[
                   const SizedBox(height: AppSpacing.xs),
                   Text(
-                    'Expected: ${dateFormat.format(payout.expectedPayoutDate!)}',
+                    l10n.payoutsExpectedLabel(
+                      dateFormat.format(payout.expectedPayoutDate!),
+                    ),
                   ),
                 ],
               ],
@@ -118,14 +129,15 @@ class _PayoutList extends StatelessWidget {
     );
   }
 
-  String _statusLabel(ShiftPayoutStatus status) => switch (status) {
-    ShiftPayoutStatus.pendingApproval => 'Pending approval',
-    ShiftPayoutStatus.approved => 'Approved',
-    ShiftPayoutStatus.processing => 'Processing',
-    ShiftPayoutStatus.paid => 'Paid',
-    ShiftPayoutStatus.failed => 'Failed',
-    ShiftPayoutStatus.disputed => 'Disputed',
-  };
+  String _statusLabel(ShiftPayoutStatus status, AppLocalizations l10n) =>
+      switch (status) {
+        ShiftPayoutStatus.pendingApproval => l10n.payoutStatusPendingApproval,
+        ShiftPayoutStatus.approved => l10n.payoutStatusApproved,
+        ShiftPayoutStatus.processing => l10n.payoutStatusProcessing,
+        ShiftPayoutStatus.paid => l10n.payoutStatusPaid,
+        ShiftPayoutStatus.failed => l10n.payoutStatusFailed,
+        ShiftPayoutStatus.disputed => l10n.payoutStatusDisputed,
+      };
 
   AppChipTone _statusTone(ShiftPayoutStatus status) => switch (status) {
     ShiftPayoutStatus.pendingApproval => AppChipTone.neutral,

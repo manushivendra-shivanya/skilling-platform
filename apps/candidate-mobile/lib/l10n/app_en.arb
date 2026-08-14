@@ -297,5 +297,374 @@
   "@languageHindi": { "description": "Language option label, in its own script." },
   "@languageHinglish": {
     "description": "Language option label for the romanised-Hindi register (Locale.fromSubtags(languageCode: 'hi', scriptCode: 'Latn')) -- matches CandidateLanguage.hinglish, onboarding's own third language choice."
-  }
+  },
+
+  "shiftStatusAccepted": "Accepted",
+  "shiftStatusConfirmed": "Confirmed",
+  "shiftStatusCheckedIn": "Checked in",
+  "shiftStatusCompleted": "Completed",
+  "shiftStatusNoShow": "No show",
+  "shiftStatusCancelled": "Cancelled",
+  "shiftStatusDisputed": "Disputed",
+  "@shiftStatusAccepted": { "description": "Shift application status, shown as a chip/stepper label." },
+  "@shiftStatusConfirmed": { "description": "Shift application status, shown as a chip/stepper label." },
+  "@shiftStatusCheckedIn": { "description": "Shift application status, shown as a chip/stepper label." },
+  "@shiftStatusCompleted": { "description": "Shift application status, shown as a chip/stepper label." },
+  "@shiftStatusNoShow": { "description": "Shift application status, shown as a chip/stepper label." },
+  "@shiftStatusCancelled": { "description": "Shift application status, shown as a chip/stepper label." },
+  "@shiftStatusDisputed": { "description": "Shift application status, shown as a chip/stepper label." },
+
+  "shiftLoadErrorTitle": "Shifts could not be loaded",
+  "shiftLoadErrorFallback": "Shifts are temporarily unavailable.",
+  "@shiftLoadErrorTitle": { "description": "Title of the Shift tab's error state." },
+  "@shiftLoadErrorFallback": { "description": "Fallback message when the load failure isn't an AppFailure." },
+
+  "shiftStartsInHoursMinutes": "Starts in {hours}h {minutes}m",
+  "shiftStartsInHours": "Starts in {hours}h",
+  "shiftStartsInMinutes": "Starts in {minutes}m",
+  "@shiftStartsInHoursMinutes": {
+    "description": "Urgency ribbon label for a shift starting soon, hours and minutes both nonzero.",
+    "placeholders": { "hours": { "type": "int" }, "minutes": { "type": "int" } }
+  },
+  "@shiftStartsInHours": {
+    "description": "Urgency ribbon label -- an exact number of hours, no remainder minutes.",
+    "placeholders": { "hours": { "type": "int" } }
+  },
+  "@shiftStartsInMinutes": {
+    "description": "Urgency ribbon label -- under an hour away.",
+    "placeholders": { "minutes": { "type": "int" } }
+  },
+
+  "shiftHeadline": "My Shift",
+  "@shiftHeadline": { "description": "Headline at the top of the Shift tab's body." },
+
+  "shiftCountNearYou": "{count, plural, one{{count} shift near you today} other{{count} shifts near you today}}",
+  "@shiftCountNearYou": {
+    "description": "Subtitle under the Shift tab's headline, live-data case.",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "shiftDemoDataCaption": "Demo shifts • No live employer connection",
+  "@shiftDemoDataCaption": { "description": "Subtitle under the Shift tab's headline, demo-data case." },
+
+  "shiftShortcutAvailability": "Availability",
+  "shiftShortcutMyShifts": "My shifts",
+  "shiftShortcutPayouts": "Payouts",
+  "shiftShortcutSupport": "Support",
+  "@shiftShortcutAvailability": { "description": "Icon-plate shortcut label on the Shift tab." },
+  "@shiftShortcutMyShifts": { "description": "Icon-plate shortcut label on the Shift tab." },
+  "@shiftShortcutPayouts": { "description": "Icon-plate shortcut label on the Shift tab." },
+  "@shiftShortcutSupport": { "description": "Icon-plate shortcut label on the Shift tab." },
+
+  "shiftEmptyTitle": "No shifts right now",
+  "shiftEmptyMessage": "Check back soon, or set your availability so Flora knows when you can work.",
+  "@shiftEmptyTitle": { "description": "Title of the Shift tab's empty state." },
+  "@shiftEmptyMessage": { "description": "Message of the Shift tab's empty state." },
+
+  "shiftCardSemanticLabel": "Open {roleTitle} at {siteName}",
+  "@shiftCardSemanticLabel": {
+    "description": "Semantic label on a tappable shift card.",
+    "placeholders": { "roleTitle": { "type": "String" }, "siteName": { "type": "String" } }
+  },
+
+  "shiftBestMatchLabel": "Best match",
+  "shiftStartsSoonLabel": "Starts soon",
+  "@shiftBestMatchLabel": { "description": "Section header above the single best-match shift card." },
+  "@shiftStartsSoonLabel": { "description": "Section header above the list of upcoming shift cards." },
+
+  "shiftMatchPercent": "You match: {percent}%",
+  "shiftSkillsNeeded": "Skills needed",
+  "@shiftMatchPercent": {
+    "description": "Status chip on a shift card the candidate is already eligible for.",
+    "placeholders": { "percent": { "type": "int" } }
+  },
+  "@shiftSkillsNeeded": { "description": "Status chip on a shift card the candidate isn't eligible for yet." },
+
+  "shiftEstimatedLabel": "estimated",
+  "@shiftEstimatedLabel": { "description": "Caption next to the hero card's pay figure." },
+
+  "shiftListDisclaimer": "Flora facilitates these shifts. Final attendance and payout approval follows the company's shift policy.",
+  "shiftDetailsDisclaimer": "Flora is facilitating this shift. Final attendance and payout approval follows the company's shift policy.",
+  "@shiftListDisclaimer": { "description": "Disclaimer card at the bottom of the Shift tab's list." },
+  "@shiftDetailsDisclaimer": { "description": "Disclaimer card inside a shift's detail bottom sheet." },
+
+  "shiftAcceptFooterLabel": "Accept shift · ₹{amount}",
+  "shiftAcceptFooterSemantic": "Accept {roleTitle} shift for ₹{amount}",
+  "@shiftAcceptFooterLabel": {
+    "description": "Sticky footer CTA on the Shift tab.",
+    "placeholders": { "amount": { "type": "String" } }
+  },
+  "@shiftAcceptFooterSemantic": {
+    "description": "Full semantic label for the sticky footer CTA.",
+    "placeholders": { "roleTitle": { "type": "String" }, "amount": { "type": "String" } }
+  },
+
+  "shiftDetailShiftLabel": "Shift",
+  "shiftDetailEndsAt": "Ends {time}",
+  "shiftDetailPayLabel": "Pay",
+  "shiftDetailPayValue": "{amount} {currency} (estimated)",
+  "shiftDetailAboutLabel": "About this shift",
+  "shiftDetailSupervisorLabel": "Supervisor",
+  "shiftDetailCancellationPolicyLabel": "Cancellation policy",
+  "@shiftDetailShiftLabel": { "description": "Section label above a shift's date/time in the detail sheet." },
+  "@shiftDetailEndsAt": {
+    "description": "End time line under a shift's start time in the detail sheet.",
+    "placeholders": { "time": { "type": "String" } }
+  },
+  "@shiftDetailPayLabel": { "description": "Section label above a shift's pay figure in the detail sheet." },
+  "@shiftDetailPayValue": {
+    "description": "Pay figure line in the detail sheet.",
+    "placeholders": { "amount": { "type": "String" }, "currency": { "type": "String" } }
+  },
+  "@shiftDetailAboutLabel": { "description": "Section label above a shift's description." },
+  "@shiftDetailSupervisorLabel": { "description": "Section label above a shift's supervisor name." },
+  "@shiftDetailCancellationPolicyLabel": { "description": "Section label above a shift's cancellation policy." },
+
+  "shiftDetailAlreadyApplied": "You have already {status} this shift. Open \"My shifts\" to check in or out.",
+  "@shiftDetailAlreadyApplied": {
+    "description": "Shown in the detail sheet when the candidate already applied -- {status} is the lower-cased status label.",
+    "placeholders": { "status": { "type": "String" } }
+  },
+
+  "shiftDetailBeforeAcceptingLabel": "Before accepting this shift",
+  "shiftDetailCompleteRequirement": "Complete: {competencies}",
+  "shiftDetailCompleteSkillButton": "Complete required skill",
+  "@shiftDetailBeforeAcceptingLabel": { "description": "Section header shown when the candidate is missing a required competency." },
+  "@shiftDetailCompleteRequirement": {
+    "description": "Lists the missing competencies the candidate must complete first.",
+    "placeholders": { "competencies": { "type": "String" } }
+  },
+  "@shiftDetailCompleteSkillButton": { "description": "Button that routes to the skill-gap flow." },
+
+  "shiftDetailAcceptingLabel": "Accepting…",
+  "shiftDetailAcceptButton": "Accept shift",
+  "shiftAcceptedSnackbar": "Shift accepted.",
+  "@shiftDetailAcceptingLabel": { "description": "Accept button label while the accept request is in flight." },
+  "@shiftDetailAcceptButton": { "description": "Accept button label, idle state." },
+  "@shiftAcceptedSnackbar": { "description": "Success snackbar after accepting a shift." },
+
+  "myShiftsTitle": "My shifts",
+  "@myShiftsTitle": { "description": "AppBar title and body headline of the My Shifts screen." },
+
+  "myShiftsLoadingLabel": "Loading your shifts…",
+  "myShiftsLoadErrorTitle": "Your shifts could not be loaded",
+  "myShiftsLoadErrorFallback": "Your shifts are temporarily unavailable.",
+  "@myShiftsLoadingLabel": { "description": "Loading indicator caption on the My Shifts screen." },
+  "@myShiftsLoadErrorTitle": { "description": "Title of the My Shifts screen's error state." },
+  "@myShiftsLoadErrorFallback": { "description": "Fallback message when the load failure isn't an AppFailure." },
+
+  "myShiftsEmptyTitle": "No shifts yet",
+  "myShiftsEmptyMessage": "Accept a shift from the Shift tab to see it here.",
+  "@myShiftsEmptyTitle": { "description": "Title of the My Shifts screen's empty state." },
+  "@myShiftsEmptyMessage": { "description": "Message of the My Shifts screen's empty state." },
+
+  "myShiftsCountInProgress": "{count, plural, one{{count} shift in progress} other{{count} shifts in progress}}",
+  "@myShiftsCountInProgress": {
+    "description": "Subtitle under the My Shifts headline.",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "myShiftsDetailsUnavailable": "Shift details unavailable",
+  "@myShiftsDetailsUnavailable": { "description": "Shown on a My Shifts card whose underlying shift lookup failed." },
+
+  "myShiftsCheckInCodeLabel": "Check-in code",
+  "myShiftsCheckInCodeHint": "From your supervisor",
+  "@myShiftsCheckInCodeLabel": { "description": "Text field label on a My Shifts card." },
+  "@myShiftsCheckInCodeHint": { "description": "Text field hint on a My Shifts card." },
+
+  "myShiftsCheckingInLabel": "Checking in…",
+  "myShiftsCheckInButton": "Check in",
+  "myShiftsCheckingOutLabel": "Checking out…",
+  "myShiftsCheckOutButton": "Check out",
+  "@myShiftsCheckingInLabel": { "description": "Check-in button label while the request is in flight." },
+  "@myShiftsCheckInButton": { "description": "Check-in button label, idle state." },
+  "@myShiftsCheckingOutLabel": { "description": "Check-out button label while the request is in flight." },
+  "@myShiftsCheckOutButton": { "description": "Check-out button label, idle state." },
+
+  "myShiftsCompletedNote": "Shift completed. Payout status is available under Payouts.",
+  "@myShiftsCompletedNote": { "description": "Shown on a My Shifts card once the shift is completed." },
+
+  "myShiftsEnterCodeValidation": "Enter the check-in code.",
+  "myShiftsCheckedInSnackbar": "Checked in.",
+  "myShiftsCheckedOutSnackbar": "Checked out. Your payout is now pending approval.",
+  "@myShiftsEnterCodeValidation": { "description": "Inline validation error when submitting an empty check-in code." },
+  "@myShiftsCheckedInSnackbar": { "description": "Success snackbar after checking in." },
+  "@myShiftsCheckedOutSnackbar": { "description": "Success snackbar after checking out." },
+
+  "myShiftsTerminalNoShow": "Marked as no-show.",
+  "myShiftsTerminalCancelled": "Cancelled.",
+  "myShiftsTerminalDisputed": "Under dispute.",
+  "@myShiftsTerminalNoShow": { "description": "Terminal-state note on a My Shifts card." },
+  "@myShiftsTerminalCancelled": { "description": "Terminal-state note on a My Shifts card." },
+  "@myShiftsTerminalDisputed": { "description": "Terminal-state note on a My Shifts card." },
+
+  "availabilityTitle": "Availability",
+  "@availabilityTitle": { "description": "AppBar title of the Availability screen." },
+
+  "availabilityLoadingLabel": "Loading your availability…",
+  "availabilityLoadErrorTitle": "Availability could not be loaded",
+  "availabilityLoadErrorFallback": "Availability is temporarily unavailable.",
+  "@availabilityLoadingLabel": { "description": "Loading indicator caption on the Availability screen." },
+  "@availabilityLoadErrorTitle": { "description": "Title of the Availability screen's error state." },
+  "@availabilityLoadErrorFallback": { "description": "Fallback message when the load failure isn't an AppFailure." },
+
+  "availabilityHeadline": "Tell Flora when you can work",
+  "availabilitySubtitle": "Used to match and nudge you toward relevant shifts. You can change this any time.",
+  "@availabilityHeadline": { "description": "Headline at the top of the Availability screen." },
+  "@availabilitySubtitle": { "description": "Subtitle under the Availability headline." },
+
+  "availabilityWorkTodayLabel": "I can work today",
+  "@availabilityWorkTodayLabel": { "description": "Switch label on the Availability screen." },
+
+  "availabilityFromLabel": "Available from",
+  "availabilityUntilLabel": "Available until",
+  "availabilityTimeHelper": "24-hour, HH:mm",
+  "@availabilityFromLabel": { "description": "Text field label on the Availability screen." },
+  "@availabilityUntilLabel": { "description": "Text field label on the Availability screen." },
+  "@availabilityTimeHelper": { "description": "Helper text shared by the from/until time fields." },
+
+  "availabilityCityLabel": "Preferred city",
+  "availabilityCityHint": "Bengaluru",
+  "availabilityTravelLabel": "Maximum travel distance (km)",
+  "availabilityMinPayLabel": "Minimum pay (₹)",
+  "@availabilityCityLabel": { "description": "Text field label on the Availability screen." },
+  "@availabilityCityHint": { "description": "Text field example hint on the Availability screen." },
+  "@availabilityTravelLabel": { "description": "Text field label on the Availability screen." },
+  "@availabilityMinPayLabel": { "description": "Text field label on the Availability screen." },
+
+  "availabilitySavingLabel": "Saving…",
+  "availabilitySaveButton": "Save availability",
+  "availabilitySavedSnackbar": "Availability saved.",
+  "@availabilitySavingLabel": { "description": "Save button label while the request is in flight." },
+  "@availabilitySaveButton": { "description": "Save button label, idle state." },
+  "@availabilitySavedSnackbar": { "description": "Fallback success snackbar when the save succeeds." },
+
+  "grievanceTitle": "Support",
+  "@grievanceTitle": { "description": "AppBar title and body headline of the Support (grievance) screen." },
+
+  "grievanceLoadingLabel": "Loading your tickets…",
+  "grievanceLoadErrorTitle": "Support tickets could not be loaded",
+  "grievanceLoadErrorFallback": "Support tickets are temporarily unavailable.",
+  "@grievanceLoadingLabel": { "description": "Loading indicator caption on the Support screen." },
+  "@grievanceLoadErrorTitle": { "description": "Title of the Support screen's error state." },
+  "@grievanceLoadErrorFallback": { "description": "Fallback message when the load failure isn't an AppFailure." },
+
+  "grievanceCountFiled": "{count, plural, one{{count} ticket filed} other{{count} tickets filed}}",
+  "@grievanceCountFiled": {
+    "description": "Subtitle under the Support screen headline.",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "grievanceRaiseTicketLabel": "Raise a ticket",
+  "grievanceCategoryLabel": "Category",
+  "grievanceWhatHappenedLabel": "What happened?",
+  "grievanceYourTicketsLabel": "Your tickets",
+  "@grievanceRaiseTicketLabel": { "description": "Card title above the new-ticket form." },
+  "@grievanceCategoryLabel": { "description": "Category dropdown label." },
+  "@grievanceWhatHappenedLabel": { "description": "Description text field label." },
+  "@grievanceYourTicketsLabel": { "description": "Section header above the ticket list." },
+
+  "grievanceEmptyTitle": "No tickets yet",
+  "grievanceEmptyMessage": "Anything you raise about a shift shows up here.",
+  "@grievanceEmptyTitle": { "description": "Title of the ticket list's empty state." },
+  "@grievanceEmptyMessage": { "description": "Message of the ticket list's empty state." },
+
+  "grievanceResolutionPrefix": "Resolution: {notes}",
+  "@grievanceResolutionPrefix": {
+    "description": "Resolution notes line on a resolved ticket.",
+    "placeholders": { "notes": { "type": "String" } }
+  },
+
+  "grievanceSubmittingLabel": "Submitting…",
+  "grievanceSubmitButton": "Submit ticket",
+  "grievanceDescribeValidation": "Describe what happened.",
+  "grievanceSubmittedSnackbar": "Ticket submitted.",
+  "@grievanceSubmittingLabel": { "description": "Submit button label while the request is in flight." },
+  "@grievanceSubmitButton": { "description": "Submit button label, idle state." },
+  "@grievanceDescribeValidation": { "description": "Inline validation error when submitting an empty description." },
+  "@grievanceSubmittedSnackbar": { "description": "Success snackbar after submitting a ticket." },
+
+  "grievanceStatusOpen": "Open",
+  "grievanceStatusInReview": "In review",
+  "grievanceStatusResolved": "Resolved",
+  "grievanceStatusClosed": "Closed",
+  "@grievanceStatusOpen": { "description": "Support ticket status, shown as a chip label." },
+  "@grievanceStatusInReview": { "description": "Support ticket status, shown as a chip label." },
+  "@grievanceStatusResolved": { "description": "Support ticket status, shown as a chip label." },
+  "@grievanceStatusClosed": { "description": "Support ticket status, shown as a chip label." },
+
+  "grievanceCategoryAttendanceMismatch": "Attendance mismatch",
+  "grievanceCategoryPayoutMismatch": "Payout mismatch",
+  "grievanceCategoryUnsafeWork": "Unsafe work",
+  "grievanceCategorySupervisorIssue": "Supervisor issue",
+  "grievanceCategoryUnpaidOvertime": "Unpaid overtime",
+  "grievanceCategoryCancellationIssue": "Cancellation issue",
+  "grievanceCategoryHarassmentSafety": "Harassment or safety",
+  "grievanceCategoryOther": "Other",
+  "@grievanceCategoryAttendanceMismatch": { "description": "Support ticket category, shown in the category dropdown and on ticket cards." },
+  "@grievanceCategoryPayoutMismatch": { "description": "Support ticket category, shown in the category dropdown and on ticket cards." },
+  "@grievanceCategoryUnsafeWork": { "description": "Support ticket category, shown in the category dropdown and on ticket cards." },
+  "@grievanceCategorySupervisorIssue": { "description": "Support ticket category, shown in the category dropdown and on ticket cards." },
+  "@grievanceCategoryUnpaidOvertime": { "description": "Support ticket category, shown in the category dropdown and on ticket cards." },
+  "@grievanceCategoryCancellationIssue": { "description": "Support ticket category, shown in the category dropdown and on ticket cards." },
+  "@grievanceCategoryHarassmentSafety": { "description": "Support ticket category, shown in the category dropdown and on ticket cards." },
+  "@grievanceCategoryOther": { "description": "Support ticket category, shown in the category dropdown and on ticket cards." },
+
+  "payoutsTitle": "Payouts",
+  "@payoutsTitle": { "description": "AppBar title and body headline of the Payouts screen." },
+
+  "payoutsLoadingLabel": "Loading your payouts…",
+  "payoutsLoadErrorTitle": "Payouts could not be loaded",
+  "payoutsLoadErrorFallback": "Payouts are temporarily unavailable.",
+  "@payoutsLoadingLabel": { "description": "Loading indicator caption on the Payouts screen." },
+  "@payoutsLoadErrorTitle": { "description": "Title of the Payouts screen's error state." },
+  "@payoutsLoadErrorFallback": { "description": "Fallback message when the load failure isn't an AppFailure." },
+
+  "payoutsEmptyTitle": "No payouts yet",
+  "payoutsEmptyMessage": "Payouts appear here once you check out of a shift.",
+  "@payoutsEmptyTitle": { "description": "Title of the Payouts screen's empty state." },
+  "@payoutsEmptyMessage": { "description": "Message of the Payouts screen's empty state." },
+
+  "payoutsCount": "{count, plural, one{{count} payout} other{{count} payouts}}",
+  "@payoutsCount": {
+    "description": "Subtitle under the Payouts headline.",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "payoutsDisclaimer": "This is a status ledger, not a wallet -- Flora does not move money directly yet. Approved payouts are disbursed by the company according to its own payout policy.",
+  "@payoutsDisclaimer": { "description": "Disclaimer card at the top of the Payouts list." },
+
+  "payoutsBasePayLabel": "Base pay: ₹{amount}",
+  "payoutsBonusLabel": "Bonus: ₹{amount}",
+  "payoutsDeductionsLabel": "Deductions: ₹{amount}",
+  "payoutsExpectedLabel": "Expected: {date}",
+  "@payoutsBasePayLabel": {
+    "description": "Base pay line on a payout card.",
+    "placeholders": { "amount": { "type": "String" } }
+  },
+  "@payoutsBonusLabel": {
+    "description": "Bonus line on a payout card, shown only when bonus > 0.",
+    "placeholders": { "amount": { "type": "String" } }
+  },
+  "@payoutsDeductionsLabel": {
+    "description": "Deductions line on a payout card, shown only when deductions > 0.",
+    "placeholders": { "amount": { "type": "String" } }
+  },
+  "@payoutsExpectedLabel": {
+    "description": "Expected payout date line on a payout card.",
+    "placeholders": { "date": { "type": "String" } }
+  },
+
+  "payoutStatusPendingApproval": "Pending approval",
+  "payoutStatusApproved": "Approved",
+  "payoutStatusProcessing": "Processing",
+  "payoutStatusPaid": "Paid",
+  "payoutStatusFailed": "Failed",
+  "payoutStatusDisputed": "Disputed",
+  "@payoutStatusPendingApproval": { "description": "Payout status, shown as a chip label." },
+  "@payoutStatusApproved": { "description": "Payout status, shown as a chip label." },
+  "@payoutStatusProcessing": { "description": "Payout status, shown as a chip label." },
+  "@payoutStatusPaid": { "description": "Payout status, shown as a chip label." },
+  "@payoutStatusFailed": { "description": "Payout status, shown as a chip label." },
+  "@payoutStatusDisputed": { "description": "Payout status, shown as a chip label." }
 }

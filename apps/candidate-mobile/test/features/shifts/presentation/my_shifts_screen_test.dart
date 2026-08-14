@@ -8,6 +8,7 @@ import 'package:candidate_mobile/features/certification_exam/domain/certificatio
 import 'package:candidate_mobile/features/certification_exam/domain/certification_exam_repository.dart';
 import 'package:candidate_mobile/features/shifts/domain/shifts_repository.dart';
 import 'package:candidate_mobile/features/shifts/presentation/my_shifts_screen.dart';
+import 'package:candidate_mobile/l10n/generated/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -84,7 +85,13 @@ void main() {
     await tester.tap(find.text('Check in'));
     await tester.pumpAndSettle();
 
-    expect(find.text('That code did not match.'), findsOneWidget);
+    // Not the raw 'That code did not match.' internal message: AppFailure's
+    // own `message` is English-only developer/log text -- the screen shows
+    // a localized, generic message keyed off the failure's type instead.
+    expect(
+      find.text("That doesn't look right. Please check and try again."),
+      findsOneWidget,
+    );
     expect(find.text('Check in'), findsOneWidget);
   });
 
@@ -218,7 +225,12 @@ ProviderContainer _buildContainer(ShiftsRepository repository) =>
 
 Widget _app(ProviderContainer container) => UncontrolledProviderScope(
   container: container,
-  child: MaterialApp(theme: buildAppTheme(), home: const MyShiftsScreen()),
+  child: MaterialApp(
+    theme: buildAppTheme(),
+    localizationsDelegates: AppLocalizations.localizationsDelegates,
+    supportedLocales: AppLocalizations.supportedLocales,
+    home: const MyShiftsScreen(),
+  ),
 );
 
 class _FakeShiftsRepository implements ShiftsRepository {

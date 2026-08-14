@@ -78,5 +78,183 @@
   "languagePickerTitle": "Apni bhasha chunein",
   "languageEnglish": "English",
   "languageHindi": "हिंदी",
-  "languageHinglish": "Hinglish"
+  "languageHinglish": "Hinglish",
+
+  "shiftStatusAccepted": "Accept ho gayi",
+  "shiftStatusConfirmed": "Confirm ho gayi",
+  "shiftStatusCheckedIn": "Check-in ho gaya",
+  "shiftStatusCompleted": "Poori ho gayi",
+  "shiftStatusNoShow": "Nahi aaye",
+  "shiftStatusCancelled": "Cancel ho gayi",
+  "shiftStatusDisputed": "Dispute mein hai",
+
+  "shiftLoadErrorTitle": "Shifts load nahi ho sakin",
+  "shiftLoadErrorFallback": "Shifts filhaal available nahi hain.",
+
+  "shiftStartsInHoursMinutes": "{hours}h {minutes}m mein shuru",
+  "shiftStartsInHours": "{hours}h mein shuru",
+  "shiftStartsInMinutes": "{minutes}m mein shuru",
+
+  "shiftHeadline": "Meri Shift",
+  "shiftCountNearYou": "Aaj aapke paas {count, plural, one{{count} shift} other{{count} shifts}}",
+  "shiftDemoDataCaption": "Demo shifts • Koi live employer connection nahi",
+
+  "shiftShortcutAvailability": "Availability",
+  "shiftShortcutMyShifts": "Meri shifts",
+  "shiftShortcutPayouts": "Payouts",
+  "shiftShortcutSupport": "Support",
+
+  "shiftEmptyTitle": "Abhi koi shift nahi",
+  "shiftEmptyMessage": "Jald wapas dekhein, ya apni availability set karein taaki Flora ko pata ho aap kab kaam kar sakte hain.",
+
+  "shiftCardSemanticLabel": "{siteName} par {roleTitle} kholein",
+
+  "shiftBestMatchLabel": "Best match",
+  "shiftStartsSoonLabel": "Jald shuru hongi",
+
+  "shiftMatchPercent": "Aapka match: {percent}%",
+  "shiftSkillsNeeded": "Skills chahiye",
+
+  "shiftEstimatedLabel": "anumaanit",
+
+  "shiftListDisclaimer": "Flora in shifts ko facilitate karta hai. Final attendance aur payout approval company ki shift policy ke hisaab se hoti hai.",
+  "shiftDetailsDisclaimer": "Flora is shift ko facilitate kar raha hai. Final attendance aur payout approval company ki shift policy ke hisaab se hoti hai.",
+
+  "shiftAcceptFooterLabel": "Shift accept karein · ₹{amount}",
+  "shiftAcceptFooterSemantic": "{roleTitle} shift ₹{amount} mein accept karein",
+
+  "shiftDetailShiftLabel": "Shift",
+  "shiftDetailEndsAt": "Khatam {time}",
+  "shiftDetailPayLabel": "Pay",
+  "shiftDetailPayValue": "{amount} {currency} (anumaanit)",
+  "shiftDetailAboutLabel": "Is shift ke baare mein",
+  "shiftDetailSupervisorLabel": "Supervisor",
+  "shiftDetailCancellationPolicyLabel": "Cancellation policy",
+
+  "shiftDetailAlreadyApplied": "Aap yeh shift pehle hi {status} kar chuke hain. Check-in ya check-out ke liye \"Meri shifts\" kholein.",
+
+  "shiftDetailBeforeAcceptingLabel": "Is shift ko accept karne se pehle",
+  "shiftDetailCompleteRequirement": "Poora karein: {competencies}",
+  "shiftDetailCompleteSkillButton": "Zaroori skill poori karein",
+
+  "shiftDetailAcceptingLabel": "Accept ho raha hai…",
+  "shiftDetailAcceptButton": "Shift accept karein",
+  "shiftAcceptedSnackbar": "Shift accept ho gayi.",
+
+  "myShiftsTitle": "Meri shifts",
+
+  "myShiftsLoadingLabel": "Aapki shifts load ho rahi hain…",
+  "myShiftsLoadErrorTitle": "Aapki shifts load nahi ho sakin",
+  "myShiftsLoadErrorFallback": "Aapki shifts filhaal available nahi hain.",
+
+  "myShiftsEmptyTitle": "Abhi koi shift nahi",
+  "myShiftsEmptyMessage": "Yahan dekhne ke liye Shift tab se ek shift accept karein.",
+
+  "myShiftsCountInProgress": "{count, plural, one{{count} shift chal rahi hai} other{{count} shifts chal rahi hain}}",
+
+  "myShiftsDetailsUnavailable": "Shift ka detail available nahi",
+
+  "myShiftsCheckInCodeLabel": "Check-in code",
+  "myShiftsCheckInCodeHint": "Aapke supervisor se",
+
+  "myShiftsCheckingInLabel": "Check-in ho raha hai…",
+  "myShiftsCheckInButton": "Check in karein",
+  "myShiftsCheckingOutLabel": "Check-out ho raha hai…",
+  "myShiftsCheckOutButton": "Check out karein",
+
+  "myShiftsCompletedNote": "Shift poori ho gayi. Payout status Payouts mein available hai.",
+
+  "myShiftsEnterCodeValidation": "Check-in code daalein.",
+  "myShiftsCheckedInSnackbar": "Check-in ho gaya.",
+  "myShiftsCheckedOutSnackbar": "Check-out ho gaya. Aapka payout ab approval ka wait kar raha hai.",
+
+  "myShiftsTerminalNoShow": "No-show mark ki gayi.",
+  "myShiftsTerminalCancelled": "Cancel ho gayi.",
+  "myShiftsTerminalDisputed": "Dispute mein hai.",
+
+  "availabilityTitle": "Availability",
+
+  "availabilityLoadingLabel": "Aapki availability load ho rahi hai…",
+  "availabilityLoadErrorTitle": "Availability load nahi ho saki",
+  "availabilityLoadErrorFallback": "Availability filhaal available nahi hai.",
+
+  "availabilityHeadline": "Flora ko batayein aap kab kaam kar sakte hain",
+  "availabilitySubtitle": "Isse aapko sahi shifts se match kiya jaata hai. Aap ise kabhi bhi badal sakte hain.",
+
+  "availabilityWorkTodayLabel": "Main aaj kaam kar sakta/sakti hoon",
+
+  "availabilityFromLabel": "Kab se available",
+  "availabilityUntilLabel": "Kab tak available",
+  "availabilityTimeHelper": "24-hour, HH:mm",
+
+  "availabilityCityLabel": "Pasandeeda shahar",
+  "availabilityCityHint": "Bengaluru",
+  "availabilityTravelLabel": "Maximum travel distance (km)",
+  "availabilityMinPayLabel": "Minimum pay (₹)",
+
+  "availabilitySavingLabel": "Save ho raha hai…",
+  "availabilitySaveButton": "Availability save karein",
+  "availabilitySavedSnackbar": "Availability save ho gayi.",
+
+  "grievanceTitle": "Support",
+
+  "grievanceLoadingLabel": "Aapki tickets load ho rahi hain…",
+  "grievanceLoadErrorTitle": "Support tickets load nahi ho sakin",
+  "grievanceLoadErrorFallback": "Support tickets filhaal available nahi hain.",
+
+  "grievanceCountFiled": "{count, plural, one{{count} ticket file ki gayi} other{{count} tickets file ki gayin}}",
+
+  "grievanceRaiseTicketLabel": "Ticket raise karein",
+  "grievanceCategoryLabel": "Category",
+  "grievanceWhatHappenedLabel": "Kya hua?",
+  "grievanceYourTicketsLabel": "Aapki tickets",
+
+  "grievanceEmptyTitle": "Abhi koi ticket nahi",
+  "grievanceEmptyMessage": "Shift se judi koi bhi baat yahan dikhegi.",
+
+  "grievanceResolutionPrefix": "Resolution: {notes}",
+
+  "grievanceSubmittingLabel": "Submit ho raha hai…",
+  "grievanceSubmitButton": "Ticket submit karein",
+  "grievanceDescribeValidation": "Kya hua yeh batayein.",
+  "grievanceSubmittedSnackbar": "Ticket submit ho gayi.",
+
+  "grievanceStatusOpen": "Open",
+  "grievanceStatusInReview": "Review mein",
+  "grievanceStatusResolved": "Resolve ho gayi",
+  "grievanceStatusClosed": "Band",
+
+  "grievanceCategoryAttendanceMismatch": "Attendance mismatch",
+  "grievanceCategoryPayoutMismatch": "Payout mismatch",
+  "grievanceCategoryUnsafeWork": "Asuraksit kaam",
+  "grievanceCategorySupervisorIssue": "Supervisor se judi samasya",
+  "grievanceCategoryUnpaidOvertime": "Bina payment overtime",
+  "grievanceCategoryCancellationIssue": "Cancellation samasya",
+  "grievanceCategoryHarassmentSafety": "Harassment ya safety",
+  "grievanceCategoryOther": "Anya",
+
+  "payoutsTitle": "Payouts",
+
+  "payoutsLoadingLabel": "Aapke payouts load ho rahe hain…",
+  "payoutsLoadErrorTitle": "Payouts load nahi ho sake",
+  "payoutsLoadErrorFallback": "Payouts filhaal available nahi hain.",
+
+  "payoutsEmptyTitle": "Abhi koi payout nahi",
+  "payoutsEmptyMessage": "Shift se check-out karne ke baad payouts yahan dikhenge.",
+
+  "payoutsCount": "{count, plural, one{{count} payout} other{{count} payouts}}",
+
+  "payoutsDisclaimer": "Yeh ek status ledger hai, wallet nahi -- Flora abhi seedhe paise transfer nahi karta. Approved payouts company apni payout policy ke hisaab se release karti hai.",
+
+  "payoutsBasePayLabel": "Base pay: ₹{amount}",
+  "payoutsBonusLabel": "Bonus: ₹{amount}",
+  "payoutsDeductionsLabel": "Katauti: ₹{amount}",
+  "payoutsExpectedLabel": "Expected: {date}",
+
+  "payoutStatusPendingApproval": "Approval pending",
+  "payoutStatusApproved": "Approved",
+  "payoutStatusProcessing": "Processing ho raha hai",
+  "payoutStatusPaid": "Paid ho gaya",
+  "payoutStatusFailed": "Fail ho gaya",
+  "payoutStatusDisputed": "Dispute mein hai"
 }

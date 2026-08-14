@@ -6,6 +6,7 @@ import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_radius.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../core/errors/app_failure.dart';
+import '../../../core/errors/app_failure_localization.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_chip.dart';
@@ -14,8 +15,30 @@ import '../../../core/widgets/app_loading_progress.dart';
 import '../../../core/widgets/app_state_view.dart';
 import '../../../core/widgets/app_sticky_footer.dart';
 import '../../../core/widgets/app_text_field.dart';
+import '../../../l10n/generated/app_localizations.dart';
 import '../domain/shift_grievance.dart';
 import 'shift_grievance_controller.dart';
+
+/// Maps a category to its localized display label. Kept in the presentation
+/// layer, not the domain enum, since [ShiftGrievanceCategory] has no
+/// `BuildContext`/`AppLocalizations` to localize with.
+String _categoryLabel(
+  ShiftGrievanceCategory category,
+  AppLocalizations l10n,
+) => switch (category) {
+  ShiftGrievanceCategory.attendanceMismatch =>
+    l10n.grievanceCategoryAttendanceMismatch,
+  ShiftGrievanceCategory.payoutMismatch => l10n.grievanceCategoryPayoutMismatch,
+  ShiftGrievanceCategory.unsafeWork => l10n.grievanceCategoryUnsafeWork,
+  ShiftGrievanceCategory.supervisorIssue =>
+    l10n.grievanceCategorySupervisorIssue,
+  ShiftGrievanceCategory.unpaidOvertime => l10n.grievanceCategoryUnpaidOvertime,
+  ShiftGrievanceCategory.cancellationIssue =>
+    l10n.grievanceCategoryCancellationIssue,
+  ShiftGrievanceCategory.harassmentSafety =>
+    l10n.grievanceCategoryHarassmentSafety,
+  ShiftGrievanceCategory.other => l10n.grievanceCategoryOther,
+};
 
 class ShiftGrievanceScreen extends ConsumerWidget {
   const ShiftGrievanceScreen({super.key});
@@ -23,18 +46,19 @@ class ShiftGrievanceScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(shiftGrievanceControllerProvider);
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('Support')),
+      appBar: AppBar(title: Text(l10n.grievanceTitle)),
       body: SafeArea(
         child: state.when(
-          loading: () => const Center(
-            child: AppLoadingProgressBar(label: 'Loading your tickets…'),
+          loading: () => Center(
+            child: AppLoadingProgressBar(label: l10n.grievanceLoadingLabel),
           ),
           error: (error, stackTrace) => AppErrorState(
-            title: 'Support tickets could not be loaded',
+            title: l10n.grievanceLoadErrorTitle,
             message: error is AppFailure
-                ? error.message
-                : 'Support tickets are temporarily unavailable.',
+                ? error.localizedMessage(l10n)
+                : l10n.grievanceLoadErrorFallback,
             onAction: () => ref.invalidate(shiftGrievanceControllerProvider),
           ),
           data: (grievances) => _GrievanceContent(grievances: grievances),
@@ -67,6 +91,7 @@ class _GrievanceContentState extends ConsumerState<_GrievanceContent> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final dateFormat = DateFormat('d MMM yyyy');
     final ticketCount = widget.grievances.length;
     return Column(
@@ -80,10 +105,13 @@ class _GrievanceContentState extends ConsumerState<_GrievanceContent> {
               AppSpacing.xl,
             ),
             children: [
-              Text('Support', style: Theme.of(context).textTheme.headlineSmall),
+              Text(
+                l10n.grievanceTitle,
+                style: Theme.of(context).textTheme.headlineSmall,
+              ),
               const SizedBox(height: AppSpacing.xs),
               Text(
-                '$ticketCount ticket${ticketCount == 1 ? '' : 's'} filed',
+                l10n.grievanceCountFiled(ticketCount),
                 style: const TextStyle(color: AppColors.inkMuted),
               ),
               const SizedBox(height: AppSpacing.md),
@@ -92,7 +120,7 @@ class _GrievanceContentState extends ConsumerState<_GrievanceContent> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Raise a ticket',
+                      l10n.grievanceRaiseTicketLabel,
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
                     const SizedBox(height: AppSpacing.sm),
@@ -104,7 +132,7 @@ class _GrievanceContentState extends ConsumerState<_GrievanceContent> {
                     ),
                     const SizedBox(height: AppSpacing.md),
                     AppTextField(
-                      label: 'What happened?',
+                      label: l10n.grievanceWhatHappenedLabel,
                       controller: _descriptionController,
                       maxLines: 4,
                     ),
@@ -122,14 +150,14 @@ class _GrievanceContentState extends ConsumerState<_GrievanceContent> {
               ),
               const SizedBox(height: AppSpacing.xl),
               Text(
-                'Your tickets',
+                l10n.grievanceYourTicketsLabel,
                 style: Theme.of(context).textTheme.titleMedium,
               ),
               const SizedBox(height: AppSpacing.sm),
               if (widget.grievances.isEmpty)
-                const AppEmptyState(
-                  title: 'No tickets yet',
-                  message: 'Anything you raise about a shift shows up here.',
+                AppEmptyState(
+                  title: l10n.grievanceEmptyTitle,
+                  message: l10n.grievanceEmptyMessage,
                 )
               else
                 for (final grievance in widget.grievances) ...[
@@ -145,14 +173,14 @@ class _GrievanceContentState extends ConsumerState<_GrievanceContent> {
                               style: Theme.of(context).textTheme.titleSmall,
                             ),
                             AppStatusChip(
-                              label: _statusLabel(grievance.status),
+                              label: _statusLabel(grievance.status, l10n),
                               tone: _statusTone(grievance.status),
                             ),
                           ],
                         ),
                         const SizedBox(height: AppSpacing.xxs),
                         Text(
-                          grievance.category.displayLabel,
+                          _categoryLabel(grievance.category, l10n),
                           style: Theme.of(context).textTheme.labelSmall
                               ?.copyWith(
                                 color: AppColors.inkMuted,
@@ -168,7 +196,11 @@ class _GrievanceContentState extends ConsumerState<_GrievanceContent> {
                         Text(dateFormat.format(grievance.createdAt)),
                         if (grievance.resolutionNotes != null) ...[
                           const SizedBox(height: AppSpacing.xs),
-                          Text('Resolution: ${grievance.resolutionNotes}'),
+                          Text(
+                            l10n.grievanceResolutionPrefix(
+                              grievance.resolutionNotes!,
+                            ),
+                          ),
                         ],
                       ],
                     ),
@@ -180,7 +212,9 @@ class _GrievanceContentState extends ConsumerState<_GrievanceContent> {
         ),
         AppStickyFooter(
           child: AppButton(
-            label: _submitting ? 'Submitting…' : 'Submit ticket',
+            label: _submitting
+                ? l10n.grievanceSubmittingLabel
+                : l10n.grievanceSubmitButton,
             isLoading: _submitting,
             onPressed: _submit,
           ),
@@ -190,8 +224,9 @@ class _GrievanceContentState extends ConsumerState<_GrievanceContent> {
   }
 
   Future<void> _submit() async {
+    final l10n = AppLocalizations.of(context);
     if (_descriptionController.text.trim().isEmpty) {
-      setState(() => _error = 'Describe what happened.');
+      setState(() => _error = l10n.grievanceDescribeValidation);
       return;
     }
     setState(() {
@@ -210,20 +245,21 @@ class _GrievanceContentState extends ConsumerState<_GrievanceContent> {
       _descriptionController.clear();
       showAppSnackBar(
         context: context,
-        message: 'Ticket submitted.',
+        message: l10n.grievanceSubmittedSnackbar,
         tone: AppMessageTone.success,
       );
     } else {
-      setState(() => _error = failure.message);
+      setState(() => _error = failure.localizedMessage(l10n));
     }
   }
 
-  String _statusLabel(ShiftGrievanceStatus status) => switch (status) {
-    ShiftGrievanceStatus.open => 'Open',
-    ShiftGrievanceStatus.inReview => 'In review',
-    ShiftGrievanceStatus.resolved => 'Resolved',
-    ShiftGrievanceStatus.closed => 'Closed',
-  };
+  String _statusLabel(ShiftGrievanceStatus status, AppLocalizations l10n) =>
+      switch (status) {
+        ShiftGrievanceStatus.open => l10n.grievanceStatusOpen,
+        ShiftGrievanceStatus.inReview => l10n.grievanceStatusInReview,
+        ShiftGrievanceStatus.resolved => l10n.grievanceStatusResolved,
+        ShiftGrievanceStatus.closed => l10n.grievanceStatusClosed,
+      };
 
   AppChipTone _statusTone(ShiftGrievanceStatus status) => switch (status) {
     ShiftGrievanceStatus.open => AppChipTone.warning,
@@ -245,15 +281,19 @@ class _CategoryDropdownField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return DropdownButtonFormField<ShiftGrievanceCategory>(
       initialValue: value,
-      decoration: const InputDecoration(
-        labelText: 'Category',
-        border: OutlineInputBorder(borderRadius: AppRadius.mediumBorder),
+      decoration: InputDecoration(
+        labelText: l10n.grievanceCategoryLabel,
+        border: const OutlineInputBorder(borderRadius: AppRadius.mediumBorder),
       ),
       items: [
         for (final category in ShiftGrievanceCategory.values)
-          DropdownMenuItem(value: category, child: Text(category.displayLabel)),
+          DropdownMenuItem(
+            value: category,
+            child: Text(_categoryLabel(category, l10n)),
+          ),
       ],
       onChanged: onChanged,
     );
