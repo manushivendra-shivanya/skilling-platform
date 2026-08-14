@@ -202,6 +202,40 @@
     "description": "Journey card Interview checkpoint subtitle when there is no upcoming interview."
   },
 
+  "homeWeeklySectionTitle": "This week",
+  "@homeWeeklySectionTitle": {
+    "description": "Section title on the weekly activity strip below the Journey card."
+  },
+
+  "homeWeeklyEvidenceChip": "{count, plural, one{{count} proof item} other{{count} proof items}}",
+  "@homeWeeklyEvidenceChip": {
+    "description": "Chip on the weekly activity strip counting proof/evidence collected in the last 7 days.",
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+
+  "homeWeeklyApplicationsChip": "{count, plural, one{{count} application sent} other{{count} applications sent}}",
+  "@homeWeeklyApplicationsChip": {
+    "description": "Chip on the weekly activity strip counting job applications sent in the last 7 days.",
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+
+  "homeJobMatchTeaserLabel": "Best match for you",
+  "@homeJobMatchTeaserLabel": {
+    "description": "Eyebrow label on the job-match teaser card below the Journey card."
+  },
+
+  "homeJobMatchTeaserPercent": "{percent}% match",
+  "@homeJobMatchTeaserPercent": {
+    "description": "Match-score badge on the job-match teaser card.",
+    "placeholders": {
+      "percent": { "type": "int" }
+    }
+  },
+
   "homeSyncBanner": "{count, plural, one{{count} item waiting to sync.} other{{count} items waiting to sync.}}",
   "@homeSyncBanner": {
     "description": "Banner shown when local work is queued for sync. Used by the shared AppPendingSyncBanner, not just Home.",

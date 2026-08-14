@@ -50,6 +50,13 @@
   "homeJourneyInterviewLabel": "Interview",
   "homeJourneyInterviewPending": "Abhi tay nahi hua",
 
+  "homeWeeklySectionTitle": "Is hafte",
+  "homeWeeklyEvidenceChip": "{count, plural, one{{count} proof} other{{count} proof}}",
+  "homeWeeklyApplicationsChip": "{count, plural, one{{count} application bheja} other{{count} application bheje}}",
+
+  "homeJobMatchTeaserLabel": "Aapke liye best match",
+  "homeJobMatchTeaserPercent": "{percent}% match",
+
   "homeSyncBanner": "{count, plural, one{{count} item} other{{count} items}} sync hone ke liye baaki.",
 
   "actionView": "Dekhein",

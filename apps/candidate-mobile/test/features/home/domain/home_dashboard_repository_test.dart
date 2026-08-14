@@ -12,6 +12,8 @@ void main() {
       pendingSyncCount: 0,
       certificationStatus: CertificationJourneyStatus.notStarted,
       applicationsSentThisMonth: 0,
+      evidenceThisWeek: 0,
+      applicationsThisWeek: 0,
     );
 
     test('points toward Building while starting out', () {

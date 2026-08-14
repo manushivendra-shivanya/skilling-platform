@@ -18,15 +18,18 @@ import '../../../l10n/generated/app_localizations.dart';
 import '../domain/home_dashboard_repository.dart';
 import 'home_dashboard_controller.dart';
 import 'home_header.dart';
+import 'job_match_teaser_card.dart';
 import 'journey_timeline_card.dart';
 import 'today_mission_card.dart';
 import 'upcoming_interview_card.dart';
+import 'weekly_activity_strip.dart';
 
 class HomeDashboardScreen extends ConsumerWidget {
   const HomeDashboardScreen({
     required this.onOpenDiagnostic,
     required this.onOpenVoiceInterview,
     required this.onOpenPathway,
+    required this.onOpenJobs,
     required this.onOpenNotifications,
     super.key,
   });
@@ -34,6 +37,11 @@ class HomeDashboardScreen extends ConsumerWidget {
   final VoidCallback onOpenDiagnostic;
   final VoidCallback onOpenVoiceInterview;
   final VoidCallback onOpenPathway;
+
+  /// Where the job-match teaser card routes on tap -- the Jobs tab, sharing
+  /// `jobsControllerProvider`'s already-loaded state rather than fetching
+  /// a second time. See `JobMatchTeaserCard`'s own doc comment.
+  final VoidCallback onOpenJobs;
 
   /// Home's only route to notifications now that it has no shell AppBar --
   /// see `MainNavigationShell`'s doc comment. Surfaced from `HomeHeader`.
@@ -77,6 +85,7 @@ class HomeDashboardScreen extends ConsumerWidget {
           onOpenDiagnostic: onOpenDiagnostic,
           onOpenVoiceInterview: onOpenVoiceInterview,
           onOpenPathway: onOpenPathway,
+          onOpenJobs: onOpenJobs,
           onOpenNotifications: openNotifications,
           onRefresh: () =>
               ref.read(homeDashboardControllerProvider.notifier).refresh(),
@@ -92,6 +101,7 @@ class _HomeContent extends StatelessWidget {
     required this.onOpenDiagnostic,
     required this.onOpenVoiceInterview,
     required this.onOpenPathway,
+    required this.onOpenJobs,
     required this.onOpenNotifications,
     required this.onRefresh,
   });
@@ -100,6 +110,7 @@ class _HomeContent extends StatelessWidget {
   final VoidCallback onOpenDiagnostic;
   final VoidCallback onOpenVoiceInterview;
   final VoidCallback onOpenPathway;
+  final VoidCallback onOpenJobs;
   final VoidCallback onOpenNotifications;
   final Future<void> Function() onRefresh;
 
@@ -197,6 +208,12 @@ class _HomeContent extends StatelessWidget {
                 const SizedBox(height: AppSpacing.xs),
 
                 JourneyTimelineCard(dashboard: dashboard, onTap: onOpenPathway),
+                const SizedBox(height: AppSpacing.sm),
+
+                WeeklyActivityStrip(dashboard: dashboard),
+                const SizedBox(height: AppSpacing.sm),
+
+                JobMatchTeaserCard(onTap: onOpenJobs),
                 const SizedBox(height: AppSpacing.sm),
 
                 // Only one row, and it never duplicates a bottom-nav tab or

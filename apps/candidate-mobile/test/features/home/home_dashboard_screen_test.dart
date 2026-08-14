@@ -1,16 +1,23 @@
 import 'package:candidate_mobile/app/dependencies.dart';
 import 'package:candidate_mobile/core/errors/result.dart';
+import 'package:candidate_mobile/core/repositories/candidate_session_repository.dart';
+import 'package:candidate_mobile/core/storage/secure_key_value_store.dart';
 import 'package:candidate_mobile/core/widgets/app_card.dart';
 import 'package:candidate_mobile/features/home/data/mock_home_dashboard_repository.dart';
 import 'package:candidate_mobile/features/home/domain/home_dashboard_repository.dart';
 import 'package:candidate_mobile/features/home/presentation/home_dashboard_screen.dart';
 import 'package:candidate_mobile/features/home/presentation/home_header.dart';
+import 'package:candidate_mobile/features/home/presentation/job_match_teaser_card.dart';
 import 'package:candidate_mobile/features/home/presentation/journey_timeline_card.dart';
 import 'package:candidate_mobile/features/home/presentation/today_mission_card.dart';
+import 'package:candidate_mobile/features/jobs/data/secure_saved_jobs_repository.dart';
+import 'package:candidate_mobile/features/jobs/domain/jobs_repository.dart';
 import 'package:candidate_mobile/l10n/generated/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+import '../../helpers/fake_career_passport_repository.dart';
 
 void main() {
   Widget wrap(HomeDashboard? dashboard) {
@@ -18,6 +25,19 @@ void main() {
       overrides: [
         homeDashboardRepositoryProvider.overrideWithValue(
           MockHomeDashboardRepository(response: Success(dashboard)),
+        ),
+        // JobMatchTeaserCard pulls in jobsControllerProvider, which reads
+        // this first, before touching anything else. Left unoverridden it
+        // falls through to the real secure-storage-backed provider, which
+        // hangs on the platform channel in the widget test sandbox (see
+        // pump_app.dart's own note on this) instead of failing fast.
+        // Unauthenticated (no session set, matching pumpCandidateApp's own
+        // default) makes JobsController.build() throw AuthenticationFailure
+        // immediately -- an AsyncError the teaser card already renders
+        // nothing for -- without ever reaching jobsRepositoryProvider or
+        // careerPassportControllerProvider's own hang-prone dependencies.
+        candidateSessionRepositoryProvider.overrideWithValue(
+          InMemoryCandidateSessionRepository(),
         ),
       ],
       child: MaterialApp(
@@ -28,6 +48,50 @@ void main() {
             onOpenDiagnostic: () {},
             onOpenVoiceInterview: () {},
             onOpenPathway: () {},
+            onOpenJobs: () {},
+            onOpenNotifications: () {},
+          ),
+        ),
+      ),
+    );
+  }
+
+  // A second wrapper, only for the one test that needs the job-match
+  // teaser's data path: an authenticated session plus a loaded jobs
+  // catalogue, so jobsControllerProvider actually resolves to data instead
+  // of the AuthenticationFailure every other test in this file relies on
+  // to keep the teaser silent.
+  Widget wrapWithJobs(HomeDashboard? dashboard, List<JobOpportunity> jobs) {
+    return ProviderScope(
+      overrides: [
+        homeDashboardRepositoryProvider.overrideWithValue(
+          MockHomeDashboardRepository(response: Success(dashboard)),
+        ),
+        candidateSessionRepositoryProvider.overrideWithValue(
+          InMemoryCandidateSessionRepository(
+            session: const CandidateSession(
+              candidateId: 'candidate-1',
+              isAuthenticated: true,
+            ),
+          ),
+        ),
+        jobsRepositoryProvider.overrideWithValue(_FakeJobsRepository(jobs)),
+        savedJobsRepositoryProvider.overrideWithValue(
+          SecureSavedJobsRepository(InMemorySecureKeyValueStore()),
+        ),
+        careerPassportRepositoryProvider.overrideWithValue(
+          const NoEvidenceCareerPassportRepository(),
+        ),
+      ],
+      child: MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: HomeDashboardScreen(
+            onOpenDiagnostic: () {},
+            onOpenVoiceInterview: () {},
+            onOpenPathway: () {},
+            onOpenJobs: () {},
             onOpenNotifications: () {},
           ),
         ),
@@ -97,6 +161,8 @@ void main() {
           pendingSyncCount: 0,
           certificationStatus: sample.certificationStatus,
           applicationsSentThisMonth: sample.applicationsSentThisMonth,
+          evidenceThisWeek: sample.evidenceThisWeek,
+          applicationsThisWeek: sample.applicationsThisWeek,
           todayMission: sample.todayMission,
           pathway: sample.pathway,
         ),
@@ -124,6 +190,8 @@ void main() {
           pendingSyncCount: 0,
           certificationStatus: sample.certificationStatus,
           applicationsSentThisMonth: sample.applicationsSentThisMonth,
+          evidenceThisWeek: sample.evidenceThisWeek,
+          applicationsThisWeek: sample.applicationsThisWeek,
         ),
       ),
     );
@@ -152,6 +220,8 @@ void main() {
           pendingSyncCount: sample.pendingSyncCount,
           certificationStatus: sample.certificationStatus,
           applicationsSentThisMonth: sample.applicationsSentThisMonth,
+          evidenceThisWeek: sample.evidenceThisWeek,
+          applicationsThisWeek: sample.applicationsThisWeek,
           todayMission: sample.todayMission,
           pathway: sample.pathway,
         ),
@@ -202,6 +272,8 @@ void main() {
             pendingSyncCount: sample.pendingSyncCount,
             certificationStatus: sample.certificationStatus,
             applicationsSentThisMonth: sample.applicationsSentThisMonth,
+            evidenceThisWeek: sample.evidenceThisWeek,
+            applicationsThisWeek: sample.applicationsThisWeek,
             todayMission: sample.todayMission,
             pathway: sample.pathway,
           ),
@@ -302,6 +374,8 @@ void main() {
           pendingSyncCount: sample.pendingSyncCount,
           certificationStatus: sample.certificationStatus,
           applicationsSentThisMonth: sample.applicationsSentThisMonth,
+          evidenceThisWeek: sample.evidenceThisWeek,
+          applicationsThisWeek: sample.applicationsThisWeek,
           todayMission: sample.todayMission,
           pathway: sample.pathway,
         ),
@@ -312,4 +386,86 @@ void main() {
     expect(find.textContaining('Job ready'), findsOneWidget);
     expect(find.textContaining('% to'), findsNothing);
   });
+
+  testWidgets("surfaces this week's proof and application counts", (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      wrap(MockHomeDashboardRepository.sampleDashboard()),
+    );
+    await tester.pumpAndSettle();
+
+    // sampleDashboard: evidenceThisWeek 3, applicationsThisWeek 1 -- a
+    // distinct window from the header's 30-day evidence figure and the
+    // Journey card's calendar-month application count.
+    expect(find.text('This week'), findsOneWidget);
+    expect(find.text('3 proof items'), findsOneWidget);
+    expect(find.text('1 application sent'), findsOneWidget);
+  });
+
+  testWidgets(
+    'hides the job-match teaser when Jobs cannot be reached (no session)',
+    (tester) async {
+      await tester.pumpWidget(
+        wrap(MockHomeDashboardRepository.sampleDashboard()),
+      );
+      await tester.pumpAndSettle();
+
+      // wrap()'s unauthenticated session makes jobsControllerProvider an
+      // AsyncError -- the teaser renders nothing rather than an error card,
+      // since Jobs enrichment is below-the-fold, not a primary flow.
+      expect(find.byType(JobMatchTeaserCard), findsOneWidget);
+      expect(find.text('Best match for you'), findsNothing);
+    },
+  );
+
+  testWidgets('shows the best-matching job once Jobs data is available', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      wrapWithJobs(MockHomeDashboardRepository.sampleDashboard(), const [
+        // A title distinct from sampleDashboard.goalRoleName ("Warehouse
+        // Operations Associate", already on screen in HomeHeader's goal
+        // chip) -- reusing it here would make find.text ambiguous between
+        // the two widgets.
+        JobOpportunity(
+          id: 'job-1',
+          title: 'Inventory Executive',
+          employer: 'Meridian Logistics',
+          location: 'Gurugram, Haryana',
+          isSupervisorRole: false,
+          description: 'Cycle counts and stock reconciliation.',
+          source: 'flora',
+        ),
+      ]),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Best match for you'), findsOneWidget);
+    expect(find.text('Inventory Executive'), findsOneWidget);
+    expect(find.text('Meridian Logistics'), findsOneWidget);
+    expect(find.textContaining('% match'), findsOneWidget);
+  });
+}
+
+class _FakeJobsRepository implements JobsRepository {
+  _FakeJobsRepository(this._jobs);
+
+  final List<JobOpportunity> _jobs;
+
+  @override
+  Future<Result<List<JobOpportunity>>> loadJobs() async => Success(_jobs);
+
+  @override
+  Future<Result<Set<String>>> readAppliedJobIds(String candidateId) async =>
+      const Success({});
+
+  @override
+  Future<Result<void>> saveApplication(
+    String candidateId,
+    String jobId,
+  ) async => const Success(null);
+
+  @override
+  bool get isLiveData => true;
 }

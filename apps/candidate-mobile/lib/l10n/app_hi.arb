@@ -50,6 +50,13 @@
   "homeJourneyInterviewLabel": "साक्षात्कार",
   "homeJourneyInterviewPending": "अभी तय नहीं हुआ",
 
+  "homeWeeklySectionTitle": "इस हफ़्ते",
+  "homeWeeklyEvidenceChip": "{count, plural, one{{count} प्रमाण} other{{count} प्रमाण}}",
+  "homeWeeklyApplicationsChip": "{count, plural, one{{count} आवेदन भेजा} other{{count} आवेदन भेजे}}",
+
+  "homeJobMatchTeaserLabel": "आपके लिए सबसे अच्छा मेल",
+  "homeJobMatchTeaserPercent": "{percent}% मेल",
+
   "homeSyncBanner": "{count, plural, one{{count} आइटम} other{{count} आइटम}} सिंक होने के लिए बाकी।",
 
   "actionView": "देखें",
