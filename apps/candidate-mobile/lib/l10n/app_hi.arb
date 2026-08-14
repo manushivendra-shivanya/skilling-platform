@@ -613,5 +613,53 @@
   "personaCopyButton": "पर्सोना सारांश कॉपी करें",
   "personaCopiedSnackbar": "पर्सोना सारांश कॉपी हो गया।",
 
-  "personaOpenToRoles": "इच्छुक: {roles}"
+  "personaOpenToRoles": "इच्छुक: {roles}",
+
+  "coachAppBarTitle": "AI करियर कोच",
+
+  "coachLiveDataBanner": "AI-जनित मार्गदर्शन • कुछ भी महत्वपूर्ण होने पर अपने ट्रेनिंग अधिकारी से पुष्टि करें।",
+  "coachDemoDataBanner": "केवल लोकल डेमो • कोई प्रोडक्शन AI कनेक्ट नहीं है। संवेदनशील जानकारी साझा न करें।",
+
+  "coachLoadingConversations": "आपकी बातचीत लोड हो रही है…",
+
+  "coachLoadErrorTitle": "कोच लोड नहीं हो सका",
+  "coachLoadErrorFallback": "आपकी पिछली बातचीत फ़िलहाल उपलब्ध नहीं है।",
+
+  "coachNewQuestionHint": "एक नया सवाल पूछें",
+  "coachMessageLabel": "संदेश",
+
+  "coachWelcomeGreeting": "नमस्ते! किसी पाठ, साक्षात्कार, या आगे क्या करना है, इसके बारे में मुझसे पूछें — मैं जब भी ज़रूरत हो यहां हूं।",
+  "coachWelcomeDisclaimer": "यहां साझा की गई कोई भी बात स्कोर या नियोक्ता को नहीं दिखाई जाती।",
+
+  "coachPromptExplainTerm": "किसी पाठ शब्द को समझाएं",
+  "coachPromptPracticeInterview": "साक्षात्कार के उत्तरों का अभ्यास करें",
+  "coachPromptExperience": "मुझे अपने अनुभव के बारे में क्या कहना चाहिए?",
+
+  "coachMessageCount": "{count, plural, one{{count} संदेश} other{{count} संदेश}}",
+
+  "coachTimeJustNow": "अभी अभी",
+  "coachTimeMinutesAgo": "{minutes} मिनट पहले",
+  "coachTimeHoursAgo": "{hours} घंटे पहले",
+  "coachTimeDaysAgo": "{days, plural, one{{days} दिन पहले} other{{days} दिन पहले}}",
+
+  "coachSendTooltip": "संदेश भेजें",
+
+  "coachTypingSemantic": "कोच जवाब लिख रहा है",
+  "coachTypingLabel": "कोच लिख रहा है…",
+
+  "coachAskFabLabel": "पूछें",
+
+  "coachAskingAboutChip": "पूछ रहे हैं: {label}",
+
+  "coachAskSomethingElseButton": "कुछ और पूछें",
+  "coachContinueInCoachButton": "कोच में जारी रखें",
+
+  "coachVoiceUnavailableTooltip": "वॉइस इनपुट उपलब्ध नहीं",
+  "coachVoiceInactiveSnackbar": "वॉइस इनपुट सक्रिय नहीं है। माइक्रोफ़ोन अनुमति नहीं मांगी गई थी।",
+
+  "coachMessageYourCoachHint": "अपने कोच को संदेश भेजें…",
+
+  "coachConversationUnavailable": "यह बातचीत उपलब्ध नहीं है।",
+
+  "coachAskSkillsInterviewsHint": "कौशल या साक्षात्कार के बारे में पूछें"
 }

@@ -10,6 +10,7 @@ import '../../../app/theme/app_spacing.dart';
 import '../../../app/theme/coach_mark.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_feedback.dart';
+import '../../../l10n/generated/app_localizations.dart';
 import '../domain/coach_message.dart';
 import 'coach_composer.dart';
 import 'coach_thinking_indicator.dart';
@@ -57,7 +58,7 @@ class AskCoachAffordance extends StatelessWidget {
       backgroundColor: AppColors.brand,
       foregroundColor: Colors.white,
       icon: const CoachMark(color: Colors.white, size: 18),
-      label: const Text('Ask'),
+      label: Text(AppLocalizations.of(context).coachAskFabLabel),
       onPressed: () => showModalBottomSheet<void>(
         context: context,
         isScrollControlled: true,
@@ -99,6 +100,7 @@ class _AskCoachSheetState extends ConsumerState<_AskCoachSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final threadId = _threadId;
     final thread = threadId == null
         ? null
@@ -129,7 +131,7 @@ class _AskCoachSheetState extends ConsumerState<_AskCoachSheet> {
             alignment: Alignment.centerLeft,
             child: Chip(
               avatar: const CoachMark(size: 14, color: AppColors.brand),
-              label: Text('Asking about: ${widget.contextLabel}'),
+              label: Text(l10n.coachAskingAboutChip(widget.contextLabel)),
               backgroundColor: AppColors.brandSoft,
             ),
           ),
@@ -146,7 +148,7 @@ class _AskCoachSheetState extends ConsumerState<_AskCoachSheet> {
               children: [
                 Expanded(
                   child: AppButton(
-                    label: 'Ask something else',
+                    label: l10n.coachAskSomethingElseButton,
                     variant: AppButtonVariant.secondary,
                     onPressed: () => FocusScope.of(context).nextFocus(),
                   ),
@@ -154,7 +156,7 @@ class _AskCoachSheetState extends ConsumerState<_AskCoachSheet> {
                 const SizedBox(width: AppSpacing.xs),
                 Expanded(
                   child: AppButton(
-                    label: 'Continue in Coach',
+                    label: l10n.coachContinueInCoachButton,
                     onPressed: () {
                       Navigator.of(context).pop();
                       context.push(_coachThreadPath(threadId!));
@@ -168,7 +170,7 @@ class _AskCoachSheetState extends ConsumerState<_AskCoachSheet> {
           Row(
             children: [
               IconButton(
-                tooltip: 'Voice input unavailable',
+                tooltip: l10n.coachVoiceUnavailableTooltip,
                 onPressed: _showVoicePlaceholder,
                 icon: const Icon(Icons.mic_none_outlined),
               ),
@@ -176,7 +178,7 @@ class _AskCoachSheetState extends ConsumerState<_AskCoachSheet> {
                 child: CoachComposer(
                   controller: _composer,
                   onSend: _send,
-                  hint: 'Message your coach…',
+                  hint: l10n.coachMessageYourCoachHint,
                   isSending: _isSending,
                   autofocus: true,
                 ),
@@ -218,8 +220,7 @@ class _AskCoachSheetState extends ConsumerState<_AskCoachSheet> {
   void _showVoicePlaceholder() {
     showAppSnackBar(
       context: context,
-      message:
-          'Voice input is not active. No microphone permission was requested.',
+      message: AppLocalizations.of(context).coachVoiceInactiveSnackbar,
       tone: AppMessageTone.neutral,
     );
   }

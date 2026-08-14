@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../app/theme/app_spacing.dart';
 import '../../../core/widgets/app_text_field.dart';
+import '../../../l10n/generated/app_localizations.dart';
 
 /// The Coach message composer -- a text field plus a send control, shared
 /// across `CoachThreadsScreen` (starting a new thread), `CoachThreadScreen`
@@ -77,7 +78,7 @@ class CoachComposer extends StatelessWidget {
         const SizedBox(width: AppSpacing.xs),
         sendButton ??
             IconButton(
-              tooltip: 'Send message',
+              tooltip: AppLocalizations.of(context).coachSendTooltip,
               onPressed: isSending ? null : onSend,
               icon: const Icon(Icons.send),
             ),

@@ -6,6 +6,7 @@ import 'package:candidate_mobile/features/coach/data/secure_coach_thread_reposit
 import 'package:candidate_mobile/features/coach/domain/coach_message.dart';
 import 'package:candidate_mobile/features/coach/domain/coach_repository.dart';
 import 'package:candidate_mobile/features/coach/presentation/coach_threads_screen.dart';
+import 'package:candidate_mobile/l10n/generated/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -57,7 +58,11 @@ void main() {
               SecureCoachThreadRepository(InMemorySecureKeyValueStore()),
             ),
           ],
-          child: MaterialApp(home: CoachThreadsScreen(onOpenThread: (_) {})),
+          child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: CoachThreadsScreen(onOpenThread: (_) {}),
+          ),
         ),
       );
       await tester.pumpAndSettle();
@@ -117,7 +122,11 @@ void main() {
             ),
             coachRepositoryProvider.overrideWithValue(_FakeCoachRepository()),
           ],
-          child: MaterialApp(home: CoachThreadsScreen(onOpenThread: (_) {})),
+          child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: CoachThreadsScreen(onOpenThread: (_) {}),
+          ),
         ),
       );
       await tester.pumpAndSettle();

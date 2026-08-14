@@ -613,5 +613,53 @@
   "personaCopyButton": "Persona summary copy karein",
   "personaCopiedSnackbar": "Persona summary copy ho gayi.",
 
-  "personaOpenToRoles": "In roles ke liye open: {roles}"
+  "personaOpenToRoles": "In roles ke liye open: {roles}",
+
+  "coachAppBarTitle": "AI Career Coach",
+
+  "coachLiveDataBanner": "AI-generated guidance • Kuch bhi important ho toh apne training officer se verify karein.",
+  "coachDemoDataBanner": "Sirf local demo • Koi production AI connect nahi hai. Sensitive information share na karein.",
+
+  "coachLoadingConversations": "Aapki conversations load ho rahi hain…",
+
+  "coachLoadErrorTitle": "Coach load nahi ho saka",
+  "coachLoadErrorFallback": "Aapki past conversations filhaal available nahi hain.",
+
+  "coachNewQuestionHint": "Ek naya sawaal poochein",
+  "coachMessageLabel": "Message",
+
+  "coachWelcomeGreeting": "Namaste! Kisi lesson, interview, ya aage kya karna hai, iske baare mein mujhse poochein — main jab bhi zaroorat ho yahan hoon.",
+  "coachWelcomeDisclaimer": "Yahan share ki gayi koi bhi baat score ya employer ko nahi dikhayi jaati.",
+
+  "coachPromptExplainTerm": "Ek lesson term samjhayein",
+  "coachPromptPracticeInterview": "Interview answers practice karein",
+  "coachPromptExperience": "Mujhe apne experience ke baare mein kya kehna chahiye?",
+
+  "coachMessageCount": "{count, plural, one{{count} message} other{{count} messages}}",
+
+  "coachTimeJustNow": "Abhi abhi",
+  "coachTimeMinutesAgo": "{minutes} min pehle",
+  "coachTimeHoursAgo": "{hours} hr pehle",
+  "coachTimeDaysAgo": "{days, plural, one{{days} din pehle} other{{days} din pehle}}",
+
+  "coachSendTooltip": "Message bhejein",
+
+  "coachTypingSemantic": "Coach jawab likh raha hai",
+  "coachTypingLabel": "Coach likh raha hai…",
+
+  "coachAskFabLabel": "Poochein",
+
+  "coachAskingAboutChip": "Pooch rahe hain: {label}",
+
+  "coachAskSomethingElseButton": "Kuch aur poochein",
+  "coachContinueInCoachButton": "Coach mein jaari rakhein",
+
+  "coachVoiceUnavailableTooltip": "Voice input available nahi",
+  "coachVoiceInactiveSnackbar": "Voice input active nahi hai. Koi microphone permission request nahi ki gayi.",
+
+  "coachMessageYourCoachHint": "Apne coach ko message bhejein…",
+
+  "coachConversationUnavailable": "Yeh conversation available nahi hai.",
+
+  "coachAskSkillsInterviewsHint": "Skills ya interviews ke baare mein poochein"
 }
