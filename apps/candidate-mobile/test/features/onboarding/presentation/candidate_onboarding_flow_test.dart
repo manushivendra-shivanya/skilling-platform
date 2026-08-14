@@ -444,13 +444,12 @@ void main() {
       await tester.tap(extractButton);
       await tester.pumpAndSettle();
 
-      expect(
-        find.text(
-          'Resume parsing needs a configured backend and is not '
-          'available in this build.',
-        ),
-        findsOneWidget,
-      );
+      // Not UnavailableResumeParsingRepository's own internal message
+      // ("Resume parsing needs a configured backend...") -- this field's
+      // errorText now goes through AppFailureLocalization like every other
+      // error surface in the app, so this UnexpectedFailure shows its one
+      // generic, localized sentence instead of the raw internal text.
+      expect(find.text('Something unexpected went wrong.'), findsOneWidget);
       expect(find.text('What we found'), findsNothing);
 
       // The step is genuinely optional -- a failed extraction never

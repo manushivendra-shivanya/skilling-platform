@@ -753,5 +753,150 @@
   "otpEntryResendButton": "OTP फिर से भेजें",
   "otpEntryResendAvailableIn": "{seconds} सेकंड में फिर से भेजें उपलब्ध होगा",
 
-  "otpEntryChangeEmailButton": "ईमेल पता बदलें"
+  "otpEntryChangeEmailButton": "ईमेल पता बदलें",
+
+  "goalFindJob": "नई नौकरी ढूंढें",
+  "goalBuildSkills": "नौकरी के लिए तैयार कौशल बनाएं",
+  "goalGrowCareer": "अपने मौजूदा करियर में आगे बढ़ें",
+  "goalBuildPersona": "अपनी प्रोफेशनल प्रोफ़ाइल बनाएं",
+
+  "educationBelowTenth": "कक्षा 10 से कम",
+  "educationTenthPass": "कक्षा 10 पास",
+  "educationTwelfthPass": "कक्षा 12 पास",
+  "educationItiDiploma": "ITI या डिप्लोमा",
+  "educationGraduate": "स्नातक या उससे ऊपर",
+
+  "experienceFresher": "फ्रेशर",
+  "experienceUnderOneYear": "1 साल से कम",
+  "experienceOneToThreeYears": "1–3 साल",
+  "experienceOverThreeYears": "3 साल से ज़्यादा",
+
+  "roleWarehouseAssociate": "वेयरहाउस ऑपरेशंस एसोसिएट",
+  "roleInventoryExecutive": "इन्वेंटरी एग्ज़िक्यूटिव",
+  "roleDispatchExecutive": "डिस्पैच एग्ज़िक्यूटिव",
+  "roleHubSupervisor": "हब सुपरवाइज़र",
+  "roleShiftSupervisor": "शिफ्ट सुपरवाइज़र",
+
+  "onboardingWizardAppBarTitle": "अपनी प्रोफ़ाइल बनाएं",
+
+  "onboardingWizardLoadErrorTitle": "हम आपकी प्रोफ़ाइल नहीं खोल सके",
+  "onboardingWizardLoadErrorFallback": "आपका सेव किया गया ड्राफ्ट लोड नहीं हो सका। कृपया फिर से कोशिश करें।",
+
+  "onboardingWizardProgressLabel": "प्रोफ़ाइल सेटअप",
+
+  "onboardingWizardOfflineMessage": "आप ऑफ़लाइन हैं। आपके प्रोफ़ाइल चरण इस डिवाइस पर सुरक्षित रूप से सेव किए जा रहे हैं।",
+
+  "onboardingWizardBackButton": "वापस",
+  "onboardingWizardCompleteButton": "प्रोफ़ाइल पूरी करें",
+  "onboardingWizardSaveContinueButton": "सेव करें और आगे बढ़ें",
+  "onboardingWizardSavedLocallyNote": "हर चरण के बाद इस डिवाइस पर सुरक्षित रूप से सेव किया जाता है।",
+
+  "onboardingGoalStepTitle": "आप क्या हासिल करना चाहेंगे?",
+  "onboardingGoalStepDescription": "हम आपके अगले कदम इसी लक्ष्य के आधार पर तय करेंगे।",
+
+  "onboardingNameStepTitle": "हमें अपना नाम बताएं",
+  "onboardingNameStepDescription": "वह नाम इस्तेमाल करें जो आप एम्प्लॉयर और ट्रेनिंग पार्टनर को दिखाना चाहते हैं।",
+
+  "onboardingFullNameFieldLabel": "पूरा नाम",
+  "onboardingFullNameFieldSemantic": "पूरा नाम, आवश्यक",
+
+  "onboardingLocationStepTitle": "आप कहाँ रहते हैं?",
+  "onboardingLocationStepDescription": "लोकेशन से हमें आपके आस-पास के व्यावहारिक अवसर दिखाने में मदद मिलती है।",
+
+  "onboardingCityFieldLabel": "शहर या ज़िला",
+  "onboardingCityFieldSemantic": "शहर या ज़िला, आवश्यक",
+  "onboardingStateFieldLabel": "राज्य",
+  "onboardingStateFieldSemantic": "राज्य, आवश्यक",
+  "onboardingPinCodeFieldLabel": "पिन कोड",
+  "onboardingPinCodeFieldSemantic": "छह अंकों का पिन कोड, आवश्यक",
+
+  "onboardingEducationStepTitle": "आपकी शिक्षा का स्तर क्या है?",
+  "onboardingEducationStepDescription": "सबसे नज़दीकी विकल्प चुनें। यह स्व-घोषित जानकारी है।",
+
+  "onboardingExperienceStepTitle": "आपके पास कितना काम का अनुभव है?",
+  "onboardingExperienceStepDescription": "किसी भी भूमिका का अनुभव मायने रखता है। फ्रेशर्स का भी स्वागत है।",
+
+  "onboardingRolesStepTitle": "आपको कौन-सी भूमिकाओं में दिलचस्पी है?",
+  "onboardingRolesStepDescription": "एक या अधिक लॉजिस्टिक्स भूमिकाएं चुनें। आप इन्हें बाद में बदल सकते हैं।",
+
+  "onboardingResumeStepTitle": "अपना रिज़्यूमे जोड़ें",
+  "onboardingResumeStepDescription": "अपने रिज़्यूमे का टेक्स्ट पेस्ट करें, हम AI की मदद से आपकी प्रोफ़ाइल जल्दी भरने में मदद करेंगे। यह चरण वैकल्पिक है -- आप इसे छोड़ सकते हैं।",
+
+  "onboardingResumeFieldLabel": "रिज़्यूमे टेक्स्ट",
+  "onboardingResumeFieldHint": "यहां अपने रिज़्यूमे का टेक्स्ट पेस्ट करें",
+  "onboardingResumeFieldSemantic": "रिज़्यूमे टेक्स्ट, वैकल्पिक",
+
+  "onboardingResumeConsentTitle": "इस टेक्स्ट को पढ़ने के लिए AI का उपयोग करें",
+  "onboardingResumeConsentSubtitle": "सक्षम आपके नाम और अनुभव जैसी जानकारी निकालने के लिए यह टेक्स्ट एक AI प्रोवाइडर को भेजता है। इसे आपके रिज़्यूमे के रूप में सेव नहीं किया जाता और न ही एम्प्लॉयर के साथ शेयर किया जाता है।",
+
+  "onboardingResumeExtractButton": "जानकारी निकालें",
+
+  "onboardingResumeSignInAgainError": "अपने रिज़्यूमे से जानकारी निकालने के लिए फिर से साइन इन करें।",
+
+  "onboardingResumeFooterNote": "आगे बढ़ने के लिए 'सेव करें और आगे बढ़ें' चुनें, चाहे जानकारी निकाली गई हो या नहीं।",
+
+  "onboardingResumeFieldPhone": "फ़ोन",
+  "onboardingResumeFieldEmail": "ईमेल",
+  "onboardingResumeFieldCity": "शहर",
+  "onboardingResumeFieldHeadline": "मौजूदा/सबसे हाल की भूमिका",
+  "onboardingResumeFieldExperience": "अनुभव",
+  "onboardingResumeFieldEducation": "शिक्षा",
+  "onboardingResumeFieldWorkHistory": "कार्य इतिहास",
+  "onboardingResumeFieldSkills": "कौशल",
+
+  "onboardingResumeSummaryHeading": "हमें क्या मिला",
+
+  "onboardingResumeReviewWarning": "हम आपका नाम भरोसे के साथ नहीं पढ़ पाए -- ज़रूरत पड़ने पर चरण 1 में जांचें और खुद भरें।",
+
+  "onboardingResumeEmptyState": "उस टेक्स्ट से कोई जानकारी नहीं पढ़ी जा सकी।",
+
+  "onboardingResumeFooterNameFilled": "ऊपर दिया गया आपका नाम चरण 1 के लिए भर दिया गया है। यहां बाकी सब कुछ केवल एक पूर्वावलोकन है और अभी तक आपकी प्रोफ़ाइल में सेव नहीं हुआ है।",
+  "onboardingResumeFooterPreviewOnly": "यह केवल एक पूर्वावलोकन है -- ये जानकारियां अभी तक आपकी प्रोफ़ाइल में सेव नहीं हुई हैं।",
+
+  "onboardingVoiceStepTitle": "वॉइस परिचय",
+  "onboardingVoiceStepDescription": "हम यहां एक छोटा वॉइस अभ्यास जोड़ने की योजना बना रहे हैं, जिसमें पहले स्पष्ट माइक्रोफ़ोन अनुमति और अपनी सहमति चरण होगी।",
+  "onboardingVoiceStepNote": "यह अभी तैयार नहीं है, और इस स्क्रीन पर आपके माइक्रोफ़ोन का उपयोग नहीं किया जाता।",
+
+  "onboardingComingSoonFooter": "यहां अभी कुछ करने को नहीं है -- आगे बढ़ने के लिए 'सेव करें और आगे बढ़ें' पर टैप करें।",
+
+  "onboardingConsentStepTitle": "सहमति केंद्र",
+  "onboardingConsentStepDescription": "हर आवश्यक सूचना को अलग से देखें और स्वीकार करें। आप सहमति को बाद में प्रबंधित कर सकते हैं।",
+
+  "onboardingTermsCheckboxTitle": "प्लेटफ़ॉर्म की शर्तें",
+  "onboardingPrivacyCheckboxTitle": "गोपनीयता सूचना",
+
+  "onboardingConsentRequiredVersion": "आवश्यक • वर्शन {version}",
+
+  "onboardingConsentAccepted": "स्वीकृत",
+  "onboardingConsentNotYetAccepted": "अभी स्वीकृत नहीं",
+
+  "onboardingConsentFooterNote": "यहां कोई वॉइस रिकॉर्डिंग या एम्प्लॉयर सबूत-शेयरिंग सहमति एकत्र नहीं की जाती। ये अनुमतियां तभी मांगी जाएंगी जब वे सुविधाएं उपलब्ध होंगी।",
+
+  "onboardingReviewStepTitle": "अपनी प्रोफ़ाइल की समीक्षा करें",
+  "onboardingReviewStepDescription": "सेटअप पूरा करने से पहले अपनी जानकारी जांचें। बदलाव करने के लिए 'वापस' का उपयोग करें।",
+
+  "onboardingReviewGoalLabel": "लक्ष्य",
+  "onboardingReviewNameLabel": "नाम",
+  "onboardingReviewLocationLabel": "लोकेशन",
+  "onboardingReviewEducationLabel": "शिक्षा",
+  "onboardingReviewExperienceLabel": "अनुभव",
+  "onboardingReviewRolesLabel": "पसंदीदा भूमिकाएं",
+  "onboardingReviewConsentLabel": "आवश्यक सहमति",
+
+  "onboardingReviewMissing": "गुम",
+  "onboardingReviewConsentAccepted": "मौजूदा वर्शन के साथ स्वीकृत",
+
+  "onboardingCompletionTitle": "आपकी प्रोफ़ाइल तैयार है",
+  "onboardingCompletionMessage": "आपकी ऑनबोर्डिंग जानकारी और सहमति वर्शन इस डिवाइस पर सुरक्षित रूप से सेव हैं। अपने सक्षम होम पर आगे बढ़ें।",
+  "onboardingCompletionAction": "होम पर जाएं",
+
+  "onboardingValidationChooseGoal": "आगे बढ़ने के लिए एक लक्ष्य चुनें।",
+  "onboardingValidationFullName": "आगे बढ़ने के लिए अपना पूरा नाम दर्ज करें।",
+  "onboardingValidationCityState": "अपना शहर या ज़िला और राज्य दर्ज करें।",
+  "onboardingValidationPinCode": "एक सही 6 अंकों का पिन कोड दर्ज करें।",
+  "onboardingValidationEducation": "अपनी शिक्षा का स्तर चुनें।",
+  "onboardingValidationExperience": "अपना काम का अनुभव चुनें।",
+  "onboardingValidationRoles": "कम से कम एक पसंदीदा भूमिका चुनें।",
+  "onboardingValidationConsent": "आगे बढ़ने के लिए दोनों आवश्यक सूचनाएं स्वीकार करें।",
+  "onboardingValidationReviewIncomplete": "कुछ आवश्यक प्रोफ़ाइल जानकारी गुम है। वापस जाएं और उसे देखें।"
 }

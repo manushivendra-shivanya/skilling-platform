@@ -753,5 +753,150 @@
   "otpEntryResendButton": "OTP dobara bhejein",
   "otpEntryResendAvailableIn": "{seconds} second mein dobara bhejna available hoga",
 
-  "otpEntryChangeEmailButton": "Email address badlein"
+  "otpEntryChangeEmailButton": "Email address badlein",
+
+  "goalFindJob": "Nayi naukri dhundein",
+  "goalBuildSkills": "Naukri ke liye ready skills banayein",
+  "goalGrowCareer": "Apne current career mein aage badhein",
+  "goalBuildPersona": "Apni professional profile banayein",
+
+  "educationBelowTenth": "Class 10 se kam",
+  "educationTenthPass": "Class 10 pass",
+  "educationTwelfthPass": "Class 12 pass",
+  "educationItiDiploma": "ITI ya diploma",
+  "educationGraduate": "Graduate ya usse upar",
+
+  "experienceFresher": "Fresher",
+  "experienceUnderOneYear": "1 saal se kam",
+  "experienceOneToThreeYears": "1–3 saal",
+  "experienceOverThreeYears": "3 saal se zyada",
+
+  "roleWarehouseAssociate": "Warehouse Operations Associate",
+  "roleInventoryExecutive": "Inventory Executive",
+  "roleDispatchExecutive": "Dispatch Executive",
+  "roleHubSupervisor": "Hub Supervisor",
+  "roleShiftSupervisor": "Shift Supervisor",
+
+  "onboardingWizardAppBarTitle": "Apni profile banayein",
+
+  "onboardingWizardLoadErrorTitle": "Hum aapki profile nahi khol paaye",
+  "onboardingWizardLoadErrorFallback": "Aapka saved draft load nahi ho paaya. Please dobara try karein.",
+
+  "onboardingWizardProgressLabel": "Profile setup",
+
+  "onboardingWizardOfflineMessage": "Aap offline hain. Aapke profile steps is device par securely save ho rahe hain.",
+
+  "onboardingWizardBackButton": "Wapas",
+  "onboardingWizardCompleteButton": "Profile complete karein",
+  "onboardingWizardSaveContinueButton": "Save karein aur aage badhein",
+  "onboardingWizardSavedLocallyNote": "Har step ke baad is device par securely save kiya jaata hai.",
+
+  "onboardingGoalStepTitle": "Aap kya hasil karna chahenge?",
+  "onboardingGoalStepDescription": "Hum aapke agle steps isi goal ke aadhar par tay karenge.",
+
+  "onboardingNameStepTitle": "Humein apna naam bataein",
+  "onboardingNameStepDescription": "Woh naam use karein jo aap employers aur training partners ko dikhana chahte hain.",
+
+  "onboardingFullNameFieldLabel": "Poora naam",
+  "onboardingFullNameFieldSemantic": "Poora naam, zaroori",
+
+  "onboardingLocationStepTitle": "Aap kahaan rehte hain?",
+  "onboardingLocationStepDescription": "Location se humein aapke aas-paas ke practical opportunities dikhane mein madad milti hai.",
+
+  "onboardingCityFieldLabel": "City ya district",
+  "onboardingCityFieldSemantic": "City ya district, zaroori",
+  "onboardingStateFieldLabel": "State",
+  "onboardingStateFieldSemantic": "State, zaroori",
+  "onboardingPinCodeFieldLabel": "PIN code",
+  "onboardingPinCodeFieldSemantic": "Chhah digit ka PIN code, zaroori",
+
+  "onboardingEducationStepTitle": "Aapka education level kya hai?",
+  "onboardingEducationStepDescription": "Sabse nazdeeki option choose karein. Yeh self-reported jaankari hai.",
+
+  "onboardingExperienceStepTitle": "Aapke paas kitna kaam ka experience hai?",
+  "onboardingExperienceStepDescription": "Kisi bhi role ka experience maayne rakhta hai. Freshers ka bhi swagat hai.",
+
+  "onboardingRolesStepTitle": "Aapko kaun si roles mein interest hai?",
+  "onboardingRolesStepDescription": "Ek ya zyada logistics roles choose karein. Aap inhe baad mein badal sakte hain.",
+
+  "onboardingResumeStepTitle": "Apna resume add karein",
+  "onboardingResumeStepDescription": "Apne resume ka text paste karein, hum AI ki madad se aapki profile jaldi bharne mein madad karenge. Yeh step optional hai -- aap ise skip kar sakte hain.",
+
+  "onboardingResumeFieldLabel": "Resume text",
+  "onboardingResumeFieldHint": "Yahan apne resume ka text paste karein",
+  "onboardingResumeFieldSemantic": "Resume text, optional",
+
+  "onboardingResumeConsentTitle": "Is text ko padhne ke liye AI use karein",
+  "onboardingResumeConsentSubtitle": "Saksham aapke naam aur experience jaisi jaankari nikalne ke liye yeh text ek AI provider ko bhejta hai. Ise aapke resume ke roop mein save nahi kiya jaata aur na hi employers ke saath share kiya jaata hai.",
+
+  "onboardingResumeExtractButton": "Details nikalein",
+
+  "onboardingResumeSignInAgainError": "Apne resume se details nikalne ke liye dobara sign in karein.",
+
+  "onboardingResumeFooterNote": "Aage badhne ke liye 'Save karein aur aage badhein' choose karein, chahe details nikali gayi ho ya nahi.",
+
+  "onboardingResumeFieldPhone": "Phone",
+  "onboardingResumeFieldEmail": "Email",
+  "onboardingResumeFieldCity": "City",
+  "onboardingResumeFieldHeadline": "Current/sabse haal ki role",
+  "onboardingResumeFieldExperience": "Experience",
+  "onboardingResumeFieldEducation": "Education",
+  "onboardingResumeFieldWorkHistory": "Work history",
+  "onboardingResumeFieldSkills": "Skills",
+
+  "onboardingResumeSummaryHeading": "Humein kya mila",
+
+  "onboardingResumeReviewWarning": "Hum aapka naam bharose se nahi padh paaye -- zaroorat pade to step 1 mein check karein aur khud bharein.",
+
+  "onboardingResumeEmptyState": "Us text se koi jaankari nahi padhi ja saki.",
+
+  "onboardingResumeFooterNameFilled": "Upar diya gaya aapka naam step 1 ke liye bhar diya gaya hai. Yahan baaki sab kuch sirf ek preview hai aur abhi tak aapki profile mein save nahi hua hai.",
+  "onboardingResumeFooterPreviewOnly": "Yeh sirf ek preview hai -- yeh details abhi tak aapki profile mein save nahi hui hain.",
+
+  "onboardingVoiceStepTitle": "Voice introduction",
+  "onboardingVoiceStepDescription": "Hum yahan ek chhota voice practice add karne ki planning kar rahe hain, jisme pehle clear microphone permission aur apna consent step hoga.",
+  "onboardingVoiceStepNote": "Yeh abhi ready nahi hai, aur is screen par aapke microphone ka use nahi kiya jaata.",
+
+  "onboardingComingSoonFooter": "Yahan abhi kuch karne ko nahi hai -- aage badhne ke liye 'Save karein aur aage badhein' par tap karein.",
+
+  "onboardingConsentStepTitle": "Consent centre",
+  "onboardingConsentStepDescription": "Har zaroori notice ko alag se dekhein aur accept karein. Aap consent ko baad mein manage kar sakte hain.",
+
+  "onboardingTermsCheckboxTitle": "Platform terms",
+  "onboardingPrivacyCheckboxTitle": "Privacy notice",
+
+  "onboardingConsentRequiredVersion": "Zaroori • Version {version}",
+
+  "onboardingConsentAccepted": "Accepted",
+  "onboardingConsentNotYetAccepted": "Abhi accepted nahi",
+
+  "onboardingConsentFooterNote": "Yahan koi voice recording ya employer evidence-sharing consent collect nahi ki jaati. Yeh permissions tabhi maangi jaayengi jab woh features available hongi.",
+
+  "onboardingReviewStepTitle": "Apni profile ki review karein",
+  "onboardingReviewStepDescription": "Setup complete karne se pehle apni details check karein. Changes karne ke liye 'Wapas' use karein.",
+
+  "onboardingReviewGoalLabel": "Goal",
+  "onboardingReviewNameLabel": "Naam",
+  "onboardingReviewLocationLabel": "Location",
+  "onboardingReviewEducationLabel": "Education",
+  "onboardingReviewExperienceLabel": "Experience",
+  "onboardingReviewRolesLabel": "Preferred roles",
+  "onboardingReviewConsentLabel": "Zaroori consent",
+
+  "onboardingReviewMissing": "Missing",
+  "onboardingReviewConsentAccepted": "Current versions ke saath accepted",
+
+  "onboardingCompletionTitle": "Aapki profile ready hai",
+  "onboardingCompletionMessage": "Aapki onboarding details aur consent versions is device par securely save hain. Apne Saksham home par aage badhein.",
+  "onboardingCompletionAction": "Home par jaayein",
+
+  "onboardingValidationChooseGoal": "Aage badhne ke liye ek goal choose karein.",
+  "onboardingValidationFullName": "Aage badhne ke liye apna poora naam enter karein.",
+  "onboardingValidationCityState": "Apna city ya district aur state enter karein.",
+  "onboardingValidationPinCode": "Ek sahi 6-digit PIN code enter karein.",
+  "onboardingValidationEducation": "Apna education level choose karein.",
+  "onboardingValidationExperience": "Apna kaam ka experience choose karein.",
+  "onboardingValidationRoles": "Kam se kam ek preferred role choose karein.",
+  "onboardingValidationConsent": "Aage badhne ke liye dono zaroori notices accept karein.",
+  "onboardingValidationReviewIncomplete": "Kuch zaroori profile details missing hain. Wapas jaayein aur unhe dekhein."
 }

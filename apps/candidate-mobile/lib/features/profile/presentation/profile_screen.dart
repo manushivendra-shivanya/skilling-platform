@@ -24,6 +24,7 @@ import '../../intelligence/presentation/candidate_intelligence_controller.dart';
 import '../../networking/presentation/networking_section.dart';
 import '../../onboarding/domain/candidate_onboarding_draft.dart';
 import '../../onboarding/presentation/candidate_onboarding_controller.dart';
+import '../../onboarding/presentation/candidate_onboarding_labels.dart';
 import '../../persona/presentation/professional_persona_card.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
@@ -99,20 +100,26 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 children: [
                   _DetailRow(
                     label: l10n.profileGoalLabel,
-                    value: draft.goal?.label ?? l10n.profileNotSet,
+                    value: draft.goal == null
+                        ? l10n.profileNotSet
+                        : candidateGoalLabel(draft.goal!, l10n),
                   ),
                   _DetailRow(
                     label: l10n.profileEducationLabel,
-                    value: draft.education?.label ?? l10n.profileNotSet,
+                    value: draft.education == null
+                        ? l10n.profileNotSet
+                        : educationLevelLabel(draft.education!, l10n),
                   ),
                   _DetailRow(
                     label: l10n.profileExperienceLabel,
-                    value: draft.experience?.label ?? l10n.profileNotSet,
+                    value: draft.experience == null
+                        ? l10n.profileNotSet
+                        : experienceLevelLabel(draft.experience!, l10n),
                   ),
                   _DetailRow(
                     label: l10n.profilePreferredRolesLabel,
                     value: draft.preferredRoles
-                        .map((role) => role.label)
+                        .map((role) => logisticsRoleLabel(role, l10n))
                         .join(', '),
                   ),
                   _DetailRow(

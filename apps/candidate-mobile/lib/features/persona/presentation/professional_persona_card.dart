@@ -9,6 +9,7 @@ import '../../../core/widgets/app_feedback.dart';
 import '../../../core/widgets/app_initials_avatar.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../onboarding/domain/candidate_onboarding_draft.dart';
+import '../../onboarding/presentation/candidate_onboarding_labels.dart';
 
 /// A shareable-style summary card built entirely from data the candidate
 /// already supplied via onboarding and (optionally) resume-parsing --
@@ -37,9 +38,10 @@ class ProfessionalPersonaCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final chips = <String>[
-      if (draft.education != null) draft.education!.label,
-      if (draft.experience != null) draft.experience!.label,
-      for (final role in draft.preferredRoles) role.label,
+      if (draft.education != null) educationLevelLabel(draft.education!, l10n),
+      if (draft.experience != null)
+        experienceLevelLabel(draft.experience!, l10n),
+      for (final role in draft.preferredRoles) logisticsRoleLabel(role, l10n),
     ];
 
     return AppCard(
@@ -136,8 +138,9 @@ class ProfessionalPersonaCard extends StatelessWidget {
       lines.add(location);
     }
     final tags = <String>[
-      if (draft.education != null) draft.education!.label,
-      if (draft.experience != null) draft.experience!.label,
+      if (draft.education != null) educationLevelLabel(draft.education!, l10n),
+      if (draft.experience != null)
+        experienceLevelLabel(draft.experience!, l10n),
     ];
     if (tags.isNotEmpty) {
       lines.add(tags.join(' · '));
@@ -145,7 +148,9 @@ class ProfessionalPersonaCard extends StatelessWidget {
     if (draft.preferredRoles.isNotEmpty) {
       lines.add(
         l10n.personaOpenToRoles(
-          draft.preferredRoles.map((role) => role.label).join(', '),
+          draft.preferredRoles
+              .map((role) => logisticsRoleLabel(role, l10n))
+              .join(', '),
         ),
       );
     }

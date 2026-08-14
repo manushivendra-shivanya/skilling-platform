@@ -6,6 +6,7 @@ import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_icons.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../core/errors/app_failure.dart';
+import '../../../core/errors/app_failure_localization.dart';
 import '../../../core/network/connectivity_status.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_card.dart';
@@ -17,9 +18,11 @@ import '../../../core/widgets/app_state_view.dart';
 import '../../../core/widgets/app_status_banner.dart';
 import '../../../core/widgets/app_sticky_footer.dart';
 import '../../../core/widgets/app_text_field.dart';
+import '../../../l10n/generated/app_localizations.dart';
 import '../../resume/domain/resume_parsing_repository.dart';
 import '../domain/candidate_onboarding_draft.dart';
 import 'candidate_onboarding_controller.dart';
+import 'candidate_onboarding_labels.dart';
 
 class CandidateOnboardingScreen extends ConsumerStatefulWidget {
   const CandidateOnboardingScreen({required this.onContinueToHome, super.key});
@@ -58,11 +61,12 @@ class _CandidateOnboardingScreenState
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final draftState = ref.watch(candidateOnboardingControllerProvider);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Create your profile'),
+        title: Text(l10n.onboardingWizardAppBarTitle),
         automaticallyImplyLeading:
             _workingDraft?.currentStep != 10 && !_isSaving,
       ),
@@ -70,17 +74,17 @@ class _CandidateOnboardingScreenState
         child: draftState.when(
           loading: () => const _OnboardingLoadingView(),
           error: (error, stackTrace) => AppErrorState(
-            title: 'We could not open your profile',
+            title: l10n.onboardingWizardLoadErrorTitle,
             message: error is AppFailure
-                ? error.message
-                : 'Your saved draft could not be loaded. Please try again.',
+                ? error.localizedMessage(l10n)
+                : l10n.onboardingWizardLoadErrorFallback,
             onAction: () => ref
                 .read(candidateOnboardingControllerProvider.notifier)
                 .retry(),
           ),
           data: (savedDraft) {
             _initialiseDraft(savedDraft);
-            return _buildContent(context);
+            return _buildContent(context, l10n);
           },
         ),
       ),
@@ -106,7 +110,7 @@ class _CandidateOnboardingScreenState
         OnboardingConsentVersions.privacyVersion;
   }
 
-  Widget _buildContent(BuildContext context) {
+  Widget _buildContent(BuildContext context, AppLocalizations l10n) {
     final draft = _workingDraft!;
     if (draft.currentStep == 10 || draft.isCompleted) {
       return _CompletionStep(onContinueToHome: widget.onContinueToHome);
@@ -126,8 +130,8 @@ class _CandidateOnboardingScreenState
             children: [
               AppProgress(
                 value: (draft.currentStep + 1) / _stepCount,
-                label: 'Profile setup',
-                detail: 'Step ${draft.currentStep + 1} of $_stepCount',
+                label: l10n.onboardingWizardProgressLabel,
+                detail: l10n.homeMissionStep(draft.currentStep + 1, _stepCount),
               ),
               const SizedBox(height: AppSpacing.sm),
               StreamBuilder<ConnectivityStatus>(
@@ -139,9 +143,8 @@ class _CandidateOnboardingScreenState
                   if (snapshot.data != ConnectivityStatus.offline) {
                     return const SizedBox.shrink();
                   }
-                  return const AppOfflineBanner(
-                    message:
-                        'You are offline. Your profile steps are saved securely on this device.',
+                  return AppOfflineBanner(
+                    message: l10n.onboardingWizardOfflineMessage,
                   );
                 },
               ),
@@ -156,7 +159,7 @@ class _CandidateOnboardingScreenState
               AppSpacing.xl,
               AppSpacing.md,
             ),
-            child: _buildStep(draft),
+            child: _buildStep(draft, l10n),
           ),
         ),
         AppStickyFooter(
@@ -186,7 +189,7 @@ class _CandidateOnboardingScreenState
                   if (draft.currentStep > 0) ...[
                     Expanded(
                       child: AppButton(
-                        label: 'Back',
+                        label: l10n.onboardingWizardBackButton,
                         variant: AppButtonVariant.secondary,
                         isLoading: false,
                         onPressed: _isSaving ? null : _goBack,
@@ -198,8 +201,8 @@ class _CandidateOnboardingScreenState
                     flex: draft.currentStep > 0 ? 1 : 2,
                     child: AppButton(
                       label: draft.currentStep == 9
-                          ? 'Complete profile'
-                          : 'Save and continue',
+                          ? l10n.onboardingWizardCompleteButton
+                          : l10n.onboardingWizardSaveContinueButton,
                       isLoading: _isSaving,
                       onPressed: _isSaving ? null : _continue,
                     ),
@@ -207,8 +210,8 @@ class _CandidateOnboardingScreenState
                 ],
               ),
               const SizedBox(height: AppSpacing.xs),
-              const Text(
-                'Saved securely on this device after every step.',
+              Text(
+                l10n.onboardingWizardSavedLocallyNote,
                 textAlign: TextAlign.center,
               ),
             ],
@@ -224,78 +227,76 @@ class _CandidateOnboardingScreenState
   // (name, location) gets a person/pencil icon, and the remaining steps --
   // resume upload, the coming-soon voice step, consent, review -- each get
   // an icon obvious for their own content. See `_StepHeading`.
-  Widget _buildStep(CandidateOnboardingDraft draft) {
+  Widget _buildStep(CandidateOnboardingDraft draft, AppLocalizations l10n) {
     return switch (draft.currentStep) {
       0 => _ChoiceStep<CandidateGoal>(
         icon: Icons.checklist_rounded,
-        title: 'What would you like to achieve?',
-        description: 'We will shape your next steps around this goal.',
+        title: l10n.onboardingGoalStepTitle,
+        description: l10n.onboardingGoalStepDescription,
         values: CandidateGoal.values,
         selected: draft.goal,
-        labelFor: (value) => value.label,
+        labelFor: (value) => candidateGoalLabel(value, l10n),
         onSelected: (value) => _updateDraft(draft.copyWith(goal: value)),
       ),
       1 => _TextStep(
         icon: Icons.person_outline,
-        title: 'Tell us your name',
-        description:
-            'Use the name you want employers and training partners to see.',
+        title: l10n.onboardingNameStepTitle,
+        description: l10n.onboardingNameStepDescription,
         fields: [
           AppTextField(
             key: const ValueKey('full-name-field'),
-            label: 'Full name',
+            label: l10n.onboardingFullNameFieldLabel,
             controller: _fullNameController,
             textInputAction: TextInputAction.done,
-            semanticLabel: 'Full name, required',
+            semanticLabel: l10n.onboardingFullNameFieldSemantic,
           ),
         ],
       ),
       2 => _TextStep(
         icon: Icons.edit_outlined,
-        title: 'Where are you based?',
-        description: 'Location helps us show practical opportunities near you.',
+        title: l10n.onboardingLocationStepTitle,
+        description: l10n.onboardingLocationStepDescription,
         fields: [
           AppTextField(
             key: const ValueKey('city-field'),
-            label: 'City or district',
+            label: l10n.onboardingCityFieldLabel,
             controller: _cityController,
             textInputAction: TextInputAction.next,
-            semanticLabel: 'City or district, required',
+            semanticLabel: l10n.onboardingCityFieldSemantic,
           ),
           AppTextField(
             key: const ValueKey('state-field'),
-            label: 'State',
+            label: l10n.onboardingStateFieldLabel,
             controller: _stateController,
             textInputAction: TextInputAction.next,
-            semanticLabel: 'State, required',
+            semanticLabel: l10n.onboardingStateFieldSemantic,
           ),
           AppTextField(
             key: const ValueKey('pin-code-field'),
-            label: 'PIN code',
+            label: l10n.onboardingPinCodeFieldLabel,
             controller: _pinCodeController,
             keyboardType: TextInputType.number,
             textInputAction: TextInputAction.done,
-            semanticLabel: 'Six digit PIN code, required',
+            semanticLabel: l10n.onboardingPinCodeFieldSemantic,
           ),
         ],
       ),
       3 => _ChoiceStep<EducationLevel>(
         icon: Icons.checklist_rounded,
-        title: 'What is your education level?',
-        description: 'Choose the closest option. This is self-reported.',
+        title: l10n.onboardingEducationStepTitle,
+        description: l10n.onboardingEducationStepDescription,
         values: EducationLevel.values,
         selected: draft.education,
-        labelFor: (value) => value.label,
+        labelFor: (value) => educationLevelLabel(value, l10n),
         onSelected: (value) => _updateDraft(draft.copyWith(education: value)),
       ),
       4 => _ChoiceStep<ExperienceLevel>(
         icon: Icons.checklist_rounded,
-        title: 'How much work experience do you have?',
-        description:
-            'Experience in any role counts. Freshers are welcome here.',
+        title: l10n.onboardingExperienceStepTitle,
+        description: l10n.onboardingExperienceStepDescription,
         values: ExperienceLevel.values,
         selected: draft.experience,
-        labelFor: (value) => value.label,
+        labelFor: (value) => experienceLevelLabel(value, l10n),
         onSelected: (value) => _updateDraft(draft.copyWith(experience: value)),
       ),
       5 => _RolesStep(
@@ -307,15 +308,11 @@ class _CandidateOnboardingScreenState
         onFullNameExtracted: _applyExtractedFullName,
         onHeadlineExtracted: _applyExtractedHeadline,
       ),
-      7 => const _ComingSoonStep(
+      7 => _ComingSoonStep(
         icon: Icons.mic_none_outlined,
-        title: 'Voice introduction',
-        description:
-            'We plan to add a short voice practice here, with clear '
-            'microphone permission and its own consent step first.',
-        note:
-            "This isn't ready yet, and your microphone is not used on "
-            'this screen.',
+        title: l10n.onboardingVoiceStepTitle,
+        description: l10n.onboardingVoiceStepDescription,
+        note: l10n.onboardingVoiceStepNote,
       ),
       8 => _ConsentStep(
         termsAccepted: _termsAccepted,
@@ -371,7 +368,10 @@ class _CandidateOnboardingScreenState
 
   Future<void> _continue() async {
     var draft = _draftWithTextFields(_workingDraft!);
-    final validationMessage = _validateStep(draft);
+    final validationMessage = _validateStep(
+      draft,
+      AppLocalizations.of(context),
+    );
     if (validationMessage != null) {
       setState(() {
         _validationMessage = validationMessage;
@@ -423,33 +423,33 @@ class _CandidateOnboardingScreenState
     if (!mounted) {
       return;
     }
+    final l10n = AppLocalizations.of(context);
     setState(() {
       _isSaving = false;
       if (failure == null) {
         _workingDraft = draft;
       } else {
-        _saveMessage = failure.message;
+        _saveMessage = failure.localizedMessage(l10n);
       }
     });
   }
 
-  String? _validateStep(CandidateOnboardingDraft draft) {
+  String? _validateStep(CandidateOnboardingDraft draft, AppLocalizations l10n) {
     return switch (draft.currentStep) {
-      0 when draft.goal == null => 'Choose one goal to continue.',
+      0 when draft.goal == null => l10n.onboardingValidationChooseGoal,
       1 when draft.fullName.trim().length < 2 =>
-        'Enter your full name to continue.',
+        l10n.onboardingValidationFullName,
       2 when draft.city.trim().length < 2 || draft.state.trim().length < 2 =>
-        'Enter your city or district and state.',
+        l10n.onboardingValidationCityState,
       2 when !RegExp(r'^\d{6}$').hasMatch(draft.pinCode) =>
-        'Enter a valid 6-digit PIN code.',
-      3 when draft.education == null => 'Choose your education level.',
-      4 when draft.experience == null => 'Choose your work experience.',
-      5 when draft.preferredRoles.isEmpty =>
-        'Choose at least one preferred role.',
+        l10n.onboardingValidationPinCode,
+      3 when draft.education == null => l10n.onboardingValidationEducation,
+      4 when draft.experience == null => l10n.onboardingValidationExperience,
+      5 when draft.preferredRoles.isEmpty => l10n.onboardingValidationRoles,
       8 when !_termsAccepted || !_privacyAccepted =>
-        'Accept both required notices to continue.',
+        l10n.onboardingValidationConsent,
       9 when !_isCompleteForReview(draft) =>
-        'Some required profile details are missing. Go back and review them.',
+        l10n.onboardingValidationReviewIncomplete,
       _ => null,
     };
   }
@@ -578,19 +578,19 @@ class _RolesStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const _StepHeading(
+        _StepHeading(
           icon: Icons.checklist_rounded,
-          title: 'Which roles interest you?',
-          description:
-              'Choose one or more logistics roles. You can change these later.',
+          title: l10n.onboardingRolesStepTitle,
+          description: l10n.onboardingRolesStepDescription,
         ),
         const SizedBox(height: AppSpacing.xl),
         for (final role in LogisticsRole.values) ...[
           _SelectableCard(
-            label: role.label,
+            label: logisticsRoleLabel(role, l10n),
             selected: selectedRoles.contains(role),
             onTap: () {
               final updatedRoles = {...selectedRoles};
@@ -620,8 +620,11 @@ class _SelectableCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return AppCard(
-      semanticLabel: '$label. ${selected ? 'Selected' : 'Not selected'}',
+      semanticLabel:
+          '$label. '
+          '${selected ? l10n.languageSelectionCardSelected : l10n.languageSelectionCardNotSelected}',
       onTap: onTap,
       backgroundColor: selected ? AppColors.brandSoft : AppColors.surface,
       child: Row(
@@ -691,6 +694,7 @@ class _ResumeUploadStepState extends ConsumerState<_ResumeUploadStep> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final canExtract =
         _consentGiven &&
         _resumeController.text.trim().length >= _minResumeLength &&
@@ -699,20 +703,19 @@ class _ResumeUploadStepState extends ConsumerState<_ResumeUploadStep> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const _StepHeading(
+        _StepHeading(
           icon: Icons.upload_file_outlined,
-          title: 'Add your resume',
-          description:
-              'Paste your resume text and we will use AI to help fill in your profile faster. This step is optional -- you can skip it.',
+          title: l10n.onboardingResumeStepTitle,
+          description: l10n.onboardingResumeStepDescription,
         ),
         const SizedBox(height: AppSpacing.xl),
         AppTextField(
           key: const ValueKey('resume-text-field'),
-          label: 'Resume text',
-          hint: 'Paste the text of your resume here',
+          label: l10n.onboardingResumeFieldLabel,
+          hint: l10n.onboardingResumeFieldHint,
           maxLines: 8,
           controller: _resumeController,
-          semanticLabel: 'Resume text, optional',
+          semanticLabel: l10n.onboardingResumeFieldSemantic,
           onChanged: (_) => setState(() {}),
         ),
         const SizedBox(height: AppSpacing.sm),
@@ -723,17 +726,13 @@ class _ResumeUploadStepState extends ConsumerState<_ResumeUploadStep> {
                 setState(() => _consentGiven = value ?? false),
             contentPadding: EdgeInsets.zero,
             controlAffinity: ListTileControlAffinity.leading,
-            title: const Text('Use AI to read this text'),
-            subtitle: const Text(
-              'Saksham sends this text to an AI provider to extract details '
-              'like your name and experience. It is not saved as your '
-              'resume or shared with employers.',
-            ),
+            title: Text(l10n.onboardingResumeConsentTitle),
+            subtitle: Text(l10n.onboardingResumeConsentSubtitle),
           ),
         ),
         const SizedBox(height: AppSpacing.md),
         AppButton(
-          label: 'Extract details',
+          label: l10n.onboardingResumeExtractButton,
           isLoading: _isParsing,
           onPressed: canExtract ? _extract : null,
         ),
@@ -755,8 +754,7 @@ class _ResumeUploadStepState extends ConsumerState<_ResumeUploadStep> {
         ],
         const SizedBox(height: AppSpacing.md),
         Text(
-          'Choose Save and continue to move on, with or without extracting '
-          'details.',
+          l10n.onboardingResumeFooterNote,
           style: Theme.of(context).textTheme.bodySmall,
           textAlign: TextAlign.center,
         ),
@@ -769,6 +767,7 @@ class _ResumeUploadStepState extends ConsumerState<_ResumeUploadStep> {
       _isParsing = true;
       _errorMessage = null;
     });
+    final l10n = AppLocalizations.of(context);
 
     final sessionResult = await ref
         .read(candidateSessionRepositoryProvider)
@@ -781,7 +780,7 @@ class _ResumeUploadStepState extends ConsumerState<_ResumeUploadStep> {
       if (!mounted) return;
       setState(() {
         _isParsing = false;
-        _errorMessage = 'Sign in again to extract details from your resume.';
+        _errorMessage = l10n.onboardingResumeSignInAgainError;
       });
       return;
     }
@@ -814,7 +813,7 @@ class _ResumeUploadStepState extends ConsumerState<_ResumeUploadStep> {
       failure: (failure) {
         setState(() {
           _isParsing = false;
-          _errorMessage = failure.message;
+          _errorMessage = failure.localizedMessage(l10n);
         });
       },
     );
@@ -826,21 +825,23 @@ class _ResumeExtractionSummary extends StatelessWidget {
 
   final ResumeParseResult result;
 
-  static const _fieldLabels = {
-    'fullName': 'Full name',
-    'phone': 'Phone',
-    'email': 'Email',
-    'city': 'City',
-    'headline': 'Current/most recent role',
-    'yearsOfExperience': 'Experience',
-    'education': 'Education',
-    'workHistory': 'Work history',
-    'skills': 'Skills',
+  Map<String, String> _fieldLabels(AppLocalizations l10n) => {
+    'fullName': l10n.onboardingFullNameFieldLabel,
+    'phone': l10n.onboardingResumeFieldPhone,
+    'email': l10n.onboardingResumeFieldEmail,
+    'city': l10n.onboardingResumeFieldCity,
+    'headline': l10n.onboardingResumeFieldHeadline,
+    'yearsOfExperience': l10n.onboardingResumeFieldExperience,
+    'education': l10n.onboardingResumeFieldEducation,
+    'workHistory': l10n.onboardingResumeFieldWorkHistory,
+    'skills': l10n.onboardingResumeFieldSkills,
   };
 
   @override
   Widget build(BuildContext context) {
-    final populated = _fieldLabels.entries
+    final l10n = AppLocalizations.of(context);
+    final fieldLabels = _fieldLabels(l10n);
+    final populated = fieldLabels.entries
         .where((entry) => (result.fields[entry.key]?.trim() ?? '').isNotEmpty)
         .toList(growable: false);
 
@@ -848,25 +849,27 @@ class _ResumeExtractionSummary extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('What we found', style: Theme.of(context).textTheme.titleMedium),
+          Text(
+            l10n.onboardingResumeSummaryHeading,
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
           const SizedBox(height: AppSpacing.xs),
           if (result.requiresCandidateReview)
             Padding(
               padding: const EdgeInsets.only(bottom: AppSpacing.sm),
               child: Text(
-                'We could not confidently read your name -- check and fill '
-                'in step 1 yourself if needed.',
+                l10n.onboardingResumeReviewWarning,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: Theme.of(context).colorScheme.error,
                 ),
               ),
             ),
           if (populated.isEmpty)
-            const Text('No details could be read from that text.')
+            Text(l10n.onboardingResumeEmptyState)
           else
             for (final entry in populated) ...[
               Text(
-                _fieldLabels[entry.key]!,
+                fieldLabels[entry.key]!,
                 style: Theme.of(context).textTheme.labelMedium,
               ),
               Text(result.fields[entry.key]!.trim()),
@@ -875,11 +878,8 @@ class _ResumeExtractionSummary extends StatelessWidget {
           const SizedBox(height: AppSpacing.xs),
           Text(
             result.fields['fullName']?.trim().isNotEmpty ?? false
-                ? 'Your name above has been filled in for step 1. Everything '
-                      'else here is a preview only and is not yet saved to '
-                      'your profile.'
-                : 'This is a preview only -- these details are not yet '
-                      'saved to your profile.',
+                ? l10n.onboardingResumeFooterNameFilled
+                : l10n.onboardingResumeFooterPreviewOnly,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
               color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
@@ -912,6 +912,7 @@ class _ComingSoonStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -925,7 +926,7 @@ class _ComingSoonStep extends StatelessWidget {
               Text(note, textAlign: TextAlign.center),
               const SizedBox(height: AppSpacing.xs),
               Text(
-                'Nothing to do here yet -- tap Save and continue to move on.',
+                l10n.onboardingComingSoonFooter,
                 style: Theme.of(context).textTheme.bodySmall,
                 textAlign: TextAlign.center,
               ),
@@ -952,14 +953,14 @@ class _ConsentStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const _StepHeading(
+        _StepHeading(
           icon: Icons.lock_outline,
-          title: 'Consent centre',
-          description:
-              'Review and accept each required notice separately. You can manage consent later.',
+          title: l10n.onboardingConsentStepTitle,
+          description: l10n.onboardingConsentStepDescription,
         ),
         const SizedBox(height: AppSpacing.xl),
         AppCard(
@@ -971,9 +972,11 @@ class _ConsentStep extends StatelessWidget {
                 onChanged: onTermsChanged,
                 contentPadding: EdgeInsets.zero,
                 controlAffinity: ListTileControlAffinity.leading,
-                title: const Text('Platform terms'),
-                subtitle: const Text(
-                  'Required • Version ${OnboardingConsentVersions.termsVersion}',
+                title: Text(l10n.onboardingTermsCheckboxTitle),
+                subtitle: Text(
+                  l10n.onboardingConsentRequiredVersion(
+                    OnboardingConsentVersions.termsVersion,
+                  ),
                 ),
               ),
               Padding(
@@ -981,7 +984,9 @@ class _ConsentStep extends StatelessWidget {
                 child: AppStatusChip(
                   // Same boolean the checkbox above reads -- rendered with
                   // more visual weight alongside it, not instead of it.
-                  label: termsAccepted ? 'Accepted' : 'Not yet accepted',
+                  label: termsAccepted
+                      ? l10n.onboardingConsentAccepted
+                      : l10n.onboardingConsentNotYetAccepted,
                   tone: termsAccepted
                       ? AppChipTone.success
                       : AppChipTone.warning,
@@ -1000,15 +1005,19 @@ class _ConsentStep extends StatelessWidget {
                 onChanged: onPrivacyChanged,
                 contentPadding: EdgeInsets.zero,
                 controlAffinity: ListTileControlAffinity.leading,
-                title: const Text('Privacy notice'),
-                subtitle: const Text(
-                  'Required • Version ${OnboardingConsentVersions.privacyVersion}',
+                title: Text(l10n.onboardingPrivacyCheckboxTitle),
+                subtitle: Text(
+                  l10n.onboardingConsentRequiredVersion(
+                    OnboardingConsentVersions.privacyVersion,
+                  ),
                 ),
               ),
               Padding(
                 padding: const EdgeInsets.only(left: AppSpacing.xl),
                 child: AppStatusChip(
-                  label: privacyAccepted ? 'Accepted' : 'Not yet accepted',
+                  label: privacyAccepted
+                      ? l10n.onboardingConsentAccepted
+                      : l10n.onboardingConsentNotYetAccepted,
                   tone: privacyAccepted
                       ? AppChipTone.success
                       : AppChipTone.warning,
@@ -1018,9 +1027,7 @@ class _ConsentStep extends StatelessWidget {
           ),
         ),
         const SizedBox(height: AppSpacing.md),
-        const Text(
-          'No voice recording or employer evidence-sharing consent is collected here. Those permissions will be requested only when those features are available.',
-        ),
+        Text(l10n.onboardingConsentFooterNote),
       ],
     );
   }
@@ -1033,52 +1040,64 @@ class _ReviewStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const _StepHeading(
+        _StepHeading(
           icon: Icons.description_outlined,
-          title: 'Review your profile',
-          description:
-              'Check your details before completing setup. Use Back to make changes.',
+          title: l10n.onboardingReviewStepTitle,
+          description: l10n.onboardingReviewStepDescription,
         ),
         const SizedBox(height: AppSpacing.xl),
         AppCard(
           child: Column(
             children: [
-              _ReviewRow(label: 'Goal', value: draft.goal?.label ?? 'Missing'),
-              _ReviewRow(label: 'Name', value: draft.fullName),
               _ReviewRow(
-                label: 'Location',
+                label: l10n.onboardingReviewGoalLabel,
+                value: draft.goal == null
+                    ? l10n.onboardingReviewMissing
+                    : candidateGoalLabel(draft.goal!, l10n),
+              ),
+              _ReviewRow(
+                label: l10n.onboardingReviewNameLabel,
+                value: draft.fullName,
+              ),
+              _ReviewRow(
+                label: l10n.onboardingReviewLocationLabel,
                 value: '${draft.city}, ${draft.state} • ${draft.pinCode}',
               ),
               _ReviewRow(
-                label: 'Education',
-                value: draft.education?.label ?? 'Missing',
+                label: l10n.onboardingReviewEducationLabel,
+                value: draft.education == null
+                    ? l10n.onboardingReviewMissing
+                    : educationLevelLabel(draft.education!, l10n),
               ),
               _ReviewRow(
-                label: 'Experience',
-                value: draft.experience?.label ?? 'Missing',
+                label: l10n.onboardingReviewExperienceLabel,
+                value: draft.experience == null
+                    ? l10n.onboardingReviewMissing
+                    : experienceLevelLabel(draft.experience!, l10n),
               ),
               _ReviewRow(
-                label: 'Preferred roles',
+                label: l10n.onboardingReviewRolesLabel,
                 value: draft.preferredRoles
-                    .map((role) => role.label)
+                    .map((role) => logisticsRoleLabel(role, l10n))
                     .join(', '),
               ),
               _ReviewRow(
-                label: 'Required consent',
+                label: l10n.onboardingReviewConsentLabel,
                 value: draft.hasCurrentRequiredConsents
-                    ? 'Accepted with current versions'
-                    : 'Missing',
+                    ? l10n.onboardingReviewConsentAccepted
+                    : l10n.onboardingReviewMissing,
                 // Same `hasCurrentRequiredConsents` boolean as `value` above,
                 // promoted to a status chip -- this is a hard completion
                 // gate (see `_isCompleteForReview`), so it earns more visual
                 // weight than the plain-text rows around it.
                 valueChip: AppStatusChip(
                   label: draft.hasCurrentRequiredConsents
-                      ? 'Accepted with current versions'
-                      : 'Missing',
+                      ? l10n.onboardingReviewConsentAccepted
+                      : l10n.onboardingReviewMissing,
                   tone: draft.hasCurrentRequiredConsents
                       ? AppChipTone.success
                       : AppChipTone.warning,
@@ -1141,12 +1160,12 @@ class _CompletionStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return AppStateView(
       icon: AppIcons.success,
-      title: 'Your profile is ready',
-      message:
-          'Your onboarding details and consent versions are saved securely on this device. Continue to your Saksham home.',
-      actionLabel: 'Go to home',
+      title: l10n.onboardingCompletionTitle,
+      message: l10n.onboardingCompletionMessage,
+      actionLabel: l10n.onboardingCompletionAction,
       onAction: onContinueToHome,
     );
   }
