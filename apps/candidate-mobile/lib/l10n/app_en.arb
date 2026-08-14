@@ -1118,5 +1118,167 @@
   "@assessmentSubmittingLabel": { "description": "Submit button label while the request is in flight." },
   "@assessmentSubmitFirstLabel": { "description": "Submit button label before any attempt has been recorded." },
   "@assessmentSubmitAnotherLabel": { "description": "Submit button label after at least one attempt has been recorded." },
-  "@assessmentNoAttemptsRemaining": { "description": "Shown once every scored attempt for this clip has been used." }
+  "@assessmentNoAttemptsRemaining": { "description": "Shown once every scored attempt for this clip has been used." },
+
+  "certExamHeadline": "Warehouse Operations Certification",
+  "certExamDescription": "A formal, timed exam covering the full warehouse process. Pass it to add verified Career Passport evidence for every competency it covers.",
+  "certExamPassingInfoCard": "Passing adds real Career Passport evidence -- visible to an employer only if you choose to share it, same as everywhere else.",
+  "@certExamHeadline": { "description": "Headline of the Certification section." },
+  "@certExamDescription": { "description": "Description under the Certification headline." },
+  "@certExamPassingInfoCard": { "description": "Info card explaining what passing the exam does." },
+
+  "certExamLoadErrorTitle": "Certification exam could not be loaded",
+  "certExamLoadErrorFallback": "The exam is temporarily unavailable.",
+  "@certExamLoadErrorTitle": { "description": "Title of the Certification section's error state." },
+  "@certExamLoadErrorFallback": { "description": "Fallback message when the load failure isn't an AppFailure." },
+
+  "certStatusLocked": "LOCKED",
+  "certStatusEligible": "ELIGIBLE",
+  "certStatusVerified": "VERIFIED",
+  "@certStatusLocked": { "description": "Credential card status chip, all-caps by design." },
+  "@certStatusEligible": { "description": "Credential card status chip, all-caps by design." },
+  "@certStatusVerified": { "description": "Credential card status chip, all-caps by design." },
+
+  "certEligibilityLabel": "{completed} / {total} LESSONS CLEARED",
+  "@certEligibilityLabel": {
+    "description": "Eligibility progress label on the locked credential card, all-caps by design.",
+    "placeholders": { "completed": { "type": "int" }, "total": { "type": "int" } }
+  },
+
+  "certCtaLocked": "Clear all lessons to unlock",
+  "certCtaStart": "Start certification exam",
+  "certCtaRetake": "Retake exam",
+  "@certCtaLocked": { "description": "Credential card CTA, not yet eligible." },
+  "@certCtaStart": { "description": "Credential card CTA, eligible and not yet attempted." },
+  "@certCtaRetake": { "description": "Credential card CTA, verified or failed." },
+
+  "certSemanticLocked": "{title}. Locked. {completed} of {total} lessons cleared.",
+  "certSemanticEligible": "{title}. Eligible to start.",
+  "certSemanticVerified": "{title}. Verified. Passed with {score} percent.",
+  "certSemanticFailed": "{title}. Last attempt {score} percent, below the {threshold} percent pass mark.",
+  "certRetakeUnlocksSemantic": " Retake unlocks at {time}.",
+  "@certSemanticLocked": {
+    "description": "Credential card semantic label, not yet eligible.",
+    "placeholders": { "title": { "type": "String" }, "completed": { "type": "int" }, "total": { "type": "int" } }
+  },
+  "@certSemanticEligible": {
+    "description": "Credential card semantic label, eligible and not yet attempted.",
+    "placeholders": { "title": { "type": "String" } }
+  },
+  "@certSemanticVerified": {
+    "description": "Credential card semantic label, verified.",
+    "placeholders": { "title": { "type": "String" }, "score": { "type": "int" } }
+  },
+  "@certSemanticFailed": {
+    "description": "Credential card semantic label, failed -- appended with certRetakeUnlocksSemantic when the cooldown hasn't elapsed.",
+    "placeholders": { "title": { "type": "String" }, "score": { "type": "int" }, "threshold": { "type": "int" } }
+  },
+  "@certRetakeUnlocksSemantic": {
+    "description": "Appended to certSemanticFailed when a retake cooldown is still active.",
+    "placeholders": { "time": { "type": "String" } }
+  },
+
+  "certAttemptPassed": "Passed with {score}% -- Career Passport updated.",
+  "certAttemptFailed": "Last attempt: {score}%, below the {threshold}% pass mark.",
+  "certRetakeAfter": " You can retake this exam after {time}.",
+  "@certAttemptPassed": {
+    "description": "Attempt text on the verified credential card.",
+    "placeholders": { "score": { "type": "int" } }
+  },
+  "@certAttemptFailed": {
+    "description": "Attempt text on the failed credential card.",
+    "placeholders": { "score": { "type": "int" }, "threshold": { "type": "int" } }
+  },
+  "@certRetakeAfter": {
+    "description": "Appended to certAttemptFailed when a retake cooldown is still active.",
+    "placeholders": { "time": { "type": "String" } }
+  },
+
+  "certOrgLine": "{sector} · {count}Q · ~{minutes} MIN",
+  "certPassLevelLabel": "PASS {threshold}%",
+  "@certOrgLine": {
+    "description": "Credential card org line, all-caps by design.",
+    "placeholders": { "sector": { "type": "String" }, "count": { "type": "int" }, "minutes": { "type": "int" } }
+  },
+  "@certPassLevelLabel": {
+    "description": "Credential card pass-threshold level label, all-caps by design.",
+    "placeholders": { "threshold": { "type": "int" } }
+  },
+
+  "examExitTooltip": "Exit exam",
+  "@examExitTooltip": { "description": "Tooltip on the exam screen's exit button." },
+
+  "examQuestionCounter": "Question {current} of {total}",
+  "@examQuestionCounter": {
+    "description": "AppBar title on the exam screen.",
+    "placeholders": { "current": { "type": "int" }, "total": { "type": "int" } }
+  },
+
+  "examPreviousButton": "Previous",
+  "examNextButton": "Next",
+  "@examPreviousButton": { "description": "Navigation button on the exam screen." },
+  "@examNextButton": { "description": "Navigation button on the exam screen." },
+
+  "examAnsweredCount": "{answered} of {total} questions answered",
+  "@examAnsweredCount": {
+    "description": "Answered-count line shown on the exam's last question.",
+    "placeholders": { "answered": { "type": "int" }, "total": { "type": "int" } }
+  },
+
+  "examSubmitButton": "Submit exam",
+  "@examSubmitButton": { "description": "Submit button on the exam screen's last question." },
+
+  "examExitDialogTitle": "Exit certification exam?",
+  "examExitDialogBody": "Your progress will be lost and this will not count as an attempt.",
+  "examKeepGoingButton": "Keep going",
+  "examExitButton": "Exit",
+  "@examExitDialogTitle": { "description": "Title of the exit-confirmation dialog." },
+  "@examExitDialogBody": { "description": "Body of the exit-confirmation dialog." },
+  "@examKeepGoingButton": { "description": "Dismiss button on the exit-confirmation dialog." },
+  "@examExitButton": { "description": "Confirm button on the exit-confirmation dialog." },
+
+  "examResultTitle": "Exam result",
+  "@examResultTitle": { "description": "AppBar title of the exam result screen." },
+
+  "examResultMeta": "{score}% • {correct} of {total} correct • pass mark {threshold}%",
+  "@examResultMeta": {
+    "description": "Score summary line on the result banner.",
+    "placeholders": {
+      "score": { "type": "int" },
+      "correct": { "type": "int" },
+      "total": { "type": "int" },
+      "threshold": { "type": "int" }
+    }
+  },
+
+  "examResultPassedNote": "Your Career Passport has been updated with evidence for every competency this exam covers.",
+  "examResultFailedNote": "You can retake this exam after {time}.",
+  "@examResultPassedNote": { "description": "Note on the result banner, passed case." },
+  "@examResultFailedNote": {
+    "description": "Note on the result banner, failed case.",
+    "placeholders": { "time": { "type": "String" } }
+  },
+
+  "examQuestionBreakdownTitle": "Question breakdown",
+  "examBackToLearnButton": "Back to Learn",
+  "@examQuestionBreakdownTitle": { "description": "Section header above the per-question result list." },
+  "@examBackToLearnButton": { "description": "Button that returns from the result screen to Learn." },
+
+  "examPassedLabel": "Passed",
+  "examNotPassedLabel": "Not passed",
+  "@examPassedLabel": { "description": "Result banner headline, passed case." },
+  "@examNotPassedLabel": { "description": "Result banner headline, failed case." },
+
+  "examNotAnswered": "Not answered",
+  "examYourAnswer": "Your answer: {label}",
+  "examCorrectAnswer": "Correct answer: {label}",
+  "@examNotAnswered": { "description": "Shown on a question-result row the candidate never answered." },
+  "@examYourAnswer": {
+    "description": "Shown on a question-result row for the candidate's selected option.",
+    "placeholders": { "label": { "type": "String" } }
+  },
+  "@examCorrectAnswer": {
+    "description": "Shown on an incorrect question-result row with the right answer.",
+    "placeholders": { "label": { "type": "String" } }
+  }
 }

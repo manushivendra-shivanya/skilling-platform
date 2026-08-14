@@ -477,5 +477,68 @@
   "assessmentSubmittingLabel": "जमा हो रहा है...",
   "assessmentSubmitFirstLabel": "करियर पासपोर्ट साक्ष्य के लिए जमा करें",
   "assessmentSubmitAnotherLabel": "एक और प्रयास जमा करें",
-  "assessmentNoAttemptsRemaining": "इस क्लिप के लिए कोई प्रयास बाकी नहीं है।"
+  "assessmentNoAttemptsRemaining": "इस क्लिप के लिए कोई प्रयास बाकी नहीं है।",
+
+  "certExamHeadline": "वेयरहाउस ऑपरेशंस प्रमाणन",
+  "certExamDescription": "पूरी वेयरहाउस प्रक्रिया को कवर करने वाली एक औपचारिक, समयबद्ध परीक्षा। इसे पास करके हर योग्यता के लिए सत्यापित करियर पासपोर्ट साक्ष्य जोड़ें।",
+  "certExamPassingInfoCard": "पास करने पर असली करियर पासपोर्ट साक्ष्य जुड़ता है -- नियोक्ता को तभी दिखता है जब आप इसे साझा करना चुनें, बाकी सब जगह की तरह।",
+
+  "certExamLoadErrorTitle": "प्रमाणन परीक्षा लोड नहीं हो सकी",
+  "certExamLoadErrorFallback": "परीक्षा फ़िलहाल उपलब्ध नहीं है।",
+
+  "certStatusLocked": "लॉक",
+  "certStatusEligible": "योग्य",
+  "certStatusVerified": "सत्यापित",
+
+  "certEligibilityLabel": "{total} में से {completed} पाठ पूरे",
+
+  "certCtaLocked": "अनलॉक के लिए सभी पाठ पूरे करें",
+  "certCtaStart": "प्रमाणन परीक्षा शुरू करें",
+  "certCtaRetake": "दोबारा परीक्षा दें",
+
+  "certSemanticLocked": "{title}। लॉक। {total} में से {completed} पाठ पूरे।",
+  "certSemanticEligible": "{title}। शुरू करने के लिए योग्य।",
+  "certSemanticVerified": "{title}। सत्यापित। {score} प्रतिशत के साथ पास।",
+  "certSemanticFailed": "{title}। पिछला प्रयास {score} प्रतिशत, {threshold} प्रतिशत पास अंक से कम।",
+  "certRetakeUnlocksSemantic": " दोबारा प्रयास {time} पर अनलॉक होगा।",
+
+  "certAttemptPassed": "{score}% के साथ पास -- करियर पासपोर्ट अपडेट हुआ।",
+  "certAttemptFailed": "पिछला प्रयास: {score}%, {threshold}% पास अंक से कम।",
+  "certRetakeAfter": " आप {time} के बाद यह परीक्षा दोबारा दे सकते हैं।",
+
+  "certOrgLine": "{sector} · {count}प्रश्न · ~{minutes} मिनट",
+  "certPassLevelLabel": "पास {threshold}%",
+
+  "examExitTooltip": "परीक्षा से बाहर निकलें",
+
+  "examQuestionCounter": "प्रश्न {total} में से {current}",
+
+  "examPreviousButton": "पिछला",
+  "examNextButton": "अगला",
+
+  "examAnsweredCount": "{total} में से {answered} प्रश्नों के उत्तर दिए गए",
+
+  "examSubmitButton": "परीक्षा जमा करें",
+
+  "examExitDialogTitle": "प्रमाणन परीक्षा से बाहर निकलें?",
+  "examExitDialogBody": "आपकी प्रगति खो जाएगी और यह एक प्रयास नहीं गिना जाएगा।",
+  "examKeepGoingButton": "जारी रखें",
+  "examExitButton": "बाहर निकलें",
+
+  "examResultTitle": "परीक्षा परिणाम",
+
+  "examResultMeta": "{score}% • {total} में से {correct} सही • पास अंक {threshold}%",
+
+  "examResultPassedNote": "इस परीक्षा में शामिल हर योग्यता के लिए आपका करियर पासपोर्ट साक्ष्य के साथ अपडेट हो गया है।",
+  "examResultFailedNote": "आप {time} के बाद यह परीक्षा दोबारा दे सकते हैं।",
+
+  "examQuestionBreakdownTitle": "प्रश्न विवरण",
+  "examBackToLearnButton": "सीखने पर वापस जाएं",
+
+  "examPassedLabel": "पास",
+  "examNotPassedLabel": "पास नहीं हुए",
+
+  "examNotAnswered": "उत्तर नहीं दिया",
+  "examYourAnswer": "आपका उत्तर: {label}",
+  "examCorrectAnswer": "सही उत्तर: {label}"
 }

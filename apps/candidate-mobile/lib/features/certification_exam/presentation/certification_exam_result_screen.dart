@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../core/widgets/app_button.dart';
+import '../../../l10n/generated/app_localizations.dart';
 import '../../sector_pack/application/active_sector_pack_provider.dart';
 import '../../sector_pack/domain/sector_pack.dart';
 import '../../sector_pack/presentation/sector_pack_icons.dart';
@@ -37,6 +38,7 @@ class CertificationExamResultScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
     final pack = ref.watch(activeSectorPackProvider);
     final passed = attempt.passed(exam.passThresholdPercent);
     final retakeAt = attempt.submittedAt.add(certificationExamRetakeCooldown);
@@ -44,7 +46,7 @@ class CertificationExamResultScreen extends ConsumerWidget {
       appBar: AppBar(
         backgroundColor: AppColors.navy,
         foregroundColor: Colors.white,
-        title: const Text('Exam result'),
+        title: Text(l10n.examResultTitle),
       ),
       body: ListView(
         padding: const EdgeInsets.all(AppSpacing.md),
@@ -52,19 +54,19 @@ class CertificationExamResultScreen extends ConsumerWidget {
           _ResultBanner(
             pack: pack,
             passed: passed,
-            metaText:
-                '${attempt.scorePercent}% • '
-                '${attempt.correctCount} of ${attempt.responses.length} '
-                'correct • pass mark ${exam.passThresholdPercent}%',
+            metaText: l10n.examResultMeta(
+              attempt.scorePercent,
+              attempt.correctCount,
+              attempt.responses.length,
+              exam.passThresholdPercent,
+            ),
             noteText: passed
-                ? 'Your Career Passport has been updated with evidence '
-                      'for every competency this exam covers.'
-                : 'You can retake this exam after '
-                      '${_formatDateTime(retakeAt)}.',
+                ? l10n.examResultPassedNote
+                : l10n.examResultFailedNote(_formatDateTime(retakeAt)),
           ),
           const SizedBox(height: AppSpacing.lg),
           Text(
-            'Question breakdown',
+            l10n.examQuestionBreakdownTitle,
             style: Theme.of(context).textTheme.titleMedium,
           ),
           const SizedBox(height: AppSpacing.sm),
@@ -80,7 +82,7 @@ class CertificationExamResultScreen extends ConsumerWidget {
           ],
           const SizedBox(height: AppSpacing.md),
           AppButton(
-            label: 'Back to Learn',
+            label: l10n.examBackToLearnButton,
             onPressed: () => Navigator.of(context, rootNavigator: true).pop(),
           ),
         ],
@@ -129,6 +131,7 @@ class _ResultBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final toneBase = passed
         ? pack.signalPalette.cleared
         : pack.signalPalette.locked;
@@ -155,7 +158,7 @@ class _ResultBanner extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.sm),
           Text(
-            passed ? 'Passed' : 'Not passed',
+            passed ? l10n.examPassedLabel : l10n.examNotPassedLabel,
             style: SectorPackTypography.displayLabel(
               color: Colors.white,
               fontSize: 20,
@@ -207,6 +210,7 @@ class _QuestionResult extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final isCorrect = response.isCorrect;
     final selectedOption = response.selectedOptionId == unansweredOptionId
         ? null
@@ -258,8 +262,8 @@ class _QuestionResult extends StatelessWidget {
                 const SizedBox(height: AppSpacing.xxs),
                 Text(
                   selectedOption == null
-                      ? 'Not answered'
-                      : 'Your answer: ${selectedOption.label}',
+                      ? l10n.examNotAnswered
+                      : l10n.examYourAnswer(selectedOption.label),
                   style: SectorPackTypography.bodyRegular(
                     color: inkMuted,
                     fontSize: 11.5,
@@ -268,7 +272,7 @@ class _QuestionResult extends StatelessWidget {
                 if (!isCorrect) ...[
                   const SizedBox(height: AppSpacing.xxs),
                   Text(
-                    'Correct answer: ${question.correctOption.label}',
+                    l10n.examCorrectAnswer(question.correctOption.label),
                     style: SectorPackTypography.bodyRegular(
                       color: inkMuted,
                       fontSize: 11.5,
