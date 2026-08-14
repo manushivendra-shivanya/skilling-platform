@@ -256,5 +256,57 @@
   "payoutStatusProcessing": "Processing ho raha hai",
   "payoutStatusPaid": "Paid ho gaya",
   "payoutStatusFailed": "Fail ho gaya",
-  "payoutStatusDisputed": "Dispute mein hai"
+  "payoutStatusDisputed": "Dispute mein hai",
+
+  "learningLoadErrorTitle": "Learning load nahi ho saki",
+  "learningLoadErrorFallback": "Local pathway filhaal available nahi hai.",
+
+  "learningEmptyTitle": "Abhi koi lesson nahi",
+  "learningEmptyMessage": "Content assign hone par aapka pathway yahan dikhega.",
+
+  "learningOfflineBanner": "Offline: sirf Downloaded mark kiye lessons hi available hain.",
+
+  "learningHeadline": "Aapka training pathway",
+
+  "learningProgressLabel": "Local lesson progress",
+  "learningProgressDetail": "{total} mein se {completed}",
+
+  "learningProgressDisclaimer": "Progress securely save hoti hai, offline kaam karti hai, aur configured backend available hone par sync hoti hai. Sirf poora karna employer qualification nahi hai.",
+
+  "learningTrainFlowCard": "Train flow: chhota lesson → asli warehouse clip ya text fallback → decision check → available hone par matching simulation.",
+
+  "learningLessonMeta": "{minutes} min · Content v{version}",
+
+  "learningLessonStatusCompleted": "{base} · Poora hua — incomplete mark karne ke liye tap karein",
+  "learningLessonStatusDownloaded": "{base} · Downloaded",
+  "learningLessonStatusOpen": "{base} · Kholne ke liye tap karein",
+
+  "learningLessonSemanticCompleted": "{title}. Poora hua. Incomplete mark karne ke liye tap karein.",
+  "learningLessonSemanticOpen": "{title}. Lesson kholne ke liye tap karein.",
+
+  "learningDownloadedTooltip": "Downloaded",
+  "learningDownloadTooltip": "Offline ke liye download karein",
+
+  "learningCheckpointQuestion": "Checkpoint: Exception ke dauran kaunsi action audit trail ko surakshit rakhti hai?",
+  "learningCheckpointAnswer": "Escalate ya correct karne se pehle original aur observed values record karein.",
+
+  "learnTabLessons": "Lessons",
+  "learnTabPractise": "Practise",
+  "learnTabCertification": "Certification",
+
+  "learnStateUnavailable": "Unavailable",
+  "learnStateLoading": "Load ho raha hai…",
+
+  "learnLessonsClearedCount": "{total} mein se {completed} clear",
+
+  "learnPractiseMissionsReady": "{count, plural, one{{count} mission ready} other{{count} missions ready}}",
+
+  "learnPractiseSomeReady": "{total} mein se {ready} ready",
+
+  "learnCertLocked": "Locked",
+  "learnCertEligible": "Eligible",
+  "learnCertPassed": "Pass ho gaye",
+  "learnCertRetryAvailable": "Retry available",
+
+  "learnTabSemanticLabel": "{label}. {stateText}. Tab {total} mein se {index}."
 }

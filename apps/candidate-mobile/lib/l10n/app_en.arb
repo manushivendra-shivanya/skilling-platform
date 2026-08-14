@@ -666,5 +666,128 @@
   "@payoutStatusProcessing": { "description": "Payout status, shown as a chip label." },
   "@payoutStatusPaid": { "description": "Payout status, shown as a chip label." },
   "@payoutStatusFailed": { "description": "Payout status, shown as a chip label." },
-  "@payoutStatusDisputed": { "description": "Payout status, shown as a chip label." }
+  "@payoutStatusDisputed": { "description": "Payout status, shown as a chip label." },
+
+  "learningLoadErrorTitle": "Learning could not be loaded",
+  "learningLoadErrorFallback": "The local pathway is temporarily unavailable.",
+  "@learningLoadErrorTitle": { "description": "Title of the Lessons screen's error state." },
+  "@learningLoadErrorFallback": { "description": "Fallback message when the load failure isn't an AppFailure." },
+
+  "learningEmptyTitle": "No lessons yet",
+  "learningEmptyMessage": "Your pathway will appear here when content is assigned.",
+  "@learningEmptyTitle": { "description": "Title of the Lessons screen's empty state; also reused as the Learn tab bar's Lessons-segment state text when there are no lessons." },
+  "@learningEmptyMessage": { "description": "Message of the Lessons screen's empty state." },
+
+  "learningOfflineBanner": "Offline: only lessons marked Downloaded are available.",
+  "@learningOfflineBanner": { "description": "Banner shown on Lessons when the device is offline." },
+
+  "learningHeadline": "Your training pathway",
+  "@learningHeadline": { "description": "Headline at the top of the Lessons screen." },
+
+  "learningProgressLabel": "Local lesson progress",
+  "learningProgressDetail": "{completed} of {total}",
+  "@learningProgressLabel": { "description": "Label on the Lessons progress bar." },
+  "@learningProgressDetail": {
+    "description": "Completed-of-total detail on the Lessons progress bar.",
+    "placeholders": { "completed": { "type": "int" }, "total": { "type": "int" } }
+  },
+
+  "learningProgressDisclaimer": "Progress is stored securely, works offline, and syncs when a configured backend is available. Completion alone is not an employer qualification.",
+  "@learningProgressDisclaimer": { "description": "Disclaimer line under the Lessons progress bar." },
+
+  "learningTrainFlowCard": "Train flow: short lesson → real warehouse clip or text fallback → decision check → matching simulation where available.",
+  "@learningTrainFlowCard": { "description": "Card explaining the Train flow, shown above the lesson list." },
+
+  "learningLessonMeta": "{minutes} min · Content v{version}",
+  "@learningLessonMeta": {
+    "description": "Base metadata line on a lesson row -- duration and content version.",
+    "placeholders": { "minutes": { "type": "int" }, "version": { "type": "String" } }
+  },
+
+  "learningLessonStatusCompleted": "{base} · Completed — tap to mark incomplete",
+  "learningLessonStatusDownloaded": "{base} · Downloaded",
+  "learningLessonStatusOpen": "{base} · Tap to open",
+  "@learningLessonStatusCompleted": {
+    "description": "A completed lesson row's status text, built from learningLessonMeta.",
+    "placeholders": { "base": { "type": "String" } }
+  },
+  "@learningLessonStatusDownloaded": {
+    "description": "A downloaded (not yet completed) lesson row's status text.",
+    "placeholders": { "base": { "type": "String" } }
+  },
+  "@learningLessonStatusOpen": {
+    "description": "A not-yet-opened lesson row's status text.",
+    "placeholders": { "base": { "type": "String" } }
+  },
+
+  "learningLessonSemanticCompleted": "{title}. Completed. Tap to mark incomplete.",
+  "learningLessonSemanticOpen": "{title}. Tap to open lesson.",
+  "@learningLessonSemanticCompleted": {
+    "description": "Semantic label on a completed lesson row.",
+    "placeholders": { "title": { "type": "String" } }
+  },
+  "@learningLessonSemanticOpen": {
+    "description": "Semantic label on a not-yet-completed lesson row.",
+    "placeholders": { "title": { "type": "String" } }
+  },
+
+  "learningDownloadedTooltip": "Downloaded",
+  "learningDownloadTooltip": "Download for offline",
+  "@learningDownloadedTooltip": { "description": "Tooltip on a lesson row's download button, already-downloaded state." },
+  "@learningDownloadTooltip": { "description": "Tooltip on a lesson row's download button, not-yet-downloaded state." },
+
+  "learningCheckpointQuestion": "Checkpoint: Which action preserves an audit trail during an exception?",
+  "learningCheckpointAnswer": "Record the original and observed values before escalating or correcting.",
+  "@learningCheckpointQuestion": { "description": "Checkpoint question shown at the end of a lesson's bottom sheet." },
+  "@learningCheckpointAnswer": { "description": "Checkpoint answer card shown below the question." },
+
+  "learnTabLessons": "Lessons",
+  "learnTabPractise": "Practise",
+  "learnTabCertification": "Certification",
+  "@learnTabLessons": { "description": "Segment label on the Learn tab bar." },
+  "@learnTabPractise": { "description": "Segment label on the Learn tab bar." },
+  "@learnTabCertification": { "description": "Segment label on the Learn tab bar." },
+
+  "learnStateUnavailable": "Unavailable",
+  "learnStateLoading": "Loading…",
+  "@learnStateUnavailable": { "description": "Generic state readout on a Learn tab bar segment." },
+  "@learnStateLoading": { "description": "Generic state readout on a Learn tab bar segment." },
+
+  "learnLessonsClearedCount": "{completed} of {total} cleared",
+  "@learnLessonsClearedCount": {
+    "description": "Lessons segment's state readout once loaded.",
+    "placeholders": { "completed": { "type": "int" }, "total": { "type": "int" } }
+  },
+
+  "learnPractiseMissionsReady": "{count, plural, one{{count} mission ready} other{{count} missions ready}}",
+  "@learnPractiseMissionsReady": {
+    "description": "Practise segment's state readout once every mission is ready.",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "learnPractiseSomeReady": "{ready} of {total} ready",
+  "@learnPractiseSomeReady": {
+    "description": "Practise segment's state readout while only some missions are ready.",
+    "placeholders": { "ready": { "type": "int" }, "total": { "type": "int" } }
+  },
+
+  "learnCertLocked": "Locked",
+  "learnCertEligible": "Eligible",
+  "learnCertPassed": "Passed",
+  "learnCertRetryAvailable": "Retry available",
+  "@learnCertLocked": { "description": "Certification segment's state readout -- not yet eligible." },
+  "@learnCertEligible": { "description": "Certification segment's state readout -- eligible, not yet attempted." },
+  "@learnCertPassed": { "description": "Certification segment's state readout -- passed." },
+  "@learnCertRetryAvailable": { "description": "Certification segment's state readout -- failed, retry available." },
+
+  "learnTabSemanticLabel": "{label}. {stateText}. Tab {index} of {total}.",
+  "@learnTabSemanticLabel": {
+    "description": "Full semantic label read by a screen reader for a Learn tab bar segment.",
+    "placeholders": {
+      "label": { "type": "String" },
+      "stateText": { "type": "String" },
+      "index": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  }
 }

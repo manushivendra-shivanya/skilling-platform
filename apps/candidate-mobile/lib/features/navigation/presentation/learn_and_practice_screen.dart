@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/app_colors.dart';
+import '../../../l10n/generated/app_localizations.dart';
 import '../../certification_exam/presentation/certification_exam_controller.dart';
 import '../../certification_exam/presentation/certification_exam_section.dart';
 import '../../learning/presentation/learning_controller.dart';
@@ -117,11 +118,12 @@ class _SectorSegmentedTabBar extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
     final pack = ref.watch(activeSectorPackProvider);
     final segments = [
-      _lessonsSegment(ref),
-      _practiseSegment(ref),
-      _certificationSegment(ref),
+      _lessonsSegment(ref, l10n),
+      _practiseSegment(ref, l10n),
+      _certificationSegment(ref, l10n),
     ];
     // Fixed chrome, not derived from pack.primaryAccent -- see
     // AppColors.navy's doc comment for why (a real bug caught on-device:
@@ -161,9 +163,12 @@ class _SectorSegmentedTabBar extends ConsumerWidget {
                   // same fix already shipped on practice_screen.dart's
                   // `_DemoOptionCard` and certification_exam_screen.dart's
                   // `_ExamOptionCard`.
-                  label:
-                      '${segment.label}. ${segment.stateText}. '
-                      'Tab ${index + 1} of ${segments.length}.',
+                  label: l10n.learnTabSemanticLabel(
+                    segment.label,
+                    segment.stateText,
+                    index + 1,
+                    segments.length,
+                  ),
                   button: true,
                   selected: index == selectedIndex,
                   role: SemanticsRole.tab,
@@ -248,20 +253,20 @@ class _SectorSegmentedTabBar extends ConsumerWidget {
     );
   }
 
-  _SegmentData _lessonsSegment(WidgetRef ref) {
+  _SegmentData _lessonsSegment(WidgetRef ref, AppLocalizations l10n) {
     final state = ref.watch(learningControllerProvider);
     final learning = state.valueOrNull;
     if (state.hasError) {
-      return const _SegmentData(
-        label: 'Lessons',
-        stateText: 'Unavailable',
+      return _SegmentData(
+        label: l10n.learnTabLessons,
+        stateText: l10n.learnStateUnavailable,
         signalState: SectorSignalState.locked,
       );
     }
     if (learning == null) {
-      return const _SegmentData(
-        label: 'Lessons',
-        stateText: 'Loading…',
+      return _SegmentData(
+        label: l10n.learnTabLessons,
+        stateText: l10n.learnStateLoading,
         signalState: null,
       );
     }
@@ -273,13 +278,15 @@ class _SectorSegmentedTabBar extends ConsumerWidget {
         ? SectorSignalState.cleared
         : SectorSignalState.active;
     return _SegmentData(
-      label: 'Lessons',
-      stateText: total == 0 ? 'No lessons yet' : '$completed of $total cleared',
+      label: l10n.learnTabLessons,
+      stateText: total == 0
+          ? l10n.learningEmptyTitle
+          : l10n.learnLessonsClearedCount(completed, total),
       signalState: signalState,
     );
   }
 
-  _SegmentData _practiseSegment(WidgetRef ref) {
+  _SegmentData _practiseSegment(WidgetRef ref, AppLocalizations l10n) {
     const missionIds = [
       WorkplaceSimulationController.missionId,
       WorkplaceSimulationController.putAwayMissionId,
@@ -298,75 +305,75 @@ class _SectorSegmentedTabBar extends ConsumerWidget {
     }
     if (ready == missionIds.length) {
       return _SegmentData(
-        label: 'Practise',
-        stateText: '$ready missions ready',
+        label: l10n.learnTabPractise,
+        stateText: l10n.learnPractiseMissionsReady(ready),
         signalState: SectorSignalState.cleared,
       );
     }
     if (ready > 0) {
       return _SegmentData(
-        label: 'Practise',
-        stateText: '$ready of ${missionIds.length} ready',
+        label: l10n.learnTabPractise,
+        stateText: l10n.learnPractiseSomeReady(ready, missionIds.length),
         signalState: SectorSignalState.active,
       );
     }
     if (errored == missionIds.length) {
-      return const _SegmentData(
-        label: 'Practise',
-        stateText: 'Unavailable',
+      return _SegmentData(
+        label: l10n.learnTabPractise,
+        stateText: l10n.learnStateUnavailable,
         signalState: SectorSignalState.locked,
       );
     }
-    return const _SegmentData(
-      label: 'Practise',
-      stateText: 'Loading…',
+    return _SegmentData(
+      label: l10n.learnTabPractise,
+      stateText: l10n.learnStateLoading,
       signalState: null,
     );
   }
 
-  _SegmentData _certificationSegment(WidgetRef ref) {
+  _SegmentData _certificationSegment(WidgetRef ref, AppLocalizations l10n) {
     final learningState = ref.watch(learningControllerProvider);
     final examState = ref.watch(certificationExamControllerProvider);
     if (learningState.hasError || examState.hasError) {
-      return const _SegmentData(
-        label: 'Certification',
-        stateText: 'Unavailable',
+      return _SegmentData(
+        label: l10n.learnTabCertification,
+        stateText: l10n.learnStateUnavailable,
         signalState: SectorSignalState.locked,
       );
     }
     final learning = learningState.valueOrNull;
     final exam = examState.valueOrNull;
     if (learning == null || exam == null) {
-      return const _SegmentData(
-        label: 'Certification',
-        stateText: 'Loading…',
+      return _SegmentData(
+        label: l10n.learnTabCertification,
+        stateText: l10n.learnStateLoading,
         signalState: null,
       );
     }
     if (!isCertificationEligible(learning)) {
-      return const _SegmentData(
-        label: 'Certification',
-        stateText: 'Locked',
+      return _SegmentData(
+        label: l10n.learnTabCertification,
+        stateText: l10n.learnCertLocked,
         signalState: SectorSignalState.locked,
       );
     }
     if (exam.lastAttempt == null) {
-      return const _SegmentData(
-        label: 'Certification',
-        stateText: 'Eligible',
+      return _SegmentData(
+        label: l10n.learnTabCertification,
+        stateText: l10n.learnCertEligible,
         signalState: SectorSignalState.cleared,
       );
     }
     if (exam.lastAttemptPassed) {
-      return const _SegmentData(
-        label: 'Certification',
-        stateText: 'Passed',
+      return _SegmentData(
+        label: l10n.learnTabCertification,
+        stateText: l10n.learnCertPassed,
         signalState: SectorSignalState.cleared,
       );
     }
-    return const _SegmentData(
-      label: 'Certification',
-      stateText: 'Retry available',
+    return _SegmentData(
+      label: l10n.learnTabCertification,
+      stateText: l10n.learnCertRetryAvailable,
       signalState: SectorSignalState.active,
     );
   }
