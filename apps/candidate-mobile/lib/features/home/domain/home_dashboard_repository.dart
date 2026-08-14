@@ -31,6 +31,11 @@ import '../../../core/errors/result.dart';
 ///   fields: `job_applications` already has `created_at` and a
 ///   `(candidate_id, created_at desc)` index shaped for exactly this count,
 ///   it just isn't queried yet.
+/// - [evidenceThisWeek] and [applicationsThisWeek] read the same tables and
+///   indexes as [evidence] and [applicationsSentThisMonth] respectively,
+///   just over a 7-day window instead of 30 days/the calendar month --
+///   no new schema, only a second query with a different `WHERE created_at`
+///   bound.
 class HomeDashboard {
   const HomeDashboard({
     required this.candidateFirstName,
@@ -41,6 +46,8 @@ class HomeDashboard {
     required this.pendingSyncCount,
     required this.certificationStatus,
     required this.applicationsSentThisMonth,
+    required this.evidenceThisWeek,
+    required this.applicationsThisWeek,
     this.todayMission,
     this.pathway,
     this.nextInterview,
@@ -78,6 +85,17 @@ class HomeDashboard {
   /// current calendar month. See the class doc: the query this needs
   /// doesn't exist yet, but the table and index already do.
   final int applicationsSentThisMonth;
+
+  /// Count of `competency_evidence` rows created in the last 7 days -- the
+  /// same table and index [evidence] already cites, just windowed to a
+  /// week instead of [evidence]'s 30 days. Powers the "This week" strip,
+  /// distinct from the 30-day figure on the header.
+  final int evidenceThisWeek;
+
+  /// Count of `job_applications` rows created in the last 7 days -- the
+  /// same table and index [applicationsSentThisMonth] cites, just windowed
+  /// to a week instead of the calendar month.
+  final int applicationsThisWeek;
 
   /// Lowest-sequence `learning_units` row for the active pathway that is not
   /// in `candidate_learning_state.completed_unit_ids`. Null when the pathway

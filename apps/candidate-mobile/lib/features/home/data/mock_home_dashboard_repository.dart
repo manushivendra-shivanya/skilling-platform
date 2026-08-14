@@ -25,6 +25,8 @@ class MockHomeDashboardRepository implements HomeDashboardRepository {
       pendingSyncCount: 2,
       certificationStatus: CertificationJourneyStatus.notStarted,
       applicationsSentThisMonth: 2,
+      evidenceThisWeek: 3,
+      applicationsThisWeek: 1,
       todayMission: const TodayMission(
         unitId: 'lu-receiving-mismatch-report',
         title: 'Inventory mismatch report karna seekhein',
