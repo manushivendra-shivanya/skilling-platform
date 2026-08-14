@@ -308,5 +308,118 @@
   "learnCertPassed": "पास हुआ",
   "learnCertRetryAvailable": "दोबारा कोशिश करें",
 
-  "learnTabSemanticLabel": "{label}। {stateText}। टैब {total} में से {index}।"
+  "learnTabSemanticLabel": "{label}। {stateText}। टैब {total} में से {index}।",
+
+  "practiceBannerMessage": "अभ्यास डेमो स्कोर किए गए मूल्यांकन नहीं हैं और कोई नियोक्ता साक्ष्य नहीं बनाते।",
+
+  "practiceTagScored": "स्कोर किया गया",
+  "practiceTagPractice": "अभ्यास",
+
+  "practiceScoredSimTitle": "स्कोर की गई इन्वेंटरी सिमुलेशन",
+  "practiceScoredSimDescription": "क्रमबद्ध घटनाओं, निश्चित स्कोरिंग, स्पष्टीकरण और साक्ष्य के साथ अपरिवर्तनीय v1 परिदृश्य।",
+
+  "practiceTearStart": "शुरू करें",
+  "practiceTearRetry": "दोबारा",
+  "practiceTearContinue": "जारी रखें",
+  "practiceTearNA": "लागू नहीं",
+
+  "practiceStatNotStarted": "शुरू नहीं हुआ",
+  "practiceStatCompleted": "पूरा हुआ",
+  "practiceStatInProgress": "जारी है",
+  "practiceStatLoadingSimulation": "सिमुलेशन लोड हो रहा है",
+  "practiceStatContentUnavailable": "कंटेंट उपलब्ध नहीं",
+  "practiceStatAttemptFailed": "प्रयास विफल",
+  "practiceTagUnavailable": "अनुपलब्ध",
+
+  "practiceMissionReceiveTitle": "आने वाली खेप प्राप्त करें",
+  "practiceMissionPutAwayTitle": "आने वाला स्टॉक व्यवस्थित करें",
+  "practiceMissionProcessTitle": "आने वाला बैच प्रोसेस करें",
+  "practiceMissionDispatchTitle": "डिलीवरी रूट डिस्पैच करें",
+
+  "practiceMissionMeta": "लॉजिस्टिक्स · वेयरहाउस एसोसिएट · लगभग {minutes} मिनट",
+
+  "practiceDifficultyBeginner": "शुरुआती",
+  "practiceDifficultyIntermediate": "मध्यम",
+
+  "practiceMissionCardSemantic": "{title}। {statLeft}। {tearLabel} बटन।",
+
+  "practiceRecommendedTitle": "अनुशंसित अभ्यास",
+
+  "practiceDemoTitle": "इन्वेंटरी विसंगति",
+  "practiceDemoDescription": "सिस्टम मात्रा की भौतिक गिनती से तुलना करें और एक सुरक्षित अगला कदम चुनें।",
+
+  "practiceDemoSemanticLabel": "इन्वेंटरी विसंगति डेमो। {status}। {action} बटन।",
+
+  "practiceCatalogueTitle": "कैटलॉग",
+
+  "practiceCatDispatchTitle": "डिस्पैच प्राथमिकता",
+  "practicePreviewPlannedStatus": "प्रीव्यू योजनाबद्ध • केवल प्रदर्शन",
+
+  "practiceCatVoiceTitle": "वॉइस वर्कप्लेस अभ्यास",
+  "practiceMicPlannedStatus": "योजनाबद्ध • माइक्रोफ़ोन सक्रिय नहीं है",
+  "practiceVoiceSnackbar": "वॉइस अभ्यास सक्रिय नहीं है। माइक्रोफ़ोन अनुमति नहीं मांगी गई थी।",
+
+  "practiceAttemptHistoryTitle": "प्रयास इतिहास",
+
+  "practiceLoadingAttemptsTitle": "प्रयास लोड हो रहे हैं",
+  "practiceLoadingAttemptsMessage": "आपका स्कोर किया गया सिमुलेशन इतिहास बहाल हो रहा है।",
+
+  "practiceAttemptErrorTitle": "प्रयास इतिहास उपलब्ध नहीं",
+  "practiceAttemptErrorMessage": "जब आपका सुरक्षित डेटा उपलब्ध हो, तो इस टैब से दोबारा कोशिश करें।",
+
+  "practiceNoAttemptsTitle": "कोई स्कोर किया गया प्रयास नहीं",
+  "practiceNoAttemptsMessage": "डेमो मूल्यांकित साक्ष्य के रूप में नहीं दिखते और विश्वसनीयता को प्रभावित नहीं करते।",
+
+  "practiceAttemptRowTitle": "इन्वेंटरी सिमुलेशन • {score}%",
+
+  "practiceStep1Label": "चरण 1/3 · सत्यापन",
+  "practiceStep1Question": "पहला कदम चुनें।",
+  "practiceStep1Primary": "भौतिक स्टॉक की दोबारा गिनती करें",
+  "practiceStep1Secondary": "सिस्टम मात्रा को अधिलेखित करें",
+
+  "practiceStep2Label": "चरण 2/3 · ऑडिट ट्रेल",
+  "practiceStep2Question": "दोनों रिकॉर्ड के साथ आप क्या करेंगे?",
+  "practiceStep2Primary": "दोनों मूल्य और गिनती नोट्स सुरक्षित रखें",
+  "practiceStep2Secondary": "मूल रिकॉर्ड हटा दें",
+
+  "practiceStep3Label": "चरण 3/3 · एस्केलेशन",
+  "practiceStep3Question": "अंतिम प्रतिक्रिया चुनें।",
+  "practiceStep3Primary": "दर्ज अपवाद को एस्केलेट करें",
+  "practiceStep3Secondary": "इसे अगली शिफ्ट के लिए छोड़ दें",
+
+  "practiceScoringTitle": "सिमुलेशन स्कोर हो रहा है",
+  "practiceScoringMessage": "प्रकाशित निश्चित रूब्रिक लागू हो रहा है।",
+
+  "practiceAssessmentHeadline": "इन्वेंटरी विसंगति मूल्यांकन",
+  "practiceScenarioLine": "परिदृश्य v1 • सिस्टम: 24 यूनिट • भौतिक गिनती: 21 यूनिट",
+  "practiceScoringDisclaimer": "केवल आपकी चुनी गई कार्रवाइयां स्कोर होती हैं। नेटवर्क या ऐप विफलताएं अलग से दर्ज होती हैं और विश्वसनीयता कभी कम नहीं करतीं।",
+
+  "practiceTechnicalEventSnackbar": "तकनीकी घटना अलग से दर्ज हुई, कोई स्कोर कटौती नहीं।",
+
+  "practiceResultHeadline": "सिमुलेशन परिणाम",
+  "practiceResultDisclaimer": "यह साक्ष्य समझाने योग्य और समीक्षा योग्य है। इसे नियोक्ता अस्वीकृति का एकमात्र आधार नहीं बनाया जाना चाहिए।",
+
+  "practiceRecordFailureButton": "डेमो नेटवर्क रुकावट दर्ज करें",
+
+  "practiceNextImprovement": "अगला सुधार: {improvement}",
+
+  "practiceReturnButton": "अभ्यास पर वापस जाएं",
+
+  "practiceDemoHeadline": "इन्वेंटरी विसंगति डेमो",
+  "practiceDemoScenarioLine": "सिस्टम: 24 यूनिट • भौतिक गिनती: 21 यूनिट",
+
+  "practiceDemoOptionOverwrite": "सिस्टम मात्रा तुरंत बदलें",
+  "practiceDemoOptionCorrect": "दोबारा गिनें, रिकॉर्ड सुरक्षित रखें, और अंतर को एस्केलेट करें",
+  "practiceDemoOptionIgnore": "शिफ्ट खत्म होने तक अंतर को नज़रअंदाज़ करें",
+
+  "practiceDemoFeedbackCorrect": "अच्छा अभ्यास: गिनती सत्यापित करें, ऑडिट ट्रेल रखें, और SOP के अनुसार एस्केलेट करें।",
+  "practiceDemoFeedbackIncorrect": "दोबारा कोशिश करें: सुरक्षित कार्य रिकॉर्ड सुरक्षित रखते हैं और अस्पष्ट विसंगतियों को एस्केलेट करते हैं।",
+
+  "practiceDemoFooterDisclaimer": "अगर भविष्य के मूल्यांकन के दौरान ऐप या नेटवर्क विफल होता है, तो तकनीकी विफलता उम्मीदवार की विश्वसनीयता कम नहीं करनी चाहिए।",
+
+  "practiceOptionSelected": "चयनित",
+  "practiceOptionNotSelected": "चयनित नहीं",
+  "practiceOptionSemantic": "{label}। {state}",
+
+  "notEmployerEvidenceDefault": "केवल अभ्यास फ़ीडबैक — अभी नियोक्ता साक्ष्य नहीं है।"
 }

@@ -308,5 +308,118 @@
   "learnCertPassed": "Pass ho gaye",
   "learnCertRetryAvailable": "Retry available",
 
-  "learnTabSemanticLabel": "{label}. {stateText}. Tab {total} mein se {index}."
+  "learnTabSemanticLabel": "{label}. {stateText}. Tab {total} mein se {index}.",
+
+  "practiceBannerMessage": "Practice demos scored assessments nahi hain aur koi employer evidence nahi banate.",
+
+  "practiceTagScored": "Scored",
+  "practiceTagPractice": "Practice",
+
+  "practiceScoredSimTitle": "Scored inventory simulation",
+  "practiceScoredSimDescription": "Ordered events, deterministic scoring, explanations aur evidence ke saath immutable v1 scenario.",
+
+  "practiceTearStart": "START",
+  "practiceTearRetry": "RETRY",
+  "practiceTearContinue": "CONTINUE",
+  "practiceTearNA": "N/A",
+
+  "practiceStatNotStarted": "Shuru nahi hua",
+  "practiceStatCompleted": "Poora hua",
+  "practiceStatInProgress": "Jaari hai",
+  "practiceStatLoadingSimulation": "Simulation load ho rahi hai",
+  "practiceStatContentUnavailable": "Content available nahi",
+  "practiceStatAttemptFailed": "Attempt fail ho gaya",
+  "practiceTagUnavailable": "Unavailable",
+
+  "practiceMissionReceiveTitle": "Aane wali shipment receive karein",
+  "practiceMissionPutAwayTitle": "Aane wala stock put away karein",
+  "practiceMissionProcessTitle": "Aane wala batch process karein",
+  "practiceMissionDispatchTitle": "Delivery route dispatch karein",
+
+  "practiceMissionMeta": "Logistics · Warehouse Associate · Lagbhag {minutes} minute",
+
+  "practiceDifficultyBeginner": "Beginner",
+  "practiceDifficultyIntermediate": "Intermediate",
+
+  "practiceMissionCardSemantic": "{title}. {statLeft}. {tearLabel} button.",
+
+  "practiceRecommendedTitle": "Recommended practice",
+
+  "practiceDemoTitle": "Inventory discrepancy",
+  "practiceDemoDescription": "System quantity ko physical count se compare karein aur ek safe next action chunein.",
+
+  "practiceDemoSemanticLabel": "Inventory discrepancy demo. {status}. {action} button.",
+
+  "practiceCatalogueTitle": "Catalogue",
+
+  "practiceCatDispatchTitle": "Dispatch prioritisation",
+  "practicePreviewPlannedStatus": "Preview planned • sirf demonstration",
+
+  "practiceCatVoiceTitle": "Voice workplace practice",
+  "practiceMicPlannedStatus": "Planned • microphone active nahi hai",
+  "practiceVoiceSnackbar": "Voice practice active nahi hai. Koi microphone permission request nahi ki gayi.",
+
+  "practiceAttemptHistoryTitle": "Attempt history",
+
+  "practiceLoadingAttemptsTitle": "Attempts load ho rahe hain",
+  "practiceLoadingAttemptsMessage": "Aapka scored simulation history restore ho raha hai.",
+
+  "practiceAttemptErrorTitle": "Attempt history available nahi",
+  "practiceAttemptErrorMessage": "Jab aapka secure data available ho, tab is tab se dobara koshish karein.",
+
+  "practiceNoAttemptsTitle": "Koi scored attempts nahi",
+  "practiceNoAttemptsMessage": "Demos assessed evidence ke roop mein nahi dikhte aur reliability affect nahi karte.",
+
+  "practiceAttemptRowTitle": "Inventory simulation • {score}%",
+
+  "practiceStep1Label": "STEP 1 OF 3 · VERIFY",
+  "practiceStep1Question": "Pehla action chunein.",
+  "practiceStep1Primary": "Physical stock dobara ginein",
+  "practiceStep1Secondary": "System quantity overwrite karein",
+
+  "practiceStep2Label": "STEP 2 OF 3 · AUDIT TRAIL",
+  "practiceStep2Question": "Dono records ke saath aap kya karenge?",
+  "practiceStep2Primary": "Dono values aur count notes preserve karein",
+  "practiceStep2Secondary": "Original record discard karein",
+
+  "practiceStep3Label": "STEP 3 OF 3 · ESCALATION",
+  "practiceStep3Question": "Final response chunein.",
+  "practiceStep3Primary": "Documented exception escalate karein",
+  "practiceStep3Secondary": "Ise agli shift ke liye chhod dein",
+
+  "practiceScoringTitle": "Simulation score ho rahi hai",
+  "practiceScoringMessage": "Published deterministic rubric apply ho raha hai.",
+
+  "practiceAssessmentHeadline": "Inventory discrepancy assessment",
+  "practiceScenarioLine": "Scenario v1 • System: 24 units • Physical count: 21 units",
+  "practiceScoringDisclaimer": "Sirf aapki chuni gayi actions score hoti hain. Network ya app failures alag se record hoti hain aur reliability kabhi kam nahi karti.",
+
+  "practiceTechnicalEventSnackbar": "Technical event alag se record hua, zero score penalty.",
+
+  "practiceResultHeadline": "Simulation result",
+  "practiceResultDisclaimer": "Yeh evidence explainable aur reviewable hai. Ise employer rejection ka ekmatra aadhar nahi banaya jaana chahiye.",
+
+  "practiceRecordFailureButton": "Demo network interruption record karein",
+
+  "practiceNextImprovement": "Agla improvement: {improvement}",
+
+  "practiceReturnButton": "Practice par wapas jaayein",
+
+  "practiceDemoHeadline": "Inventory discrepancy demo",
+  "practiceDemoScenarioLine": "System: 24 units • Physical count: 21 units",
+
+  "practiceDemoOptionOverwrite": "System quantity turant badlein",
+  "practiceDemoOptionCorrect": "Dobara ginein, records preserve karein, aur mismatch escalate karein",
+  "practiceDemoOptionIgnore": "Shift khatam hone tak difference ignore karein",
+
+  "practiceDemoFeedbackCorrect": "Achha practice: count verify karein, audit trail rakhein, aur SOP ke hisaab se escalate karein.",
+  "practiceDemoFeedbackIncorrect": "Dobara koshish karein: safe operations records preserve karte hain aur unexplained discrepancies escalate karte hain.",
+
+  "practiceDemoFooterDisclaimer": "Agar future assessment ke dauran app ya network fail ho, toh technical failure candidate ki reliability kam nahi karni chahiye.",
+
+  "practiceOptionSelected": "Selected",
+  "practiceOptionNotSelected": "Selected nahi",
+  "practiceOptionSemantic": "{label}. {state}",
+
+  "notEmployerEvidenceDefault": "Sirf practice feedback — abhi employer evidence nahi hai."
 }

@@ -5,10 +5,12 @@ import '../../../app/dependencies.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../core/analytics/analytics_event.dart';
+import '../../../core/errors/app_failure_localization.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_feedback.dart';
 import '../../../core/widgets/app_state_view.dart';
+import '../../../l10n/generated/app_localizations.dart';
 import '../../intelligence/domain/candidate_intelligence.dart';
 import '../../intelligence/domain/simulation_scoring_engine.dart';
 import '../../intelligence/presentation/candidate_intelligence_controller.dart';
@@ -62,39 +64,40 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
   /// the same shape the 4 real missions use for their own completed state.
   bool _demoCompleted = false;
 
-  static const _missions = [
+  List<_WorkplaceMissionEntry> _missions(AppLocalizations l10n) => [
     _WorkplaceMissionEntry(
       missionId: WorkplaceSimulationController.missionId,
       workOrderLabel: 'WM-01',
-      title: 'Receive an Incoming Shipment',
-      meta: 'Logistics · Warehouse Associate · Approximately 20 minutes',
-      difficultyLabel: 'Beginner',
+      title: l10n.practiceMissionReceiveTitle,
+      meta: l10n.practiceMissionMeta(20),
+      difficultyLabel: l10n.practiceDifficultyBeginner,
     ),
     _WorkplaceMissionEntry(
       missionId: WorkplaceSimulationController.putAwayMissionId,
       workOrderLabel: 'WM-02',
-      title: 'Put Away Incoming Stock',
-      meta: 'Logistics · Warehouse Associate · Approximately 20 minutes',
-      difficultyLabel: 'Beginner',
+      title: l10n.practiceMissionPutAwayTitle,
+      meta: l10n.practiceMissionMeta(20),
+      difficultyLabel: l10n.practiceDifficultyBeginner,
     ),
     _WorkplaceMissionEntry(
       missionId: WorkplaceSimulationController.processingMissionId,
       workOrderLabel: 'WM-03',
-      title: 'Process Incoming Batch',
-      meta: 'Logistics · Warehouse Associate · Approximately 22 minutes',
-      difficultyLabel: 'Intermediate',
+      title: l10n.practiceMissionProcessTitle,
+      meta: l10n.practiceMissionMeta(22),
+      difficultyLabel: l10n.practiceDifficultyIntermediate,
     ),
     _WorkplaceMissionEntry(
       missionId: WorkplaceSimulationController.dispatchMissionId,
       workOrderLabel: 'WM-04',
-      title: 'Dispatch Delivery Route',
-      meta: 'Logistics · Warehouse Associate · Approximately 24 minutes',
-      difficultyLabel: 'Intermediate',
+      title: l10n.practiceMissionDispatchTitle,
+      meta: l10n.practiceMissionMeta(24),
+      difficultyLabel: l10n.practiceDifficultyIntermediate,
     ),
   ];
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final pack = ref.watch(activeSectorPackProvider);
     if (_scoredOpen) {
       return _ScoredInventorySimulation(
@@ -130,24 +133,20 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
         // sits above scored simulations too, so it keeps its own wording via
         // the optional `message` override rather than the micro-lesson
         // default.
-        const NotEmployerEvidenceBanner(
-          message:
-              'Practice demonstrations are not scored assessments and create no employer evidence.',
-        ),
+        NotEmployerEvidenceBanner(message: l10n.practiceBannerMessage),
         const SizedBox(height: AppSpacing.md),
         SectorTaskCard(
           pack: pack,
           workOrderLabel: 'SIM-01',
-          tagLabel: 'Scored',
+          tagLabel: l10n.practiceTagScored,
           tone: SectorTaskTone.emphasis,
-          title: 'Scored inventory simulation',
-          description:
-              'Immutable v1 scenario with ordered events, deterministic scoring, explanations, and evidence.',
-          tearLabel: 'START',
+          title: l10n.practiceScoredSimTitle,
+          description: l10n.practiceScoredSimDescription,
+          tearLabel: l10n.practiceTearStart,
           onTap: () => setState(() => _scoredOpen = true),
         ),
         const SizedBox(height: AppSpacing.md),
-        for (final mission in _missions) ...[
+        for (final mission in _missions(l10n)) ...[
           _WorkplaceMissionCard(
             pack: pack,
             entry: mission,
@@ -156,7 +155,7 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
           const SizedBox(height: AppSpacing.md),
         ],
         Text(
-          'Recommended practice',
+          l10n.practiceRecommendedTitle,
           style: Theme.of(context).textTheme.headlineSmall,
         ),
         const SizedBox(height: AppSpacing.md),
@@ -168,21 +167,29 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
         SectorTaskCard(
           pack: pack,
           workOrderLabel: 'DEMO-01',
-          tagLabel: 'Practice',
+          tagLabel: l10n.practiceTagPractice,
           tone: _demoCompleted ? SectorTaskTone.cleared : SectorTaskTone.active,
-          title: 'Inventory discrepancy',
-          description:
-              'Compare a system quantity with a physical count and choose a safe next action.',
-          statLeft: _demoCompleted ? 'Completed' : 'Not started',
-          tearLabel: _demoCompleted ? 'RETRY' : 'START',
+          title: l10n.practiceDemoTitle,
+          description: l10n.practiceDemoDescription,
+          statLeft: _demoCompleted
+              ? l10n.practiceStatCompleted
+              : l10n.practiceStatNotStarted,
+          tearLabel: _demoCompleted
+              ? l10n.practiceTearRetry
+              : l10n.practiceTearStart,
           onTap: () => setState(() => _demoOpen = true),
-          semanticLabel:
-              'Inventory discrepancy demo. '
-              '${_demoCompleted ? 'Completed' : 'Not started'}. '
-              '${_demoCompleted ? 'Retry' : 'Start'} button.',
+          semanticLabel: l10n.practiceDemoSemanticLabel(
+            _demoCompleted
+                ? l10n.practiceStatCompleted
+                : l10n.practiceStatNotStarted,
+            _demoCompleted ? l10n.practiceTearRetry : l10n.practiceTearStart,
+          ),
         ),
         const SizedBox(height: AppSpacing.xl),
-        Text('Catalogue', style: Theme.of(context).textTheme.titleLarge),
+        Text(
+          l10n.practiceCatalogueTitle,
+          style: Theme.of(context).textTheme.titleLarge,
+        ),
         const SizedBox(height: AppSpacing.sm),
         // SectorIndexRow, the same structural row Learning uses for its
         // lesson list -- these two entries were previously a plain
@@ -197,8 +204,8 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
           pack: pack,
           indexLabel: 'CAT-01',
           glyph: SectorGlyph.truck,
-          title: 'Dispatch prioritisation',
-          statusText: 'Preview planned • demonstration only',
+          title: l10n.practiceCatDispatchTitle,
+          statusText: l10n.practicePreviewPlannedStatus,
           locked: true,
         ),
         const SizedBox(height: AppSpacing.sm),
@@ -206,38 +213,38 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
           pack: pack,
           indexLabel: 'CAT-02',
           glyph: SectorGlyph.mic,
-          title: 'Voice workplace practice',
-          statusText: 'Planned • microphone is not active',
+          title: l10n.practiceCatVoiceTitle,
+          statusText: l10n.practiceMicPlannedStatus,
           locked: true,
           onTap: () => showAppSnackBar(
             context: context,
-            message:
-                'Voice practice is not active. No microphone permission was requested.',
+            message: l10n.practiceVoiceSnackbar,
           ),
         ),
         const SizedBox(height: AppSpacing.xl),
-        Text('Attempt history', style: Theme.of(context).textTheme.titleLarge),
+        Text(
+          l10n.practiceAttemptHistoryTitle,
+          style: Theme.of(context).textTheme.titleLarge,
+        ),
         const SizedBox(height: AppSpacing.sm),
         ref
             .watch(candidateIntelligenceControllerProvider)
             .when(
-              loading: () => const AppStateView(
+              loading: () => AppStateView(
                 icon: Icons.hourglass_top,
-                title: 'Loading attempts',
-                message: 'Restoring your scored simulation history.',
+                title: l10n.practiceLoadingAttemptsTitle,
+                message: l10n.practiceLoadingAttemptsMessage,
               ),
-              error: (error, stackTrace) => const AppErrorState(
-                title: 'Attempt history unavailable',
-                message:
-                    'Retry from this tab when your secure data is available.',
+              error: (error, stackTrace) => AppErrorState(
+                title: l10n.practiceAttemptErrorTitle,
+                message: l10n.practiceAttemptErrorMessage,
               ),
               data: (state) => state.simulationScores.isEmpty
-                  ? const SizedBox(
+                  ? SizedBox(
                       height: 220,
                       child: AppEmptyState(
-                        title: 'No scored attempts',
-                        message:
-                            'Demonstrations do not appear as assessed evidence or affect reliability.',
+                        title: l10n.practiceNoAttemptsTitle,
+                        message: l10n.practiceNoAttemptsMessage,
                       ),
                     )
                   : Column(
@@ -259,8 +266,9 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
                               indexLabel:
                                   'ATT-${(index + 1).toString().padLeft(2, '0')}',
                               glyph: SectorGlyph.check,
-                              title:
-                                  'Inventory simulation • ${score.totalScore}%',
+                              title: l10n.practiceAttemptRowTitle(
+                                score.totalScore,
+                              ),
                               statusText: score.explanation,
                               signalState: SectorSignalState.cleared,
                             ),
@@ -290,6 +298,7 @@ class _WorkplaceMissionCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
     final state = ref.watch(
       workplaceSimulationControllerProvider(entry.missionId),
     );
@@ -301,19 +310,19 @@ class _WorkplaceMissionCard extends ConsumerWidget {
         tone: SectorTaskTone.muted,
         title: entry.title,
         description: entry.meta,
-        statLeft: 'Loading simulation',
+        statLeft: l10n.practiceStatLoadingSimulation,
         tearLabel: '···',
         unavailable: true,
       ),
       error: (error, stackTrace) => SectorTaskCard(
         pack: pack,
         workOrderLabel: entry.workOrderLabel,
-        tagLabel: 'Unavailable',
+        tagLabel: l10n.practiceTagUnavailable,
         tone: SectorTaskTone.muted,
         title: entry.title,
         description: entry.meta,
-        statLeft: 'Content unavailable',
-        tearLabel: 'N/A',
+        statLeft: l10n.practiceStatContentUnavailable,
+        tearLabel: l10n.practiceTearNA,
         unavailable: true,
       ),
       data: (value) {
@@ -323,19 +332,19 @@ class _WorkplaceMissionCard extends ConsumerWidget {
         final String tearLabel;
         if (attempt == null) {
           tone = SectorTaskTone.emphasis;
-          statLeft = 'Not started';
-          tearLabel = 'START';
+          statLeft = l10n.practiceStatNotStarted;
+          tearLabel = l10n.practiceTearStart;
         } else if (attempt.state == MissionState.completed ||
             attempt.state == MissionState.failed) {
           tone = SectorTaskTone.cleared;
           statLeft = attempt.state == MissionState.completed
-              ? 'Completed'
-              : 'Attempt failed';
-          tearLabel = 'RETRY';
+              ? l10n.practiceStatCompleted
+              : l10n.practiceStatAttemptFailed;
+          tearLabel = l10n.practiceTearRetry;
         } else {
           tone = SectorTaskTone.active;
-          statLeft = 'In progress';
-          tearLabel = 'CONTINUE';
+          statLeft = l10n.practiceStatInProgress;
+          tearLabel = l10n.practiceTearContinue;
         }
         return SectorTaskCard(
           pack: pack,
@@ -347,7 +356,11 @@ class _WorkplaceMissionCard extends ConsumerWidget {
           statLeft: statLeft,
           tearLabel: tearLabel,
           onTap: onOpen,
-          semanticLabel: '${entry.title}. $statLeft. $tearLabel button.',
+          semanticLabel: l10n.practiceMissionCardSemantic(
+            entry.title,
+            statLeft,
+            tearLabel,
+          ),
         );
       },
     );
@@ -384,31 +397,31 @@ class _ScoredInventorySimulationState
     String secondaryLabel,
     VoidCallback onSecondary,
   })
-  get _currentStep {
+  _currentStep(AppLocalizations l10n) {
     return switch (_step) {
       0 => (
-        stepLabel: 'STEP 1 OF 3 · VERIFY',
-        question: 'Choose the first action.',
-        primaryLabel: 'Recount the physical stock',
+        stepLabel: l10n.practiceStep1Label,
+        question: l10n.practiceStep1Question,
+        primaryLabel: l10n.practiceStep1Primary,
         onPrimary: () => _record('decision_selected', {'decision': 'recount'}),
-        secondaryLabel: 'Overwrite the system quantity',
+        secondaryLabel: l10n.practiceStep1Secondary,
         onSecondary: () =>
             _record('decision_selected', {'decision': 'overwrite'}),
       ),
       1 => (
-        stepLabel: 'STEP 2 OF 3 · AUDIT TRAIL',
-        question: 'What do you do with the two records?',
-        primaryLabel: 'Preserve both values and count notes',
+        stepLabel: l10n.practiceStep2Label,
+        question: l10n.practiceStep2Question,
+        primaryLabel: l10n.practiceStep2Primary,
         onPrimary: () => _record('records_preserved', const {}),
-        secondaryLabel: 'Discard the original record',
+        secondaryLabel: l10n.practiceStep2Secondary,
         onSecondary: () => _record('record_discarded', const {}),
       ),
       _ => (
-        stepLabel: 'STEP 3 OF 3 · ESCALATION',
-        question: 'Choose the final response.',
-        primaryLabel: 'Escalate the documented exception',
+        stepLabel: l10n.practiceStep3Label,
+        question: l10n.practiceStep3Question,
+        primaryLabel: l10n.practiceStep3Primary,
         onPrimary: () => _record('exception_escalated', const {}),
-        secondaryLabel: 'Leave it for the next shift',
+        secondaryLabel: l10n.practiceStep3Secondary,
         onSecondary: () => _record('exception_ignored', const {}),
       ),
     };
@@ -416,18 +429,19 @@ class _ScoredInventorySimulationState
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final pack = ref.watch(activeSectorPackProvider);
     if (_saving) {
-      return const AppStateView(
+      return AppStateView(
         icon: Icons.calculate_outlined,
-        title: 'Scoring simulation',
-        message: 'Applying the published deterministic rubric.',
+        title: l10n.practiceScoringTitle,
+        message: l10n.practiceScoringMessage,
       );
     }
     if (_score != null) {
-      return _buildResult(pack, _score!);
+      return _buildResult(context, pack, _score!);
     }
-    final step = _currentStep;
+    final step = _currentStep(l10n);
     return ListView(
       padding: const EdgeInsets.fromLTRB(
         AppSpacing.xl,
@@ -437,17 +451,15 @@ class _ScoredInventorySimulationState
       ),
       children: [
         Text(
-          'Inventory discrepancy assessment',
+          l10n.practiceAssessmentHeadline,
           style: Theme.of(context).textTheme.headlineSmall,
         ),
         const SizedBox(height: AppSpacing.xs),
-        const Text('Scenario v1 • System: 24 units • Physical count: 21 units'),
+        Text(l10n.practiceScenarioLine),
         const SizedBox(height: AppSpacing.md),
-        const AppCard(
+        AppCard(
           backgroundColor: AppColors.infoSoft,
-          child: Text(
-            'Only your selected operational actions are scored. Network or app failures are recorded separately and never reduce reliability.',
-          ),
+          child: Text(l10n.practiceScoringDisclaimer),
         ),
         const SizedBox(height: AppSpacing.lg),
         _WizardStepCard(
@@ -495,7 +507,7 @@ class _ScoredInventorySimulationState
     });
     showAppSnackBar(
       context: context,
-      message: 'Technical event recorded separately with zero score penalty.',
+      message: AppLocalizations.of(context).practiceTechnicalEventSnackbar,
     );
   }
 
@@ -518,7 +530,7 @@ class _ScoredInventorySimulationState
     if (failure != null) {
       showAppSnackBar(
         context: context,
-        message: failure.message,
+        message: failure.localizedMessage(AppLocalizations.of(context)),
         tone: AppMessageTone.error,
       );
     } else {
@@ -528,7 +540,12 @@ class _ScoredInventorySimulationState
     }
   }
 
-  Widget _buildResult(SectorPack pack, SimulationScore score) {
+  Widget _buildResult(
+    BuildContext context,
+    SectorPack pack,
+    SimulationScore score,
+  ) {
+    final l10n = AppLocalizations.of(context);
     return ListView(
       padding: const EdgeInsets.fromLTRB(
         AppSpacing.xl,
@@ -538,15 +555,13 @@ class _ScoredInventorySimulationState
       ),
       children: [
         Text(
-          'Simulation result',
+          l10n.practiceResultHeadline,
           style: Theme.of(context).textTheme.headlineSmall,
         ),
         const SizedBox(height: AppSpacing.md),
         _ResultCard(pack: pack, score: score, onClose: widget.onClose),
         const SizedBox(height: AppSpacing.md),
-        const Text(
-          'This evidence is explainable and reviewable. It must not be used as the sole basis for an employer rejection.',
-        ),
+        Text(l10n.practiceResultDisclaimer),
       ],
     );
   }
@@ -672,7 +687,7 @@ class _WizardStepCard extends StatelessWidget {
                 size: 13,
               ),
               label: Text(
-                'Record a demo network interruption',
+                AppLocalizations.of(context).practiceRecordFailureButton,
                 style: SectorPackTypography.monoLabel(
                   color: Colors.white.withValues(alpha: 0.6),
                 ),
@@ -882,7 +897,9 @@ class _ResultCard extends StatelessWidget {
                     ),
                   ),
                   child: Text(
-                    'Next improvement: ${score.improvement}',
+                    AppLocalizations.of(
+                      context,
+                    ).practiceNextImprovement(score.improvement),
                     style: SectorPackTypography.bodyRegular(
                       color: Colors.white.withValues(alpha: 0.86),
                       fontSize: 12,
@@ -925,7 +942,7 @@ class _ResultCard extends StatelessWidget {
                     alignment: Alignment.center,
                     padding: const EdgeInsets.symmetric(vertical: 13),
                     child: Text(
-                      'Return to practice',
+                      AppLocalizations.of(context).practiceReturnButton,
                       style: SectorPackTypography.bodySemiBold(
                         color: Colors.white,
                         fontSize: 13,
@@ -942,9 +959,6 @@ class _ResultCard extends StatelessWidget {
   }
 }
 
-const _correctDemoOption =
-    'Recount, preserve records, and escalate the mismatch';
-
 class _InventoryDemo extends StatelessWidget {
   const _InventoryDemo({
     required this.pack,
@@ -960,7 +974,9 @@ class _InventoryDemo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final surface = Theme.of(context).colorScheme.surface;
+    final correctOption = l10n.practiceDemoOptionCorrect;
     return ListView(
       padding: const EdgeInsets.fromLTRB(
         AppSpacing.xl,
@@ -970,16 +986,16 @@ class _InventoryDemo extends StatelessWidget {
       ),
       children: [
         Text(
-          'Inventory discrepancy demo',
+          l10n.practiceDemoHeadline,
           style: Theme.of(context).textTheme.headlineSmall,
         ),
         const SizedBox(height: AppSpacing.xs),
-        const Text('System: 24 units • Physical count: 21 units'),
+        Text(l10n.practiceDemoScenarioLine),
         const SizedBox(height: AppSpacing.lg),
-        for (final option in const [
-          'Change the system quantity immediately',
-          _correctDemoOption,
-          'Ignore the difference until the shift ends',
+        for (final option in [
+          l10n.practiceDemoOptionOverwrite,
+          correctOption,
+          l10n.practiceDemoOptionIgnore,
         ]) ...[
           _DemoOptionCard(
             pack: pack,
@@ -1000,7 +1016,7 @@ class _InventoryDemo extends StatelessWidget {
           // the actual choice.
           Builder(
             builder: (context) {
-              final correct = selectedDecision == _correctDemoOption;
+              final correct = selectedDecision == correctOption;
               final tone = correct
                   ? pack.signalPalette.cleared
                   : pack.signalPalette.locked;
@@ -1016,8 +1032,8 @@ class _InventoryDemo extends StatelessWidget {
                 ),
                 child: Text(
                   correct
-                      ? 'Good practice: verify the count, keep an audit trail, and escalate according to SOP.'
-                      : 'Try again: safe operations preserve records and escalate unexplained discrepancies.',
+                      ? l10n.practiceDemoFeedbackCorrect
+                      : l10n.practiceDemoFeedbackIncorrect,
                   style: SectorPackTypography.bodyRegular(
                     color: Theme.of(context).colorScheme.onSurface,
                     fontSize: 12.5,
@@ -1028,12 +1044,10 @@ class _InventoryDemo extends StatelessWidget {
           ),
         ],
         const SizedBox(height: AppSpacing.md),
-        const Text(
-          'If the app or network fails during a future assessment, the technical failure must not reduce candidate reliability.',
-        ),
+        Text(l10n.practiceDemoFooterDisclaimer),
         const SizedBox(height: AppSpacing.lg),
         AppButton(
-          label: 'Return to practice',
+          label: l10n.practiceReturnButton,
           variant: AppButtonVariant.secondary,
           onPressed: onClose,
         ),
@@ -1062,12 +1076,16 @@ class _DemoOptionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final surface = Theme.of(context).colorScheme.surface;
     final divider = Theme.of(context).dividerColor;
     final ink = Theme.of(context).colorScheme.onSurface;
     final inkSoft = Theme.of(context).colorScheme.onSurfaceVariant;
     return Semantics(
-      label: '$label. ${selected ? 'Selected' : 'Not selected'}',
+      label: l10n.practiceOptionSemantic(
+        label,
+        selected ? l10n.practiceOptionSelected : l10n.practiceOptionNotSelected,
+      ),
       button: true,
       container: true,
       // excludeSemantics: true hides the descendant Text/icon's own

@@ -789,5 +789,219 @@
       "index": { "type": "int" },
       "total": { "type": "int" }
     }
+  },
+
+  "practiceBannerMessage": "Practice demonstrations are not scored assessments and create no employer evidence.",
+  "@practiceBannerMessage": { "description": "Banner at the top of Practise explaining that demos aren't scored evidence." },
+
+  "practiceTagScored": "Scored",
+  "practiceTagPractice": "Practice",
+  "@practiceTagScored": { "description": "Tag on the scored-simulation task card." },
+  "@practiceTagPractice": { "description": "Tag on the unscored demo task card." },
+
+  "practiceScoredSimTitle": "Scored inventory simulation",
+  "practiceScoredSimDescription": "Immutable v1 scenario with ordered events, deterministic scoring, explanations, and evidence.",
+  "@practiceScoredSimTitle": { "description": "Title of the scored-simulation task card." },
+  "@practiceScoredSimDescription": { "description": "Description of the scored-simulation task card." },
+
+  "practiceTearStart": "START",
+  "practiceTearRetry": "RETRY",
+  "practiceTearContinue": "CONTINUE",
+  "practiceTearNA": "N/A",
+  "@practiceTearStart": { "description": "Tear-off action label on a task card, not-started state." },
+  "@practiceTearRetry": { "description": "Tear-off action label on a task card, retry state." },
+  "@practiceTearContinue": { "description": "Tear-off action label on a task card, in-progress state." },
+  "@practiceTearNA": { "description": "Tear-off action label on a task card, unavailable state." },
+
+  "practiceStatNotStarted": "Not started",
+  "practiceStatCompleted": "Completed",
+  "practiceStatInProgress": "In progress",
+  "practiceStatLoadingSimulation": "Loading simulation",
+  "practiceStatContentUnavailable": "Content unavailable",
+  "practiceStatAttemptFailed": "Attempt failed",
+  "practiceTagUnavailable": "Unavailable",
+  "@practiceStatNotStarted": { "description": "Status text on a mission task card." },
+  "@practiceStatCompleted": { "description": "Status text on a mission task card." },
+  "@practiceStatInProgress": { "description": "Status text on a mission task card." },
+  "@practiceStatLoadingSimulation": { "description": "Status text on a mission task card while it loads." },
+  "@practiceStatContentUnavailable": { "description": "Status text on a mission task card that failed to load." },
+  "@practiceStatAttemptFailed": { "description": "Status text on a mission task card whose last attempt failed." },
+  "@practiceTagUnavailable": { "description": "Tag on a mission task card that failed to load." },
+
+  "practiceMissionReceiveTitle": "Receive an Incoming Shipment",
+  "practiceMissionPutAwayTitle": "Put Away Incoming Stock",
+  "practiceMissionProcessTitle": "Process Incoming Batch",
+  "practiceMissionDispatchTitle": "Dispatch Delivery Route",
+  "@practiceMissionReceiveTitle": { "description": "Title of a workplace-simulation mission card." },
+  "@practiceMissionPutAwayTitle": { "description": "Title of a workplace-simulation mission card." },
+  "@practiceMissionProcessTitle": { "description": "Title of a workplace-simulation mission card." },
+  "@practiceMissionDispatchTitle": { "description": "Title of a workplace-simulation mission card." },
+
+  "practiceMissionMeta": "Logistics · Warehouse Associate · Approximately {minutes} minutes",
+  "@practiceMissionMeta": {
+    "description": "Description line on a mission card -- sector, role, and estimated duration.",
+    "placeholders": { "minutes": { "type": "int" } }
+  },
+
+  "practiceDifficultyBeginner": "Beginner",
+  "practiceDifficultyIntermediate": "Intermediate",
+  "@practiceDifficultyBeginner": { "description": "Difficulty tag on a mission card." },
+  "@practiceDifficultyIntermediate": { "description": "Difficulty tag on a mission card." },
+
+  "practiceMissionCardSemantic": "{title}. {statLeft}. {tearLabel} button.",
+  "@practiceMissionCardSemantic": {
+    "description": "Full semantic label read by a screen reader for a mission task card.",
+    "placeholders": {
+      "title": { "type": "String" },
+      "statLeft": { "type": "String" },
+      "tearLabel": { "type": "String" }
+    }
+  },
+
+  "practiceRecommendedTitle": "Recommended practice",
+  "@practiceRecommendedTitle": { "description": "Section header above the unscored demo task card." },
+
+  "practiceDemoTitle": "Inventory discrepancy",
+  "practiceDemoDescription": "Compare a system quantity with a physical count and choose a safe next action.",
+  "@practiceDemoTitle": { "description": "Title of the unscored demo task card." },
+  "@practiceDemoDescription": { "description": "Description of the unscored demo task card." },
+
+  "practiceDemoSemanticLabel": "Inventory discrepancy demo. {status}. {action} button.",
+  "@practiceDemoSemanticLabel": {
+    "description": "Full semantic label read by a screen reader for the demo task card.",
+    "placeholders": { "status": { "type": "String" }, "action": { "type": "String" } }
+  },
+
+  "practiceCatalogueTitle": "Catalogue",
+  "@practiceCatalogueTitle": { "description": "Section header above the locked/planned catalogue rows." },
+
+  "practiceCatDispatchTitle": "Dispatch prioritisation",
+  "practicePreviewPlannedStatus": "Preview planned • demonstration only",
+  "@practiceCatDispatchTitle": { "description": "Title of a locked catalogue row." },
+  "@practicePreviewPlannedStatus": { "description": "Status text on a locked, preview-planned catalogue row." },
+
+  "practiceCatVoiceTitle": "Voice workplace practice",
+  "practiceMicPlannedStatus": "Planned • microphone is not active",
+  "practiceVoiceSnackbar": "Voice practice is not active. No microphone permission was requested.",
+  "@practiceCatVoiceTitle": { "description": "Title of the voice-practice catalogue row." },
+  "@practiceMicPlannedStatus": { "description": "Status text on the voice-practice catalogue row." },
+  "@practiceVoiceSnackbar": { "description": "Snackbar shown when tapping the voice-practice row." },
+
+  "practiceAttemptHistoryTitle": "Attempt history",
+  "@practiceAttemptHistoryTitle": { "description": "Section header above the scored-attempt history list." },
+
+  "practiceLoadingAttemptsTitle": "Loading attempts",
+  "practiceLoadingAttemptsMessage": "Restoring your scored simulation history.",
+  "@practiceLoadingAttemptsTitle": { "description": "Title of the attempt-history loading state." },
+  "@practiceLoadingAttemptsMessage": { "description": "Message of the attempt-history loading state." },
+
+  "practiceAttemptErrorTitle": "Attempt history unavailable",
+  "practiceAttemptErrorMessage": "Retry from this tab when your secure data is available.",
+  "@practiceAttemptErrorTitle": { "description": "Title of the attempt-history error state." },
+  "@practiceAttemptErrorMessage": { "description": "Message of the attempt-history error state." },
+
+  "practiceNoAttemptsTitle": "No scored attempts",
+  "practiceNoAttemptsMessage": "Demonstrations do not appear as assessed evidence or affect reliability.",
+  "@practiceNoAttemptsTitle": { "description": "Title of the attempt-history empty state." },
+  "@practiceNoAttemptsMessage": { "description": "Message of the attempt-history empty state." },
+
+  "practiceAttemptRowTitle": "Inventory simulation • {score}%",
+  "@practiceAttemptRowTitle": {
+    "description": "Title of one row in the attempt-history list.",
+    "placeholders": { "score": { "type": "int" } }
+  },
+
+  "practiceStep1Label": "STEP 1 OF 3 · VERIFY",
+  "practiceStep1Question": "Choose the first action.",
+  "practiceStep1Primary": "Recount the physical stock",
+  "practiceStep1Secondary": "Overwrite the system quantity",
+  "@practiceStep1Label": { "description": "Step label in the scored-simulation wizard." },
+  "@practiceStep1Question": { "description": "Question in the scored-simulation wizard, step 1." },
+  "@practiceStep1Primary": { "description": "Primary answer option, step 1." },
+  "@practiceStep1Secondary": { "description": "Secondary answer option, step 1." },
+
+  "practiceStep2Label": "STEP 2 OF 3 · AUDIT TRAIL",
+  "practiceStep2Question": "What do you do with the two records?",
+  "practiceStep2Primary": "Preserve both values and count notes",
+  "practiceStep2Secondary": "Discard the original record",
+  "@practiceStep2Label": { "description": "Step label in the scored-simulation wizard." },
+  "@practiceStep2Question": { "description": "Question in the scored-simulation wizard, step 2." },
+  "@practiceStep2Primary": { "description": "Primary answer option, step 2." },
+  "@practiceStep2Secondary": { "description": "Secondary answer option, step 2." },
+
+  "practiceStep3Label": "STEP 3 OF 3 · ESCALATION",
+  "practiceStep3Question": "Choose the final response.",
+  "practiceStep3Primary": "Escalate the documented exception",
+  "practiceStep3Secondary": "Leave it for the next shift",
+  "@practiceStep3Label": { "description": "Step label in the scored-simulation wizard." },
+  "@practiceStep3Question": { "description": "Question in the scored-simulation wizard, step 3." },
+  "@practiceStep3Primary": { "description": "Primary answer option, step 3." },
+  "@practiceStep3Secondary": { "description": "Secondary answer option, step 3." },
+
+  "practiceScoringTitle": "Scoring simulation",
+  "practiceScoringMessage": "Applying the published deterministic rubric.",
+  "@practiceScoringTitle": { "description": "Title shown while a scored simulation attempt is being scored." },
+  "@practiceScoringMessage": { "description": "Message shown while a scored simulation attempt is being scored." },
+
+  "practiceAssessmentHeadline": "Inventory discrepancy assessment",
+  "practiceScenarioLine": "Scenario v1 • System: 24 units • Physical count: 21 units",
+  "practiceScoringDisclaimer": "Only your selected operational actions are scored. Network or app failures are recorded separately and never reduce reliability.",
+  "@practiceAssessmentHeadline": { "description": "Headline of the scored-simulation wizard." },
+  "@practiceScenarioLine": { "description": "Scenario summary line under the wizard headline." },
+  "@practiceScoringDisclaimer": { "description": "Disclaimer card above the wizard's first step." },
+
+  "practiceTechnicalEventSnackbar": "Technical event recorded separately with zero score penalty.",
+  "@practiceTechnicalEventSnackbar": { "description": "Snackbar shown after recording a demo network interruption." },
+
+  "practiceResultHeadline": "Simulation result",
+  "practiceResultDisclaimer": "This evidence is explainable and reviewable. It must not be used as the sole basis for an employer rejection.",
+  "@practiceResultHeadline": { "description": "Headline of the scored-simulation result screen." },
+  "@practiceResultDisclaimer": { "description": "Disclaimer under the result card." },
+
+  "practiceRecordFailureButton": "Record a demo network interruption",
+  "@practiceRecordFailureButton": { "description": "Button in the wizard that records a simulated technical failure." },
+
+  "practiceNextImprovement": "Next improvement: {improvement}",
+  "@practiceNextImprovement": {
+    "description": "Improvement note on the result card.",
+    "placeholders": { "improvement": { "type": "String" } }
+  },
+
+  "practiceReturnButton": "Return to practice",
+  "@practiceReturnButton": { "description": "Button that returns from a result/demo screen back to the Practise list." },
+
+  "practiceDemoHeadline": "Inventory discrepancy demo",
+  "practiceDemoScenarioLine": "System: 24 units • Physical count: 21 units",
+  "@practiceDemoHeadline": { "description": "Headline of the unscored demo screen." },
+  "@practiceDemoScenarioLine": { "description": "Scenario summary line under the demo headline." },
+
+  "practiceDemoOptionOverwrite": "Change the system quantity immediately",
+  "practiceDemoOptionCorrect": "Recount, preserve records, and escalate the mismatch",
+  "practiceDemoOptionIgnore": "Ignore the difference until the shift ends",
+  "@practiceDemoOptionOverwrite": { "description": "One of three selectable options on the unscored demo screen." },
+  "@practiceDemoOptionCorrect": { "description": "The correct (best-practice) option on the unscored demo screen -- also compared by value to detect a correct pick, so every locale's translation must stay the option actually selected." },
+  "@practiceDemoOptionIgnore": { "description": "One of three selectable options on the unscored demo screen." },
+
+  "practiceDemoFeedbackCorrect": "Good practice: verify the count, keep an audit trail, and escalate according to SOP.",
+  "practiceDemoFeedbackIncorrect": "Try again: safe operations preserve records and escalate unexplained discrepancies.",
+  "@practiceDemoFeedbackCorrect": { "description": "Feedback shown after picking the correct demo option." },
+  "@practiceDemoFeedbackIncorrect": { "description": "Feedback shown after picking an incorrect demo option." },
+
+  "practiceDemoFooterDisclaimer": "If the app or network fails during a future assessment, the technical failure must not reduce candidate reliability.",
+  "@practiceDemoFooterDisclaimer": { "description": "Disclaimer at the bottom of the unscored demo screen." },
+
+  "practiceOptionSelected": "Selected",
+  "practiceOptionNotSelected": "Not selected",
+  "practiceOptionSemantic": "{label}. {state}",
+  "@practiceOptionSelected": { "description": "Selection-state word used inside practiceOptionSemantic." },
+  "@practiceOptionNotSelected": { "description": "Selection-state word used inside practiceOptionSemantic." },
+  "@practiceOptionSemantic": {
+    "description": "Full semantic label for a demo option card.",
+    "placeholders": { "label": { "type": "String" }, "state": { "type": "String" } }
+  },
+
+  "notEmployerEvidenceDefault": "Practice feedback only — not employer evidence yet.",
+  "@notEmployerEvidenceDefault": {
+    "description": "Default wording of NotEmployerEvidenceBanner, shown wherever a caller doesn't override it with its own wording."
   }
 }
