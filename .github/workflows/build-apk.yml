@@ -61,7 +61,17 @@ jobs:
     # `ubuntu-latest` once the Actions minutes quota resets (2026-09-01) or
     # affording GitHub-hosted overage stops being a concern.
     runs-on: [self-hosted, macOS]
-    timeout-minutes: 30
+    # Was 30. Two consecutive runs (2026-08-14) were killed by this timeout
+    # at 30m40s and 30m49s -- not a manual cancel or a flaky runner, the job
+    # itself: `subosito/flutter-action@v2`'s `cache: true` isn't hitting on
+    # this self-hosted Mac runner, so Flutter SDK setup alone took ~16
+    # minutes both times, and `flutter test` (fast locally, under 2 minutes)
+    # took another ~11-12 minutes on this runner. That's ~27-28 minutes gone
+    # before the job ever reaches the actual APK build, signing, and
+    # release-publish steps. 60 gives real headroom for setup + test + build
+    # + publish even on a cold cache; revisit downward once the Flutter SDK
+    # cache is confirmed to actually persist across runs on this runner.
+    timeout-minutes: 60
 
     # Needed only by the release step below; pushes never reach it.
     permissions:
