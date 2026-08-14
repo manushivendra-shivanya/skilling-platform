@@ -57,6 +57,8 @@
   "homeJobMatchTeaserLabel": "आपके लिए सबसे अच्छा मेल",
   "homeJobMatchTeaserPercent": "{percent}% मेल",
 
+  "homeProfileCompletionTitle": "अपनी प्रोफ़ाइल पूरी करें",
+
   "homeSyncBanner": "{count, plural, one{{count} आइटम} other{{count} आइटम}} सिंक होने के लिए बाकी।",
 
   "actionView": "देखें",

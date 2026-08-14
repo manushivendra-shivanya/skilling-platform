@@ -20,6 +20,7 @@ import 'home_dashboard_controller.dart';
 import 'home_header.dart';
 import 'job_match_teaser_card.dart';
 import 'journey_timeline_card.dart';
+import 'profile_completion_banner.dart';
 import 'today_mission_card.dart';
 import 'upcoming_interview_card.dart';
 import 'weekly_activity_strip.dart';
@@ -30,6 +31,7 @@ class HomeDashboardScreen extends ConsumerWidget {
     required this.onOpenVoiceInterview,
     required this.onOpenPathway,
     required this.onOpenJobs,
+    required this.onOpenDetailedProfile,
     required this.onOpenNotifications,
     super.key,
   });
@@ -42,6 +44,10 @@ class HomeDashboardScreen extends ConsumerWidget {
   /// `jobsControllerProvider`'s already-loaded state rather than fetching
   /// a second time. See `JobMatchTeaserCard`'s own doc comment.
   final VoidCallback onOpenJobs;
+
+  /// Where the profile-completion banner routes on tap -- the detailed
+  /// profile screen. See `ProfileCompletionBanner`'s own doc comment.
+  final VoidCallback onOpenDetailedProfile;
 
   /// Home's only route to notifications now that it has no shell AppBar --
   /// see `MainNavigationShell`'s doc comment. Surfaced from `HomeHeader`.
@@ -86,6 +92,7 @@ class HomeDashboardScreen extends ConsumerWidget {
           onOpenVoiceInterview: onOpenVoiceInterview,
           onOpenPathway: onOpenPathway,
           onOpenJobs: onOpenJobs,
+          onOpenDetailedProfile: onOpenDetailedProfile,
           onOpenNotifications: openNotifications,
           onRefresh: () =>
               ref.read(homeDashboardControllerProvider.notifier).refresh(),
@@ -102,6 +109,7 @@ class _HomeContent extends StatelessWidget {
     required this.onOpenVoiceInterview,
     required this.onOpenPathway,
     required this.onOpenJobs,
+    required this.onOpenDetailedProfile,
     required this.onOpenNotifications,
     required this.onRefresh,
   });
@@ -111,6 +119,7 @@ class _HomeContent extends StatelessWidget {
   final VoidCallback onOpenVoiceInterview;
   final VoidCallback onOpenPathway;
   final VoidCallback onOpenJobs;
+  final VoidCallback onOpenDetailedProfile;
   final VoidCallback onOpenNotifications;
   final Future<void> Function() onRefresh;
 
@@ -224,7 +233,7 @@ class _HomeContent extends StatelessWidget {
                 // UpcomingInterviewCard is already showing its own "Prepare"
                 // button above, this row would just be a second way to say
                 // the same thing, so it only appears when that card doesn't.
-                if (interview == null)
+                if (interview == null) ...[
                   _ShortcutRow(
                     icon: Icons.mic_none_outlined,
                     iconBackground: AppColors.infoSoft,
@@ -233,6 +242,15 @@ class _HomeContent extends StatelessWidget {
                     subtitle: l10n.homeInterviewPracticeSubtitle,
                     onTap: onOpenVoiceInterview,
                   ),
+                  const SizedBox(height: AppSpacing.sm),
+                ],
+
+                // Last on the page, not first: this is a nudge toward
+                // finishing setup, not the day's most urgent task -- it
+                // stays out of the way of the mission/journey/jobs content
+                // above, and disappears entirely once the profile is
+                // complete (see ProfileCompletionBanner's own doc comment).
+                ProfileCompletionBanner(onTap: onOpenDetailedProfile),
               ],
             ),
           ),

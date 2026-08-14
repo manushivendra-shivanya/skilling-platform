@@ -480,6 +480,8 @@ GoRouter createAppRouter({
                       context.push(voiceInterviewRoutePath),
                   onOpenPathway: () => context.go(learnRoutePath),
                   onOpenJobs: () => context.go(jobsRoutePath),
+                  onOpenDetailedProfile: () =>
+                      context.push(detailedProfileRoutePath),
                   onOpenNotifications: () =>
                       context.push(notificationsRoutePath),
                 ),

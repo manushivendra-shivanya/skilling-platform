@@ -57,6 +57,8 @@
   "homeJobMatchTeaserLabel": "Aapke liye best match",
   "homeJobMatchTeaserPercent": "{percent}% match",
 
+  "homeProfileCompletionTitle": "Apni profile poori karein",
+
   "homeSyncBanner": "{count, plural, one{{count} item} other{{count} items}} sync hone ke liye baaki.",
 
   "actionView": "Dekhein",
