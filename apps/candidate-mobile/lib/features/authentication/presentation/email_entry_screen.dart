@@ -5,10 +5,12 @@ import '../../../app/dependencies.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_icons.dart';
 import '../../../app/theme/app_spacing.dart';
+import '../../../core/errors/app_failure_localization.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_progress.dart';
 import '../../../core/widgets/app_text_field.dart';
+import '../../../l10n/generated/app_localizations.dart';
 import '../../onboarding/presentation/pre_onboarding_step_chrome.dart';
 import 'development_auth_controller.dart';
 
@@ -41,13 +43,14 @@ class _EmailEntryScreenState extends ConsumerState<EmailEntryScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final authState = ref.watch(developmentAuthControllerProvider);
     final isRealBackend = ref.watch(
       appConfigProvider.select((config) => config.hasSupabaseConfiguration),
     );
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Email sign-in')),
+      appBar: AppBar(title: Text(l10n.emailEntryAppBarTitle)),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(AppSpacing.xl),
@@ -62,8 +65,11 @@ class _EmailEntryScreenState extends ConsumerState<EmailEntryScreen> {
               // `PreOnboardingProgress`'s doc comment.
               AppProgress(
                 value: 3 / PreOnboardingProgress.emailPathSteps,
-                label: 'Getting started',
-                detail: 'Step 3 of ${PreOnboardingProgress.emailPathSteps}',
+                label: l10n.onboardingGettingStartedLabel,
+                detail: l10n.homeMissionStep(
+                  3,
+                  PreOnboardingProgress.emailPathSteps,
+                ),
               ),
               const SizedBox(height: AppSpacing.lg),
               const Icon(
@@ -73,15 +79,15 @@ class _EmailEntryScreenState extends ConsumerState<EmailEntryScreen> {
               ),
               const SizedBox(height: AppSpacing.lg),
               Text(
-                'Enter your email address',
+                l10n.emailEntryHeadline,
                 style: Theme.of(context).textTheme.headlineSmall,
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: AppSpacing.sm),
               Text(
                 isRealBackend
-                    ? 'We will email a one-time code to verify this address.'
-                    : 'We will use this only to demonstrate the development OTP flow.',
+                    ? l10n.emailEntryRealBackendSubtitle
+                    : l10n.emailEntryDevSubtitle,
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
@@ -89,54 +95,42 @@ class _EmailEntryScreenState extends ConsumerState<EmailEntryScreen> {
               ),
               const SizedBox(height: AppSpacing.xl),
               if (isRealBackend)
-                const AppCard(
-                  semanticLabel:
-                      'Email sign-in requires mail delivery to be enabled on '
-                      'the backend. If no code arrives, use Google sign-in '
-                      'instead.',
+                AppCard(
+                  semanticLabel: l10n.emailEntryRealBackendCardSemantic,
                   backgroundColor: AppColors.infoSoft,
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(AppIcons.info, color: AppColors.info),
-                      SizedBox(width: AppSpacing.sm),
-                      Expanded(
-                        child: Text(
-                          'If your code never arrives, go back and use Google sign-in instead.',
-                        ),
-                      ),
+                      const Icon(AppIcons.info, color: AppColors.info),
+                      const SizedBox(width: AppSpacing.sm),
+                      Expanded(child: Text(l10n.emailEntryRealBackendCardText)),
                     ],
                   ),
                 )
               else
-                const AppCard(
-                  semanticLabel:
-                      'Development mode. No email is sent and no production authentication service is connected.',
+                AppCard(
+                  semanticLabel: l10n.emailEntryDevCardSemantic,
                   backgroundColor: AppColors.infoSoft,
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(AppIcons.info, color: AppColors.info),
-                      SizedBox(width: AppSpacing.sm),
-                      Expanded(
-                        child: Text(
-                          'Development mode: no email is sent. This flow works without a network connection.',
-                        ),
-                      ),
+                      const Icon(AppIcons.info, color: AppColors.info),
+                      const SizedBox(width: AppSpacing.sm),
+                      Expanded(child: Text(l10n.emailEntryDevCardText)),
                     ],
                   ),
                 ),
               const SizedBox(height: AppSpacing.xl),
               AppTextField(
-                label: 'Email address',
+                label: l10n.emailEntryFieldLabel,
                 controller: _emailController,
-                hint: 'name@example.com',
-                errorText: authState.failure?.message,
+                hint: l10n.emailEntryFieldHint,
+                errorText: authState.failure?.localizedMessage(l10n),
                 keyboardType: TextInputType.emailAddress,
                 textInputAction: TextInputAction.done,
                 leadingIcon: Icons.email_outlined,
                 enabled: !authState.isRequesting,
-                semanticLabel: 'Email address',
+                semanticLabel: l10n.emailEntryFieldLabel,
                 // The failure only cleared when the next request started, so
                 // a validation error stayed on screen while the candidate
                 // corrected the address -- making a now-valid address look
@@ -156,7 +150,9 @@ class _EmailEntryScreenState extends ConsumerState<EmailEntryScreen> {
                 // isRealBackend; this one did not, so a build wired to a
                 // real Supabase project told the candidate it was sending
                 // a "development code" while sending them a real one.
-                label: isRealBackend ? 'Send code' : 'Send development code',
+                label: isRealBackend
+                    ? l10n.emailEntrySendCodeButton
+                    : l10n.emailEntrySendDevCodeButton,
                 isLoading: authState.isRequesting,
                 onPressed: _requestOtp,
               ),
@@ -168,11 +164,8 @@ class _EmailEntryScreenState extends ConsumerState<EmailEntryScreen> {
                 // code by email. Consent copy has to describe what the
                 // build actually does.
                 isRealBackend
-                    ? 'Your email is sent to our servers to send you a '
-                          'one-time code, and is used to create or resume '
-                          'your profile.'
-                    : 'Your email is kept only in memory for this mock '
-                          'sign-in and is not sent to a server.',
+                    ? l10n.emailEntryConsentReal
+                    : l10n.emailEntryConsentDev,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),

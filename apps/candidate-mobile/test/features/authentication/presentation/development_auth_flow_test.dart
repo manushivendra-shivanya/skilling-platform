@@ -40,7 +40,12 @@ void main() {
     );
     await tester.tap(find.text('Verify and continue'));
     await tester.pump();
-    expect(find.textContaining('code is incorrect'), findsWidgets);
+    // Not the mock repository's own internal message ("That code is
+    // incorrect...") -- the OTP field's errorText now goes through
+    // AppFailureLocalization like every other error surface in the app, so
+    // this AuthenticationFailure shows its one generic, localized sentence
+    // instead of the raw internal text.
+    expect(find.text('Please sign in again to continue.'), findsWidgets);
 
     await tester.enterText(
       find.bySemanticsLabel('Six digit one time password'),
@@ -117,7 +122,12 @@ void main() {
     await tester.ensureVisible(find.text('Send development code'));
     await tester.tap(find.text('Send development code'));
     await tester.pump();
-    expect(find.textContaining('valid email'), findsOneWidget);
+    // Not the mock repository's own internal message ("Enter a valid
+    // email address.") -- see the OTP-failure assertion above for why.
+    expect(
+      find.text('That doesn\'t look right. Please check and try again.'),
+      findsOneWidget,
+    );
 
     await tester.enterText(
       find.bySemanticsLabel('Email address'),
