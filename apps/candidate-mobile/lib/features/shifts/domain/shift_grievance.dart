@@ -32,16 +32,10 @@ enum ShiftGrievanceCategory {
     _ => other,
   };
 
-  String get displayLabel => switch (this) {
-    attendanceMismatch => 'Attendance mismatch',
-    payoutMismatch => 'Payout mismatch',
-    unsafeWork => 'Unsafe work',
-    supervisorIssue => 'Supervisor issue',
-    unpaidOvertime => 'Unpaid overtime',
-    cancellationIssue => 'Cancellation issue',
-    harassmentSafety => 'Harassment or safety',
-    other => 'Other',
-  };
+  // No `displayLabel` here -- this is domain-layer, English-only by
+  // convention, and has no `BuildContext` to localize with. The
+  // presentation-layer `_categoryLabel` in shift_grievance_screen.dart maps
+  // this enum to a localized string instead.
 }
 
 enum ShiftGrievanceStatus {

@@ -80,7 +80,14 @@ void main() {
     await tester.tap(find.text('Save availability'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Could not save your availability.'), findsOneWidget);
+    // Not the raw 'Could not save your availability.' internal message:
+    // AppFailure's own `message` is English-only developer/log text -- the
+    // screen shows a localized, generic message keyed off the failure's
+    // type instead.
+    expect(
+      find.text('Something went wrong saving this on your device.'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('a load failure shows the error state with retry', (

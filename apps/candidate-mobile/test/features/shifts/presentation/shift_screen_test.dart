@@ -8,6 +8,8 @@ import 'package:candidate_mobile/features/certification_exam/domain/certificatio
 import 'package:candidate_mobile/features/certification_exam/domain/certification_exam_repository.dart';
 import 'package:candidate_mobile/features/shifts/domain/shifts_repository.dart';
 import 'package:candidate_mobile/features/shifts/presentation/shift_screen.dart';
+import 'package:candidate_mobile/l10n/generated/app_localizations.dart';
+import 'package:candidate_mobile/l10n/generated/app_localizations_en.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -132,17 +134,25 @@ void main() {
     await tester.tap(find.text('Accept shift'));
     await tester.pumpAndSettle();
 
-    expect(find.text('This shift just filled up.'), findsOneWidget);
+    // Not the raw 'This shift just filled up.' internal message: AppFailure's
+    // own `message` is English-only developer/log text -- the screen shows
+    // a localized, generic message keyed off the failure's type instead.
+    expect(
+      find.text("That doesn't look right. Please check and try again."),
+      findsOneWidget,
+    );
     expect(find.text('Accept shift'), findsOneWidget);
   });
 
   group('shiftUrgencyLabel', () {
     final reference = DateTime(2026, 8, 12, 12);
+    final l10n = AppLocalizationsEn();
 
     test('is null once the shift has already started', () {
       expect(
         shiftUrgencyLabel(
           reference.subtract(const Duration(minutes: 1)),
+          l10n: l10n,
           now: reference,
         ),
         isNull,
@@ -153,6 +163,7 @@ void main() {
       expect(
         shiftUrgencyLabel(
           reference.add(const Duration(hours: 6, minutes: 1)),
+          l10n: l10n,
           now: reference,
         ),
         isNull,
@@ -163,6 +174,7 @@ void main() {
       expect(
         shiftUrgencyLabel(
           reference.add(const Duration(hours: 2, minutes: 30)),
+          l10n: l10n,
           now: reference,
         ),
         'Starts in 2h 30m',
@@ -173,6 +185,7 @@ void main() {
       expect(
         shiftUrgencyLabel(
           reference.add(const Duration(hours: 3)),
+          l10n: l10n,
           now: reference,
         ),
         'Starts in 3h',
@@ -183,6 +196,7 @@ void main() {
       expect(
         shiftUrgencyLabel(
           reference.add(const Duration(minutes: 45)),
+          l10n: l10n,
           now: reference,
         ),
         'Starts in 45m',
@@ -193,6 +207,7 @@ void main() {
       expect(
         shiftUrgencyLabel(
           reference.add(const Duration(hours: 1)),
+          l10n: l10n,
           now: reference,
           window: const Duration(minutes: 30),
         ),
@@ -308,6 +323,8 @@ void main() {
         container: container,
         child: MaterialApp(
           theme: buildAppTheme(),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(
             body: ShiftScreen(
               onOpenAvailability: () => availabilityOpened = true,
@@ -435,6 +452,8 @@ Widget _app(ProviderContainer container, {VoidCallback? onOpenSkillGap}) =>
       container: container,
       child: MaterialApp(
         theme: buildAppTheme(),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(
           body: ShiftScreen(
             onOpenAvailability: () {},

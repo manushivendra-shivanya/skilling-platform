@@ -78,5 +78,183 @@
   "languagePickerTitle": "अपनी भाषा चुनें",
   "languageEnglish": "English",
   "languageHindi": "हिंदी",
-  "languageHinglish": "Hinglish"
+  "languageHinglish": "Hinglish",
+
+  "shiftStatusAccepted": "स्वीकृत",
+  "shiftStatusConfirmed": "पुष्ट",
+  "shiftStatusCheckedIn": "चेक-इन हुआ",
+  "shiftStatusCompleted": "पूरा हुआ",
+  "shiftStatusNoShow": "नहीं आए",
+  "shiftStatusCancelled": "रद्द",
+  "shiftStatusDisputed": "विवादित",
+
+  "shiftLoadErrorTitle": "शिफ्ट लोड नहीं हो सकीं",
+  "shiftLoadErrorFallback": "शिफ्ट फ़िलहाल उपलब्ध नहीं हैं।",
+
+  "shiftStartsInHoursMinutes": "{hours} घंटे {minutes} मिनट में शुरू",
+  "shiftStartsInHours": "{hours} घंटे में शुरू",
+  "shiftStartsInMinutes": "{minutes} मिनट में शुरू",
+
+  "shiftHeadline": "मेरी शिफ्ट",
+  "shiftCountNearYou": "आज आपके पास {count, plural, one{{count} शिफ्ट} other{{count} शिफ्ट}}",
+  "shiftDemoDataCaption": "डेमो शिफ्ट • कोई लाइव नियोक्ता कनेक्शन नहीं",
+
+  "shiftShortcutAvailability": "उपलब्धता",
+  "shiftShortcutMyShifts": "मेरी शिफ्ट",
+  "shiftShortcutPayouts": "भुगतान",
+  "shiftShortcutSupport": "सहायता",
+
+  "shiftEmptyTitle": "अभी कोई शिफ्ट नहीं",
+  "shiftEmptyMessage": "जल्द वापस देखें, या अपनी उपलब्धता सेट करें ताकि Flora को पता हो कि आप कब काम कर सकते हैं।",
+
+  "shiftCardSemanticLabel": "{siteName} पर {roleTitle} खोलें",
+
+  "shiftBestMatchLabel": "सबसे उपयुक्त",
+  "shiftStartsSoonLabel": "जल्द शुरू होंगी",
+
+  "shiftMatchPercent": "आपका मेल: {percent}%",
+  "shiftSkillsNeeded": "कौशल चाहिए",
+
+  "shiftEstimatedLabel": "अनुमानित",
+
+  "shiftListDisclaimer": "Flora इन शिफ्ट को सुविधाजनक बनाता है। अंतिम उपस्थिति और भुगतान स्वीकृति कंपनी की शिफ्ट नीति के अनुसार होती है।",
+  "shiftDetailsDisclaimer": "Flora इस शिफ्ट को सुविधाजनक बना रहा है। अंतिम उपस्थिति और भुगतान स्वीकृति कंपनी की शिफ्ट नीति के अनुसार होती है।",
+
+  "shiftAcceptFooterLabel": "शिफ्ट स्वीकार करें · ₹{amount}",
+  "shiftAcceptFooterSemantic": "{roleTitle} शिफ्ट ₹{amount} में स्वीकार करें",
+
+  "shiftDetailShiftLabel": "शिफ्ट",
+  "shiftDetailEndsAt": "समाप्ति {time}",
+  "shiftDetailPayLabel": "भुगतान",
+  "shiftDetailPayValue": "{amount} {currency} (अनुमानित)",
+  "shiftDetailAboutLabel": "इस शिफ्ट के बारे में",
+  "shiftDetailSupervisorLabel": "सुपरवाइज़र",
+  "shiftDetailCancellationPolicyLabel": "रद्द करने की नीति",
+
+  "shiftDetailAlreadyApplied": "आप इस शिफ्ट को पहले ही {status} कर चुके हैं। चेक-इन या चेक-आउट के लिए \"मेरी शिफ्ट\" खोलें।",
+
+  "shiftDetailBeforeAcceptingLabel": "इस शिफ्ट को स्वीकार करने से पहले",
+  "shiftDetailCompleteRequirement": "पूरा करें: {competencies}",
+  "shiftDetailCompleteSkillButton": "आवश्यक कौशल पूरा करें",
+
+  "shiftDetailAcceptingLabel": "स्वीकार हो रहा है…",
+  "shiftDetailAcceptButton": "शिफ्ट स्वीकार करें",
+  "shiftAcceptedSnackbar": "शिफ्ट स्वीकार हो गई।",
+
+  "myShiftsTitle": "मेरी शिफ्ट",
+
+  "myShiftsLoadingLabel": "आपकी शिफ्ट लोड हो रही हैं…",
+  "myShiftsLoadErrorTitle": "आपकी शिफ्ट लोड नहीं हो सकीं",
+  "myShiftsLoadErrorFallback": "आपकी शिफ्ट फ़िलहाल उपलब्ध नहीं हैं।",
+
+  "myShiftsEmptyTitle": "अभी कोई शिफ्ट नहीं",
+  "myShiftsEmptyMessage": "यहां देखने के लिए Shift टैब से एक शिफ्ट स्वीकार करें।",
+
+  "myShiftsCountInProgress": "{count, plural, one{{count} शिफ्ट जारी} other{{count} शिफ्ट जारी}}",
+
+  "myShiftsDetailsUnavailable": "शिफ्ट का विवरण उपलब्ध नहीं",
+
+  "myShiftsCheckInCodeLabel": "चेक-इन कोड",
+  "myShiftsCheckInCodeHint": "आपके सुपरवाइज़र से",
+
+  "myShiftsCheckingInLabel": "चेक-इन हो रहा है…",
+  "myShiftsCheckInButton": "चेक-इन करें",
+  "myShiftsCheckingOutLabel": "चेक-आउट हो रहा है…",
+  "myShiftsCheckOutButton": "चेक-आउट करें",
+
+  "myShiftsCompletedNote": "शिफ्ट पूरी हुई। भुगतान की स्थिति Payouts में उपलब्ध है।",
+
+  "myShiftsEnterCodeValidation": "चेक-इन कोड डालें।",
+  "myShiftsCheckedInSnackbar": "चेक-इन हो गया।",
+  "myShiftsCheckedOutSnackbar": "चेक-आउट हो गया। आपका भुगतान अब स्वीकृति की प्रतीक्षा में है।",
+
+  "myShiftsTerminalNoShow": "नहीं आए के रूप में चिह्नित।",
+  "myShiftsTerminalCancelled": "रद्द कर दी गई।",
+  "myShiftsTerminalDisputed": "विवाद में है।",
+
+  "availabilityTitle": "उपलब्धता",
+
+  "availabilityLoadingLabel": "आपकी उपलब्धता लोड हो रही है…",
+  "availabilityLoadErrorTitle": "उपलब्धता लोड नहीं हो सकी",
+  "availabilityLoadErrorFallback": "उपलब्धता फ़िलहाल उपलब्ध नहीं है।",
+
+  "availabilityHeadline": "Flora को बताएं कि आप कब काम कर सकते हैं",
+  "availabilitySubtitle": "इसका उपयोग आपको सही शिफ्ट से जोड़ने के लिए होता है। आप इसे कभी भी बदल सकते हैं।",
+
+  "availabilityWorkTodayLabel": "मैं आज काम कर सकता/सकती हूं",
+
+  "availabilityFromLabel": "कब से उपलब्ध",
+  "availabilityUntilLabel": "कब तक उपलब्ध",
+  "availabilityTimeHelper": "24-घंटे, HH:mm",
+
+  "availabilityCityLabel": "पसंदीदा शहर",
+  "availabilityCityHint": "बेंगलुरु",
+  "availabilityTravelLabel": "अधिकतम यात्रा दूरी (किमी)",
+  "availabilityMinPayLabel": "न्यूनतम भुगतान (₹)",
+
+  "availabilitySavingLabel": "सेव हो रहा है…",
+  "availabilitySaveButton": "उपलब्धता सेव करें",
+  "availabilitySavedSnackbar": "उपलब्धता सेव हो गई।",
+
+  "grievanceTitle": "सहायता",
+
+  "grievanceLoadingLabel": "आपकी टिकटें लोड हो रही हैं…",
+  "grievanceLoadErrorTitle": "सहायता टिकटें लोड नहीं हो सकीं",
+  "grievanceLoadErrorFallback": "सहायता टिकटें फ़िलहाल उपलब्ध नहीं हैं।",
+
+  "grievanceCountFiled": "{count, plural, one{{count} टिकट दर्ज} other{{count} टिकट दर्ज}}",
+
+  "grievanceRaiseTicketLabel": "टिकट दर्ज करें",
+  "grievanceCategoryLabel": "श्रेणी",
+  "grievanceWhatHappenedLabel": "क्या हुआ?",
+  "grievanceYourTicketsLabel": "आपकी टिकटें",
+
+  "grievanceEmptyTitle": "अभी कोई टिकट नहीं",
+  "grievanceEmptyMessage": "शिफ्ट से जुड़ी कोई भी बात यहां दिखेगी।",
+
+  "grievanceResolutionPrefix": "समाधान: {notes}",
+
+  "grievanceSubmittingLabel": "जमा हो रहा है…",
+  "grievanceSubmitButton": "टिकट जमा करें",
+  "grievanceDescribeValidation": "क्या हुआ यह बताएं।",
+  "grievanceSubmittedSnackbar": "टिकट जमा हो गया।",
+
+  "grievanceStatusOpen": "खुली",
+  "grievanceStatusInReview": "समीक्षा में",
+  "grievanceStatusResolved": "सुलझी",
+  "grievanceStatusClosed": "बंद",
+
+  "grievanceCategoryAttendanceMismatch": "उपस्थिति में गड़बड़ी",
+  "grievanceCategoryPayoutMismatch": "भुगतान में गड़बड़ी",
+  "grievanceCategoryUnsafeWork": "असुरक्षित काम",
+  "grievanceCategorySupervisorIssue": "सुपरवाइज़र से जुड़ी समस्या",
+  "grievanceCategoryUnpaidOvertime": "बिना भुगतान ओवरटाइम",
+  "grievanceCategoryCancellationIssue": "रद्द करने की समस्या",
+  "grievanceCategoryHarassmentSafety": "उत्पीड़न या सुरक्षा",
+  "grievanceCategoryOther": "अन्य",
+
+  "payoutsTitle": "भुगतान",
+
+  "payoutsLoadingLabel": "आपके भुगतान लोड हो रहे हैं…",
+  "payoutsLoadErrorTitle": "भुगतान लोड नहीं हो सके",
+  "payoutsLoadErrorFallback": "भुगतान फ़िलहाल उपलब्ध नहीं हैं।",
+
+  "payoutsEmptyTitle": "अभी कोई भुगतान नहीं",
+  "payoutsEmptyMessage": "शिफ्ट से चेक-आउट करने के बाद भुगतान यहां दिखेंगे।",
+
+  "payoutsCount": "{count, plural, one{{count} भुगतान} other{{count} भुगतान}}",
+
+  "payoutsDisclaimer": "यह एक स्थिति-सूची है, वॉलेट नहीं -- Flora अभी सीधे पैसे नहीं भेजता। स्वीकृत भुगतान कंपनी अपनी भुगतान नीति के अनुसार जारी करती है।",
+
+  "payoutsBasePayLabel": "मूल वेतन: ₹{amount}",
+  "payoutsBonusLabel": "बोनस: ₹{amount}",
+  "payoutsDeductionsLabel": "कटौती: ₹{amount}",
+  "payoutsExpectedLabel": "अपेक्षित: {date}",
+
+  "payoutStatusPendingApproval": "स्वीकृति लंबित",
+  "payoutStatusApproved": "स्वीकृत",
+  "payoutStatusProcessing": "प्रक्रिया में",
+  "payoutStatusPaid": "भुगतान हो गया",
+  "payoutStatusFailed": "विफल",
+  "payoutStatusDisputed": "विवादित"
 }

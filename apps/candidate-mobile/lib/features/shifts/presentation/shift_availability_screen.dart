@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../core/errors/app_failure.dart';
+import '../../../core/errors/app_failure_localization.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_feedback.dart';
@@ -11,6 +12,7 @@ import '../../../core/widgets/app_loading_progress.dart';
 import '../../../core/widgets/app_state_view.dart';
 import '../../../core/widgets/app_sticky_footer.dart';
 import '../../../core/widgets/app_text_field.dart';
+import '../../../l10n/generated/app_localizations.dart';
 import '../domain/shift_availability.dart';
 import 'shift_availability_controller.dart';
 
@@ -20,18 +22,19 @@ class ShiftAvailabilityScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(shiftAvailabilityControllerProvider);
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('Availability')),
+      appBar: AppBar(title: Text(l10n.availabilityTitle)),
       body: SafeArea(
         child: state.when(
-          loading: () => const Center(
-            child: AppLoadingProgressBar(label: 'Loading your availability…'),
+          loading: () => Center(
+            child: AppLoadingProgressBar(label: l10n.availabilityLoadingLabel),
           ),
           error: (error, stackTrace) => AppErrorState(
-            title: 'Availability could not be loaded',
+            title: l10n.availabilityLoadErrorTitle,
             message: error is AppFailure
-                ? error.message
-                : 'Availability is temporarily unavailable.',
+                ? error.localizedMessage(l10n)
+                : l10n.availabilityLoadErrorFallback,
             onAction: () => ref.invalidate(shiftAvailabilityControllerProvider),
           ),
           data: (value) => _AvailabilityForm(initial: value),
@@ -92,6 +95,7 @@ class _AvailabilityFormState extends ConsumerState<_AvailabilityForm> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Column(
       children: [
         Expanded(
@@ -101,13 +105,13 @@ class _AvailabilityFormState extends ConsumerState<_AvailabilityForm> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(
-                  'Tell Flora when you can work',
+                  l10n.availabilityHeadline,
                   style: Theme.of(context).textTheme.headlineSmall,
                 ),
                 const SizedBox(height: AppSpacing.xs),
-                const Text(
-                  'Used to match and nudge you toward relevant shifts. You can change this any time.',
-                  style: TextStyle(color: AppColors.inkMuted),
+                Text(
+                  l10n.availabilitySubtitle,
+                  style: const TextStyle(color: AppColors.inkMuted),
                 ),
                 const SizedBox(height: AppSpacing.xl),
                 AppCard(
@@ -119,27 +123,27 @@ class _AvailabilityFormState extends ConsumerState<_AvailabilityForm> {
                         value: _availableToday,
                         onChanged: (value) =>
                             setState(() => _availableToday = value),
-                        title: const Text('I can work today'),
+                        title: Text(l10n.availabilityWorkTodayLabel),
                       ),
                       const SizedBox(height: AppSpacing.md),
                       Row(
                         children: [
                           Expanded(
                             child: AppTextField(
-                              label: 'Available from',
+                              label: l10n.availabilityFromLabel,
                               controller: _fromController,
                               hint: '16:00',
-                              helperText: '24-hour, HH:mm',
+                              helperText: l10n.availabilityTimeHelper,
                               keyboardType: TextInputType.datetime,
                             ),
                           ),
                           const SizedBox(width: AppSpacing.md),
                           Expanded(
                             child: AppTextField(
-                              label: 'Available until',
+                              label: l10n.availabilityUntilLabel,
                               controller: _untilController,
                               hint: '22:00',
-                              helperText: '24-hour, HH:mm',
+                              helperText: l10n.availabilityTimeHelper,
                               keyboardType: TextInputType.datetime,
                             ),
                           ),
@@ -154,20 +158,20 @@ class _AvailabilityFormState extends ConsumerState<_AvailabilityForm> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       AppTextField(
-                        label: 'Preferred city',
+                        label: l10n.availabilityCityLabel,
                         controller: _cityController,
-                        hint: 'Bengaluru',
+                        hint: l10n.availabilityCityHint,
                       ),
                       const SizedBox(height: AppSpacing.md),
                       AppTextField(
-                        label: 'Maximum travel distance (km)',
+                        label: l10n.availabilityTravelLabel,
                         controller: _travelController,
                         hint: '8',
                         keyboardType: TextInputType.number,
                       ),
                       const SizedBox(height: AppSpacing.md),
                       AppTextField(
-                        label: 'Minimum pay (₹)',
+                        label: l10n.availabilityMinPayLabel,
                         controller: _minPayController,
                         hint: '500',
                         keyboardType: TextInputType.number,
@@ -181,7 +185,9 @@ class _AvailabilityFormState extends ConsumerState<_AvailabilityForm> {
         ),
         AppStickyFooter(
           child: AppButton(
-            label: _saving ? 'Saving…' : 'Save availability',
+            label: _saving
+                ? l10n.availabilitySavingLabel
+                : l10n.availabilitySaveButton,
             isLoading: _saving,
             onPressed: _save,
           ),
@@ -210,10 +216,12 @@ class _AvailabilityFormState extends ConsumerState<_AvailabilityForm> {
         .read(shiftAvailabilityControllerProvider.notifier)
         .save(availability);
     if (!mounted) return;
+    final l10n = AppLocalizations.of(context);
     setState(() => _saving = false);
     showAppSnackBar(
       context: context,
-      message: failure?.message ?? 'Availability saved.',
+      message:
+          failure?.localizedMessage(l10n) ?? l10n.availabilitySavedSnackbar,
       tone: failure == null ? AppMessageTone.success : AppMessageTone.error,
     );
   }

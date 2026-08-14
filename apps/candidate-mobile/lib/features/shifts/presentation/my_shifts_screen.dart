@@ -5,12 +5,14 @@ import 'package:intl/intl.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../core/errors/app_failure.dart';
+import '../../../core/errors/app_failure_localization.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_feedback.dart';
 import '../../../core/widgets/app_loading_progress.dart';
 import '../../../core/widgets/app_state_view.dart';
 import '../../../core/widgets/app_text_field.dart';
+import '../../../l10n/generated/app_localizations.dart';
 import '../domain/shifts_repository.dart';
 import 'shifts_controller.dart';
 
@@ -20,18 +22,19 @@ class MyShiftsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(shiftsControllerProvider);
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('My shifts')),
+      appBar: AppBar(title: Text(l10n.myShiftsTitle)),
       body: SafeArea(
         child: state.when(
-          loading: () => const Center(
-            child: AppLoadingProgressBar(label: 'Loading your shifts…'),
+          loading: () => Center(
+            child: AppLoadingProgressBar(label: l10n.myShiftsLoadingLabel),
           ),
           error: (error, stackTrace) => AppErrorState(
-            title: 'Your shifts could not be loaded',
+            title: l10n.myShiftsLoadErrorTitle,
             message: error is AppFailure
-                ? error.message
-                : 'Your shifts are temporarily unavailable.',
+                ? error.localizedMessage(l10n)
+                : l10n.myShiftsLoadErrorFallback,
             onAction: () => ref.read(shiftsControllerProvider.notifier).retry(),
           ),
           data: (value) => _MyShiftsContent(state: value),
@@ -48,10 +51,11 @@ class _MyShiftsContent extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
     if (state.myApplications.isEmpty) {
-      return const AppEmptyState(
-        title: 'No shifts yet',
-        message: 'Accept a shift from the Shift tab to see it here.',
+      return AppEmptyState(
+        title: l10n.myShiftsEmptyTitle,
+        message: l10n.myShiftsEmptyMessage,
       );
     }
     final shiftCount = state.myApplications.length;
@@ -63,10 +67,13 @@ class _MyShiftsContent extends ConsumerWidget {
         AppSpacing.xl,
       ),
       children: [
-        Text('My shifts', style: Theme.of(context).textTheme.headlineSmall),
+        Text(
+          l10n.myShiftsTitle,
+          style: Theme.of(context).textTheme.headlineSmall,
+        ),
         const SizedBox(height: AppSpacing.xs),
         Text(
-          '$shiftCount shift${shiftCount == 1 ? '' : 's'} in progress',
+          l10n.myShiftsCountInProgress(shiftCount),
           style: const TextStyle(color: AppColors.inkMuted),
         ),
         const SizedBox(height: AppSpacing.md),
@@ -112,6 +119,7 @@ class _MyShiftCardState extends ConsumerState<_MyShiftCard> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final shift = widget.shift;
     final dateFormat = DateFormat('EEE, d MMM • h:mm a');
     return AppCard(
@@ -138,10 +146,13 @@ class _MyShiftCardState extends ConsumerState<_MyShiftCard> {
             const SizedBox(height: AppSpacing.xxs),
             Text(dateFormat.format(shift.startsAt)),
           ] else ...[
-            Text('Shift', style: Theme.of(context).textTheme.titleMedium),
+            Text(
+              l10n.shiftDetailShiftLabel,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
             const SizedBox(height: AppSpacing.xxs),
             Text(
-              'Shift details unavailable',
+              l10n.myShiftsDetailsUnavailable,
               style: Theme.of(
                 context,
               ).textTheme.labelSmall?.copyWith(color: AppColors.inkMuted),
@@ -162,37 +173,40 @@ class _MyShiftCardState extends ConsumerState<_MyShiftCard> {
               widget.application.status ==
                   ShiftApplicationStatus.confirmed) ...[
             AppTextField(
-              label: 'Check-in code',
+              label: l10n.myShiftsCheckInCodeLabel,
               controller: _codeController,
-              hint: 'From your supervisor',
+              hint: l10n.myShiftsCheckInCodeHint,
               keyboardType: TextInputType.number,
             ),
             const SizedBox(height: AppSpacing.sm),
             AppButton(
-              label: _busy ? 'Checking in…' : 'Check in',
+              label: _busy
+                  ? l10n.myShiftsCheckingInLabel
+                  : l10n.myShiftsCheckInButton,
               isLoading: _busy,
               onPressed: _checkIn,
             ),
           ] else if (widget.application.status ==
               ShiftApplicationStatus.checkedIn) ...[
             AppButton(
-              label: _busy ? 'Checking out…' : 'Check out',
+              label: _busy
+                  ? l10n.myShiftsCheckingOutLabel
+                  : l10n.myShiftsCheckOutButton,
               isLoading: _busy,
               onPressed: _checkOut,
             ),
           ] else if (widget.application.status ==
               ShiftApplicationStatus.completed)
-            const Text(
-              'Shift completed. Payout status is available under Payouts.',
-            ),
+            Text(l10n.myShiftsCompletedNote),
         ],
       ),
     );
   }
 
   Future<void> _checkIn() async {
+    final l10n = AppLocalizations.of(context);
     if (_codeController.text.trim().isEmpty) {
-      setState(() => _error = 'Enter the check-in code.');
+      setState(() => _error = l10n.myShiftsEnterCodeValidation);
       return;
     }
     setState(() {
@@ -207,11 +221,11 @@ class _MyShiftCardState extends ConsumerState<_MyShiftCard> {
     if (failure == null) {
       showAppSnackBar(
         context: context,
-        message: 'Checked in.',
+        message: l10n.myShiftsCheckedInSnackbar,
         tone: AppMessageTone.success,
       );
     } else {
-      setState(() => _error = failure.message);
+      setState(() => _error = failure.localizedMessage(l10n));
     }
   }
 
@@ -224,15 +238,16 @@ class _MyShiftCardState extends ConsumerState<_MyShiftCard> {
         .read(shiftsControllerProvider.notifier)
         .checkOut(widget.application.id);
     if (!mounted) return;
+    final l10n = AppLocalizations.of(context);
     setState(() => _busy = false);
     if (failure == null) {
       showAppSnackBar(
         context: context,
-        message: 'Checked out. Your payout is now pending approval.',
+        message: l10n.myShiftsCheckedOutSnackbar,
         tone: AppMessageTone.success,
       );
     } else {
-      setState(() => _error = failure.message);
+      setState(() => _error = failure.localizedMessage(l10n));
     }
   }
 }
@@ -242,7 +257,6 @@ const _stages = [
   ShiftApplicationStatus.checkedIn,
   ShiftApplicationStatus.completed,
 ];
-const _stageLabels = ['Accepted', 'Checked in', 'Completed'];
 
 /// A compact dot-and-line stepper, same visual language as
 /// `features/home/presentation/journey_step_card.dart`'s `_StepDot` --
@@ -255,17 +269,23 @@ class _StatusStepper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final isTerminalOther =
         status == ShiftApplicationStatus.noShow ||
         status == ShiftApplicationStatus.cancelled ||
         status == ShiftApplicationStatus.disputed;
     if (isTerminalOther) {
       return Text(
-        _terminalLabel(status),
+        _terminalLabel(status, l10n),
         style: const TextStyle(color: AppColors.error),
       );
     }
     final currentIndex = _stages.indexOf(status).clamp(0, _stages.length - 1);
+    final stageLabels = [
+      l10n.shiftStatusAccepted,
+      l10n.shiftStatusCheckedIn,
+      l10n.shiftStatusCompleted,
+    ];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -298,9 +318,9 @@ class _StatusStepper extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            for (var i = 0; i < _stageLabels.length; i++)
+            for (var i = 0; i < stageLabels.length; i++)
               Text(
-                _stageLabels[i],
+                stageLabels[i],
                 style: Theme.of(context).textTheme.labelSmall?.copyWith(
                   color: i == currentIndex ? AppColors.ink : AppColors.inkMuted,
                   fontWeight: i == currentIndex
@@ -314,10 +334,11 @@ class _StatusStepper extends StatelessWidget {
     );
   }
 
-  String _terminalLabel(ShiftApplicationStatus status) => switch (status) {
-    ShiftApplicationStatus.noShow => 'Marked as no-show.',
-    ShiftApplicationStatus.cancelled => 'Cancelled.',
-    ShiftApplicationStatus.disputed => 'Under dispute.',
-    _ => '',
-  };
+  String _terminalLabel(ShiftApplicationStatus status, AppLocalizations l10n) =>
+      switch (status) {
+        ShiftApplicationStatus.noShow => l10n.myShiftsTerminalNoShow,
+        ShiftApplicationStatus.cancelled => l10n.myShiftsTerminalCancelled,
+        ShiftApplicationStatus.disputed => l10n.myShiftsTerminalDisputed,
+        _ => '',
+      };
 }
