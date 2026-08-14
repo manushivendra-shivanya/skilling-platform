@@ -1,13 +1,19 @@
+// No `label` field on any of the enums below -- these are domain-layer,
+// English-only by convention, and have no `BuildContext` to localize with.
+// The presentation-layer `candidateGoalLabel`/`educationLevelLabel`/
+// `experienceLevelLabel`/`logisticsRoleLabel` in
+// candidate_onboarding_labels.dart map each enum to a localized string
+// instead (same pattern as `ShiftGrievanceCategory`'s own domain doc
+// comment).
 enum CandidateGoal {
-  findJob('find_job', 'Find a new job'),
-  buildSkills('build_skills', 'Build job-ready skills'),
-  growCareer('grow_career', 'Grow in my current career'),
-  buildPersona('build_persona', 'Build my professional profile');
+  findJob('find_job'),
+  buildSkills('build_skills'),
+  growCareer('grow_career'),
+  buildPersona('build_persona');
 
-  const CandidateGoal(this.id, this.label);
+  const CandidateGoal(this.id);
 
   final String id;
-  final String label;
 
   static CandidateGoal? fromId(Object? id) {
     for (final value in values) {
@@ -20,16 +26,15 @@ enum CandidateGoal {
 }
 
 enum EducationLevel {
-  belowTenth('below_tenth', 'Below Class 10'),
-  tenthPass('tenth_pass', 'Class 10 pass'),
-  twelfthPass('twelfth_pass', 'Class 12 pass'),
-  itiDiploma('iti_diploma', 'ITI or diploma'),
-  graduate('graduate', 'Graduate or above');
+  belowTenth('below_tenth'),
+  tenthPass('tenth_pass'),
+  twelfthPass('twelfth_pass'),
+  itiDiploma('iti_diploma'),
+  graduate('graduate');
 
-  const EducationLevel(this.id, this.label);
+  const EducationLevel(this.id);
 
   final String id;
-  final String label;
 
   static EducationLevel? fromId(Object? id) {
     for (final value in values) {
@@ -42,15 +47,14 @@ enum EducationLevel {
 }
 
 enum ExperienceLevel {
-  fresher('fresher', 'Fresher'),
-  underOneYear('under_one_year', 'Less than 1 year'),
-  oneToThreeYears('one_to_three_years', '1–3 years'),
-  overThreeYears('over_three_years', 'More than 3 years');
+  fresher('fresher'),
+  underOneYear('under_one_year'),
+  oneToThreeYears('one_to_three_years'),
+  overThreeYears('over_three_years');
 
-  const ExperienceLevel(this.id, this.label);
+  const ExperienceLevel(this.id);
 
   final String id;
-  final String label;
 
   static ExperienceLevel? fromId(Object? id) {
     for (final value in values) {
@@ -76,24 +80,15 @@ enum RoleLevel {
 }
 
 enum LogisticsRole {
-  warehouseAssociate(
-    'warehouse_associate',
-    'Warehouse Operations Associate',
-    RoleLevel.l1,
-  ),
-  inventoryExecutive(
-    'inventory_executive',
-    'Inventory Executive',
-    RoleLevel.l1,
-  ),
-  dispatchExecutive('dispatch_executive', 'Dispatch Executive', RoleLevel.l1),
-  hubSupervisor('hub_supervisor', 'Hub Supervisor', RoleLevel.supervisor),
-  shiftSupervisor('shift_supervisor', 'Shift Supervisor', RoleLevel.supervisor);
+  warehouseAssociate('warehouse_associate', RoleLevel.l1),
+  inventoryExecutive('inventory_executive', RoleLevel.l1),
+  dispatchExecutive('dispatch_executive', RoleLevel.l1),
+  hubSupervisor('hub_supervisor', RoleLevel.supervisor),
+  shiftSupervisor('shift_supervisor', RoleLevel.supervisor);
 
-  const LogisticsRole(this.id, this.label, this.level);
+  const LogisticsRole(this.id, this.level);
 
   final String id;
-  final String label;
   final RoleLevel level;
 
   static LogisticsRole? fromId(Object? id) {
