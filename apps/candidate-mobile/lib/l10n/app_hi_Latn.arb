@@ -421,5 +421,61 @@
   "practiceOptionNotSelected": "Selected nahi",
   "practiceOptionSemantic": "{label}. {state}",
 
-  "notEmployerEvidenceDefault": "Sirf practice feedback — abhi employer evidence nahi hai."
+  "notEmployerEvidenceDefault": "Sirf practice feedback — abhi employer evidence nahi hai.",
+
+  "clipsHeadline": "Warehouse process clips",
+  "clipsSubtitle": "10-second real-process clips: kya notice karein, kya decide karein, aur ek quick practice sawaal.",
+
+  "clipsLoadErrorTitle": "Clips load nahi ho sakin",
+  "clipsLoadErrorFallback": "Clip catalogue filhaal available nahi hai.",
+
+  "clipsEmptyTitle": "Abhi koi clip nahi",
+  "clipsEmptyMessage": "Publish hone par warehouse process clips yahan dikhengi.",
+
+  "clipDomainReceiving": "Receiving",
+  "clipDomainInspection": "Inspection",
+  "clipDomainPutAway": "Put-away",
+  "clipDomainProcessing": "Processing",
+  "clipDomainPicking": "Picking",
+  "clipDomainDispatch": "Dispatch",
+  "clipDomainDelivery": "Delivery",
+  "clipDomainSupervisor": "Supervisor / returns",
+  "clipDomainInventory": "Inventory",
+  "clipDomainSafety": "Safety",
+
+  "clipStatusDownloaded": "{duration}s · {processArea} · Downloaded",
+  "clipStatusDownloadedWatched": "{duration}s · {processArea} · Downloaded · Dekha gaya",
+  "clipStatusNoVideo": "Video abhi available nahi · {processArea}",
+
+  "clipPractiseSimulation": "{label} simulation practise karein",
+
+  "clipBackTooltip": "Back",
+
+  "clipSignInAgain": "Yeh attempt record karne ke liye dobara sign in karein.",
+
+  "clipNoVideoPlaceholder": "Abhi koi video nahi — text lesson taiyar hai",
+  "clipPlaybackFailed": "Playback fail: {error}",
+  "clipLoadingVideo": "Video load ho raha hai…",
+
+  "clipWhatToLookFor": "Kya notice karein",
+  "clipWhatToDecide": "Kya decide karein",
+  "clipLessonLabel": "Lesson",
+  "clipTranscriptLabel": "Transcript",
+
+  "clipStateFailedLabel": "Playback fail",
+  "clipStateNoVideoLabel": "Abhi koi video nahi • text lesson aur assessment taiyar hai",
+  "clipStateBundledLabel": "App ke saath bundled • offline kaam karta hai",
+  "clipStateStreamedLabel": "Streamed",
+
+  "assessmentTitle": "Assessment",
+
+  "assessmentRemainingLine": "Submit karna is clip ke liye aapke Career Passport evidence mein count hota hai -- {max} mein se {remaining} attempts baaki.",
+
+  "assessmentRecordedCorrect": "Record hua -- sahi jawab.",
+  "assessmentRecordedIncorrect": "Record hua -- galat jawab.",
+
+  "assessmentSubmittingLabel": "Submit ho raha hai...",
+  "assessmentSubmitFirstLabel": "Career Passport evidence ke liye submit karein",
+  "assessmentSubmitAnotherLabel": "Ek aur attempt submit karein",
+  "assessmentNoAttemptsRemaining": "Is clip ke liye koi attempt baaki nahi hai."
 }
