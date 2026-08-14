@@ -67,9 +67,39 @@ class HomeDashboard {
   /// states rather than a precise number: the spec forbids presenting a score
   /// with more confidence than the evidence behind it supports.
   ReadinessBand get readinessBand {
-    if (readinessProgress < 0.34) return ReadinessBand.starting;
-    if (readinessProgress < 0.75) return ReadinessBand.building;
+    if (readinessProgress < _buildingThreshold) return ReadinessBand.starting;
+    if (readinessProgress < _jobReadyThreshold) return ReadinessBand.building;
     return ReadinessBand.jobReady;
+  }
+
+  static const double _buildingThreshold = 0.34;
+  static const double _jobReadyThreshold = 0.75;
+
+  /// A short, plain-language nudge toward the next [ReadinessBand] -- e.g.
+  /// "13% to Job ready" -- shown alongside the coarse band above so the
+  /// screen says something a candidate can act on, not just a label. Null
+  /// once already at [ReadinessBand.jobReady]: there is no further band to
+  /// point toward.
+  ///
+  /// Computed from [readinessProgress] alone, the same field the coarse band
+  /// already reads -- no new data source, just a second way of saying it.
+  String? get readinessBandProgressNote {
+    final ReadinessBand next;
+    final double threshold;
+    switch (readinessBand) {
+      case ReadinessBand.starting:
+        next = ReadinessBand.building;
+        threshold = _buildingThreshold;
+      case ReadinessBand.building:
+        next = ReadinessBand.jobReady;
+        threshold = _jobReadyThreshold;
+      case ReadinessBand.jobReady:
+        return null;
+    }
+    // Rounds up, not to nearest: "0% to Job ready" while still one point
+    // short of the threshold would read as done when it isn't.
+    final percent = ((threshold - readinessProgress) * 100).ceil();
+    return '$percent% to ${next.label}';
   }
 }
 
@@ -128,6 +158,17 @@ class TodayMission {
   final int totalSteps;
 
   double get progress => totalSteps == 0 ? 0 : (stepNumber - 1) / totalSteps;
+
+  /// Steps left in the pathway after this one. Zero when this is the last
+  /// step.
+  int get stepsRemainingAfterThis => totalSteps - stepNumber;
+
+  /// A rough total-time estimate for [stepsRemainingAfterThis], assuming
+  /// each remaining step costs about as long as this one -- the only signal
+  /// available, and only ever shown behind an "about" in the UI for that
+  /// reason, not as a promise.
+  int get estimatedMinutesRemainingAfterThis =>
+      stepsRemainingAfterThis * durationMinutes;
 }
 
 /// Position within the assigned learning pathway.
@@ -143,6 +184,9 @@ class PathwayProgress {
   final int totalUnits;
 
   double get fraction => totalUnits == 0 ? 0 : completedUnits / totalUnits;
+
+  /// Lessons left to finish this pathway. Zero once complete.
+  int get remainingUnits => totalUnits - completedUnits;
 }
 
 /// A scheduled, real-world commitment. This is the only item on Home that the
