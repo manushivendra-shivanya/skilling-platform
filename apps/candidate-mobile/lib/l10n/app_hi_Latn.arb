@@ -540,5 +540,78 @@
 
   "examNotAnswered": "Jawab nahi diya",
   "examYourAnswer": "Aapka jawab: {label}",
-  "examCorrectAnswer": "Sahi jawab: {label}"
+  "examCorrectAnswer": "Sahi jawab: {label}",
+
+  "profileLoadErrorTitle": "Profile load nahi ho saki",
+  "profileLoadErrorFallback": "Aapki secure local profile filhaal available nahi hai.",
+
+  "profileEditDetailsButton": "Personal details edit karein",
+
+  "profileCareerSectionTitle": "Career profile",
+
+  "profileGoalLabel": "Goal",
+  "profileEducationLabel": "Education",
+  "profileExperienceLabel": "Experience",
+  "profilePreferredRolesLabel": "Preferred roles",
+  "profileEvidenceLabel": "Evidence",
+
+  "profileNotSet": "Set nahi hai",
+
+  "profileNoEvidenceYet": "Abhi koi assessed evidence nahi",
+  "profileEvidenceCount": "{count, plural, one{{count} explainable record} other{{count} explainable records}}",
+
+  "profileCareerDiagnosticTitle": "Career diagnostic",
+  "profileCareerDiagnosticSubtitle": "Apni taiyari dobara jaanchein",
+
+  "profileReadinessEvidenceTitle": "Readiness evidence",
+  "profileEvidenceDisclaimer": "Evidence observed platform work dikhata hai. Yeh personality score nahi hai aur rejection ka ekmatra aadhar nahi ho sakta.",
+
+  "profilePrivacySectionTitle": "Privacy aur consent",
+
+  "profilePlatformTermsLabel": "Platform terms",
+  "profilePrivacyNoticeLabel": "Privacy notice",
+  "profileNotAccepted": "Accept nahi kiya gaya",
+
+  "profileVoiceSharingLabel": "Voice sharing",
+  "profileVoiceSharingValue": "Us feature ke use par alag se request ki jaati hai",
+  "profileEmployerSharingLabel": "Employer sharing",
+  "profileEmployerSharingValue": "Upar Career Passport section mein control hota hai",
+
+  "profilePreferencesSectionTitle": "Preferences aur support",
+
+  "profileLanguageLabel": "Bhasha",
+
+  "profileNotificationPrefTitle": "Notification preference",
+  "profileNotificationPrefSubtitle": "Sirf preference ke roop mein save hai. Abhi koi push token register nahi hai.",
+
+  "profileHelpSupportTitle": "Help aur support",
+  "profileSupportSnackbar": "Support contact workflow baad ke phase mein connect hoga.",
+
+  "profileDeleteAccountTitle": "Account deletion ka request karein",
+  "profileDeleteAccountSubtitle": "Placeholder • koi request nahi bheji gayi",
+
+  "profileDeletionDialogTitle": "Account deletion abhi connect nahi hai",
+  "profileDeletionDialogMessage": "Phase 1 mein koi request nahi bheji jayegi. Ise active karne se pehle ek verified deletion workflow aur recovery window zaroori hai.",
+  "profileDeletionConfirmLabel": "Samajh gaya",
+  "profileDeletionCancelLabel": "Band karein",
+
+  "profileLogoutButton": "Log out",
+
+  "profileFullNameLabel": "Poora naam",
+  "profileCityLabel": "Shahar ya zila",
+
+  "profileNameCityValidation": "Ek valid naam aur shahar daalein.",
+
+  "profileSaveChangesButton": "Changes save karein",
+  "profileSavedSnackbar": "Profile is device par securely save ho gayi.",
+
+  "personaCardTitle": "Professional persona",
+  "personaSelfReportedChip": "Self-reported",
+
+  "personaCardDescription": "Aapke bataye gaye information se bana -- Flora ise kabhi khud host ya share nahi karta. Ise copy karke kisi message, application, ya apni profile mein paste karein.",
+
+  "personaCopyButton": "Persona summary copy karein",
+  "personaCopiedSnackbar": "Persona summary copy ho gayi.",
+
+  "personaOpenToRoles": "In roles ke liye open: {roles}"
 }

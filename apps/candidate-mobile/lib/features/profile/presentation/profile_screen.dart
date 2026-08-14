@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../app/localization/app_locale.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../core/errors/app_failure.dart';
+import '../../../core/errors/app_failure_localization.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_feedback.dart';
@@ -12,6 +14,7 @@ import '../../../core/widgets/app_initials_avatar.dart';
 import '../../../core/widgets/app_skeleton.dart';
 import '../../../core/widgets/app_state_view.dart';
 import '../../../core/widgets/app_status_banner.dart';
+import '../../../l10n/generated/app_localizations.dart';
 import '../../authentication/presentation/candidate_session_controller.dart';
 import '../../authentication/presentation/development_auth_controller.dart';
 import '../../career_passport/presentation/career_passport_section.dart';
@@ -46,22 +49,23 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final draft = ref.watch(candidateOnboardingControllerProvider);
     return draft.when(
       loading: () => const _ProfileLoadingView(),
       error: (error, stackTrace) => AppErrorState(
-        title: 'Profile could not be loaded',
+        title: l10n.profileLoadErrorTitle,
         message: error is AppFailure
-            ? error.message
-            : 'Your secure local profile is temporarily unavailable.',
+            ? error.localizedMessage(l10n)
+            : l10n.profileLoadErrorFallback,
         onAction: () =>
             ref.read(candidateOnboardingControllerProvider.notifier).retry(),
       ),
-      data: _buildProfile,
+      data: (draft) => _buildProfile(l10n, draft),
     );
   }
 
-  Widget _buildProfile(CandidateOnboardingDraft draft) {
+  Widget _buildProfile(AppLocalizations l10n, CandidateOnboardingDraft draft) {
     final intelligence = ref
         .watch(candidateIntelligenceControllerProvider)
         .valueOrNull;
@@ -85,43 +89,45 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 const SizedBox(height: AppSpacing.md),
               ],
               AppButton(
-                label: 'Edit personal details',
+                label: l10n.profileEditDetailsButton,
                 variant: AppButtonVariant.secondary,
-                onPressed: () => _editDetails(draft),
+                onPressed: () => _editDetails(l10n, draft),
               ),
               const SizedBox(height: AppSpacing.lg),
               _Section(
-                title: 'Career profile',
+                title: l10n.profileCareerSectionTitle,
                 children: [
                   _DetailRow(
-                    label: 'Goal',
-                    value: draft.goal?.label ?? 'Not set',
+                    label: l10n.profileGoalLabel,
+                    value: draft.goal?.label ?? l10n.profileNotSet,
                   ),
                   _DetailRow(
-                    label: 'Education',
-                    value: draft.education?.label ?? 'Not set',
+                    label: l10n.profileEducationLabel,
+                    value: draft.education?.label ?? l10n.profileNotSet,
                   ),
                   _DetailRow(
-                    label: 'Experience',
-                    value: draft.experience?.label ?? 'Not set',
+                    label: l10n.profileExperienceLabel,
+                    value: draft.experience?.label ?? l10n.profileNotSet,
                   ),
                   _DetailRow(
-                    label: 'Preferred roles',
+                    label: l10n.profilePreferredRolesLabel,
                     value: draft.preferredRoles
                         .map((role) => role.label)
                         .join(', '),
                   ),
                   _DetailRow(
-                    label: 'Evidence',
+                    label: l10n.profileEvidenceLabel,
                     value: intelligence == null || intelligence.evidence.isEmpty
-                        ? 'No assessed evidence yet'
-                        : '${intelligence.evidence.length} explainable records',
+                        ? l10n.profileNoEvidenceYet
+                        : l10n.profileEvidenceCount(
+                            intelligence.evidence.length,
+                          ),
                   ),
                   ListTile(
                     contentPadding: EdgeInsets.zero,
                     leading: const Icon(Icons.assignment_outlined),
-                    title: const Text('Career diagnostic'),
-                    subtitle: const Text('Apni taiyari dobara jaanchein'),
+                    title: Text(l10n.profileCareerDiagnosticTitle),
+                    subtitle: Text(l10n.profileCareerDiagnosticSubtitle),
                     trailing: const Icon(Icons.arrow_forward_rounded, size: 18),
                     onTap: widget.onOpenDiagnostic,
                   ),
@@ -136,13 +142,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               if (intelligence != null && intelligence.evidence.isNotEmpty) ...[
                 const SizedBox(height: AppSpacing.md),
                 _Section(
-                  title: 'Readiness evidence',
+                  title: l10n.profileReadinessEvidenceTitle,
                   children: [
                     for (final item in intelligence.evidence.reversed.take(4))
                       _EvidenceRow(item: item),
-                    const Text(
-                      'Evidence shows observed platform work. It is not a personality score and cannot be the sole basis for rejection.',
-                    ),
+                    Text(l10n.profileEvidenceDisclaimer),
                   ],
                 ),
               ],
@@ -152,57 +156,57 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               const CareerPassportSection(),
               const SizedBox(height: AppSpacing.md),
               _Section(
-                title: 'Privacy and consent',
+                title: l10n.profilePrivacySectionTitle,
                 children: [
                   _DetailRow(
-                    label: 'Platform terms',
+                    label: l10n.profilePlatformTermsLabel,
                     value:
                         draft
                             .consents[OnboardingConsentVersions.termsPurpose]
                             ?.version ??
-                        'Not accepted',
+                        l10n.profileNotAccepted,
                   ),
                   _DetailRow(
-                    label: 'Privacy notice',
+                    label: l10n.profilePrivacyNoticeLabel,
                     value:
                         draft
                             .consents[OnboardingConsentVersions.privacyPurpose]
                             ?.version ??
-                        'Not accepted',
+                        l10n.profileNotAccepted,
                   ),
-                  const _DetailRow(
-                    label: 'Voice sharing',
-                    value: 'Requested separately when that feature is used',
+                  _DetailRow(
+                    label: l10n.profileVoiceSharingLabel,
+                    value: l10n.profileVoiceSharingValue,
                   ),
-                  const _DetailRow(
-                    label: 'Employer sharing',
-                    value: 'Controlled in the Career Passport section above',
+                  _DetailRow(
+                    label: l10n.profileEmployerSharingLabel,
+                    value: l10n.profileEmployerSharingValue,
                   ),
                 ],
               ),
               const SizedBox(height: AppSpacing.md),
               _Section(
-                title: 'Preferences and support',
+                title: l10n.profilePreferencesSectionTitle,
                 children: [
-                  const _DetailRow(label: 'Language', value: 'English'),
+                  _DetailRow(
+                    label: l10n.profileLanguageLabel,
+                    value: _currentLanguageLabel(context, l10n),
+                  ),
                   SwitchListTile(
                     contentPadding: EdgeInsets.zero,
                     value: _notificationsEnabled,
                     onChanged: (value) =>
                         setState(() => _notificationsEnabled = value),
-                    title: const Text('Notification preference'),
-                    subtitle: const Text(
-                      'Stored as a preference only. No push token is registered yet.',
-                    ),
+                    title: Text(l10n.profileNotificationPrefTitle),
+                    subtitle: Text(l10n.profileNotificationPrefSubtitle),
                   ),
                   ListTile(
                     contentPadding: EdgeInsets.zero,
                     leading: const Icon(Icons.help_outline),
-                    title: const Text('Help and support'),
+                    title: Text(l10n.profileHelpSupportTitle),
                     onTap: () => showAppSnackBar(
                       context: context,
-                      message:
-                          'Support contact workflow will be connected in a later phase.',
+                      message: l10n.profileSupportSnackbar,
                     ),
                   ),
                   ListTile(
@@ -211,18 +215,18 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       Icons.delete_outline,
                       color: AppColors.error,
                     ),
-                    title: const Text('Request account deletion'),
-                    subtitle: const Text('Placeholder • no request is sent'),
-                    onTap: _showDeletionPlaceholder,
+                    title: Text(l10n.profileDeleteAccountTitle),
+                    subtitle: Text(l10n.profileDeleteAccountSubtitle),
+                    onTap: () => _showDeletionPlaceholder(l10n),
                   ),
                 ],
               ),
               const SizedBox(height: AppSpacing.lg),
               AppButton(
-                label: 'Log out',
+                label: l10n.profileLogoutButton,
                 variant: AppButtonVariant.secondary,
                 isLoading: _loggingOut,
-                onPressed: _loggingOut ? null : _logout,
+                onPressed: _loggingOut ? null : () => _logout(l10n),
               ),
             ],
           ),
@@ -231,10 +235,22 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
   }
 
-  Future<void> _editDetails(CandidateOnboardingDraft draft) async {
+  String _currentLanguageLabel(BuildContext context, AppLocalizations l10n) {
+    final locale = ref.watch(appLocaleProvider);
+    return switch (locale.scriptCode) {
+      'Latn' => l10n.languageHinglish,
+      _ when locale.languageCode == 'hi' => l10n.languageHindi,
+      _ => l10n.languageEnglish,
+    };
+  }
+
+  Future<void> _editDetails(
+    AppLocalizations l10n,
+    CandidateOnboardingDraft draft,
+  ) async {
     final updated = await showAppBottomSheet<CandidateOnboardingDraft>(
       context: context,
-      title: 'Edit personal details',
+      title: l10n.profileEditDetailsButton,
       child: _EditProfileForm(draft: draft),
     );
     if (updated == null || !mounted) return;
@@ -244,24 +260,23 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     if (!mounted) return;
     showAppSnackBar(
       context: context,
-      message: failure?.message ?? 'Profile saved securely on this device.',
+      message: failure?.localizedMessage(l10n) ?? l10n.profileSavedSnackbar,
       tone: failure == null ? AppMessageTone.success : AppMessageTone.error,
     );
   }
 
-  Future<void> _showDeletionPlaceholder() async {
+  Future<void> _showDeletionPlaceholder(AppLocalizations l10n) async {
     await showAppConfirmationDialog(
       context: context,
-      title: 'Account deletion is not connected',
-      message:
-          'No request will be sent in Phase 1. A verified deletion workflow and recovery window are required before this becomes active.',
-      confirmLabel: 'I understand',
-      cancelLabel: 'Close',
+      title: l10n.profileDeletionDialogTitle,
+      message: l10n.profileDeletionDialogMessage,
+      confirmLabel: l10n.profileDeletionConfirmLabel,
+      cancelLabel: l10n.profileDeletionCancelLabel,
       isDestructive: true,
     );
   }
 
-  Future<void> _logout() async {
+  Future<void> _logout(AppLocalizations l10n) async {
     setState(() => _loggingOut = true);
     final failure = await ref
         .read(candidateSessionControllerProvider.notifier)
@@ -275,7 +290,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       setState(() => _loggingOut = false);
       showAppSnackBar(
         context: context,
-        message: failure.message,
+        message: failure.localizedMessage(l10n),
         tone: AppMessageTone.error,
       );
     }
@@ -398,24 +413,25 @@ class _EditProfileFormState extends State<_EditProfileForm> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         TextField(
           controller: _name,
-          decoration: const InputDecoration(labelText: 'Full name'),
+          decoration: InputDecoration(labelText: l10n.profileFullNameLabel),
         ),
         const SizedBox(height: AppSpacing.md),
         TextField(
           controller: _city,
-          decoration: const InputDecoration(labelText: 'City or district'),
+          decoration: InputDecoration(labelText: l10n.profileCityLabel),
         ),
         if (_error != null) ...[
           const SizedBox(height: AppSpacing.sm),
           Text(_error!, style: const TextStyle(color: AppColors.error)),
         ],
         const SizedBox(height: AppSpacing.lg),
-        AppButton(label: 'Save changes', onPressed: _submit),
+        AppButton(label: l10n.profileSaveChangesButton, onPressed: _submit),
         const SizedBox(height: AppSpacing.sm),
         const AppBottomSheetCloseButton(),
       ],
@@ -424,7 +440,9 @@ class _EditProfileFormState extends State<_EditProfileForm> {
 
   void _submit() {
     if (_name.text.trim().length < 2 || _city.text.trim().length < 2) {
-      setState(() => _error = 'Enter a valid name and city.');
+      setState(
+        () => _error = AppLocalizations.of(context).profileNameCityValidation,
+      );
       return;
     }
     Navigator.of(context).pop(
@@ -472,7 +490,9 @@ class _DetailRow extends StatelessWidget {
         children: [
           Text(label, style: Theme.of(context).textTheme.labelLarge),
           const SizedBox(height: AppSpacing.xxs),
-          Text(value.isEmpty ? 'Not set' : value),
+          Text(
+            value.isEmpty ? AppLocalizations.of(context).profileNotSet : value,
+          ),
         ],
       ),
     );

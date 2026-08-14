@@ -7,6 +7,7 @@ import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_chip.dart';
 import '../../../core/widgets/app_feedback.dart';
 import '../../../core/widgets/app_initials_avatar.dart';
+import '../../../l10n/generated/app_localizations.dart';
 import '../../onboarding/domain/candidate_onboarding_draft.dart';
 
 /// A shareable-style summary card built entirely from data the candidate
@@ -34,6 +35,7 @@ class ProfessionalPersonaCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final chips = <String>[
       if (draft.education != null) draft.education!.label,
       if (draft.experience != null) draft.experience!.label,
@@ -48,21 +50,19 @@ class ProfessionalPersonaCard extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  'Professional persona',
+                  l10n.personaCardTitle,
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
               ),
-              const AppStatusChip(
-                label: 'Self-reported',
+              AppStatusChip(
+                label: l10n.personaSelfReportedChip,
                 tone: AppChipTone.info,
               ),
             ],
           ),
           const SizedBox(height: AppSpacing.xxs),
           Text(
-            'Built from what you told us -- never hosted or shared by '
-            'Flora on its own. Copy it to paste into a message, an '
-            'application, or your own profile elsewhere.',
+            l10n.personaCardDescription,
             style: Theme.of(context).textTheme.bodySmall,
           ),
           const SizedBox(height: AppSpacing.md),
@@ -104,26 +104,26 @@ class ProfessionalPersonaCard extends StatelessWidget {
           ],
           const SizedBox(height: AppSpacing.md),
           AppButton(
-            label: 'Copy persona summary',
+            label: l10n.personaCopyButton,
             variant: AppButtonVariant.secondary,
-            onPressed: () => _copySummary(context),
+            onPressed: () => _copySummary(context, l10n),
           ),
         ],
       ),
     );
   }
 
-  Future<void> _copySummary(BuildContext context) async {
-    await Clipboard.setData(ClipboardData(text: _summaryText()));
+  Future<void> _copySummary(BuildContext context, AppLocalizations l10n) async {
+    await Clipboard.setData(ClipboardData(text: _summaryText(l10n)));
     if (!context.mounted) return;
     showAppSnackBar(
       context: context,
-      message: 'Persona summary copied.',
+      message: l10n.personaCopiedSnackbar,
       tone: AppMessageTone.success,
     );
   }
 
-  String _summaryText() {
+  String _summaryText(AppLocalizations l10n) {
     final lines = <String>[draft.fullName];
     if (draft.headline.trim().isNotEmpty) {
       lines.add(draft.headline.trim());
@@ -144,8 +144,9 @@ class ProfessionalPersonaCard extends StatelessWidget {
     }
     if (draft.preferredRoles.isNotEmpty) {
       lines.add(
-        'Open to: '
-        '${draft.preferredRoles.map((role) => role.label).join(', ')}',
+        l10n.personaOpenToRoles(
+          draft.preferredRoles.map((role) => role.label).join(', '),
+        ),
       );
     }
     return lines.join('\n');
