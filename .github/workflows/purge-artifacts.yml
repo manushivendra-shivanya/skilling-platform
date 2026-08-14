@@ -1,0 +1,81 @@
+name: Purge Actions Artifacts
+
+on:
+  workflow_dispatch:
+    inputs:
+      keep_latest:
+        description: >-
+          Keep the single most recently created artifact (e.g. the latest
+          debug APK) and delete the rest. Uncheck to delete everything.
+        type: boolean
+        required: false
+        default: true
+
+jobs:
+  purge:
+    # Deliberately ubuntu-latest, not the self-hosted Mac build-apk.yml
+    # uses -- this job does no build, no checkout, nothing but list-then-
+    # DELETE calls against the Actions API. It finishes in well under a
+    # minute and GitHub bills Linux runners at 1x with no multiplier
+    # (Windows is 2x, macOS is 10x -- exactly why build-apk.yml itself
+    # moved off GitHub-hosted runners for its own multi-hour Gradle
+    # builds). One run of this is a rounding error against the account's
+    # included Actions minutes.
+    runs-on: ubuntu-latest
+
+    # DELETE /repos/{owner}/{repo}/actions/artifacts/{id} requires the
+    # Actions API's own write permission on the token, separate from
+    # `contents`.
+    permissions:
+      actions: write
+
+    steps:
+      # Only lists and deletes existing artifact blobs via the Actions
+      # API -- no source, branch, commit, or workflow run history/logs is
+      # touched. Frees exactly the storage-quota GB the blobs occupy,
+      # which is what actually blocks new uploads once the account's
+      # 500MB Actions storage quota fills (see build-apk.yml's own
+      # upload-artifact step doc comment for how that quota got
+      # exhausted in the first place).
+      - name: List and delete artifacts
+        env:
+          GH_TOKEN: ${{ github.token }}
+          KEEP_LATEST: ${{ inputs.keep_latest }}
+        run: |
+          set -euo pipefail
+          ids=$(gh api "repos/${{ github.repository }}/actions/artifacts" --paginate \
+            --jq '.artifacts | sort_by(.created_at) | reverse | .[].id')
+
+          if [ -z "$ids" ]; then
+            echo "No artifacts stored -- nothing to purge."
+            exit 0
+          fi
+
+          if [ "$KEEP_LATEST" = "true" ]; then
+            kept=$(echo "$ids" | head -1)
+            ids=$(echo "$ids" | tail -n +2)
+            echo "Keeping most recent artifact: $kept"
+          fi
+
+          if [ -z "$ids" ]; then
+            echo "Nothing left to delete after keeping the most recent artifact."
+            exit 0
+          fi
+
+          count=0
+          for id in $ids; do
+            echo "deleting artifact $id"
+            gh api -X DELETE "repos/${{ github.repository }}/actions/artifacts/$id"
+            count=$((count + 1))
+          done
+          echo "Deleted $count artifact(s)."
+
+      - name: Report remaining Actions storage usage
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh api "repos/${{ github.repository }}/actions/cache/usage" \
+            --jq '"Cache usage: \(.active_caches_size_in_bytes / 1048576 | floor)MB across \(.active_caches_count) cache(s)."' \
+            || echo "Could not read cache usage (this only reports Actions cache, not artifact storage -- artifact storage has no equivalent API endpoint; check the repo's Settings -> Actions -> General page for the current total)."
