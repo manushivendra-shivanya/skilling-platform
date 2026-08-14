@@ -65,7 +65,14 @@ void main() {
     );
     await tester.tap(find.text('Refresh'));
     await tester.pumpAndSettle();
-    expect(find.text('Demo network failure.'), findsOneWidget);
+    // Not the raw 'Demo network failure.' internal message: AppFailure's
+    // own `message` is English-only developer/log text (see
+    // AppFailureLocalization's doc comment) -- the screen now shows a
+    // localized, generic message keyed off the failure's *type* instead.
+    expect(
+      find.text('No internet connection. Check your network and try again.'),
+      findsOneWidget,
+    );
   });
 
   testWidgets(

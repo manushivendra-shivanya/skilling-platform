@@ -6,6 +6,7 @@ import 'package:candidate_mobile/core/repositories/candidate_session_repository.
 import 'package:candidate_mobile/core/widgets/app_sticky_footer.dart';
 import 'package:candidate_mobile/features/shifts/domain/shift_availability.dart';
 import 'package:candidate_mobile/features/shifts/presentation/shift_availability_screen.dart';
+import 'package:candidate_mobile/l10n/generated/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -131,6 +132,8 @@ Widget _app(ShiftAvailabilityRepository repository) =>
       ),
       child: MaterialApp(
         theme: buildAppTheme(),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         home: const ShiftAvailabilityScreen(),
       ),
     );

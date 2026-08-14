@@ -6,6 +6,7 @@ import 'package:candidate_mobile/core/errors/result.dart';
 import 'package:candidate_mobile/core/repositories/candidate_session_repository.dart';
 import 'package:candidate_mobile/features/shifts/domain/shift_grievance.dart';
 import 'package:candidate_mobile/features/shifts/presentation/shift_grievance_screen.dart';
+import 'package:candidate_mobile/l10n/generated/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -131,6 +132,8 @@ Widget _app(ShiftGrievanceRepository repository) => UncontrolledProviderScope(
   ),
   child: MaterialApp(
     theme: buildAppTheme(),
+    localizationsDelegates: AppLocalizations.localizationsDelegates,
+    supportedLocales: AppLocalizations.supportedLocales,
     home: const ShiftGrievanceScreen(),
   ),
 );

@@ -4,12 +4,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../core/errors/app_failure.dart';
+import '../../../core/errors/app_failure_localization.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_chip.dart';
 import '../../../core/widgets/app_icon_plate.dart';
 import '../../../core/widgets/app_meter_bar.dart';
 import '../../../core/widgets/app_skeleton.dart';
+import '../../../l10n/generated/app_localizations.dart';
 import '../domain/role_readiness.dart';
 import 'career_passport_controller.dart';
 
@@ -43,7 +45,7 @@ class RoleReadinessSection extends ConsumerWidget {
             loading: () => const AppSkeleton(height: 96),
             error: (error, _) => _RoleReadinessError(
               message: error is AppFailure
-                  ? error.message
+                  ? error.localizedMessage(AppLocalizations.of(context))
                   : 'Role readiness could not be loaded.',
               onRetry: () =>
                   ref.read(careerPassportControllerProvider.notifier).retry(),

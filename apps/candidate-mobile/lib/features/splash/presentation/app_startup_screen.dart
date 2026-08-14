@@ -6,9 +6,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../app/theme/coach_mark.dart';
 import '../../../core/errors/app_failure.dart';
+import '../../../core/errors/app_failure_localization.dart';
 import '../../../core/widgets/app_chip.dart';
 import '../../../core/widgets/app_loading_progress.dart';
 import '../../../core/widgets/app_state_view.dart';
+import '../../../l10n/generated/app_localizations.dart';
 import '../domain/app_startup_state.dart';
 import 'app_startup_controller.dart';
 
@@ -74,7 +76,7 @@ class _AppStartupScreenState extends ConsumerState<AppStartupScreen> {
           loading: () => const _AppStartupLoadingView(),
           error: (error, stackTrace) => _AppStartupErrorView(
             message: error is AppFailure
-                ? error.message
+                ? error.localizedMessage(AppLocalizations.of(context))
                 : 'Please check your connection and try again.',
             onRetry: () =>
                 ref.read(appStartupControllerProvider.notifier).retry(),

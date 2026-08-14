@@ -8,6 +8,7 @@ import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../core/analytics/analytics_event.dart';
 import '../../../core/errors/app_failure.dart';
+import '../../../core/errors/app_failure_localization.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_icon_plate.dart';
 import '../../../core/widgets/app_insight_line.dart';
@@ -57,7 +58,7 @@ class HomeDashboardScreen extends ConsumerWidget {
       error: (error, stackTrace) => AppErrorState(
         title: l10n.homeLoadErrorTitle,
         message: error is AppFailure
-            ? error.message
+            ? error.localizedMessage(l10n)
             : l10n.homeLoadErrorMessage,
         onAction: () =>
             ref.read(homeDashboardControllerProvider.notifier).refresh(),

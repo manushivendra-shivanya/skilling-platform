@@ -5,6 +5,7 @@ import 'package:candidate_mobile/core/errors/result.dart';
 import 'package:candidate_mobile/core/repositories/candidate_session_repository.dart';
 import 'package:candidate_mobile/features/shifts/domain/shift_payout.dart';
 import 'package:candidate_mobile/features/shifts/presentation/shift_payout_screen.dart';
+import 'package:candidate_mobile/l10n/generated/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -83,7 +84,12 @@ Widget _app(ShiftPayoutRepository repository) => UncontrolledProviderScope(
       shiftPayoutRepositoryProvider.overrideWithValue(repository),
     ],
   ),
-  child: MaterialApp(theme: buildAppTheme(), home: const ShiftPayoutScreen()),
+  child: MaterialApp(
+    theme: buildAppTheme(),
+    localizationsDelegates: AppLocalizations.localizationsDelegates,
+    supportedLocales: AppLocalizations.supportedLocales,
+    home: const ShiftPayoutScreen(),
+  ),
 );
 
 class _FakeShiftPayoutRepository implements ShiftPayoutRepository {

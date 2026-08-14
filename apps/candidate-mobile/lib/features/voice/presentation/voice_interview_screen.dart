@@ -7,6 +7,7 @@ import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_radius.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../core/errors/app_failure.dart';
+import '../../../core/errors/app_failure_localization.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_feedback.dart';
@@ -14,6 +15,7 @@ import '../../../core/widgets/app_progress.dart';
 import '../../../core/widgets/app_state_view.dart';
 import '../../../core/widgets/app_status_banner.dart';
 import '../../../core/widgets/reduced_motion.dart';
+import '../../../l10n/generated/app_localizations.dart';
 import '../domain/voice_interview.dart';
 import 'answer_pacing_track.dart';
 import 'voice_interview_controller.dart';
@@ -83,7 +85,7 @@ class _VoiceInterviewScreenState extends ConsumerState<VoiceInterviewScreen> {
         error: (error, stackTrace) => AppErrorState(
           title: 'Voice practice could not be loaded',
           message: error is AppFailure
-              ? error.message
+              ? error.localizedMessage(AppLocalizations.of(context))
               : 'Your secure voice session is temporarily unavailable.',
           onAction: () => ref.invalidate(voiceInterviewControllerProvider),
         ),

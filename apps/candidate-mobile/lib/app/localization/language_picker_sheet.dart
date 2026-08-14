@@ -53,6 +53,12 @@ class _LanguagePickerOptions extends ConsumerWidget {
           selected: selected == CandidateLanguage.hindi,
           onTap: () => select(CandidateLanguage.hindi),
         ),
+        const SizedBox(height: AppSpacing.xs),
+        _LanguageOption(
+          label: l10n.languageHinglish,
+          selected: selected == CandidateLanguage.hinglish,
+          onTap: () => select(CandidateLanguage.hinglish),
+        ),
       ],
     );
   }

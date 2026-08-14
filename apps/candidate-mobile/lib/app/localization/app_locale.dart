@@ -10,21 +10,21 @@ import '../../features/onboarding/presentation/language_selection_controller.dar
 /// (`languageSelectionControllerProvider`), rather than a second, parallel
 /// "app locale" setting a candidate would have to configure twice.
 ///
-/// [CandidateLanguage] has three values (English, Hindi, Hinglish) because
-/// that is what the onboarding sign-in flow's own hand-written copy
-/// (`SignInCopy.forLanguage`) supports. The ARB-based app-wide toggle this
-/// provider drives only ships two real locales, `en` and `hi` -- there is no
-/// Hinglish ARB file, and building one (Latin-script Hindi is not a locale
-/// most tooling or translators recognise) is out of scope for this pass.
-/// [CandidateLanguage.hinglish] and "no preference yet" both resolve to
-/// English here; onboarding's own screens are unaffected and keep reading
-/// [CandidateLanguage] directly for their three-way copy.
+/// All three [CandidateLanguage] values are real, distinct ARB locales:
+/// English and Hindi as ordinary `en`/`hi` ARB files, and Hinglish as
+/// `Locale.fromSubtags(languageCode: 'hi', scriptCode: 'Latn')` -- the
+/// correct BCP-47 shape for "Hindi, written in Latin script" (ISO 15924's
+/// `Latn` script subtag), which `flutter gen-l10n` supports as a first-class
+/// locale variant the same way it supports e.g. `zh_Hans`/`zh_Hant`. See
+/// `lib/l10n/app_hi_Latn.arb`.
 final appLocaleProvider = Provider<Locale>((ref) {
   final language = ref.watch(languageSelectionControllerProvider).valueOrNull;
   return switch (language) {
     CandidateLanguage.hindi => const Locale('hi'),
-    CandidateLanguage.english ||
-    CandidateLanguage.hinglish ||
-    null => const Locale('en'),
+    CandidateLanguage.hinglish => const Locale.fromSubtags(
+      languageCode: 'hi',
+      scriptCode: 'Latn',
+    ),
+    CandidateLanguage.english || null => const Locale('en'),
   };
 });

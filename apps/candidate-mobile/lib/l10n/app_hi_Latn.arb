@@ -1,0 +1,82 @@
+{
+  "@@locale": "hi_Latn",
+
+  "homeGreeting": "Namaste",
+  "homeReadinessLabel": "TAIYARI",
+
+  "readinessBandStarting": "Shuruaat",
+  "readinessBandBuilding": "Aage badh rahe hain",
+  "readinessBandJobReady": "Naukri ke liye taiyar",
+
+  "homeReadinessProgressNote": "{bandLabel} tak {percent}% baaki",
+
+  "homeEvidenceSummary": "Pichhle {windowDays} dinon mein {count, plural, one{{count} proof} other{{count} proof}}",
+
+  "homeNotifications": "Notifications",
+  "homeChangeLanguage": "Bhasha badlein",
+
+  "homeTodayMissionLabel": "AAJ KA KAAM",
+  "homeMissionStart": "Shuru karein",
+  "homeMissionStartSemantic": "Aaj ka kaam shuru karein: {title}. {minutes} minute.",
+  "homeMissionDuration": "{minutes} min",
+  "homeMissionStep": "Step {step} / {total}",
+  "homeMissionStepsRemaining": "Iske baad {steps, plural, one{{steps} aur step} other{{steps} aur step}} baaki · lagbhag {minutes} min",
+
+  "homeNoMissionTitle": "Aaj koi kaam nahi",
+  "homeNoMissionBody": "Apna career diagnostic poora karein, hum aapke liye agla step chunenge.",
+
+  "homeInterviewLabel": "AANE WALA",
+  "homeInterviewTitle": "Interview · {employer}",
+  "homeInterviewPrepare": "Taiyari karein",
+
+  "homeContinueSectionTitle": "Jaari rakhein",
+
+  "homeInterviewPracticeTitle": "Interview practice",
+  "homeInterviewPracticeSubtitle": "Pehla sawaal · apna parichay",
+
+  "homePathwayLessons": "{completed} / {total} lessons",
+  "homePathwayOverallLabel": "Aapki poori learning journey",
+  "homePathwayRemaining": "{title} poora karne ke liye {count, plural, one{{count} lesson} other{{count} lessons}} baaki",
+
+  "homeSyncBanner": "{count, plural, one{{count} item} other{{count} items}} sync hone ke liye baaki.",
+
+  "actionView": "Dekhein",
+  "actionRefresh": "Refresh karein",
+  "actionTryAgain": "Dobara koshish karein",
+
+  "failureNetwork": "Internet connection nahi hai. Network check karein aur dobara koshish karein.",
+  "failureStorage": "Aapke device par save karne mein dikkat hui.",
+  "failureValidation": "Yeh sahi nahi lag raha. Kripya check karke dobara koshish karein.",
+  "failureAuthentication": "Jaari rakhne ke liye kripya dobara sign in karein.",
+  "failurePermission": "Iske liye ek permission chahiye jo abhi nahi di gayi hai.",
+  "failureTimeout": "Isme bahut time lag gaya. Kripya dobara koshish karein.",
+  "failureUnexpected": "Kuch anapekshit gadbad ho gayi.",
+
+  "homeLoadErrorTitle": "Home load nahi ho saka",
+  "homeLoadErrorMessage": "Aapka dashboard filhaal available nahi hai.",
+
+  "homeEmptyTitle": "Aapki yatra yahan se shuru hoti hai",
+  "homeEmptyMessage": "Apni profile setup poori karein, taaki aapko roz ka kaam aur raasta mil sake.",
+
+  "homeNoMissionSemantic": "Aaj koi kaam nahi. Career diagnostic kholein.",
+
+  "homePathwaySemantic": "{title} path jaari rakhein. {total} mein se {completed} lesson poore. Aapki learning journey ka {percent}% poora.",
+
+  "coachPopupText": "Main yahan hoon, kuch bhi poochein",
+  "coachPopupSemantic": "AI Coach yahan hai. Sawaal poochne ke liye tap karein.",
+  "coachFabLabel": "AI Coach",
+  "coachFabTooltip": "AI Career Coach kholein",
+
+  "navHome": "Home",
+  "navTrain": "Train",
+  "navJobs": "Jobs",
+  "navShift": "Shift",
+  "navProfile": "My Profile",
+
+  "appTitle": "Saksham",
+
+  "languagePickerTitle": "Apni bhasha chunein",
+  "languageEnglish": "English",
+  "languageHindi": "हिंदी",
+  "languageHinglish": "Hinglish"
+}
