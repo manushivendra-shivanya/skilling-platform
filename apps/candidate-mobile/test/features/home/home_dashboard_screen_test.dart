@@ -12,6 +12,8 @@ import 'package:candidate_mobile/features/home/presentation/journey_timeline_car
 import 'package:candidate_mobile/features/home/presentation/today_mission_card.dart';
 import 'package:candidate_mobile/features/jobs/data/secure_saved_jobs_repository.dart';
 import 'package:candidate_mobile/features/jobs/domain/jobs_repository.dart';
+import 'package:candidate_mobile/features/profile_details/data/in_memory_detailed_profile_repository.dart';
+import 'package:candidate_mobile/features/profile_details/domain/detailed_candidate_profile.dart';
 import 'package:candidate_mobile/l10n/generated/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -49,6 +51,7 @@ void main() {
             onOpenVoiceInterview: () {},
             onOpenPathway: () {},
             onOpenJobs: () {},
+            onOpenDetailedProfile: () {},
             onOpenNotifications: () {},
           ),
         ),
@@ -92,6 +95,64 @@ void main() {
             onOpenVoiceInterview: () {},
             onOpenPathway: () {},
             onOpenJobs: () {},
+            onOpenDetailedProfile: () {},
+            onOpenNotifications: () {},
+          ),
+        ),
+      ),
+    );
+  }
+
+  // A third wrapper, only for the profile-completion banner's own tests:
+  // an authenticated session (so detailedProfileControllerProvider
+  // actually resolves to data) plus a controllable
+  // detailedProfileRepositoryProvider, so the banner's percentage/
+  // visibility can be asserted deterministically.
+  //
+  // An authenticated session also puts JobMatchTeaserCard's
+  // jobsControllerProvider on the same hang-prone path wrapWithJobs's own
+  // comment describes (this time via LocalMockJobsRepository's real
+  // secureKeyValueStoreProvider, not an unauthenticated early throw) --
+  // same fix, override jobsRepositoryProvider/savedJobsRepositoryProvider/
+  // careerPassportRepositoryProvider so it resolves fast instead.
+  Widget wrapWithProfile(
+    HomeDashboard? dashboard,
+    DetailedCandidateProfile profile,
+  ) {
+    return ProviderScope(
+      overrides: [
+        homeDashboardRepositoryProvider.overrideWithValue(
+          MockHomeDashboardRepository(response: Success(dashboard)),
+        ),
+        candidateSessionRepositoryProvider.overrideWithValue(
+          InMemoryCandidateSessionRepository(
+            session: const CandidateSession(
+              candidateId: 'candidate-1',
+              isAuthenticated: true,
+            ),
+          ),
+        ),
+        detailedProfileRepositoryProvider.overrideWithValue(
+          InMemoryDetailedProfileRepository(initialProfile: profile),
+        ),
+        jobsRepositoryProvider.overrideWithValue(_FakeJobsRepository(const [])),
+        savedJobsRepositoryProvider.overrideWithValue(
+          SecureSavedJobsRepository(InMemorySecureKeyValueStore()),
+        ),
+        careerPassportRepositoryProvider.overrideWithValue(
+          const NoEvidenceCareerPassportRepository(),
+        ),
+      ],
+      child: MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: HomeDashboardScreen(
+            onOpenDiagnostic: () {},
+            onOpenVoiceInterview: () {},
+            onOpenPathway: () {},
+            onOpenJobs: () {},
+            onOpenDetailedProfile: () {},
             onOpenNotifications: () {},
           ),
         ),
@@ -445,6 +506,73 @@ void main() {
     expect(find.text('Inventory Executive'), findsOneWidget);
     expect(find.text('Meridian Logistics'), findsOneWidget);
     expect(find.textContaining('% match'), findsOneWidget);
+  });
+
+  testWidgets(
+    'shows the profile-completion banner with the real percentage once '
+    'signed in',
+    (tester) async {
+      await tester.pumpWidget(
+        wrapWithProfile(
+          MockHomeDashboardRepository.sampleDashboard(),
+          const DetailedCandidateProfile(
+            phone: '9999999999',
+            email: '',
+            skills: [],
+            workExperience: [],
+            education: [],
+            certifications: [],
+            projects: [],
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // 1 of 5 sections filled (contact info, via phone alone) -> 20%.
+      expect(find.text('Complete your profile'), findsOneWidget);
+      expect(find.text('20% complete'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'hides the profile-completion banner once the profile is fully complete',
+    (tester) async {
+      await tester.pumpWidget(
+        wrapWithProfile(
+          MockHomeDashboardRepository.sampleDashboard(),
+          const DetailedCandidateProfile(
+            phone: '9999999999',
+            email: 'candidate@example.com',
+            skills: ['forklift'],
+            workExperience: [
+              WorkExperienceEntry(
+                id: 'w1',
+                title: 'Warehouse Associate',
+                company: 'Apex Logistics',
+              ),
+            ],
+            education: [
+              EducationEntry(id: 'e1', institution: 'Delhi University'),
+            ],
+            certifications: [],
+            projects: [ProjectEntry(id: 'p1', title: 'Inventory tracker')],
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Complete your profile'), findsNothing);
+    },
+  );
+
+  testWidgets('hides the profile-completion banner when signed out, like the '
+      'job-match teaser', (tester) async {
+    await tester.pumpWidget(
+      wrap(MockHomeDashboardRepository.sampleDashboard()),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Complete your profile'), findsNothing);
   });
 }
 

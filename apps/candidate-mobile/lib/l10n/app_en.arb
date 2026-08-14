@@ -236,6 +236,11 @@
     }
   },
 
+  "homeProfileCompletionTitle": "Complete your profile",
+  "@homeProfileCompletionTitle": {
+    "description": "Title on the Home profile-completion banner, shown until the detailed profile is 100% complete."
+  },
+
   "homeSyncBanner": "{count, plural, one{{count} item waiting to sync.} other{{count} items waiting to sync.}}",
   "@homeSyncBanner": {
     "description": "Banner shown when local work is queued for sync. Used by the shared AppPendingSyncBanner, not just Home.",
