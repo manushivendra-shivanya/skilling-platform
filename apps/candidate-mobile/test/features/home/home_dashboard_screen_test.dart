@@ -255,4 +255,51 @@ void main() {
       findsNWidgets(2),
     );
   });
+
+  testWidgets(
+    'surfaces plain-language insight lines instead of bare numbers alone',
+    (tester) async {
+      await tester.pumpWidget(
+        wrap(MockHomeDashboardRepository.sampleDashboard()),
+      );
+      await tester.pumpAndSettle();
+
+      // sampleDashboard: readinessProgress 0.62 (Building, 13% short of the
+      // 0.75 Job-ready threshold), mission step 3 of 8 at 6 min/step, and a
+      // pathway 4/12 units complete.
+      expect(find.textContaining('13% to Job ready'), findsOneWidget);
+      expect(
+        find.textContaining('5 more steps after this one'),
+        findsOneWidget,
+      );
+      expect(find.textContaining('about 30 min'), findsOneWidget);
+      expect(
+        find.textContaining('8 lessons left to finish Receiving & Put-away'),
+        findsOneWidget,
+      );
+    },
+  );
+
+  testWidgets('omits the readiness-band note once already job ready -- nothing '
+      'further to point toward', (tester) async {
+    final sample = MockHomeDashboardRepository.sampleDashboard();
+    await tester.pumpWidget(
+      wrap(
+        HomeDashboard(
+          candidateFirstName: sample.candidateFirstName,
+          goalRoleName: sample.goalRoleName,
+          readinessProgress: 0.9,
+          evidence: sample.evidence,
+          learningProgress: sample.learningProgress,
+          pendingSyncCount: sample.pendingSyncCount,
+          todayMission: sample.todayMission,
+          pathway: sample.pathway,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('Job ready'), findsOneWidget);
+    expect(find.textContaining('% to'), findsNothing);
+  });
 }

@@ -4,6 +4,7 @@ import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_radius.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../core/widgets/app_button.dart';
+import '../../../core/widgets/app_insight_line.dart';
 import '../../../core/widgets/app_meter_bar.dart';
 import '../domain/home_dashboard_repository.dart';
 
@@ -88,6 +89,17 @@ class TodayMissionCard extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.sm),
           AppMeterBar(value: mission.progress),
+          // Zero once this is the pathway's last step -- nothing left to
+          // estimate, so the line would just be noise.
+          if (mission.stepsRemainingAfterThis > 0) ...[
+            const SizedBox(height: AppSpacing.sm),
+            AppInsightLine(
+              text:
+                  '${mission.stepsRemainingAfterThis} more steps after this '
+                  'one · about ${mission.estimatedMinutesRemainingAfterThis} '
+                  'min',
+            ),
+          ],
           const SizedBox(height: AppSpacing.md),
           AppButton(
             label: 'शुरू करें · Start',

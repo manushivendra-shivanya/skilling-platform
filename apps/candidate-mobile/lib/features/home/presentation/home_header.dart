@@ -151,6 +151,21 @@ class HomeHeader extends StatelessWidget {
                         ),
                       ],
                     ),
+                    // Turns the band label into something actionable rather
+                    // than a bare status word -- null once already at
+                    // ReadinessBand.jobReady, which is the one state that
+                    // has nothing further to point toward.
+                    if (dashboard.readinessBandProgressNote
+                        case final note?) ...[
+                      const SizedBox(height: AppSpacing.xxs),
+                      Text(
+                        note,
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),

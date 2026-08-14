@@ -10,6 +10,7 @@ import '../../../core/analytics/analytics_event.dart';
 import '../../../core/errors/app_failure.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_icon_plate.dart';
+import '../../../core/widgets/app_insight_line.dart';
 import '../../../core/widgets/app_meter_bar.dart';
 import '../../../core/widgets/app_skeleton.dart';
 import '../../../core/widgets/app_state_view.dart';
@@ -316,6 +317,15 @@ class _PathwayRow extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.xxs),
           AppMeterBar(value: learningProgress),
+          // Zero once the pathway is finished -- nothing left to count down.
+          if (pathway.remainingUnits > 0) ...[
+            const SizedBox(height: AppSpacing.sm),
+            AppInsightLine(
+              text:
+                  '${pathway.remainingUnits} lessons left to finish '
+                  '${pathway.title}',
+            ),
+          ],
         ],
       ),
     );
