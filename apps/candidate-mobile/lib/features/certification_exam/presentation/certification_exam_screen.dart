@@ -6,7 +6,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/dependencies.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_spacing.dart';
+import '../../../core/errors/app_failure_localization.dart';
 import '../../../core/widgets/app_button.dart';
+import '../../../l10n/generated/app_localizations.dart';
 import '../../sector_pack/application/active_sector_pack_provider.dart';
 import '../../sector_pack/domain/sector_pack.dart';
 import '../../sector_pack/presentation/sector_pack_icons.dart';
@@ -91,7 +93,7 @@ class _CertificationExamScreenState
     if (candidateId == null) {
       setState(() {
         _isSubmitting = false;
-        _submissionError = 'Sign in again to record this attempt.';
+        _submissionError = AppLocalizations.of(context).clipSignInAgain;
       });
       return;
     }
@@ -117,6 +119,7 @@ class _CertificationExamScreenState
           submittedAt: submittedAt,
         );
     if (!mounted) return;
+    final l10n = AppLocalizations.of(context);
     result.when(
       success: (attempt) {
         ref.invalidate(certificationExamControllerProvider);
@@ -131,7 +134,7 @@ class _CertificationExamScreenState
       },
       failure: (failure) => setState(() {
         _isSubmitting = false;
-        _submissionError = failure.message;
+        _submissionError = failure.localizedMessage(l10n);
       }),
     );
   }
@@ -149,6 +152,7 @@ class _CertificationExamScreenState
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final pack = ref.watch(activeSectorPackProvider);
     final questions = widget.exam.questions;
     final question = questions[_currentIndex];
@@ -162,7 +166,7 @@ class _CertificationExamScreenState
           backgroundColor: AppColors.navy,
           foregroundColor: Colors.white,
           leading: IconButton(
-            tooltip: 'Exit exam',
+            tooltip: l10n.examExitTooltip,
             onPressed: () => _confirmExit(context),
             icon: SectorIcon(
               glyph: SectorGlyph.cross,
@@ -170,7 +174,9 @@ class _CertificationExamScreenState
               size: 20,
             ),
           ),
-          title: Text('Question ${_currentIndex + 1} of ${questions.length}'),
+          title: Text(
+            l10n.examQuestionCounter(_currentIndex + 1, questions.length),
+          ),
           actions: [
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
@@ -231,7 +237,7 @@ class _CertificationExamScreenState
                 if (_currentIndex > 0)
                   Expanded(
                     child: AppButton(
-                      label: 'Previous',
+                      label: l10n.examPreviousButton,
                       variant: AppButtonVariant.secondary,
                       onPressed: _isSubmitting
                           ? null
@@ -242,7 +248,7 @@ class _CertificationExamScreenState
                 if (_currentIndex < questions.length - 1)
                   Expanded(
                     child: AppButton(
-                      label: 'Next',
+                      label: l10n.examNextButton,
                       onPressed: _isSubmitting
                           ? null
                           : () => setState(() => _currentIndex += 1),
@@ -253,12 +259,14 @@ class _CertificationExamScreenState
             if (_currentIndex == questions.length - 1) ...[
               const SizedBox(height: AppSpacing.sm),
               Text(
-                '$answeredCount of ${questions.length} questions answered',
+                l10n.examAnsweredCount(answeredCount, questions.length),
                 style: Theme.of(context).textTheme.bodySmall,
               ),
               const SizedBox(height: AppSpacing.sm),
               AppButton(
-                label: _isSubmitting ? 'Submitting...' : 'Submit exam',
+                label: _isSubmitting
+                    ? l10n.assessmentSubmittingLabel
+                    : l10n.examSubmitButton,
                 onPressed: (!allAnswered || _isSubmitting)
                     ? null
                     : () => _submit(),
@@ -278,22 +286,20 @@ class _CertificationExamScreenState
   }
 
   Future<void> _confirmExit(BuildContext context) async {
+    final l10n = AppLocalizations.of(context);
     final shouldExit = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Exit certification exam?'),
-        content: const Text(
-          'Your progress will be lost and this will not count as an '
-          'attempt.',
-        ),
+        title: Text(l10n.examExitDialogTitle),
+        content: Text(l10n.examExitDialogBody),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: const Text('Keep going'),
+            child: Text(l10n.examKeepGoingButton),
           ),
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: const Text('Exit'),
+            child: Text(l10n.examExitButton),
           ),
         ],
       ),
@@ -362,12 +368,16 @@ class _ExamOptionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final surface = Theme.of(context).colorScheme.surface;
     final divider = Theme.of(context).dividerColor;
     final ink = Theme.of(context).colorScheme.onSurface;
     final inkSoft = Theme.of(context).colorScheme.onSurfaceVariant;
     return Semantics(
-      label: '$label. ${selected ? 'Selected' : 'Not selected'}',
+      label: l10n.practiceOptionSemantic(
+        label,
+        selected ? l10n.practiceOptionSelected : l10n.practiceOptionNotSelected,
+      ),
       button: true,
       enabled: onTap != null,
       container: true,

@@ -4,8 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../core/errors/app_failure.dart';
+import '../../../core/errors/app_failure_localization.dart';
 import '../../../core/widgets/app_skeleton.dart';
 import '../../../core/widgets/app_state_view.dart';
+import '../../../l10n/generated/app_localizations.dart';
 import '../../learning/presentation/learning_controller.dart';
 import '../../sector_pack/application/active_sector_pack_provider.dart';
 import '../../sector_pack/domain/sector_pack.dart';
@@ -43,6 +45,7 @@ class CertificationExamSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
     final examState = ref.watch(certificationExamControllerProvider);
     final learningState = ref.watch(learningControllerProvider);
     final pack = ref.watch(activeSectorPackProvider);
@@ -58,7 +61,7 @@ class CertificationExamSection extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            'Warehouse Operations Certification',
+            l10n.certExamHeadline,
             style: Theme.of(context).textTheme.headlineSmall,
           ),
           const Text(
@@ -66,11 +69,7 @@ class CertificationExamSection extends ConsumerWidget {
             style: TextStyle(color: AppColors.inkMuted, fontSize: 13),
           ),
           const SizedBox(height: AppSpacing.xs),
-          const Text(
-            'A formal, timed exam covering the full warehouse process. Pass '
-            'it to add verified Career Passport evidence for every '
-            'competency it covers.',
-          ),
+          Text(l10n.certExamDescription),
           const SizedBox(height: AppSpacing.sm),
           Container(
             width: double.infinity,
@@ -79,15 +78,13 @@ class CertificationExamSection extends ConsumerWidget {
               color: AppColors.infoSoft,
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Text(
-              'Passing adds real Career Passport evidence -- visible to an '
-              'employer only if you choose to share it, same as everywhere '
-              'else.',
-              style: TextStyle(fontWeight: FontWeight.w600),
+            child: Text(
+              l10n.certExamPassingInfoCard,
+              style: const TextStyle(fontWeight: FontWeight.w600),
             ),
           ),
           const SizedBox(height: AppSpacing.md),
-          _buildBody(ref, learningState, examState, pack),
+          _buildBody(ref, l10n, learningState, examState, pack),
         ],
       ),
     );
@@ -95,6 +92,7 @@ class CertificationExamSection extends ConsumerWidget {
 
   Widget _buildBody(
     WidgetRef ref,
+    AppLocalizations l10n,
     AsyncValue<LearningState> learningState,
     AsyncValue<CertificationExamState> examState,
     SectorPack pack,
@@ -102,10 +100,10 @@ class CertificationExamSection extends ConsumerWidget {
     final error = learningState.error ?? examState.error;
     if (error != null) {
       return AppErrorState(
-        title: 'Certification exam could not be loaded',
+        title: l10n.certExamLoadErrorTitle,
         message: error is AppFailure
-            ? error.message
-            : 'The exam is temporarily unavailable.',
+            ? error.localizedMessage(l10n)
+            : l10n.certExamLoadErrorFallback,
         onAction: () {
           ref.read(learningControllerProvider.notifier).retry();
           ref.read(certificationExamControllerProvider.notifier).retry();
@@ -134,6 +132,7 @@ class _CredentialSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final data = exam.exam;
     final minutes = (data.timeLimit.inSeconds / 60).ceil();
     final lastAttempt = exam.lastAttempt;
@@ -153,63 +152,77 @@ class _CredentialSection extends StatelessWidget {
 
     if (!eligible) {
       glyph = SectorGlyph.lock;
-      statusLabel = 'LOCKED';
+      statusLabel = l10n.certStatusLocked;
       statusState = SectorSignalState.locked;
-      eligibilityLabel =
-          '${learning.completedIds.length} / ${learning.units.length} LESSONS CLEARED';
+      eligibilityLabel = l10n.certEligibilityLabel(
+        learning.completedIds.length,
+        learning.units.length,
+      );
       eligibilityFraction = learning.units.isEmpty
           ? 0
           : learning.completedIds.length / learning.units.length;
-      ctaLabel = 'Clear all lessons to unlock';
+      ctaLabel = l10n.certCtaLocked;
       ctaEnabled = false;
-      semanticLabel =
-          '${data.title}. Locked. ${learning.completedIds.length} of '
-          '${learning.units.length} lessons cleared.';
+      semanticLabel = l10n.certSemanticLocked(
+        data.title,
+        learning.completedIds.length,
+        learning.units.length,
+      );
     } else if (lastAttempt == null) {
       glyph = SectorGlyph.check;
-      statusLabel = 'ELIGIBLE';
+      statusLabel = l10n.certStatusEligible;
       statusState = SectorSignalState.cleared;
-      ctaLabel = 'Start certification exam';
+      ctaLabel = l10n.certCtaStart;
       ctaEnabled = true;
-      semanticLabel = '${data.title}. Eligible to start.';
+      semanticLabel = l10n.certSemanticEligible(data.title);
     } else if (passed) {
       glyph = SectorGlyph.check;
-      statusLabel = 'VERIFIED';
+      statusLabel = l10n.certStatusVerified;
       statusState = SectorSignalState.cleared;
-      attemptText =
-          'Passed with ${lastAttempt.scorePercent}% -- Career Passport updated.';
+      attemptText = l10n.certAttemptPassed(lastAttempt.scorePercent);
       attemptState = SectorSignalState.cleared;
-      ctaLabel = 'Retake exam';
+      ctaLabel = l10n.certCtaRetake;
       ctaEnabled = true;
-      semanticLabel =
-          '${data.title}. Verified. Passed with '
-          '${lastAttempt.scorePercent} percent.';
+      semanticLabel = l10n.certSemanticVerified(
+        data.title,
+        lastAttempt.scorePercent,
+      );
     } else {
       glyph = SectorGlyph.cross;
-      statusLabel = 'LOCKED';
+      statusLabel = l10n.certStatusLocked;
       statusState = SectorSignalState.locked;
       final retakeAt = lastAttempt.submittedAt.add(
         certificationExamRetakeCooldown,
       );
       final canRetakeNow = DateTime.now().toUtc().isAfter(retakeAt);
       attemptText =
-          'Last attempt: ${lastAttempt.scorePercent}%, below the '
-          '${data.passThresholdPercent}% pass mark.'
-          '${canRetakeNow ? '' : ' You can retake this exam after ${_formatTime(retakeAt)}.'}';
+          l10n.certAttemptFailed(
+            lastAttempt.scorePercent,
+            data.passThresholdPercent,
+          ) +
+          (canRetakeNow ? '' : l10n.certRetakeAfter(_formatTime(retakeAt)));
       attemptState = SectorSignalState.locked;
-      ctaLabel = 'Retake exam';
+      ctaLabel = l10n.certCtaRetake;
       ctaEnabled = true;
       semanticLabel =
-          '${data.title}. Last attempt ${lastAttempt.scorePercent} percent, '
-          'below the ${data.passThresholdPercent} percent pass mark.'
-          '${canRetakeNow ? '' : ' Retake unlocks at ${_formatTime(retakeAt)}.'}';
+          l10n.certSemanticFailed(
+            data.title,
+            lastAttempt.scorePercent,
+            data.passThresholdPercent,
+          ) +
+          (canRetakeNow
+              ? ''
+              : l10n.certRetakeUnlocksSemantic(_formatTime(retakeAt)));
     }
 
     return SectorCredentialCard(
       pack: pack,
-      orgLine:
-          '${pack.displayName.toUpperCase()} · ${data.questions.length}Q · ~$minutes MIN',
-      levelLabel: 'PASS ${data.passThresholdPercent}%',
+      orgLine: l10n.certOrgLine(
+        pack.displayName.toUpperCase(),
+        data.questions.length,
+        minutes,
+      ),
+      levelLabel: l10n.certPassLevelLabel(data.passThresholdPercent),
       glyph: glyph,
       credentialName: data.title,
       subtitle: pack.pilotRole,

@@ -477,5 +477,68 @@
   "assessmentSubmittingLabel": "Submit ho raha hai...",
   "assessmentSubmitFirstLabel": "Career Passport evidence ke liye submit karein",
   "assessmentSubmitAnotherLabel": "Ek aur attempt submit karein",
-  "assessmentNoAttemptsRemaining": "Is clip ke liye koi attempt baaki nahi hai."
+  "assessmentNoAttemptsRemaining": "Is clip ke liye koi attempt baaki nahi hai.",
+
+  "certExamHeadline": "Warehouse Operations Certification",
+  "certExamDescription": "Poori warehouse process cover karne wala ek formal, timed exam. Ise pass karke har competency ke liye verified Career Passport evidence add karein.",
+  "certExamPassingInfoCard": "Pass karne par asli Career Passport evidence add hoti hai -- employer ko tabhi dikhti hai jab aap ise share karna chunein, baaki sab jagah ki tarah.",
+
+  "certExamLoadErrorTitle": "Certification exam load nahi ho saka",
+  "certExamLoadErrorFallback": "Exam filhaal available nahi hai.",
+
+  "certStatusLocked": "LOCKED",
+  "certStatusEligible": "ELIGIBLE",
+  "certStatusVerified": "VERIFIED",
+
+  "certEligibilityLabel": "{total} mein se {completed} LESSONS CLEARED",
+
+  "certCtaLocked": "Unlock ke liye sabhi lessons poore karein",
+  "certCtaStart": "Certification exam shuru karein",
+  "certCtaRetake": "Exam dobara dein",
+
+  "certSemanticLocked": "{title}. Locked. {total} mein se {completed} lessons cleared.",
+  "certSemanticEligible": "{title}. Shuru karne ke liye eligible.",
+  "certSemanticVerified": "{title}. Verified. {score} percent ke saath pass.",
+  "certSemanticFailed": "{title}. Last attempt {score} percent, {threshold} percent pass mark se kam.",
+  "certRetakeUnlocksSemantic": " Retake {time} par unlock hoga.",
+
+  "certAttemptPassed": "{score}% ke saath pass -- Career Passport update hua.",
+  "certAttemptFailed": "Last attempt: {score}%, {threshold}% pass mark se kam.",
+  "certRetakeAfter": " Aap {time} ke baad yeh exam dobara de sakte hain.",
+
+  "certOrgLine": "{sector} · {count}Q · ~{minutes} MIN",
+  "certPassLevelLabel": "PASS {threshold}%",
+
+  "examExitTooltip": "Exam se exit karein",
+
+  "examQuestionCounter": "Question {total} mein se {current}",
+
+  "examPreviousButton": "Previous",
+  "examNextButton": "Next",
+
+  "examAnsweredCount": "{total} mein se {answered} questions ka jawab diya gaya",
+
+  "examSubmitButton": "Exam submit karein",
+
+  "examExitDialogTitle": "Certification exam se exit karein?",
+  "examExitDialogBody": "Aapki progress khatam ho jayegi aur yeh ek attempt nahi gina jayega.",
+  "examKeepGoingButton": "Jaari rakhein",
+  "examExitButton": "Exit",
+
+  "examResultTitle": "Exam result",
+
+  "examResultMeta": "{score}% • {total} mein se {correct} sahi • pass mark {threshold}%",
+
+  "examResultPassedNote": "Is exam mein shamil har competency ke liye aapka Career Passport evidence ke saath update ho gaya hai.",
+  "examResultFailedNote": "Aap {time} ke baad yeh exam dobara de sakte hain.",
+
+  "examQuestionBreakdownTitle": "Question breakdown",
+  "examBackToLearnButton": "Learn par wapas jaayein",
+
+  "examPassedLabel": "Pass",
+  "examNotPassedLabel": "Pass nahi hue",
+
+  "examNotAnswered": "Jawab nahi diya",
+  "examYourAnswer": "Aapka jawab: {label}",
+  "examCorrectAnswer": "Sahi jawab: {label}"
 }
