@@ -31,6 +31,7 @@ class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({
     required this.onLoggedOut,
     required this.onOpenDiagnostic,
+    required this.onOpenDetailedProfile,
     super.key,
   });
 
@@ -39,6 +40,13 @@ class ProfileScreen extends ConsumerStatefulWidget {
   /// The diagnostic is a one-off setup task that re-scores readiness, so it
   /// belongs beside the career profile it feeds rather than on Home.
   final VoidCallback onOpenDiagnostic;
+
+  /// Opens the LinkedIn-style detailed profile (experience, education,
+  /// certifications, projects) -- a separate screen, not another section
+  /// here: unlike everything above it, that page's fields are edited one
+  /// entry at a time (add/edit/delete a single role, not a form for the
+  /// whole career section at once).
+  final VoidCallback onOpenDetailedProfile;
 
   @override
   ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
@@ -139,6 +147,26 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     onTap: widget.onOpenDiagnostic,
                   ),
                 ],
+              ),
+              const SizedBox(height: AppSpacing.md),
+              AppCard(
+                onTap: widget.onOpenDetailedProfile,
+                semanticLabel: l10n.profileDetailsOpenDetailedProfile,
+                child: Row(
+                  children: [
+                    const Icon(Icons.badge_outlined),
+                    const SizedBox(width: AppSpacing.sm),
+                    Expanded(
+                      child: Text(
+                        l10n.profileDetailsOpenDetailedProfile,
+                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                    const Icon(Icons.arrow_forward_rounded, size: 18),
+                  ],
+                ),
               ),
               if (draft.headline.trim().isNotEmpty) ...[
                 const SizedBox(height: AppSpacing.md),

@@ -51,6 +51,9 @@ import '../features/onboarding/data/secure_candidate_onboarding_repository.dart'
 import '../features/onboarding/data/supabase_candidate_onboarding_repository.dart';
 import '../features/onboarding/domain/candidate_onboarding_repository.dart';
 import '../features/onboarding/domain/onboarding_entry_repository.dart';
+import '../features/profile_details/data/in_memory_detailed_profile_repository.dart';
+import '../features/profile_details/data/supabase_detailed_profile_repository.dart';
+import '../features/profile_details/domain/detailed_profile_repository.dart';
 import '../features/resume/data/api_resume_parsing_repository.dart';
 import '../features/resume/data/unavailable_resume_parsing_repository.dart';
 import '../features/resume/domain/resume_parsing_repository.dart';
@@ -178,6 +181,20 @@ final candidateOnboardingRepositoryProvider =
         ref.watch(secureKeyValueStoreProvider),
       );
     });
+
+// Direct Supabase reads/writes under RLS, the same convention
+// candidateOnboardingRepositoryProvider above already uses -- no apps/api
+// involvement, since every field this repository touches is a simple
+// owned-row read (see SupabaseDetailedProfileRepository's own doc comment).
+final detailedProfileRepositoryProvider = Provider<DetailedProfileRepository>((
+  ref,
+) {
+  if (ref.watch(appConfigProvider).hasSupabaseConfiguration &&
+      ref.watch(canUseLiveBackendProvider)) {
+    return SupabaseDetailedProfileRepository(Supabase.instance.client);
+  }
+  return InMemoryDetailedProfileRepository();
+});
 
 final homeDashboardRepositoryProvider = Provider<HomeDashboardRepository>(
   (ref) => MockHomeDashboardRepository(),

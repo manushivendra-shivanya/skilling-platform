@@ -915,5 +915,73 @@
   "onboardingValidationExperience": "Apna kaam ka experience choose karein.",
   "onboardingValidationRoles": "Kam se kam ek preferred role choose karein.",
   "onboardingValidationConsent": "Aage badhne ke liye dono zaroori notices accept karein.",
-  "onboardingValidationReviewIncomplete": "Kuch zaroori profile details missing hain. Wapas jaayein aur unhe dekhein."
+  "onboardingValidationReviewIncomplete": "Kuch zaroori profile details missing hain. Wapas jaayein aur unhe dekhein.",
+
+  "profileDetailsScreenTitle": "Meri profile",
+  "profileDetailsCompletionLabel": "{percent}% poora",
+
+  "profileDetailsContactSectionTitle": "Contact",
+  "profileDetailsPhoneLabel": "Phone",
+  "profileDetailsEmailLabel": "Email",
+
+  "profileDetailsSkillsSectionTitle": "Skills",
+  "profileDetailsAddSkillHint": "Skill add karein aur enter dabayein",
+  "profileDetailsSkillsEmpty": "Abhi tak koi skill add nahi hui",
+
+  "profileDetailsExperienceSectionTitle": "Experience",
+  "profileDetailsExperienceEmpty": "Abhi tak koi experience add nahi hua",
+  "profileDetailsAddExperienceButton": "Experience add karein",
+
+  "profileDetailsEducationSectionTitle": "Education",
+  "profileDetailsEducationEmpty": "Abhi tak koi education add nahi hui",
+  "profileDetailsAddEducationButton": "Education add karein",
+
+  "profileDetailsCertificationsSectionTitle": "Certifications",
+  "profileDetailsCertificationsEmpty": "Abhi tak koi certification add nahi hui",
+  "profileDetailsAddCertificationButton": "Certification add karein",
+
+  "profileDetailsProjectsSectionTitle": "Projects",
+  "profileDetailsProjectsEmpty": "Abhi tak koi project add nahi hua",
+  "profileDetailsAddProjectButton": "Project add karein",
+
+  "profileDetailsSaveButton": "Save karein",
+  "profileDetailsDeleteButton": "Delete karein",
+  "profileDetailsEditSemantic": "{title} edit karein",
+  "profileDetailsDeleteSemantic": "{title} delete karein",
+  "profileDetailsDeleteConfirmTitle": "Yeh entry delete karein?",
+  "profileDetailsDeleteConfirmMessage": "Yeh wapas nahi laya ja sakta.",
+
+  "profileDetailsTitleFieldLabel": "Title",
+  "profileDetailsCompanyFieldLabel": "Company",
+  "profileDetailsLocationFieldLabel": "Location",
+  "profileDetailsCurrentRoleLabel": "Main abhi yahan kaam karta/karti hoon",
+
+  "profileDetailsInstitutionFieldLabel": "Institution",
+  "profileDetailsDegreeFieldLabel": "Degree",
+  "profileDetailsFieldOfStudyFieldLabel": "Field of study",
+  "profileDetailsGradeFieldLabel": "Grade",
+
+  "profileDetailsCertificationNameFieldLabel": "Certification ka naam",
+  "profileDetailsIssuingOrgFieldLabel": "Jaari karne wali sanstha",
+  "profileDetailsCredentialIdFieldLabel": "Credential ID",
+  "profileDetailsCredentialUrlFieldLabel": "Credential URL",
+
+  "profileDetailsRoleFieldLabel": "Aapka role",
+  "profileDetailsDescriptionFieldLabel": "Description",
+  "profileDetailsProjectUrlFieldLabel": "Project URL",
+  "profileDetailsOngoingProjectLabel": "Yeh ongoing hai",
+
+  "profileDetailsStartMonthFieldLabel": "Start month",
+  "profileDetailsStartYearFieldLabel": "Start year",
+  "profileDetailsEndMonthFieldLabel": "End month",
+  "profileDetailsEndYearFieldLabel": "End year",
+  "profileDetailsIssueMonthFieldLabel": "Issue month",
+  "profileDetailsIssueYearFieldLabel": "Issue year",
+  "profileDetailsExpiryMonthFieldLabel": "Expiry month",
+  "profileDetailsExpiryYearFieldLabel": "Expiry year",
+
+  "profileDetailsDateRange": "{start} - {end}",
+  "profileDetailsPresent": "Abhi tak",
+
+  "profileDetailsOpenDetailedProfile": "Meri poori profile dekhein"
 }
