@@ -4,6 +4,7 @@ import {
   ResumeAiParseResult,
   ResumeAiProvider,
 } from './resume-ai-provider';
+import { ResumeTooLongError } from './gemini-resume-parser';
 import { ResumeService } from './resume.service';
 import { makeDocx } from './testing/make-docx';
 
@@ -147,6 +148,25 @@ describe('ResumeService', () => {
       code: 'RESUME_PARSE_UNAVAILABLE',
       message:
         'Resume parsing is temporarily unavailable. Please try again in a moment.',
+    });
+  });
+
+  it('tells a candidate to shorten an oversized resume instead of calling it an outage', async () => {
+    // A truncated extraction is a property of the resume, not of the
+    // service -- reporting it as "try again in a moment" would send the
+    // candidate round a loop that can never succeed.
+    provider.error = new ResumeTooLongError();
+
+    await expect(
+      service.parseResume('candidate-1', {
+        resumeText: VALID_RESUME_TEXT,
+        consentVersion: 'v1',
+      }),
+    ).rejects.toMatchObject({
+      // Its own machine code, not the catch-all VALIDATION_ERROR: the
+      // mobile client keys the message it shows off this.
+      code: 'RESUME_TOO_LONG',
+      message: expect.stringContaining('shorter'),
     });
   });
 

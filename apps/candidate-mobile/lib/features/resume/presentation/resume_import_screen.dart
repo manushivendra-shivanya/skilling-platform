@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/dependencies.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_spacing.dart';
+import '../../../core/errors/app_failure.dart';
 import '../../../core/errors/app_failure_localization.dart';
 import '../../../core/errors/result.dart';
 import '../../../core/widgets/app_button.dart';
@@ -332,6 +333,36 @@ class _ResumeImportScreenState extends ConsumerState<ResumeImportScreen> {
     });
   }
 
+  /// What to put on screen when an extraction fails.
+  ///
+  /// Every failure type except [ValidationFailure] gets the ordinary
+  /// localized, type-based sentence -- there is nothing more specific
+  /// worth saying about a dropped connection or a model outage.
+  ///
+  /// A [ValidationFailure] is different, and only on this screen: the API
+  /// returns 400 exactly when it has rejected *this particular resume*
+  /// for a reason the candidate can act on -- the file isn't a PDF or
+  /// Word document, it's a legacy `.doc` that needs re-saving, the Word
+  /// file turned out to be a scan with no text in it, or the resume is
+  /// longer than can be read in one pass. Collapsing all of those into
+  /// "That doesn't look right. Please check and try again." would leave
+  /// someone re-uploading the same unreadable file with no idea why.
+  /// `ApiResumeParsingRepository._mapError` is what guarantees the
+  /// message here is candidate-facing copy rather than framework text.
+  ///
+  /// Known gap: these server-authored sentences are English only, so a
+  /// Hindi or Hinglish user sees English for this one class of error.
+  /// That is still a better trade than a localized sentence that doesn't
+  /// say what to do; localizing them means moving the copy behind the
+  /// envelope's machine codes (`RESUME_TOO_LONG` and friends), which is
+  /// worth doing once there are more than a handful.
+  String _parseFailureMessage(AppFailure failure, AppLocalizations l10n) {
+    if (failure is ValidationFailure && failure.message.trim().isNotEmpty) {
+      return failure.message;
+    }
+    return failure.localizedMessage(l10n);
+  }
+
   Future<void> _extract() async {
     setState(() {
       _isParsing = true;
@@ -384,7 +415,7 @@ class _ResumeImportScreenState extends ConsumerState<ResumeImportScreen> {
       failure: (failure) {
         setState(() {
           _isParsing = false;
-          _parseErrorMessage = failure.localizedMessage(l10n);
+          _parseErrorMessage = _parseFailureMessage(failure, l10n);
         });
       },
     );

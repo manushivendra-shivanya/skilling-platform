@@ -1,5 +1,6 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { HttpStatus, Inject, Injectable, Logger } from '@nestjs/common';
 import { AppError } from '../common/app-error';
+import { ResumeTooLongError } from './gemini-resume-parser';
 import { ResumeAiParseResult, ResumeAiProvider } from './resume-ai-provider';
 import { RESUME_AI_PROVIDER } from './resume-ai-provider.token';
 import {
@@ -50,6 +51,8 @@ export interface ResumeParseResponse extends ResumeAiParseResult {
 
 @Injectable()
 export class ResumeService {
+  private readonly logger = new Logger(ResumeService.name);
+
   private readonly dailyParseCounts = new Map<
     string,
     { day: string; count: number }
@@ -194,34 +197,71 @@ export class ResumeService {
   }
 
   /**
-   * Runs one provider call and shapes the response. Every provider
-   * failure -- a model outage, a malformed extraction, an unconfigured
-   * API key -- deliberately collapses into one 503 so that a missing
-   * `GEMINI_API_KEY` is not distinguishable from the outside.
+   * Runs one provider call and shapes the response.
+   *
+   * Provider failures still collapse into one generic 503 to the client,
+   * so a missing `GEMINI_API_KEY` stays indistinguishable from the
+   * outside -- but they are logged in full server-side first. The
+   * indistinguishability is meant to deny an *attacker* information
+   * about the deployment, and it was silently denying it to operators
+   * too: nothing anywhere recorded which failure had actually happened.
+   *
+   * The one exception is [ResumeTooLongError], which is a property of
+   * the resume rather than of the service, and gets actionable advice.
    */
   private async extract(
     call: () => Promise<ResumeAiParseResult>,
   ): Promise<ResumeParseResponse> {
+    let result: ResumeAiParseResult;
     try {
-      const result = await call();
-      // Deterministic completeness check, not the model self-reporting a
-      // confidence score -- an LLM's own confidence claim isn't something
-      // this service can verify, so it isn't trusted as one. fullName is
-      // the one field every other extracted field is presented alongside
-      // in the mobile review UI, so its absence means "look at this
-      // before trusting anything else here."
-      const requiresCandidateReview = !result.fullName.trim();
-      return {
-        ...result,
-        requiresCandidateReview,
-        provider: this.provider.id,
-      };
-    } catch {
+      result = await call();
+    } catch (error) {
+      // The client is told nothing beyond "temporarily unavailable" (see
+      // this method's doc comment) -- but the server has to know which
+      // failure it was. Without this line every cause looked identical
+      // from the outside: an unset API key, a model outage, a truncated
+      // extraction and a malformed JSON reply all arrived as the same
+      // opaque 503 with nothing recorded anywhere.
+      this.logger.error(
+        `Resume extraction failed via provider "${this.provider.id}": ${
+          error instanceof Error ? `${error.name}: ${error.message}` : error
+        }`,
+        error instanceof Error ? error.stack : undefined,
+      );
+
+      // Not transient, so not dressed up as such -- retrying an oversized
+      // resume truncates in exactly the same place. Telling the candidate
+      // to shorten it is the only advice that actually works.
+      if (error instanceof ResumeTooLongError) {
+        throw new AppError(
+          'RESUME_TOO_LONG',
+          'That resume is too long to read in one go. Import a shorter version, or remove older sections and try again.',
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+
       throw AppError.serviceUnavailable(
         'RESUME_PARSE_UNAVAILABLE',
         'Resume parsing is temporarily unavailable. Please try again in a moment.',
       );
     }
+
+    // Deterministic completeness check, not the model self-reporting a
+    // confidence score -- an LLM's own confidence claim isn't something
+    // this service can verify, so it isn't trusted as one. fullName is
+    // the one field every other extracted field is presented alongside
+    // in the mobile review UI, so its absence means "look at this
+    // before trusting anything else here."
+    //
+    // Outside the try above on purpose: only the *provider call* is
+    // guarded. Wrapping this too would let a bug in this service's own
+    // response shaping be reported to the candidate as a model outage.
+    const requiresCandidateReview = !result.fullName.trim();
+    return {
+      ...result,
+      requiresCandidateReview,
+      provider: this.provider.id,
+    };
   }
 
   private enforceRateLimit(candidateId: string): void {
