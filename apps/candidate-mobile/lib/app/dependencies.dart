@@ -55,6 +55,9 @@ import '../features/profile_details/data/in_memory_detailed_profile_repository.d
 import '../features/profile_details/data/supabase_detailed_profile_repository.dart';
 import '../features/profile_details/domain/detailed_profile_repository.dart';
 import '../features/resume/data/api_resume_parsing_repository.dart';
+import '../features/profile_assistant/data/api_profile_assistant_repository.dart';
+import '../features/profile_assistant/data/unavailable_profile_assistant_repository.dart';
+import '../features/profile_assistant/domain/profile_assistant_repository.dart';
 import '../features/resume/data/unavailable_resume_parsing_repository.dart';
 import '../features/resume/domain/resume_parsing_repository.dart';
 import '../features/shifts/data/api_shifts_repository.dart';
@@ -269,6 +272,22 @@ final resumeParsingRepositoryProvider = Provider<ResumeParsingRepository>((
   }
   return const UnavailableResumeParsingRepository();
 });
+
+final profileAssistantRepositoryProvider = Provider<ProfileAssistantRepository>(
+  (ref) {
+    final config = ref.watch(appConfigProvider);
+    if (config.hasSupabaseConfiguration &&
+        config.hasApiConfiguration &&
+        ref.watch(canUseLiveBackendProvider)) {
+      return ApiProfileAssistantRepository(
+        dio: Dio(),
+        supabaseClient: Supabase.instance.client,
+        apiBaseUrl: config.apiBaseUrl,
+      );
+    }
+    return const UnavailableProfileAssistantRepository();
+  },
+);
 
 final networkingRepositoryProvider = Provider<NetworkingRepository>((ref) {
   final config = ref.watch(appConfigProvider);

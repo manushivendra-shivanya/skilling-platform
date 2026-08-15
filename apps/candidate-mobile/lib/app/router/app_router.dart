@@ -34,6 +34,8 @@ import '../../features/shifts/presentation/shift_payout_screen.dart';
 import '../../features/shifts/presentation/shift_screen.dart';
 import '../../features/profile/presentation/profile_screen.dart';
 import '../../features/profile_details/presentation/detailed_profile_screen.dart';
+import '../../features/profile_assistant/presentation/profile_assistant_screen.dart';
+import '../../features/profile_assistant/presentation/profile_completion_screen.dart';
 import '../../features/resume/presentation/resume_import_screen.dart';
 import '../../features/splash/presentation/app_startup_screen.dart';
 import '../../features/voice/presentation/voice_interview_screen.dart';
@@ -120,6 +122,17 @@ const detailedProfileRouteName = 'detailed-profile';
 const detailedProfileResumeImportRoutePath =
     '$detailedProfileRoutePath/import-resume';
 const detailedProfileResumeImportRouteName = 'detailed-profile-import-resume';
+
+/// "Finish your profile" -- names what's still missing and offers the
+/// assistant. Reached from the Detailed Profile page; the gap list it
+/// shows is a pure local computation, so it works without a backend.
+const profileCompletionRoutePath = '$detailedProfileRoutePath/finish';
+const profileCompletionRouteName = 'profile-completion';
+
+/// The assistant conversation itself. Needs a configured AI backend --
+/// see `UnavailableProfileAssistantRepository` for what happens without.
+const profileAssistantRoutePath = '$profileCompletionRoutePath/assistant';
+const profileAssistantRouteName = 'profile-assistant';
 const aiCoachRoutePath = '/coach';
 const aiCoachRouteName = 'ai-coach';
 const aiCoachThreadRoutePattern = '$aiCoachRoutePath/:threadId';
@@ -616,7 +629,24 @@ GoRouter createAppRouter({
         builder: (context, state) => DetailedProfileScreen(
           onImportFromResume: () =>
               context.push(detailedProfileResumeImportRoutePath),
+          onFinishProfile: () => context.push(profileCompletionRoutePath),
         ),
+      ),
+      GoRoute(
+        parentNavigatorKey: rootNavigatorKey,
+        path: profileCompletionRoutePath,
+        name: profileCompletionRouteName,
+        builder: (context, state) => ProfileCompletionScreen(
+          onOpenAssistant: () => context.push(profileAssistantRoutePath),
+          onFillManually: () => context.pop(),
+        ),
+      ),
+      GoRoute(
+        parentNavigatorKey: rootNavigatorKey,
+        path: profileAssistantRoutePath,
+        name: profileAssistantRouteName,
+        builder: (context, state) =>
+            ProfileAssistantScreen(onDone: () => context.pop()),
       ),
       GoRoute(
         parentNavigatorKey: rootNavigatorKey,
@@ -1165,6 +1195,8 @@ const _mainAndGlobalRoutePaths = {
   profileRoutePath,
   detailedProfileRoutePath,
   detailedProfileResumeImportRoutePath,
+  profileCompletionRoutePath,
+  profileAssistantRoutePath,
   aiCoachRoutePath,
   notificationsRoutePath,
   diagnosticRoutePath,

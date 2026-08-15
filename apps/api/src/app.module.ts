@@ -10,6 +10,7 @@ import { HealthController } from './health/health.controller';
 import { JobSourcesModule } from './integrations/job-sources/job-sources.module';
 import { JobsModule } from './jobs/jobs.module';
 import { NetworkingModule } from './networking/networking.module';
+import { ProfileAssistantModule } from './profile-assistant/profile-assistant.module';
 import { ResumeModule } from './resume/resume.module';
 import { ShiftsModule } from './shifts/shifts.module';
 import { WorkplaceSimulationModule } from './workplace-simulation/workplace-simulation.module';
@@ -26,6 +27,7 @@ import { WorkplaceSimulationModule } from './workplace-simulation/workplace-simu
     JobSourcesModule,
     JobsModule,
     NetworkingModule,
+    ProfileAssistantModule,
     ResumeModule,
     ShiftsModule,
     WorkplaceSimulationModule,
