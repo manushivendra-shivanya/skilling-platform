@@ -19,7 +19,10 @@ class PlatformResumeFilePicker implements ResumeFilePicker {
 
   @override
   Future<PickedResumeFile?> pickResumeFile() async {
-    final result = await FilePicker.platform.pickFiles(
+    // Static, not `FilePicker.platform.pickFiles` -- file_picker 11 made
+    // FilePicker an `abstract final class` whose methods are static and
+    // delegate to FilePickerPlatform.instance internally.
+    final result = await FilePicker.pickFiles(
       type: FileType.custom,
       // `.doc` is offered deliberately even though nothing can read it --
       // the server answers a legacy Word file with "save it as PDF or
