@@ -35,19 +35,48 @@ dependencies:
   # back a single file the candidate explicitly chose, rather than the app
   # gaining access to their files.
   #
-  # Floor is 11, not 8: file_picker 8.3.7 hardcodes `compileSdk 34` in its
-  # own android/build.gradle while pulling in
-  # flutter_plugin_android_lifecycle, which requires 36 -- so
-  # `:file_picker:checkDebugAarMetadata` fails the APK build outright, no
-  # matter that this app already compiles against 36. From 11 the plugin
-  # reads `flutter.compileSdkVersion` and inherits ours. `minSdk 21` is
-  # unchanged between the two, so no device loses support.
+  # Version 12 specifically. The two older versions each break the
+  # Android build in their own way, both traceable to
+  # `android.builtInKotlin=false` in android/gradle.properties (put there
+  # by the Flutter template) combined with AGP 9:
   #
-  # Not 12 yet: file_picker 12 pulls in windows_file_picker, which needs
-  # win32 ^6, while flutter_secure_storage 9.2.4 pins win32 ^5. Moving to
-  # 12 means upgrading flutter_secure_storage first -- for a Windows-only
-  # transitive dependency this app never builds for.
-  file_picker: ^11.0.0
+  #  - 8.3.7 hardcodes `compileSdk 34` while pulling in
+  #    flutter_plugin_android_lifecycle, which needs 36, so
+  #    `:file_picker:checkDebugAarMetadata` fails outright.
+  #  - 11.0.3 skips applying the Kotlin plugin whenever AGP is 9+,
+  #    expecting AGP's built-in Kotlin to cover it -- but that is switched
+  #    off here, and Flutter decides whether to apply `kotlin-android`
+  #    itself by regex over the plugin's build script, which matches the
+  #    `apply plugin: 'org.jetbrains.kotlin.android'` line sitting unused
+  #    inside that `if`. Neither side applies Kotlin, the plugin's .kt
+  #    sources never compile, and the app fails with
+  #    `cannot find symbol: class FilePickerPlugin` from
+  #    GeneratedPluginRegistrant.
+  #
+  # 12 moves Android into the android_file_picker package, which reads the
+  # `android.builtInKotlin` property and applies the Kotlin plugin itself
+  # when it is false -- the only one of the three that handles this
+  # project's actual configuration.
+  file_picker: ^12.0.0
+# win32 6 is required by windows_file_picker, which file_picker 12 pulls in;
+# flutter_secure_storage 9.2.4 pins win32 ^5, so the two cannot co-exist
+# without help. Overridden rather than resolved by upgrading
+# flutter_secure_storage, because that upgrade is expensive and this one is
+# free: win32 is a Windows-only package, and this app ships Android (see
+# android/) -- no win32 code is ever compiled for it.
+#
+# Upgrading flutter_secure_storage instead would cost real users. Its 11.0.0
+# notes say "any data saved using deprecated algorithms or features will be
+# unusable after this upgrade" unless you pass through v10 first, so a direct
+# 9.2.4 -> 11 jump silently invalidates every stored session and onboarding
+# draft on existing installs -- and raises minSdk from 21 to 24, dropping
+# devices this app deliberately targets.
+#
+# Revisit when flutter_secure_storage is upgraded deliberately, via v10, as
+# its own piece of work.
+dependency_overrides:
+  win32: ^6.4.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
