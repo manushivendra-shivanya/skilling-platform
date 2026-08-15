@@ -5,23 +5,27 @@ import {
 } from './resume-ai-provider';
 import { ResumeService } from './resume.service';
 
+function emptyResult(fullName: string): ResumeAiParseResult {
+  return {
+    fullName,
+    phone: '',
+    email: '',
+    city: '',
+    headline: '',
+    yearsOfExperience: '',
+    skills: [],
+    education: [],
+    workExperience: [],
+    certifications: [],
+    projects: [],
+    modelId: 'fake-model',
+  };
+}
+
 class FakeResumeParser implements ResumeAiProvider {
   readonly id = 'fake';
   calls: ParseResumeParams[] = [];
-  result: ResumeAiParseResult = {
-    fields: {
-      fullName: 'Asha Kumari',
-      phone: '',
-      email: '',
-      city: '',
-      headline: '',
-      yearsOfExperience: '',
-      education: '',
-      workHistory: '',
-      skills: '',
-    },
-    modelId: 'fake-model',
-  };
+  result: ResumeAiParseResult = emptyResult('Asha Kumari');
   error: Error | null = null;
 
   async parseResume(params: ParseResumeParams) {
@@ -81,25 +85,21 @@ describe('ResumeService', () => {
     expect(provider.calls[0].resumeText).toBe(VALID_RESUME_TEXT);
   });
 
-  it('returns the parsed fields and provider metadata on success', async () => {
+  it('returns the parsed extraction and provider metadata on success', async () => {
     const result = await service.parseResume('candidate-1', {
       resumeText: VALID_RESUME_TEXT,
       consentVersion: 'v1',
     });
 
     expect(result).toEqual({
-      fields: provider.result.fields,
+      ...provider.result,
       requiresCandidateReview: false,
-      modelId: 'fake-model',
       provider: 'fake',
     });
   });
 
   it('flags requiresCandidateReview when fullName came back empty', async () => {
-    provider.result = {
-      fields: { ...provider.result.fields, fullName: '' },
-      modelId: 'fake-model',
-    };
+    provider.result = emptyResult('');
 
     const result = await service.parseResume('candidate-1', {
       resumeText: VALID_RESUME_TEXT,

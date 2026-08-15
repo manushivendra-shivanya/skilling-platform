@@ -20,6 +20,7 @@ import '../../../core/widgets/app_sticky_footer.dart';
 import '../../../core/widgets/app_text_field.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../resume/domain/resume_parsing_repository.dart';
+import '../../resume/presentation/resume_extraction_summary.dart';
 import '../domain/candidate_onboarding_draft.dart';
 import 'candidate_onboarding_controller.dart';
 import 'candidate_onboarding_labels.dart';
@@ -658,11 +659,16 @@ class _SelectableCard extends StatelessWidget {
 ///
 /// Only `fullName` and `headline` are ever written back onto the draft
 /// (see `_CandidateOnboardingScreenState._applyExtractedFullName` and
-/// `_applyExtractedHeadline`). Every other extracted field is shown for
-/// the candidate's own reference only -- `CandidateOnboardingDraft` has
-/// no columns for work history, skills, phone, or email, and adding them
-/// is a real schema decision this step doesn't make on its own. `headline`
-/// feeds the Professional Persona networking card (features/persona/).
+/// `_applyExtractedHeadline`) -- deliberately kept narrow, even though
+/// `DetailedProfileRepository` now has somewhere real to put the richer
+/// fields (work history, skills, phone, email, education, certifications,
+/// projects). The full apply-everything experience lives in the
+/// post-signup `ResumeImportScreen`, which most candidates see before
+/// ever reaching this step; this step stays a lighter secondary utility
+/// (see/re-extract fullName + headline) for whoever reaches the wizard
+/// without having used that screen, rather than silently duplicating its
+/// broader write behavior in a second place. `headline` feeds the
+/// Professional Persona networking card (features/persona/).
 class _ResumeUploadStep extends ConsumerStatefulWidget {
   const _ResumeUploadStep({
     required this.onFullNameExtracted,
@@ -750,7 +756,7 @@ class _ResumeUploadStepState extends ConsumerState<_ResumeUploadStep> {
         ],
         if (_result != null) ...[
           const SizedBox(height: AppSpacing.lg),
-          _ResumeExtractionSummary(result: _result!),
+          ResumeExtractionSummary(result: _result!),
         ],
         const SizedBox(height: AppSpacing.md),
         Text(
@@ -801,13 +807,11 @@ class _ResumeUploadStepState extends ConsumerState<_ResumeUploadStep> {
           _isParsing = false;
           _result = parsed;
         });
-        final extractedName = parsed.fields['fullName']?.trim();
-        if (extractedName != null && extractedName.isNotEmpty) {
-          widget.onFullNameExtracted(extractedName);
+        if (parsed.fullName.isNotEmpty) {
+          widget.onFullNameExtracted(parsed.fullName);
         }
-        final extractedHeadline = parsed.fields['headline']?.trim();
-        if (extractedHeadline != null && extractedHeadline.isNotEmpty) {
-          widget.onHeadlineExtracted(extractedHeadline);
+        if (parsed.headline.isNotEmpty) {
+          widget.onHeadlineExtracted(parsed.headline);
         }
       },
       failure: (failure) {
@@ -816,76 +820,6 @@ class _ResumeUploadStepState extends ConsumerState<_ResumeUploadStep> {
           _errorMessage = failure.localizedMessage(l10n);
         });
       },
-    );
-  }
-}
-
-class _ResumeExtractionSummary extends StatelessWidget {
-  const _ResumeExtractionSummary({required this.result});
-
-  final ResumeParseResult result;
-
-  Map<String, String> _fieldLabels(AppLocalizations l10n) => {
-    'fullName': l10n.onboardingFullNameFieldLabel,
-    'phone': l10n.onboardingResumeFieldPhone,
-    'email': l10n.onboardingResumeFieldEmail,
-    'city': l10n.onboardingResumeFieldCity,
-    'headline': l10n.onboardingResumeFieldHeadline,
-    'yearsOfExperience': l10n.onboardingResumeFieldExperience,
-    'education': l10n.onboardingResumeFieldEducation,
-    'workHistory': l10n.onboardingResumeFieldWorkHistory,
-    'skills': l10n.onboardingResumeFieldSkills,
-  };
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final fieldLabels = _fieldLabels(l10n);
-    final populated = fieldLabels.entries
-        .where((entry) => (result.fields[entry.key]?.trim() ?? '').isNotEmpty)
-        .toList(growable: false);
-
-    return AppCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            l10n.onboardingResumeSummaryHeading,
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
-          const SizedBox(height: AppSpacing.xs),
-          if (result.requiresCandidateReview)
-            Padding(
-              padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-              child: Text(
-                l10n.onboardingResumeReviewWarning,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).colorScheme.error,
-                ),
-              ),
-            ),
-          if (populated.isEmpty)
-            Text(l10n.onboardingResumeEmptyState)
-          else
-            for (final entry in populated) ...[
-              Text(
-                fieldLabels[entry.key]!,
-                style: Theme.of(context).textTheme.labelMedium,
-              ),
-              Text(result.fields[entry.key]!.trim()),
-              const SizedBox(height: AppSpacing.sm),
-            ],
-          const SizedBox(height: AppSpacing.xs),
-          Text(
-            result.fields['fullName']?.trim().isNotEmpty ?? false
-                ? l10n.onboardingResumeFooterNameFilled
-                : l10n.onboardingResumeFooterPreviewOnly,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-          ),
-        ],
-      ),
     );
   }
 }
