@@ -1,9 +1,10 @@
-import { GoogleGenAI } from '@google/genai';
+import { GoogleGenAI, Part } from '@google/genai';
 import {
   ParsedCertificationEntry,
   ParsedEducationEntry,
   ParsedProjectEntry,
   ParsedWorkExperienceEntry,
+  ParseResumeDocumentParams,
   ParseResumeParams,
   ResumeAiParseResult,
   ResumeAiProvider,
@@ -37,9 +38,35 @@ export class GeminiResumeParser implements ResumeAiProvider {
   async parseResume({
     resumeText,
   }: ParseResumeParams): Promise<ResumeAiParseResult> {
+    return this.extract([{ text: buildPrompt(resumeText) }]);
+  }
+
+  /**
+   * The uploaded file goes to the model as an `inlineData` part -- the
+   * shape `Part.inlineData: { data (base64), mimeType }` declared by the
+   * installed @google/genai typings, checked against them rather than
+   * recalled, in keeping with this file's standing caution about guessed
+   * request fields.
+   *
+   * Inline (rather than the Files API) because a resume is bounded to a
+   * few megabytes by `ResumeService`, well inside the inline request
+   * limit, and an upload-then-reference round trip would add a second
+   * failure mode for no gain at this size.
+   */
+  async parseResumeDocument({
+    contentBase64,
+    mimeType,
+  }: ParseResumeDocumentParams): Promise<ResumeAiParseResult> {
+    return this.extract([
+      { inlineData: { data: contentBase64, mimeType } },
+      { text: buildPrompt(null) },
+    ]);
+  }
+
+  private async extract(parts: Part[]): Promise<ResumeAiParseResult> {
     const response = await this.client.models.generateContent({
       model: GEMINI_RESUME_MODEL_ID,
-      contents: [{ role: 'user', parts: [{ text: buildPrompt(resumeText) }] }],
+      contents: [{ role: 'user', parts }],
       config: { maxOutputTokens: 4000 },
     });
 
@@ -55,7 +82,21 @@ export class GeminiResumeParser implements ResumeAiProvider {
   }
 }
 
-function buildPrompt(resumeText: string): string {
+/**
+ * One prompt for both input routes. [resumeText] is null when the resume
+ * arrives as an attached document instead of pasted text -- every
+ * extraction and normalization rule above the source is identical either
+ * way, and duplicating them into a second prompt would guarantee the two
+ * drift apart.
+ */
+function buildPrompt(resumeText: string | null): string {
+  const source =
+    resumeText === null
+      ? `The resume is the document attached to this message. Read all of it, including every page, and follow the rules above against its contents.`
+      : `Resume text:
+"""
+${resumeText}
+"""`;
   return `You extract and INTERPRET structured fields from a candidate's resume for a job-skilling platform serving warehouse, logistics, and similar operational roles in India.
 
 Two different rules apply to different fields -- follow both exactly:
@@ -122,10 +163,7 @@ Respond with ONLY a single JSON object, no markdown code fences, no commentary b
 
 Rules for the array fields (education, workExperience, certifications, projects): include one entry per item the resume actually lists, most recent first. An empty array is correct when the resume genuinely lists nothing for that section -- do not invent an entry to avoid an empty array. Use JSON null (not a string) for any month/year that isn't stated. Only set isCurrent/isOngoing to true when the resume itself says "present", "current", "ongoing" or equivalent.
 
-Resume text:
-"""
-${resumeText}
-"""`;
+${source}`;
 }
 
 function parseExtractionJson(

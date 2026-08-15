@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:dio/dio.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -30,7 +32,33 @@ class ApiResumeParsingRepository implements ResumeParsingRepository {
   final String _apiBaseUrl;
 
   @override
-  Future<Result<ResumeParseResult>> parse(ResumeParseRequest request) async {
+  Future<Result<ResumeParseResult>> parse(ResumeParseRequest request) {
+    return _post('resume/parse', {
+      'resumeText': request.resumeText,
+      'consentVersion': request.consentVersion,
+    });
+  }
+
+  /// The file goes up base64-encoded inside the ordinary JSON body rather
+  /// than as multipart form data -- one request shape, one auth header,
+  /// and the same error envelope every other endpoint returns. A resume
+  /// is bounded to a few megabytes server-side, so base64's one-third
+  /// size overhead costs less than a second transport to maintain.
+  @override
+  Future<Result<ResumeParseResult>> parseDocument(
+    ResumeDocumentParseRequest request,
+  ) {
+    return _post('resume/parse-document', {
+      'contentBase64': base64Encode(request.bytes),
+      'fileName': request.fileName,
+      'consentVersion': request.consentVersion,
+    });
+  }
+
+  Future<Result<ResumeParseResult>> _post(
+    String path,
+    Map<String, Object?> data,
+  ) async {
     final accessToken = _supabaseClient.auth.currentSession?.accessToken;
     if (accessToken == null) {
       return const ResultFailure(
@@ -39,12 +67,9 @@ class ApiResumeParsingRepository implements ResumeParsingRepository {
     }
     try {
       final response = await _dio.post<Object?>(
-        '$_apiBaseUrl/resume/parse',
+        '$_apiBaseUrl/$path',
         options: Options(headers: {'Authorization': 'Bearer $accessToken'}),
-        data: {
-          'resumeText': request.resumeText,
-          'consentVersion': request.consentVersion,
-        },
+        data: data,
       );
       final body = response.data;
       if (body is! Map) {
@@ -218,8 +243,7 @@ class ApiResumeParsingRepository implements ResumeParsingRepository {
       );
     }
     // 403 covers both the required-consent case and rate-limiting -- same
-    // posture as ApiCoachRepository: PermissionFailure surfaces `.message`
-    // verbatim, so the server's own wording carries through untouched.
+    // posture as ApiCoachRepository.
     if (status == 403 || status == 429) {
       return PermissionFailure(message, cause: error, stackTrace: stackTrace);
     }
@@ -235,6 +259,19 @@ class ApiResumeParsingRepository implements ResumeParsingRepository {
     if (networkErrorTypes.contains(error.type)) {
       return NetworkFailure(
         'Could not reach the server. Check your connection and try again.',
+        cause: error,
+        stackTrace: stackTrace,
+      );
+    }
+    // `ResumeService.parseResume` turns *every* provider failure -- a
+    // Gemini outage, a malformed extraction, or simply an unset
+    // GEMINI_API_KEY -- into a 503. Without this branch that landed on
+    // UnexpectedFailure, which renders as "Something unexpected went
+    // wrong": no hint that waiting helps, and indistinguishable from a
+    // bug in the app itself.
+    if (status != null && status >= 500 && status < 600) {
+      return ServiceUnavailableFailure(
+        message,
         cause: error,
         stackTrace: stackTrace,
       );

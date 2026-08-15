@@ -1,3 +1,4 @@
+import 'package:candidate_mobile/core/errors/app_failure.dart';
 import 'package:candidate_mobile/core/errors/result.dart';
 import 'package:candidate_mobile/core/repositories/candidate_session_repository.dart';
 import 'package:candidate_mobile/core/network/connectivity_status.dart';
@@ -440,10 +441,22 @@ void main() {
 
       // Not UnavailableResumeParsingRepository's own internal message
       // ("Resume parsing needs a configured backend...") -- this field's
-      // errorText now goes through AppFailureLocalization like every other
-      // error surface in the app, so this UnexpectedFailure shows its one
-      // generic, localized sentence instead of the raw internal text.
-      expect(find.text('Something unexpected went wrong.'), findsOneWidget);
+      // errorText goes through AppFailureLocalization like every other
+      // error surface in the app, so what shows is the one generic,
+      // localized sentence for the failure's *type*.
+      //
+      // That type is ServiceUnavailableFailure, not UnexpectedFailure:
+      // "temporarily unavailable, try again shortly" is true of a build
+      // with no backend configured and of a 503 from a real one, where
+      // the generic "something unexpected went wrong" this used to
+      // assert read as a crash and told the candidate nothing.
+      expect(
+        find.text(
+          'This service is temporarily unavailable. '
+          'Please try again in a few minutes.',
+        ),
+        findsOneWidget,
+      );
       expect(find.text('What we found'), findsNothing);
 
       // The step is genuinely optional -- a failed extraction never
@@ -543,6 +556,13 @@ Future<void> _navigateToResumeStep(WidgetTester tester) async {
 
 class _FakeResumeParsingRepository implements ResumeParsingRepository {
   final calls = <ResumeParseRequest>[];
+
+  @override
+  Future<Result<ResumeParseResult>> parseDocument(
+    ResumeDocumentParseRequest request,
+  ) async => const ResultFailure<ResumeParseResult>(
+    ValidationFailure('The onboarding step has no upload affordance.'),
+  );
 
   @override
   Future<Result<ResumeParseResult>> parse(ResumeParseRequest request) async {

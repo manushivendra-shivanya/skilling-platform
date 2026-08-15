@@ -23,6 +23,7 @@
     "@nestjs/platform-express": "^10.4.15",
     "@supabase/supabase-js": "^2.47.10",
     "@zavudev/sdk": "^0.53.0",
+    "mammoth": "^1.12.1",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
     "standardwebhooks": "^1.0.0"

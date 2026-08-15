@@ -71,6 +71,7 @@
   "failureAuthentication": "जारी रखने के लिए कृपया दोबारा साइन इन करें।",
   "failurePermission": "इसके लिए एक अनुमति चाहिए जो अभी नहीं दी गई है।",
   "failureTimeout": "इसमें बहुत समय लग गया। कृपया फिर से कोशिश करें।",
+  "failureServiceUnavailable": "यह सेवा फ़िलहाल उपलब्ध नहीं है। कृपया कुछ मिनट बाद फिर कोशिश करें।",
   "failureUnexpected": "कुछ अप्रत्याशित गड़बड़ी हुई।",
 
   "homeLoadErrorTitle": "होम लोड नहीं हो सका",
@@ -889,6 +890,12 @@
   "resumeImportContinueAnywayButton": "फिर भी आगे बढ़ें",
 
   "resumeImportApplyFailedMessage": "कुछ विवरण सेव नहीं किए जा सके। आप उन्हें बाद में अपनी प्रोफ़ाइल से जोड़ सकते हैं।",
+  "resumeImportUploadButton": "PDF या Word फ़ाइल अपलोड करें",
+  "resumeImportUploadHint": "PDF या Word (.docx), अधिकतम 5 MB",
+  "resumeImportUploadOrPaste": "या टेक्स्ट पेस्ट करें",
+  "resumeImportRemoveFileButton": "हटाएँ",
+  "resumeImportFileTooLargeError": "यह फ़ाइल बहुत बड़ी है। 5 MB से छोटा रिज़्यूमे चुनें।",
+  "resumeImportFileUnreadableError": "यह फ़ाइल पढ़ी नहीं जा सकी। कृपया इसे दोबारा चुनें।",
 
   "onboardingVoiceStepTitle": "वॉइस परिचय",
   "onboardingVoiceStepDescription": "हम यहां एक छोटा वॉइस अभ्यास जोड़ने की योजना बना रहे हैं, जिसमें पहले स्पष्ट माइक्रोफ़ोन अनुमति और अपनी सहमति चरण होगी।",

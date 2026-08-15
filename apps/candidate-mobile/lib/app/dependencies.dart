@@ -58,7 +58,9 @@ import '../features/resume/data/api_resume_parsing_repository.dart';
 import '../features/profile_assistant/data/api_profile_assistant_repository.dart';
 import '../features/profile_assistant/data/unavailable_profile_assistant_repository.dart';
 import '../features/profile_assistant/domain/profile_assistant_repository.dart';
+import '../features/resume/data/platform_resume_file_picker.dart';
 import '../features/resume/data/unavailable_resume_parsing_repository.dart';
+import '../features/resume/domain/resume_file_picker.dart';
 import '../features/resume/domain/resume_parsing_repository.dart';
 import '../features/shifts/data/api_shifts_repository.dart';
 import '../features/shifts/data/local_mock_shifts_repository.dart';
@@ -272,6 +274,16 @@ final resumeParsingRepositoryProvider = Provider<ResumeParsingRepository>((
   }
   return const UnavailableResumeParsingRepository();
 });
+
+/// Not config-gated the way `resumeParsingRepositoryProvider` is: picking
+/// a file is a purely local, always-available capability. Whether the
+/// chosen file can then be *parsed* is the repository's business, and
+/// letting the picker open regardless keeps the failure honest -- the
+/// candidate is told parsing is unavailable, rather than the upload
+/// button being mysteriously absent.
+final resumeFilePickerProvider = Provider<ResumeFilePicker>(
+  (ref) => const PlatformResumeFilePicker(),
+);
 
 final profileAssistantRepositoryProvider = Provider<ProfileAssistantRepository>(
   (ref) {

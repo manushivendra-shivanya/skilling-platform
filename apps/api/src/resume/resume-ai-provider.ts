@@ -3,6 +3,28 @@ export interface ParseResumeParams {
 }
 
 /**
+ * A resume the candidate uploaded as a file, handed to the model as-is
+ * rather than as extracted text.
+ *
+ * Only formats the model reads natively arrive here -- PDF today (see
+ * `ResumeService.parseResumeDocument`, which routes .docx through a text
+ * extractor and the ordinary [ParseResumeParams] path instead). Passing
+ * the original bytes matters for PDFs specifically: resumes lean on
+ * two-column layouts and tables, and a text extractor interleaves those
+ * columns into nonsense, whereas the model sees the page.
+ */
+export interface ParseResumeDocumentParams {
+  /** Raw file bytes, base64-encoded. */
+  contentBase64: string;
+  /**
+   * IANA mime type of those bytes. Established by sniffing the file's own
+   * magic number server-side, never taken from what the client claimed --
+   * see `sniffResumeDocumentKind`.
+   */
+  mimeType: string;
+}
+
+/**
  * One qualification. [degree] and [fieldOfStudy] are deliberately separate
  * fields, not one free-text string -- this is the "intelligence" layer:
  * an abbreviation like "BTech CS" on the resume should come back here as
@@ -98,4 +120,7 @@ export interface ResumeAiParseResult {
 export interface ResumeAiProvider {
   readonly id: string;
   parseResume(params: ParseResumeParams): Promise<ResumeAiParseResult>;
+  parseResumeDocument(
+    params: ParseResumeDocumentParams,
+  ): Promise<ResumeAiParseResult>;
 }

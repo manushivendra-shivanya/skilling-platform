@@ -270,6 +270,7 @@
   "failureAuthentication": "Please sign in again to continue.",
   "failurePermission": "This needs a permission that hasn't been granted yet.",
   "failureTimeout": "That took too long. Please try again.",
+  "failureServiceUnavailable": "This service is temporarily unavailable. Please try again in a few minutes.",
   "failureUnexpected": "Something unexpected went wrong.",
   "@failureNetwork": {
     "description": "Generic user-facing message for AppFailure.NetworkFailure -- shown instead of the failure's own internal `message` field, which is English-only developer/log text, not translated copy."
@@ -288,6 +289,9 @@
   },
   "@failureTimeout": {
     "description": "Generic user-facing message for AppFailure.TimeoutFailure."
+  },
+  "@failureServiceUnavailable": {
+    "description": "Generic user-facing message for AppFailure.ServiceUnavailableFailure -- a 5xx from the API, or a feature this build has no backend configuration for. Says 'try again shortly' because that is the honest advice, unlike the generic unexpected-error copy it replaced."
   },
   "@failureUnexpected": {
     "description": "Generic user-facing message for AppFailure.UnexpectedFailure, and the fallback for any error that isn't an AppFailure at all."
@@ -1928,6 +1932,24 @@
 
   "resumeImportApplyFailedMessage": "Some details could not be saved. You can add them later from your profile.",
   "@resumeImportApplyFailedMessage": { "description": "Shown when applying a reviewed resume extraction partially or fully fails." },
+
+  "resumeImportUploadButton": "Upload PDF or Word file",
+  "@resumeImportUploadButton": { "description": "Opens the device's document picker to choose a resume file." },
+
+  "resumeImportUploadHint": "PDF or Word (.docx), up to 5 MB",
+  "@resumeImportUploadHint": { "description": "Supported resume upload formats and size limit, shown under the upload button." },
+
+  "resumeImportUploadOrPaste": "or paste the text",
+  "@resumeImportUploadOrPaste": { "description": "Divider between the resume-file upload option and the paste-text field." },
+
+  "resumeImportRemoveFileButton": "Remove",
+  "@resumeImportRemoveFileButton": { "description": "Clears the chosen resume file and returns to the paste-text field." },
+
+  "resumeImportFileTooLargeError": "That file is too large. Choose a resume under 5 MB.",
+  "@resumeImportFileTooLargeError": { "description": "Shown when the picked resume file exceeds the upload size limit, before any request is made." },
+
+  "resumeImportFileUnreadableError": "That file could not be read. Please choose it again.",
+  "@resumeImportFileUnreadableError": { "description": "Shown when the device's picker returned a file whose contents could not be loaded." },
 
   "onboardingVoiceStepTitle": "Voice introduction",
   "onboardingVoiceStepDescription": "We plan to add a short voice practice here, with clear microphone permission and its own consent step first.",
