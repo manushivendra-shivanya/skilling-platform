@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import '../../../core/errors/result.dart';
 import '../../profile_details/domain/detailed_candidate_profile.dart';
 
@@ -10,22 +12,47 @@ class ResumeParseRequest {
 
   final String candidateId;
 
-  /// Pasted/extracted resume text -- v1 works on plain text, not a
-  /// stored file. A prior version of this contract had a
-  /// `documentReference` field implying an already-uploaded file this
-  /// repository would fetch and parse; that direction (pick a file,
-  /// upload it to storage, parse the stored bytes) needs real
-  /// infrastructure this app doesn't have yet (a storage bucket, upload
-  /// UI, and either client- or server-side PDF/DOCX text extraction --
-  /// see `apps/api/src/resume/gemini-resume-parser.ts`'s doc comment).
-  /// Renamed rather than kept alongside a new field: this interface had
-  /// no implementation and no call sites before this, so there was
-  /// nothing to stay compatible with.
+  /// Pasted resume text. A resume that exists as a PDF or Word file goes
+  /// through [ResumeDocumentParseRequest] instead -- the file itself is
+  /// sent, and nothing on this side tries to turn it into text first.
   final String resumeText;
 
   /// A per-action consent value, not a versioned platform consent
   /// (`OnboardingConsentVersions` covers terms/privacy only) -- see
   /// `ResumeUploadStep`'s doc comment for why.
+  final String consentVersion;
+}
+
+/// A resume the candidate picked as a file instead of pasting.
+///
+/// The bytes are sent as-is to Flora's own API, which decides the format
+/// from the file's own magic number and routes a PDF straight to the
+/// model while extracting a .docx to text first (see
+/// `apps/api/src/resume/resume.service.ts`). Nothing is uploaded to
+/// storage and nothing is kept: the file makes one round trip inside the
+/// parse request and is never persisted on either side.
+///
+/// Deliberately no client-side text extraction. A PDF resume is usually
+/// two columns or a table, and every plain-text extractor interleaves
+/// those into unreadable order -- sending the original file is what lets
+/// the model see the page as laid out.
+class ResumeDocumentParseRequest {
+  const ResumeDocumentParseRequest({
+    required this.candidateId,
+    required this.fileName,
+    required this.bytes,
+    required this.consentVersion,
+  });
+
+  final String candidateId;
+
+  /// What the picker called the file. Carried only so the server can word
+  /// an error naturally -- the format is never inferred from it.
+  final String fileName;
+
+  final Uint8List bytes;
+
+  /// Same per-action consent as [ResumeParseRequest.consentVersion].
   final String consentVersion;
 }
 
@@ -94,4 +121,11 @@ class ResumeParseResult {
 
 abstract interface class ResumeParsingRepository {
   Future<Result<ResumeParseResult>> parse(ResumeParseRequest request);
+
+  /// Parses an uploaded PDF or Word file. Returns the identical
+  /// [ResumeParseResult] the pasted-text route does, so the review screen
+  /// never branches on how the resume arrived.
+  Future<Result<ResumeParseResult>> parseDocument(
+    ResumeDocumentParseRequest request,
+  );
 }

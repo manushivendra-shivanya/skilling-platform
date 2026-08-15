@@ -14,6 +14,7 @@ import '../../../l10n/generated/app_localizations.dart';
 import '../../onboarding/domain/candidate_onboarding_draft.dart';
 import '../../onboarding/presentation/candidate_onboarding_controller.dart';
 import '../../profile_details/presentation/detailed_profile_controller.dart';
+import '../domain/resume_file_picker.dart';
 import '../domain/resume_parsing_repository.dart';
 import 'resume_extraction_summary.dart';
 
@@ -38,12 +39,25 @@ import 'resume_extraction_summary.dart';
 /// existing never-overwrite check naturally leaves the completed draft
 /// alone and only the detailed profile picks up new data.
 ///
+/// Two ways in, deliberately in this order: upload the PDF or Word file
+/// the candidate already has, or paste the text. Uploading is offered
+/// first because it is what people actually have -- a resume lives as a
+/// file, and asking someone to open it, select all and paste on a phone
+/// is asking them to do the app's job. The paste field stays as the
+/// fallback for a resume that only exists inside an email or a message.
+///
+/// The two are mutually exclusive at any moment: choosing a file replaces
+/// the paste field with the file's card, and removing the file brings the
+/// field back. There is deliberately no state where both are filled and
+/// the candidate has to guess which one "Extract details" will use.
+///
 /// Nothing is written anywhere until the candidate reviews an extraction
-/// and presses [AppLocalizations.resumeImportConfirmButton] -- pasting
-/// text and extracting is free of side effects, and the top-right action
-/// is available at every point (before extracting, mid-review, even
-/// after a failed save) so a candidate who doesn't have a resume handy,
-/// or changes their mind, is never blocked from moving on.
+/// and presses [AppLocalizations.resumeImportConfirmButton] -- choosing a
+/// file or pasting text and extracting is free of side effects, and the
+/// top-right action is available at every point (before extracting,
+/// mid-review, even after a failed save) so a candidate who doesn't have
+/// a resume handy, or changes their mind, is never blocked from moving
+/// on.
 class ResumeImportScreen extends ConsumerStatefulWidget {
   const ResumeImportScreen({
     required this.onContinue,
@@ -71,6 +85,12 @@ class _ResumeImportScreenState extends ConsumerState<ResumeImportScreen> {
   static const _consentVersion = 'resume_import_v1';
   static const _minResumeLength = 40;
 
+  /// Matches `MAX_RESUME_FILE_BYTES` in `apps/api/src/resume/
+  /// resume.service.ts`. Checked here as well as there so an oversized
+  /// file is refused before it is base64-encoded and pushed over a mobile
+  /// connection, not after.
+  static const _maxFileBytes = 5 * 1024 * 1024;
+
   final _resumeController = TextEditingController();
   bool _consentGiven = false;
   bool _isParsing = false;
@@ -79,6 +99,7 @@ class _ResumeImportScreenState extends ConsumerState<ResumeImportScreen> {
   String? _parseErrorMessage;
   String? _applyErrorMessage;
   ResumeParseResult? _result;
+  PickedResumeFile? _pickedFile;
 
   @override
   void dispose() {
@@ -89,10 +110,11 @@ class _ResumeImportScreenState extends ConsumerState<ResumeImportScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final canExtract =
-        _consentGiven &&
-        _resumeController.text.trim().length >= _minResumeLength &&
-        !_isParsing;
+    final pickedFile = _pickedFile;
+    final hasEnoughInput =
+        pickedFile != null ||
+        _resumeController.text.trim().length >= _minResumeLength;
+    final canExtract = _consentGiven && hasEnoughInput && !_isParsing;
     final isBusy = _isParsing || _isApplying;
 
     return Scaffold(
@@ -138,16 +160,70 @@ class _ResumeImportScreenState extends ConsumerState<ResumeImportScreen> {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: AppSpacing.xl),
-              AppTextField(
-                key: const ValueKey('resume-import-text-field'),
-                label: l10n.onboardingResumeFieldLabel,
-                hint: l10n.onboardingResumeFieldHint,
-                maxLines: 8,
-                controller: _resumeController,
-                semanticLabel: l10n.onboardingResumeFieldSemantic,
-                enabled: !isBusy,
-                onChanged: (_) => setState(() {}),
-              ),
+              if (pickedFile != null)
+                _PickedFileCard(
+                  file: pickedFile,
+                  onRemove: isBusy
+                      ? null
+                      : () => setState(() => _pickedFile = null),
+                )
+              else ...[
+                OutlinedButton.icon(
+                  key: const ValueKey('resume-import-upload-button'),
+                  onPressed: isBusy ? null : _pickFile,
+                  icon: const Icon(Icons.attach_file_rounded),
+                  // Plain Text, deliberately not wrapped in a Flexible:
+                  // OutlinedButton.icon already puts the label in one
+                  // (and a second would be competing parent data on the
+                  // same render object), so it wraps to a second line on
+                  // a narrow screen at a large text scale on its own.
+                  label: Text(
+                    l10n.resumeImportUploadButton,
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.xxs),
+                Text(
+                  l10n.resumeImportUploadHint,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.labelSmall?.copyWith(color: AppColors.inkMuted),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: AppSpacing.md),
+                Row(
+                  children: [
+                    const Expanded(child: Divider()),
+                    // Flexible so the label wins the space it needs at a
+                    // large text scale instead of pushing the row past
+                    // the screen edge.
+                    Flexible(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.sm,
+                        ),
+                        child: Text(
+                          l10n.resumeImportUploadOrPaste,
+                          style: Theme.of(context).textTheme.labelSmall
+                              ?.copyWith(color: AppColors.inkMuted),
+                        ),
+                      ),
+                    ),
+                    const Expanded(child: Divider()),
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.md),
+                AppTextField(
+                  key: const ValueKey('resume-import-text-field'),
+                  label: l10n.onboardingResumeFieldLabel,
+                  hint: l10n.onboardingResumeFieldHint,
+                  maxLines: 8,
+                  controller: _resumeController,
+                  semanticLabel: l10n.onboardingResumeFieldSemantic,
+                  enabled: !isBusy,
+                  onChanged: (_) => setState(() {}),
+                ),
+              ],
               const SizedBox(height: AppSpacing.sm),
               AppCard(
                 child: CheckboxListTile(
@@ -224,6 +300,38 @@ class _ResumeImportScreenState extends ConsumerState<ResumeImportScreen> {
     );
   }
 
+  /// Opens the device's document picker. Nothing is sent yet -- the file
+  /// is held in memory until the candidate presses "Extract details",
+  /// same as pasted text, so choosing the wrong file costs nothing.
+  Future<void> _pickFile() async {
+    final l10n = AppLocalizations.of(context);
+    PickedResumeFile? picked;
+    try {
+      picked = await ref.read(resumeFilePickerProvider).pickResumeFile();
+    } on ResumeFileUnreadableException {
+      if (!mounted) return;
+      setState(() => _parseErrorMessage = l10n.resumeImportFileUnreadableError);
+      return;
+    }
+    // Null means the picker was dismissed without choosing -- an ordinary
+    // outcome, so the screen is left exactly as it was.
+    if (picked == null || !mounted) return;
+
+    if (picked.sizeInBytes > _maxFileBytes) {
+      setState(() => _parseErrorMessage = l10n.resumeImportFileTooLargeError);
+      return;
+    }
+    setState(() {
+      _pickedFile = picked;
+      _parseErrorMessage = null;
+      // A previous extraction belonged to the previous input; leaving it
+      // on screen under a newly chosen file would misattribute it.
+      _result = null;
+      _applyErrorMessage = null;
+      _applyFailed = false;
+    });
+  }
+
   Future<void> _extract() async {
     setState(() {
       _isParsing = true;
@@ -247,15 +355,24 @@ class _ResumeImportScreenState extends ConsumerState<ResumeImportScreen> {
       return;
     }
 
-    final result = await ref
-        .read(resumeParsingRepositoryProvider)
-        .parse(
-          ResumeParseRequest(
-            candidateId: candidateId,
-            resumeText: _resumeController.text.trim(),
-            consentVersion: _consentVersion,
-          ),
-        );
+    final repository = ref.read(resumeParsingRepositoryProvider);
+    final file = _pickedFile;
+    final result = file != null
+        ? await repository.parseDocument(
+            ResumeDocumentParseRequest(
+              candidateId: candidateId,
+              fileName: file.name,
+              bytes: file.bytes,
+              consentVersion: _consentVersion,
+            ),
+          )
+        : await repository.parse(
+            ResumeParseRequest(
+              candidateId: candidateId,
+              resumeText: _resumeController.text.trim(),
+              consentVersion: _consentVersion,
+            ),
+          );
     if (!mounted) return;
     result.when(
       success: (parsed) {
@@ -409,5 +526,67 @@ class _ResumeImportScreenState extends ConsumerState<ResumeImportScreen> {
     }
     setState(() => _isApplying = false);
     widget.onContinue();
+  }
+}
+
+/// Confirms which file is about to be read, and offers a way back out.
+///
+/// It replaces the paste field rather than sitting alongside it, so the
+/// screen only ever has one live input -- see the screen's own doc
+/// comment.
+class _PickedFileCard extends StatelessWidget {
+  const _PickedFileCard({required this.file, required this.onRemove});
+
+  final PickedResumeFile file;
+
+  /// Null while a parse is in flight -- removing the file mid-request
+  /// would leave the reply with nothing to attach itself to.
+  final VoidCallback? onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return AppCard(
+      key: const ValueKey('resume-import-picked-file'),
+      child: Row(
+        children: [
+          const Icon(Icons.description_outlined, color: AppColors.brand),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  file.name,
+                  style: Theme.of(context).textTheme.bodyMedium,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                Text(
+                  _readableSize(file.sizeInBytes),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.labelSmall?.copyWith(color: AppColors.inkMuted),
+                ),
+              ],
+            ),
+          ),
+          TextButton(
+            key: const ValueKey('resume-import-remove-file-button'),
+            onPressed: onRemove,
+            child: Text(l10n.resumeImportRemoveFileButton),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Deliberately not localized through ARB: "KB"/"MB" are used verbatim
+  /// in Hindi and Hinglish too, and a plural-aware message for a unit
+  /// nobody translates would be ceremony for no reader.
+  static String _readableSize(int bytes) {
+    if (bytes < 1024) return '$bytes B';
+    if (bytes < 1024 * 1024) return '${(bytes / 1024).round()} KB';
+    return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
   }
 }

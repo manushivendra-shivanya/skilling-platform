@@ -34,6 +34,7 @@ import 'package:candidate_mobile/features/networking/data/unavailable_networking
 import 'package:candidate_mobile/features/networking/domain/networking_repository.dart';
 import 'package:candidate_mobile/features/profile_details/domain/detailed_profile_repository.dart';
 import 'package:candidate_mobile/features/resume/data/unavailable_resume_parsing_repository.dart';
+import 'package:candidate_mobile/features/resume/domain/resume_file_picker.dart';
 import 'package:candidate_mobile/features/resume/domain/resume_parsing_repository.dart';
 import 'package:candidate_mobile/features/shifts/data/local_mock_shifts_repository.dart';
 import 'package:candidate_mobile/features/shifts/domain/shifts_repository.dart';
@@ -65,6 +66,7 @@ extension CandidateAppPump on WidgetTester {
     CertificationExamAttemptRepository? certificationExamAttemptRepository,
     CoachThreadRepository? coachThreadRepository,
     ResumeParsingRepository? resumeParsingRepository,
+    ResumeFilePicker? resumeFilePicker,
     DetailedProfileRepository? detailedProfileRepository,
     NetworkingRepository? networkingRepository,
     JobsRepository? jobsRepository,
@@ -167,6 +169,13 @@ extension CandidateAppPump on WidgetTester {
             resumeParsingRepository ??
                 const UnavailableResumeParsingRepository(),
           ),
+          // The real picker is a platform channel that never completes
+          // under `flutter test`, so it is always overridden. The default
+          // models a candidate who opened the picker and closed it again
+          // without choosing -- the one outcome that changes nothing.
+          resumeFilePickerProvider.overrideWithValue(
+            resumeFilePicker ?? const _DismissedResumeFilePicker(),
+          ),
           if (detailedProfileRepository != null)
             detailedProfileRepositoryProvider.overrideWithValue(
               detailedProfileRepository,
@@ -256,4 +265,15 @@ class _NoExamCertificationExamRepository
   Future<Result<CertificationExam>> loadExam() async => const ResultFailure(
     StorageFailure('No certification exam configured for this test.'),
   );
+}
+
+/// Default test double for [resumeFilePickerProvider] -- models the
+/// candidate dismissing the picker without choosing a file, so tapping
+/// the upload button in a test that isn't about uploading leaves the
+/// screen exactly as it was.
+class _DismissedResumeFilePicker implements ResumeFilePicker {
+  const _DismissedResumeFilePicker();
+
+  @override
+  Future<PickedResumeFile?> pickResumeFile() async => null;
 }

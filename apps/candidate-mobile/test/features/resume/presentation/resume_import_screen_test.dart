@@ -1,12 +1,15 @@
 import 'package:candidate_mobile/core/errors/app_failure.dart';
 import 'package:candidate_mobile/core/errors/result.dart';
 import 'package:candidate_mobile/core/repositories/candidate_session_repository.dart';
+import 'package:candidate_mobile/core/widgets/app_button.dart';
 import 'package:candidate_mobile/features/onboarding/data/secure_candidate_onboarding_repository.dart';
 import 'package:candidate_mobile/features/profile_details/data/in_memory_detailed_profile_repository.dart';
 import 'package:candidate_mobile/features/profile_details/domain/detailed_candidate_profile.dart';
 import 'package:candidate_mobile/features/profile_details/domain/detailed_profile_repository.dart';
+import 'package:candidate_mobile/features/resume/domain/resume_file_picker.dart';
 import 'package:candidate_mobile/features/resume/domain/resume_parsing_repository.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../../helpers/pump_app.dart';
@@ -166,7 +169,193 @@ void main() {
       expect(find.text('What would you like to achieve?'), findsOneWidget);
     },
   );
+
+  group('uploading a PDF or Word file', () {
+    Future<void> tapUpload(WidgetTester tester) async {
+      final button = find.byKey(const ValueKey('resume-import-upload-button'));
+      await tester.ensureVisible(button);
+      await tester.tap(button);
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('a chosen file replaces the paste field with its own card', (
+      tester,
+    ) async {
+      await tester.pumpCandidateApp(
+        candidateSessionRepository: sessions,
+        candidateOnboardingRepository: InMemoryCandidateOnboardingRepository(),
+        resumeFilePicker: _FakeResumeFilePicker(file: _pickedPdf()),
+      );
+      await continueToAuthenticated(tester);
+
+      expect(
+        find.byKey(const ValueKey('resume-import-text-field')),
+        findsOneWidget,
+      );
+
+      await tapUpload(tester);
+
+      expect(find.text('asha-resume.pdf'), findsOneWidget);
+      // Exactly one live input at a time -- the paste field is gone, so
+      // there is no ambiguity about what Extract will read.
+      expect(
+        find.byKey(const ValueKey('resume-import-text-field')),
+        findsNothing,
+      );
+    });
+
+    testWidgets('removing the file brings the paste field back', (
+      tester,
+    ) async {
+      await tester.pumpCandidateApp(
+        candidateSessionRepository: sessions,
+        candidateOnboardingRepository: InMemoryCandidateOnboardingRepository(),
+        resumeFilePicker: _FakeResumeFilePicker(file: _pickedPdf()),
+      );
+      await continueToAuthenticated(tester);
+      await tapUpload(tester);
+
+      await tester.tap(
+        find.byKey(const ValueKey('resume-import-remove-file-button')),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('asha-resume.pdf'), findsNothing);
+      expect(
+        find.byKey(const ValueKey('resume-import-text-field')),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('extracting sends the file bytes, not pasted text', (
+      tester,
+    ) async {
+      final parser = _FakeResumeParsingRepository(_fullExtraction);
+      await tester.pumpCandidateApp(
+        candidateSessionRepository: sessions,
+        candidateOnboardingRepository: InMemoryCandidateOnboardingRepository(),
+        detailedProfileRepository: InMemoryDetailedProfileRepository(),
+        resumeParsingRepository: parser,
+        resumeFilePicker: _FakeResumeFilePicker(file: _pickedPdf()),
+      );
+      await continueToAuthenticated(tester);
+      await tapUpload(tester);
+
+      // Consent still gates the upload route exactly as it gates paste.
+      await tester.ensureVisible(find.text('Use AI to read this text'));
+      await tester.tap(find.text('Use AI to read this text'));
+      await tester.pump();
+
+      final extractButton = find.byKey(
+        const ValueKey('resume-import-extract-button'),
+      );
+      await tester.ensureVisible(extractButton);
+      await tester.tap(extractButton);
+      await tester.pumpAndSettle();
+
+      expect(parser.documentRequests, hasLength(1));
+      expect(parser.documentRequests.single.fileName, 'asha-resume.pdf');
+      expect(parser.documentRequests.single.bytes, _pdfBytes);
+      expect(find.text('What we found'), findsOneWidget);
+    });
+
+    testWidgets('consent is still required before a file can be extracted', (
+      tester,
+    ) async {
+      final parser = _FakeResumeParsingRepository(_fullExtraction);
+      await tester.pumpCandidateApp(
+        candidateSessionRepository: sessions,
+        candidateOnboardingRepository: InMemoryCandidateOnboardingRepository(),
+        resumeParsingRepository: parser,
+        resumeFilePicker: _FakeResumeFilePicker(file: _pickedPdf()),
+      );
+      await continueToAuthenticated(tester);
+      await tapUpload(tester);
+
+      final extractButton = find.byKey(
+        const ValueKey('resume-import-extract-button'),
+      );
+      await tester.ensureVisible(extractButton);
+      expect(
+        tester.widget<AppButton>(extractButton).onPressed,
+        isNull,
+        reason: 'a file alone must not be enough to send it to an AI',
+      );
+      expect(parser.documentRequests, isEmpty);
+    });
+
+    testWidgets('an oversized file is refused before any request is made', (
+      tester,
+    ) async {
+      final parser = _FakeResumeParsingRepository(_fullExtraction);
+      await tester.pumpCandidateApp(
+        candidateSessionRepository: sessions,
+        candidateOnboardingRepository: InMemoryCandidateOnboardingRepository(),
+        resumeParsingRepository: parser,
+        resumeFilePicker: _FakeResumeFilePicker(
+          file: PickedResumeFile(
+            name: 'huge-scan.pdf',
+            bytes: Uint8List(5 * 1024 * 1024 + 1),
+          ),
+        ),
+      );
+      await continueToAuthenticated(tester);
+      await tapUpload(tester);
+
+      expect(
+        find.text('That file is too large. Choose a resume under 5 MB.'),
+        findsOneWidget,
+      );
+      // Not accepted as the screen's input either -- the paste field stays.
+      expect(
+        find.byKey(const ValueKey('resume-import-text-field')),
+        findsOneWidget,
+      );
+      expect(parser.documentRequests, isEmpty);
+    });
+
+    testWidgets('a file whose contents cannot be read says so', (tester) async {
+      await tester.pumpCandidateApp(
+        candidateSessionRepository: sessions,
+        candidateOnboardingRepository: InMemoryCandidateOnboardingRepository(),
+        resumeFilePicker: _FakeResumeFilePicker(throwsUnreadable: true),
+      );
+      await continueToAuthenticated(tester);
+      await tapUpload(tester);
+
+      expect(
+        find.text('That file could not be read. Please choose it again.'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('dismissing the picker changes nothing', (tester) async {
+      final picker = _FakeResumeFilePicker();
+      await tester.pumpCandidateApp(
+        candidateSessionRepository: sessions,
+        candidateOnboardingRepository: InMemoryCandidateOnboardingRepository(),
+        resumeFilePicker: picker,
+      );
+      await continueToAuthenticated(tester);
+      await tapUpload(tester);
+
+      expect(picker.callCount, 1);
+      expect(
+        find.byKey(const ValueKey('resume-import-picked-file')),
+        findsNothing,
+      );
+      expect(
+        find.byKey(const ValueKey('resume-import-text-field')),
+        findsOneWidget,
+      );
+    });
+  });
 }
+
+final _pdfBytes = Uint8List.fromList('%PDF-1.7 Asha Kumari'.codeUnits);
+
+PickedResumeFile _pickedPdf() =>
+    PickedResumeFile(name: 'asha-resume.pdf', bytes: _pdfBytes);
 
 final _fullExtraction = ResumeParseResult(
   adapter: 'fake',
@@ -201,10 +390,39 @@ class _FakeResumeParsingRepository implements ResumeParsingRepository {
   _FakeResumeParsingRepository(this._result);
 
   final ResumeParseResult _result;
+  final documentRequests = <ResumeDocumentParseRequest>[];
 
   @override
   Future<Result<ResumeParseResult>> parse(ResumeParseRequest request) async =>
       Success(_result);
+
+  @override
+  Future<Result<ResumeParseResult>> parseDocument(
+    ResumeDocumentParseRequest request,
+  ) async {
+    documentRequests.add(request);
+    return Success(_result);
+  }
+}
+
+/// Stands in for the platform document picker, which never completes
+/// under `flutter test`.
+class _FakeResumeFilePicker implements ResumeFilePicker {
+  _FakeResumeFilePicker({this.file, this.throwsUnreadable = false});
+
+  /// Null models the candidate dismissing the picker without choosing.
+  final PickedResumeFile? file;
+  final bool throwsUnreadable;
+  int callCount = 0;
+
+  @override
+  Future<PickedResumeFile?> pickResumeFile() async {
+    callCount += 1;
+    if (throwsUnreadable) {
+      throw const ResumeFileUnreadableException('resume.pdf');
+    }
+    return file;
+  }
 }
 
 /// Fails only the profile-writing calls -- draft saves still go through, so

@@ -16,8 +16,10 @@ class UnavailableProfileAssistantRepository
   Future<Result<AssistantReply>> continueConversation(
     AssistantTurnRequest request,
   ) async {
+    // ServiceUnavailableFailure for the same reason
+    // UnavailableResumeParsingRepository uses it -- see its doc comment.
     return const ResultFailure(
-      UnexpectedFailure(
+      ServiceUnavailableFailure(
         'The profile assistant needs a configured backend and is not '
         'available in this build.',
       ),

@@ -16,4 +16,8 @@ export class UnconfiguredResumeParser implements ResumeAiProvider {
   async parseResume(): Promise<ResumeAiParseResult> {
     throw new Error('Resume parsing is not configured.');
   }
+
+  async parseResumeDocument(): Promise<ResumeAiParseResult> {
+    throw new Error('Resume parsing is not configured.');
+  }
 }

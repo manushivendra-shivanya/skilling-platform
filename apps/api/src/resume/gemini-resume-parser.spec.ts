@@ -127,6 +127,63 @@ describe('GeminiResumeParser', () => {
     });
   });
 
+  it('sends an uploaded document as an inlineData part alongside the same prompt', async () => {
+    let seenParams: unknown;
+    const client = fakeClient(async (params) => {
+      seenParams = params;
+      return { text: FULL_JSON };
+    });
+    const parser = new GeminiResumeParser(client);
+
+    const result = await parser.parseResumeDocument({
+      contentBase64: 'JVBERi0xLjc=',
+      mimeType: 'application/pdf',
+    });
+
+    expect(result.fullName).toBe('Asha Kumari');
+    expect(seenParams).toMatchObject({
+      model: GEMINI_RESUME_MODEL_ID,
+      contents: [
+        {
+          role: 'user',
+          parts: [
+            {
+              inlineData: {
+                data: 'JVBERi0xLjc=',
+                mimeType: 'application/pdf',
+              },
+            },
+            // Same extraction and normalization rules as the pasted-text
+            // prompt -- one prompt builder serves both routes, so the two
+            // cannot drift apart.
+            { text: expect.stringContaining('normalized degree') },
+          ],
+        },
+      ],
+      config: { maxOutputTokens: 4000 },
+    });
+  });
+
+  it('does not leave a pasted-text placeholder in the document prompt', async () => {
+    let seenParams: unknown;
+    const client = fakeClient(async (params) => {
+      seenParams = params;
+      return { text: FULL_JSON };
+    });
+    const parser = new GeminiResumeParser(client);
+
+    await parser.parseResumeDocument({
+      contentBase64: 'JVBERi0xLjc=',
+      mimeType: 'application/pdf',
+    });
+
+    const prompt = (
+      seenParams as { contents: { parts: { text?: string }[] }[] }
+    ).contents[0].parts[1].text;
+    expect(prompt).toContain('document attached to this message');
+    expect(prompt).not.toContain('Resume text:');
+  });
+
   it('interprets an abbreviated degree the model already normalized into degree/fieldOfStudy', async () => {
     // The prompt asks the model to do the interpretation (e.g. "BTech CS"
     // -> "Bachelor of Technology" / "Computer Science") -- this test

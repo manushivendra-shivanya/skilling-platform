@@ -9,7 +9,7 @@ import 'app_failure.dart';
 /// one part of an error screen that actually said what went wrong stayed
 /// English regardless of the app's language setting.
 ///
-/// This maps by failure *type* instead -- seven wide categories, each with
+/// This maps by failure *type* instead -- eight wide categories, each with
 /// one honest, localized, generic sentence -- rather than attempting to
 /// translate all ~190 individual internal messages themselves. A screen
 /// that wants to say something more specific than its failure type still
@@ -22,6 +22,7 @@ extension AppFailureLocalization on AppFailure {
     AuthenticationFailure() => l10n.failureAuthentication,
     PermissionFailure() => l10n.failurePermission,
     TimeoutFailure() => l10n.failureTimeout,
+    ServiceUnavailableFailure() => l10n.failureServiceUnavailable,
     UnexpectedFailure() => l10n.failureUnexpected,
   };
 }

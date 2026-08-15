@@ -71,6 +71,7 @@
   "failureAuthentication": "Jaari rakhne ke liye kripya dobara sign in karein.",
   "failurePermission": "Iske liye ek permission chahiye jo abhi nahi di gayi hai.",
   "failureTimeout": "Isme bahut time lag gaya. Kripya dobara koshish karein.",
+  "failureServiceUnavailable": "Yeh service abhi available nahi hai. Kripya kuch minute baad dobara try karein.",
   "failureUnexpected": "Kuch anapekshit gadbad ho gayi.",
 
   "homeLoadErrorTitle": "Home load nahi ho saka",
@@ -889,6 +890,12 @@
   "resumeImportContinueAnywayButton": "Phir bhi aage badhein",
 
   "resumeImportApplyFailedMessage": "Kuch details save nahi ho payin. Aap unhe baad mein apni profile se jod sakte hain.",
+  "resumeImportUploadButton": "PDF ya Word file upload karein",
+  "resumeImportUploadHint": "PDF ya Word (.docx), 5 MB tak",
+  "resumeImportUploadOrPaste": "ya text paste karein",
+  "resumeImportRemoveFileButton": "Hatayein",
+  "resumeImportFileTooLargeError": "Yeh file bahut badi hai. 5 MB se chhota resume chunein.",
+  "resumeImportFileUnreadableError": "Yeh file padhi nahi ja saki. Kripya dobara chunein.",
 
   "onboardingVoiceStepTitle": "Voice introduction",
   "onboardingVoiceStepDescription": "Hum yahan ek chhota voice practice add karne ki planning kar rahe hain, jisme pehle clear microphone permission aur apna consent step hoga.",

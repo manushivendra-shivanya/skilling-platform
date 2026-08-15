@@ -127,6 +127,16 @@ class ApiCoachRepository implements CoachRepository {
         stackTrace: stackTrace,
       );
     }
+    // CoachService wraps any provider failure in a 503 -- see
+    // ApiResumeParsingRepository._mapError for why that needs its own
+    // branch rather than falling through to UnexpectedFailure.
+    if (status != null && status >= 500 && status < 600) {
+      return ServiceUnavailableFailure(
+        message,
+        cause: error,
+        stackTrace: stackTrace,
+      );
+    }
     return UnexpectedFailure(message, cause: error, stackTrace: stackTrace);
   }
 }
