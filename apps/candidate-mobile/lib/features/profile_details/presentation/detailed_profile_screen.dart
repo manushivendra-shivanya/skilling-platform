@@ -15,6 +15,7 @@ import '../../../core/widgets/app_text_field.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../domain/detailed_candidate_profile.dart';
 import 'detailed_profile_controller.dart';
+import 'detailed_profile_labels.dart';
 
 /// The LinkedIn-style detailed profile: contact info, skills, and the
 /// candidate's Career Journey (experience, education, certifications,
@@ -110,7 +111,16 @@ class _DetailedProfileContent extends ConsumerWidget {
         ),
         const SizedBox(height: AppSpacing.lg),
 
+        _AboutCard(profile: profile, controller: controller),
+        const SizedBox(height: AppSpacing.lg),
+
         _ContactAndSkillsCard(profile: profile, controller: controller),
+        const SizedBox(height: AppSpacing.lg),
+
+        _LanguagesSection(profile: profile, controller: controller),
+        const SizedBox(height: AppSpacing.lg),
+
+        _CareerPreferencesCard(profile: profile, controller: controller),
         const SizedBox(height: AppSpacing.lg),
 
         _ExperienceSection(profile: profile, controller: controller),
@@ -279,6 +289,7 @@ class _ContactAndSkillsCardState extends State<_ContactAndSkillsCard> {
             ),
           const SizedBox(height: AppSpacing.sm),
           AppTextField(
+            key: const ValueKey('detailed-profile-add-skill-field'),
             controller: _skillController,
             hint: l10n.profileDetailsAddSkillHint,
             textInputAction: TextInputAction.done,
@@ -286,6 +297,490 @@ class _ContactAndSkillsCardState extends State<_ContactAndSkillsCard> {
           ),
           const SizedBox(height: AppSpacing.md),
           AppButton(
+            key: const ValueKey('detailed-profile-contact-save-button'),
+            label: l10n.profileDetailsSaveButton,
+            isLoading: _isSaving,
+            onPressed: _isSaving ? null : _save,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AboutCard extends StatefulWidget {
+  const _AboutCard({required this.profile, required this.controller});
+
+  final DetailedCandidateProfile profile;
+  final DetailedProfileController controller;
+
+  @override
+  State<_AboutCard> createState() => _AboutCardState();
+}
+
+class _AboutCardState extends State<_AboutCard> {
+  late final _headlineController = TextEditingController(
+    text: widget.profile.headline,
+  );
+  late final _totalExperienceController = TextEditingController(
+    text: widget.profile.totalExperience,
+  );
+  late final _summaryController = TextEditingController(
+    text: widget.profile.summary,
+  );
+  bool _isSaving = false;
+
+  @override
+  void dispose() {
+    _headlineController.dispose();
+    _totalExperienceController.dispose();
+    _summaryController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _save() async {
+    setState(() => _isSaving = true);
+    final failure = await widget.controller.saveProfileBasics(
+      headline: _headlineController.text.trim(),
+      summary: _summaryController.text.trim(),
+      totalExperience: _totalExperienceController.text.trim(),
+    );
+    if (!mounted) return;
+    setState(() => _isSaving = false);
+    if (failure != null) _showFailureSnackbar(context, failure);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return AppCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            l10n.profileDetailsAboutSectionTitle,
+            style: Theme.of(
+              context,
+            ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          AppTextField(
+            label: l10n.profileDetailsHeadlineFieldLabel,
+            hint: l10n.profileDetailsHeadlineFieldHint,
+            controller: _headlineController,
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          AppTextField(
+            label: l10n.profileDetailsTotalExperienceFieldLabel,
+            hint: l10n.profileDetailsTotalExperienceFieldHint,
+            controller: _totalExperienceController,
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          AppTextField(
+            label: l10n.profileDetailsSummaryFieldLabel,
+            hint: l10n.profileDetailsSummaryFieldHint,
+            controller: _summaryController,
+            maxLines: 4,
+          ),
+          const SizedBox(height: AppSpacing.md),
+          AppButton(
+            key: const ValueKey('detailed-profile-about-save-button'),
+            label: l10n.profileDetailsSaveButton,
+            isLoading: _isSaving,
+            onPressed: _isSaving ? null : _save,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _LanguagesSection extends StatelessWidget {
+  const _LanguagesSection({required this.profile, required this.controller});
+
+  final DetailedCandidateProfile profile;
+  final DetailedProfileController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return AppCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            l10n.profileDetailsLanguagesSectionTitle,
+            style: Theme.of(
+              context,
+            ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+          ),
+          if (profile.languages.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+              child: Text(
+                l10n.profileDetailsLanguagesEmpty,
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: AppColors.inkMuted),
+              ),
+            )
+          else
+            for (final entry in profile.languages)
+              _EntryRow(
+                title: entry.language,
+                subtitle: languageProficiencyLabel(entry.proficiency, l10n),
+                dateRange: '',
+                onEdit: () =>
+                    _showLanguageForm(context, controller, entry: entry),
+                onDelete: () async {
+                  if (!await _confirmDelete(context)) return;
+                  final failure = await controller.deleteLanguage(entry.id);
+                  if (context.mounted && failure != null) {
+                    _showFailureSnackbar(context, failure);
+                  }
+                },
+              ),
+          const SizedBox(height: AppSpacing.sm),
+          AppButton(
+            label: l10n.profileDetailsAddLanguageButton,
+            variant: AppButtonVariant.secondary,
+            onPressed: () => _showLanguageForm(context, controller),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+Future<void> _showLanguageForm(
+  BuildContext context,
+  DetailedProfileController controller, {
+  LanguageEntry? entry,
+}) {
+  final l10n = AppLocalizations.of(context);
+  return showAppBottomSheet(
+    context: context,
+    title: entry == null
+        ? l10n.profileDetailsAddLanguageButton
+        : l10n.profileDetailsEditSemantic(entry.language),
+    child: _LanguageForm(controller: controller, entry: entry),
+  );
+}
+
+class _LanguageForm extends StatefulWidget {
+  const _LanguageForm({required this.controller, this.entry});
+
+  final DetailedProfileController controller;
+  final LanguageEntry? entry;
+
+  @override
+  State<_LanguageForm> createState() => _LanguageFormState();
+}
+
+class _LanguageFormState extends State<_LanguageForm> {
+  late final _language = TextEditingController(
+    text: widget.entry?.language ?? '',
+  );
+  late LanguageProficiency _proficiency =
+      widget.entry?.proficiency ?? LanguageProficiency.professionalWorking;
+  bool _isSaving = false;
+
+  @override
+  void dispose() {
+    _language.dispose();
+    super.dispose();
+  }
+
+  Future<void> _save() async {
+    if (_language.text.trim().isEmpty) return;
+    setState(() => _isSaving = true);
+    final entry = LanguageEntry(
+      id: widget.entry?.id ?? '',
+      language: _language.text.trim(),
+      proficiency: _proficiency,
+      sequence: widget.entry?.sequence ?? 0,
+    );
+    final failure = await widget.controller.saveLanguage(entry);
+    if (!mounted) return;
+    if (failure != null) {
+      setState(() => _isSaving = false);
+      _showFailureSnackbar(context, failure);
+      return;
+    }
+    Navigator.of(context).pop();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        AppTextField(
+          label: l10n.profileDetailsLanguageFieldLabel,
+          controller: _language,
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        Text(
+          l10n.profileDetailsProficiencyFieldLabel,
+          style: Theme.of(context).textTheme.labelMedium,
+        ),
+        const SizedBox(height: AppSpacing.xs),
+        Wrap(
+          spacing: AppSpacing.xs,
+          runSpacing: AppSpacing.xxs,
+          children: [
+            for (final level in LanguageProficiency.values)
+              ChoiceChip(
+                label: Text(languageProficiencyLabel(level, l10n)),
+                selected: _proficiency == level,
+                onSelected: (_) => setState(() => _proficiency = level),
+              ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.md),
+        AppButton(
+          label: l10n.profileDetailsSaveButton,
+          isLoading: _isSaving,
+          onPressed: _isSaving ? null : _save,
+        ),
+      ],
+    );
+  }
+}
+
+class _CareerPreferencesCard extends StatefulWidget {
+  const _CareerPreferencesCard({
+    required this.profile,
+    required this.controller,
+  });
+
+  final DetailedCandidateProfile profile;
+  final DetailedProfileController controller;
+
+  @override
+  State<_CareerPreferencesCard> createState() => _CareerPreferencesCardState();
+}
+
+class _CareerPreferencesCardState extends State<_CareerPreferencesCard> {
+  late final _currentCtc = TextEditingController(
+    text: widget.profile.careerPreferences.currentCtcAmount?.toStringAsFixed(0),
+  );
+  late final _expectedCtc = TextEditingController(
+    text: widget.profile.careerPreferences.expectedCtcAmount?.toStringAsFixed(
+      0,
+    ),
+  );
+  late final _locationController = TextEditingController();
+  late final _industry = TextEditingController(
+    text: widget.profile.careerPreferences.industry,
+  );
+  late final _functionalArea = TextEditingController(
+    text: widget.profile.careerPreferences.functionalArea,
+  );
+  late bool _currentCtcUndisclosed =
+      widget.profile.careerPreferences.currentCtcUndisclosed;
+  late bool _expectedCtcNegotiable =
+      widget.profile.careerPreferences.expectedCtcNegotiable;
+  late NoticePeriod? _noticePeriod =
+      widget.profile.careerPreferences.noticePeriod;
+  late Set<EmploymentType> _employmentTypes = Set.of(
+    widget.profile.careerPreferences.employmentTypes,
+  );
+  late List<String> _locations = List.of(
+    widget.profile.careerPreferences.preferredLocations,
+  );
+  late bool _willingToRelocate =
+      widget.profile.careerPreferences.willingToRelocate;
+  bool _isSaving = false;
+
+  @override
+  void dispose() {
+    _currentCtc.dispose();
+    _expectedCtc.dispose();
+    _locationController.dispose();
+    _industry.dispose();
+    _functionalArea.dispose();
+    super.dispose();
+  }
+
+  void _addLocation(String raw) {
+    final location = raw.trim();
+    if (location.isEmpty || _locations.contains(location)) {
+      _locationController.clear();
+      return;
+    }
+    setState(() {
+      _locations = [..._locations, location];
+      _locationController.clear();
+    });
+  }
+
+  void _removeLocation(String location) {
+    setState(
+      () => _locations = _locations.where((l) => l != location).toList(),
+    );
+  }
+
+  Future<void> _save() async {
+    setState(() => _isSaving = true);
+    final failure = await widget.controller.saveCareerPreferences(
+      CareerPreferences(
+        currentCtcAmount: double.tryParse(_currentCtc.text.trim()),
+        currentCtcUndisclosed: _currentCtcUndisclosed,
+        expectedCtcAmount: double.tryParse(_expectedCtc.text.trim()),
+        expectedCtcNegotiable: _expectedCtcNegotiable,
+        noticePeriod: _noticePeriod,
+        employmentTypes: _employmentTypes,
+        preferredLocations: _locations,
+        willingToRelocate: _willingToRelocate,
+        industry: _industry.text.trim(),
+        functionalArea: _functionalArea.text.trim(),
+      ),
+    );
+    if (!mounted) return;
+    setState(() => _isSaving = false);
+    if (failure != null) _showFailureSnackbar(context, failure);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return AppCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            l10n.profileDetailsCareerPreferencesSectionTitle,
+            style: Theme.of(
+              context,
+            ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(height: AppSpacing.xxs),
+          Text(
+            l10n.profileDetailsCareerPreferencesSectionSubtitle,
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: AppColors.inkMuted),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          AppTextField(
+            label: l10n.profileDetailsCurrentCtcFieldLabel,
+            controller: _currentCtc,
+            keyboardType: TextInputType.number,
+            enabled: !_currentCtcUndisclosed,
+          ),
+          CheckboxListTile(
+            value: _currentCtcUndisclosed,
+            onChanged: (value) =>
+                setState(() => _currentCtcUndisclosed = value ?? false),
+            contentPadding: EdgeInsets.zero,
+            controlAffinity: ListTileControlAffinity.leading,
+            title: Text(l10n.profileDetailsCurrentCtcUndisclosedLabel),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          AppTextField(
+            label: l10n.profileDetailsExpectedCtcFieldLabel,
+            controller: _expectedCtc,
+            keyboardType: TextInputType.number,
+          ),
+          CheckboxListTile(
+            value: _expectedCtcNegotiable,
+            onChanged: (value) =>
+                setState(() => _expectedCtcNegotiable = value ?? false),
+            contentPadding: EdgeInsets.zero,
+            controlAffinity: ListTileControlAffinity.leading,
+            title: Text(l10n.profileDetailsExpectedCtcNegotiableLabel),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            l10n.profileDetailsNoticePeriodFieldLabel,
+            style: Theme.of(context).textTheme.labelMedium,
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Wrap(
+            spacing: AppSpacing.xs,
+            runSpacing: AppSpacing.xxs,
+            children: [
+              for (final period in NoticePeriod.values)
+                ChoiceChip(
+                  label: Text(noticePeriodLabel(period, l10n)),
+                  selected: _noticePeriod == period,
+                  onSelected: (selected) =>
+                      setState(() => _noticePeriod = selected ? period : null),
+                ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            l10n.profileDetailsEmploymentTypeFieldLabel,
+            style: Theme.of(context).textTheme.labelMedium,
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Wrap(
+            spacing: AppSpacing.xs,
+            runSpacing: AppSpacing.xxs,
+            children: [
+              for (final type in EmploymentType.values)
+                FilterChip(
+                  label: Text(employmentTypeLabel(type, l10n)),
+                  selected: _employmentTypes.contains(type),
+                  onSelected: (selected) => setState(() {
+                    _employmentTypes = selected
+                        ? {..._employmentTypes, type}
+                        : _employmentTypes.where((t) => t != type).toSet();
+                  }),
+                ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            l10n.profileDetailsPreferredLocationsFieldLabel,
+            style: Theme.of(context).textTheme.labelMedium,
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          if (_locations.isNotEmpty)
+            Wrap(
+              spacing: AppSpacing.xs,
+              runSpacing: AppSpacing.xxs,
+              children: [
+                for (final location in _locations)
+                  InputChip(
+                    label: Text(location),
+                    onDeleted: () => _removeLocation(location),
+                  ),
+              ],
+            ),
+          const SizedBox(height: AppSpacing.sm),
+          AppTextField(
+            controller: _locationController,
+            hint: l10n.profileDetailsAddLocationHint,
+            textInputAction: TextInputAction.done,
+            onSubmitted: _addLocation,
+          ),
+          CheckboxListTile(
+            value: _willingToRelocate,
+            onChanged: (value) =>
+                setState(() => _willingToRelocate = value ?? false),
+            contentPadding: EdgeInsets.zero,
+            controlAffinity: ListTileControlAffinity.leading,
+            title: Text(l10n.profileDetailsWillingToRelocateLabel),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          AppTextField(
+            label: l10n.profileDetailsIndustryFieldLabel,
+            controller: _industry,
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          AppTextField(
+            label: l10n.profileDetailsFunctionalAreaFieldLabel,
+            controller: _functionalArea,
+          ),
+          const SizedBox(height: AppSpacing.md),
+          AppButton(
+            key: const ValueKey(
+              'detailed-profile-career-preferences-save-button',
+            ),
             label: l10n.profileDetailsSaveButton,
             isLoading: _isSaving,
             onPressed: _isSaving ? null : _save,

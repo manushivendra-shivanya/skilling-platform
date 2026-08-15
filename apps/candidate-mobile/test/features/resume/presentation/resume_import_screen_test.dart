@@ -122,6 +122,8 @@ void main() {
       expect(onboarding.draft.headline, 'Warehouse Associate');
       expect(profile.profile.phone, '9876543210');
       expect(profile.profile.skills, ['Forklift operation']);
+      expect(profile.profile.headline, 'Warehouse Associate');
+      expect(profile.profile.totalExperience, '2 years');
       expect(profile.profile.education, hasLength(1));
       expect(profile.profile.education.single.degree, 'Bachelor of Technology');
       expect(profile.profile.workExperience, hasLength(1));
@@ -224,6 +226,34 @@ class _FailingDetailedProfileRepository implements DetailedProfileRepository {
       'This could not be saved. Check your connection and try again.',
     ),
   );
+
+  @override
+  Future<Result<void>> saveProfileBasics(
+    String candidateId, {
+    required String headline,
+    required String summary,
+    required String totalExperience,
+  }) async => const ResultFailure(
+    NetworkFailure(
+      'This could not be saved. Check your connection and try again.',
+    ),
+  );
+
+  @override
+  Future<Result<void>> saveCareerPreferences(
+    String candidateId,
+    CareerPreferences preferences,
+  ) => throw UnimplementedError();
+
+  @override
+  Future<Result<void>> upsertLanguage(
+    String candidateId,
+    LanguageEntry entry,
+  ) => throw UnimplementedError();
+
+  @override
+  Future<Result<void>> deleteLanguage(String candidateId, String id) =>
+      throw UnimplementedError();
 
   @override
   Future<Result<void>> upsertWorkExperience(

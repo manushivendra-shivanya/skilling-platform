@@ -28,7 +28,13 @@ class SupabaseDetailedProfileRepository implements DetailedProfileRepository {
       final results = await Future.wait([
         _client
             .from('candidate_profiles')
-            .select('phone, email, skills')
+            .select(
+              'phone, email, skills, headline, summary, total_experience, '
+              'current_ctc_amount, current_ctc_undisclosed, '
+              'expected_ctc_amount, expected_ctc_negotiable, notice_period, '
+              'employment_types, preferred_locations, willing_to_relocate, '
+              'industry, functional_area',
+            )
             .eq('candidate_id', candidateId)
             .maybeSingle()
             .timeout(_callTimeout),
@@ -56,6 +62,12 @@ class SupabaseDetailedProfileRepository implements DetailedProfileRepository {
             .eq('candidate_id', candidateId)
             .order('sequence')
             .timeout(_callTimeout),
+        _client
+            .from('candidate_languages')
+            .select()
+            .eq('candidate_id', candidateId)
+            .order('sequence')
+            .timeout(_callTimeout),
       ]);
 
       final profile = results[0] as Map<String, dynamic>?;
@@ -63,6 +75,7 @@ class SupabaseDetailedProfileRepository implements DetailedProfileRepository {
       final educationRows = results[2] as List<dynamic>;
       final certificationRows = results[3] as List<dynamic>;
       final projectRows = results[4] as List<dynamic>;
+      final languageRows = results[5] as List<dynamic>;
 
       return Success(
         DetailedCandidateProfile(
@@ -85,6 +98,14 @@ class SupabaseDetailedProfileRepository implements DetailedProfileRepository {
               .cast<Map<String, dynamic>>()
               .map(_projectFromRow)
               .toList(growable: false),
+          headline: profile?['headline'] as String? ?? '',
+          summary: profile?['summary'] as String? ?? '',
+          totalExperience: profile?['total_experience'] as String? ?? '',
+          languages: languageRows
+              .cast<Map<String, dynamic>>()
+              .map(_languageFromRow)
+              .toList(growable: false),
+          careerPreferences: _careerPreferencesFromRow(profile),
         ),
       );
     } on PostgrestException catch (error, stackTrace) {
@@ -168,6 +189,111 @@ class SupabaseDetailedProfileRepository implements DetailedProfileRepository {
     skillsUsed: _stringList(row['skills_used']),
     sequence: row['sequence'] as int? ?? 0,
   );
+
+  LanguageEntry _languageFromRow(Map<String, dynamic> row) => LanguageEntry(
+    id: row['id'] as String,
+    language: row['language'] as String? ?? '',
+    proficiency:
+        LanguageProficiency.fromId(row['proficiency']) ??
+        LanguageProficiency.elementary,
+    sequence: row['sequence'] as int? ?? 0,
+  );
+
+  CareerPreferences _careerPreferencesFromRow(Map<String, dynamic>? row) {
+    if (row == null) return CareerPreferences.empty;
+    return CareerPreferences(
+      currentCtcAmount: (row['current_ctc_amount'] as num?)?.toDouble(),
+      currentCtcUndisclosed: row['current_ctc_undisclosed'] as bool? ?? false,
+      expectedCtcAmount: (row['expected_ctc_amount'] as num?)?.toDouble(),
+      expectedCtcNegotiable: row['expected_ctc_negotiable'] as bool? ?? false,
+      noticePeriod: NoticePeriod.fromId(row['notice_period']),
+      employmentTypes: (row['employment_types'] as List<dynamic>? ?? const [])
+          .map(EmploymentType.fromId)
+          .whereType<EmploymentType>()
+          .toSet(),
+      preferredLocations: _stringList(row['preferred_locations']),
+      willingToRelocate: row['willing_to_relocate'] as bool? ?? false,
+      industry: row['industry'] as String? ?? '',
+      functionalArea: row['functional_area'] as String? ?? '',
+    );
+  }
+
+  @override
+  Future<Result<void>> saveProfileBasics(
+    String candidateId, {
+    required String headline,
+    required String summary,
+    required String totalExperience,
+  }) async {
+    try {
+      // Upsert, not update -- same rationale as saveContactAndSkills: a
+      // resume-driven import or the future voice-completion flow can both
+      // write before any candidate_profiles row exists.
+      await _client
+          .from('candidate_profiles')
+          .upsert({
+            'candidate_id': candidateId,
+            'headline': headline,
+            'summary': summary,
+            'total_experience': totalExperience,
+          }, onConflict: 'candidate_id')
+          .timeout(_callTimeout);
+      return const Success(null);
+    } on PostgrestException catch (error, stackTrace) {
+      return ResultFailure(_saveFailure(error, stackTrace));
+    } on TimeoutException catch (error, stackTrace) {
+      return ResultFailure(_saveFailure(error, stackTrace));
+    }
+  }
+
+  @override
+  Future<Result<void>> saveCareerPreferences(
+    String candidateId,
+    CareerPreferences preferences,
+  ) async {
+    try {
+      await _client
+          .from('candidate_profiles')
+          .upsert({
+            'candidate_id': candidateId,
+            'current_ctc_amount': preferences.currentCtcAmount,
+            'current_ctc_undisclosed': preferences.currentCtcUndisclosed,
+            'expected_ctc_amount': preferences.expectedCtcAmount,
+            'expected_ctc_negotiable': preferences.expectedCtcNegotiable,
+            'notice_period': preferences.noticePeriod?.id,
+            'employment_types': preferences.employmentTypes
+                .map((type) => type.id)
+                .toList(),
+            'preferred_locations': preferences.preferredLocations,
+            'willing_to_relocate': preferences.willingToRelocate,
+            'industry': preferences.industry,
+            'functional_area': preferences.functionalArea,
+          }, onConflict: 'candidate_id')
+          .timeout(_callTimeout);
+      return const Success(null);
+    } on PostgrestException catch (error, stackTrace) {
+      return ResultFailure(_saveFailure(error, stackTrace));
+    } on TimeoutException catch (error, stackTrace) {
+      return ResultFailure(_saveFailure(error, stackTrace));
+    }
+  }
+
+  @override
+  Future<Result<void>> upsertLanguage(
+    String candidateId,
+    LanguageEntry entry,
+  ) => _upsert('candidate_languages', {
+    if (entry.id.isNotEmpty) 'id': entry.id,
+    'candidate_id': candidateId,
+    'language': entry.language,
+    'proficiency': entry.proficiency.id,
+    'sequence': entry.sequence,
+    'updated_at': DateTime.now().toUtc().toIso8601String(),
+  });
+
+  @override
+  Future<Result<void>> deleteLanguage(String candidateId, String id) =>
+      _delete('candidate_languages', candidateId, id);
 
   @override
   Future<Result<void>> saveContactAndSkills(

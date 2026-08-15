@@ -87,6 +87,40 @@ class DetailedProfileController
         ),
   );
 
+  Future<AppFailure?> saveProfileBasics({
+    required String headline,
+    required String summary,
+    required String totalExperience,
+  }) => _mutate(
+    (candidateId) => ref
+        .read(detailedProfileRepositoryProvider)
+        .saveProfileBasics(
+          candidateId,
+          headline: headline,
+          summary: summary,
+          totalExperience: totalExperience,
+        ),
+  );
+
+  Future<AppFailure?> saveCareerPreferences(CareerPreferences preferences) =>
+      _mutate(
+        (candidateId) => ref
+            .read(detailedProfileRepositoryProvider)
+            .saveCareerPreferences(candidateId, preferences),
+      );
+
+  Future<AppFailure?> saveLanguage(LanguageEntry entry) => _mutate(
+    (candidateId) => ref
+        .read(detailedProfileRepositoryProvider)
+        .upsertLanguage(candidateId, entry),
+  );
+
+  Future<AppFailure?> deleteLanguage(String id) => _mutate(
+    (candidateId) => ref
+        .read(detailedProfileRepositoryProvider)
+        .deleteLanguage(candidateId, id),
+  );
+
   Future<AppFailure?> saveWorkExperience(WorkExperienceEntry entry) => _mutate(
     (candidateId) => ref
         .read(detailedProfileRepositoryProvider)

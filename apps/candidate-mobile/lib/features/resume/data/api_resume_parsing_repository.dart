@@ -98,7 +98,11 @@ class ApiResumeParsingRepository implements ResumeParsingRepository {
 
   List<String> _strList(Object? value) {
     if (value is! List) return const [];
-    return value.whereType<String>().map((s) => s.trim()).where((s) => s.isNotEmpty).toList(growable: false);
+    return value
+        .whereType<String>()
+        .map((s) => s.trim())
+        .where((s) => s.isNotEmpty)
+        .toList(growable: false);
   }
 
   List<EducationEntry> _educationList(Object? value) {

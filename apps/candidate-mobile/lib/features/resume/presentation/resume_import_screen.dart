@@ -273,16 +273,20 @@ class _ResumeImportScreenState extends ConsumerState<ResumeImportScreen> {
     );
   }
 
-  /// Applies the reviewed extraction to both the onboarding draft
-  /// (fullName/city/headline -- never overwriting something the
-  /// candidate already has, defensive even though this screen is only
-  /// ever reached while the draft is still fresh) and the detailed
-  /// profile (phone/email/skills plus every education/work/certification/
-  /// project entry). Writes go straight through the repositories rather
-  /// than one-at-a-time through `DetailedProfileController` (which
-  /// reloads the whole profile after every single mutation) -- a resume
-  /// can carry a dozen entries, and reloading after each would mean a
-  /// dozen extra round-trips for no benefit here.
+  /// Applies the reviewed extraction to the onboarding draft
+  /// (fullName/city/headline), the detailed profile's identity fields
+  /// (headline again -- see `DetailedCandidateProfile.headline`'s doc
+  /// comment on the duplication -- plus totalExperience), and the
+  /// detailed profile's list sections (phone/email/skills plus every
+  /// education/work/certification/project entry). Every never-overwrite
+  /// check compares against that field's *own* current value, not the
+  /// draft's, since headline and totalExperience live in two different
+  /// places that can each independently already be filled or empty.
+  /// Writes go straight through the repositories rather than one-at-a-
+  /// time through `DetailedProfileController` (which reloads the whole
+  /// profile after every single mutation) -- a resume can carry a dozen
+  /// entries, and reloading after each would mean a dozen extra
+  /// round-trips for no benefit here.
   Future<void> _confirm() async {
     final result = _result;
     if (result == null) return;
@@ -333,6 +337,19 @@ class _ResumeImportScreenState extends ConsumerState<ResumeImportScreen> {
       if (failure != null) anyFailure = true;
     }
 
+    final currentProfile = await ref.read(
+      detailedProfileControllerProvider.future,
+    );
+    final needsProfileHeadline =
+        currentProfile.headline.trim().isEmpty && result.headline.isNotEmpty;
+    // The one bug this closes: `yearsOfExperience` has always been
+    // extracted and shown in the review summary above, but until
+    // `saveProfileBasics` existed there was no column to save it into --
+    // it was read once and discarded on confirm.
+    final needsTotalExperience =
+        currentProfile.totalExperience.trim().isEmpty &&
+        result.yearsOfExperience.isNotEmpty;
+
     final profileRepository = ref.read(detailedProfileRepositoryProvider);
     final writes = <Future<Result<void>>>[
       if (result.phone.isNotEmpty ||
@@ -343,6 +360,21 @@ class _ResumeImportScreenState extends ConsumerState<ResumeImportScreen> {
           phone: result.phone,
           email: result.email,
           skills: result.skills,
+        ),
+      // `summary` is never touched here -- resumes aren't parsed for it
+      // (see `DetailedCandidateProfile.summary`'s own doc comment), so
+      // this always carries the candidate's current value forward rather
+      // than blanking it.
+      if (needsProfileHeadline || needsTotalExperience)
+        profileRepository.saveProfileBasics(
+          candidateId,
+          headline: needsProfileHeadline
+              ? result.headline
+              : currentProfile.headline,
+          summary: currentProfile.summary,
+          totalExperience: needsTotalExperience
+              ? result.yearsOfExperience
+              : currentProfile.totalExperience,
         ),
       for (final entry in result.education)
         profileRepository.upsertEducation(candidateId, entry),
