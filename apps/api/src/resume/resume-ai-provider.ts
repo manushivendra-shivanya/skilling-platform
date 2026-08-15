@@ -2,17 +2,87 @@ export interface ParseResumeParams {
   resumeText: string;
 }
 
+/**
+ * One qualification. [degree] and [fieldOfStudy] are deliberately separate
+ * fields, not one free-text string -- this is the "intelligence" layer:
+ * an abbreviation like "BTech CS" on the resume should come back here as
+ * `degree: "Bachelor of Technology"` / `fieldOfStudy: "Computer Science"`,
+ * not kept verbatim. Mirrors `candidate_education`
+ * (supabase/migrations/20260814140000_candidate_detailed_profile.sql) and
+ * the mobile `EducationEntry` domain model field-for-field.
+ */
+export interface ParsedEducationEntry {
+  institution: string;
+  degree: string;
+  fieldOfStudy: string;
+  startYear: number | null;
+  endYear: number | null;
+  grade: string;
+}
+
+/** Mirrors `candidate_work_experience` / the mobile `WorkExperienceEntry`. */
+export interface ParsedWorkExperienceEntry {
+  title: string;
+  company: string;
+  location: string;
+  startMonth: number | null;
+  startYear: number | null;
+  endMonth: number | null;
+  endYear: number | null;
+  isCurrent: boolean;
+  description: string;
+}
+
+/**
+ * Mirrors `candidate_external_certifications` / the mobile
+ * `ExternalCertificationEntry` -- a certification the candidate already
+ * held before joining, not one of this platform's own in-app exams (see
+ * that table's own migration comment for why the two are never conflated).
+ */
+export interface ParsedCertificationEntry {
+  name: string;
+  issuingOrganization: string;
+  issueMonth: number | null;
+  issueYear: number | null;
+  expiryMonth: number | null;
+  expiryYear: number | null;
+}
+
+/** Mirrors `candidate_projects` / the mobile `ProjectEntry`. */
+export interface ParsedProjectEntry {
+  title: string;
+  role: string;
+  description: string;
+  startMonth: number | null;
+  startYear: number | null;
+  endMonth: number | null;
+  endYear: number | null;
+  isOngoing: boolean;
+  url: string;
+}
+
+/**
+ * A structured extraction, not a flat set of strings: [education],
+ * [workExperience], [certifications] and [projects] are each a real array
+ * of entries (mirroring the four `candidate_*` tables from
+ * supabase/migrations/20260814140000_candidate_detailed_profile.sql), and
+ * [skills] is a real string array, not one comma-joined line. This is what
+ * lets the mobile client apply an extraction directly into
+ * `DetailedCandidateProfile`'s repository calls (one upsert per entry)
+ * instead of re-parsing a flattened summary string first.
+ */
 export interface ResumeAiParseResult {
-  /**
-   * A flat set of extracted fields -- deliberately not a richer nested
-   * shape (no arrays/objects) so this maps directly onto the mobile
-   * `ResumeParseResult.fields` contract
-   * (candidate-mobile/lib/features/resume/domain/resume_parsing_repository.dart),
-   * which is `Map<String, String>`. Multi-item fields (education, work
-   * history, skills) are flattened into single readable summary strings
-   * by the provider, not left as arrays for the caller to format.
-   */
-  fields: Record<string, string>;
+  fullName: string;
+  phone: string;
+  email: string;
+  city: string;
+  headline: string;
+  yearsOfExperience: string;
+  skills: string[];
+  education: ParsedEducationEntry[];
+  workExperience: ParsedWorkExperienceEntry[];
+  certifications: ParsedCertificationEntry[];
+  projects: ParsedProjectEntry[];
   modelId: string;
 }
 

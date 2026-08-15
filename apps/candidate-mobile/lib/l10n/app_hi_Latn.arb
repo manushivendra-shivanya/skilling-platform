@@ -872,6 +872,19 @@
   "onboardingResumeFooterNameFilled": "Upar diya gaya aapka naam step 1 ke liye bhar diya gaya hai. Yahan baaki sab kuch sirf ek preview hai aur abhi tak aapki profile mein save nahi hua hai.",
   "onboardingResumeFooterPreviewOnly": "Yeh sirf ek preview hai -- yeh details abhi tak aapki profile mein save nahi hui hain.",
 
+  "resumeImportScreenTitle": "Apna resume import karein",
+
+  "resumeImportHeading": "Seconds mein apni profile banayein",
+  "resumeImportDescription": "Neeche apne resume ka text paste karein aur hum AI se aapka work history, education, skills aur contact details padhenge. Save karne se pehle aap sab kuch check kar sakenge.",
+
+  "resumeImportSkipButton": "Abhi ke liye skip karein",
+
+  "resumeImportConfirmButton": "Yeh details meri profile mein save karein",
+
+  "resumeImportContinueAnywayButton": "Phir bhi aage badhein",
+
+  "resumeImportApplyFailedMessage": "Kuch details save nahi ho payin. Aap unhe baad mein apni profile se jod sakte hain.",
+
   "onboardingVoiceStepTitle": "Voice introduction",
   "onboardingVoiceStepDescription": "Hum yahan ek chhota voice practice add karne ki planning kar rahe hain, jisme pehle clear microphone permission aur apna consent step hoga.",
   "onboardingVoiceStepNote": "Yeh abhi ready nahi hai, aur is screen par aapke microphone ka use nahi kiya jaata.",

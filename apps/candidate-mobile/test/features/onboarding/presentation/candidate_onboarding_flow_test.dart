@@ -29,8 +29,7 @@ void main() {
       candidateOnboardingRepository: InMemoryCandidateOnboardingRepository(),
     );
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Continue to profile setup'));
-    await tester.pumpAndSettle();
+    await _continueToOnboarding(tester);
 
     expect(find.text('What would you like to achieve?'), findsOneWidget);
     await tester.tap(find.text('Save and continue'));
@@ -60,8 +59,7 @@ void main() {
       candidateOnboardingRepository: repository,
     );
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Continue to profile setup'));
-    await tester.pumpAndSettle();
+    await _continueToOnboarding(tester);
 
     expect(find.text('Which roles interest you?'), findsOneWidget);
     expect(find.text('Step 6 of 10'), findsOneWidget);
@@ -81,8 +79,7 @@ void main() {
       connectivityRepository: connectivity,
     );
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Continue to profile setup'));
-    await tester.pumpAndSettle();
+    await _continueToOnboarding(tester);
 
     expect(
       find.text(
@@ -101,8 +98,7 @@ void main() {
       candidateOnboardingRepository: repository,
     );
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Continue to profile setup'));
-    await tester.pumpAndSettle();
+    await _continueToOnboarding(tester);
 
     await _selectAndContinue(tester, 'Find a new job');
     await tester.enterText(
@@ -158,8 +154,7 @@ void main() {
         candidateOnboardingRepository: repository,
       );
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Continue to profile setup'));
-      await tester.pumpAndSettle();
+      await _continueToOnboarding(tester);
 
       // Step 0: goal -- a choice step.
       expect(_stepHeadingIcon(tester), Icons.checklist_rounded);
@@ -352,8 +347,7 @@ void main() {
         resumeParsingRepository: parser,
       );
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Continue to profile setup'));
-      await tester.pumpAndSettle();
+      await _continueToOnboarding(tester);
       await _selectAndContinue(tester, 'Find a new job');
       await tester.enterText(
         find.byKey(const ValueKey('full-name-field')),
@@ -475,12 +469,30 @@ void main() {
       candidateOnboardingRepository: InMemoryCandidateOnboardingRepository(),
     );
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Continue to profile setup'));
-    await tester.pumpAndSettle();
+    await _continueToOnboarding(tester);
 
     expect(tester.takeException(), isNull);
     expect(find.text('Save and continue'), findsOneWidget);
   });
+}
+
+/// Taps "Continue to profile setup" and lands the tester inside the
+/// onboarding wizard, regardless of whether the router routed through the
+/// post-signup `ResumeImportScreen` first. A fresh draft (`currentStep ==
+/// 0`, every test in this file except "saved onboarding draft resumes at
+/// its last step") is offered that screen -- this taps its "Skip for now"
+/// to reach the wizard without the resume-import behaviour these tests
+/// don't care about. A resumed draft (`currentStep > 0`) skips straight
+/// to the wizard already, so "Skip for now" never appears and this is a
+/// no-op past the first tap.
+Future<void> _continueToOnboarding(WidgetTester tester) async {
+  await tester.tap(find.text('Continue to profile setup'));
+  await tester.pumpAndSettle();
+  final skipButton = find.text('Skip for now');
+  if (skipButton.evaluate().isNotEmpty) {
+    await tester.tap(skipButton);
+    await tester.pumpAndSettle();
+  }
 }
 
 Future<void> _selectAndContinue(WidgetTester tester, String label) async {
@@ -507,8 +519,7 @@ IconData _stepHeadingIcon(WidgetTester tester) {
 /// start from the same place.
 Future<void> _navigateToResumeStep(WidgetTester tester) async {
   await tester.pumpAndSettle();
-  await tester.tap(find.text('Continue to profile setup'));
-  await tester.pumpAndSettle();
+  await _continueToOnboarding(tester);
   await _selectAndContinue(tester, 'Find a new job');
   await tester.enterText(
     find.byKey(const ValueKey('full-name-field')),
@@ -540,17 +551,17 @@ class _FakeResumeParsingRepository implements ResumeParsingRepository {
       ResumeParseResult(
         adapter: 'fake',
         requiresCandidateReview: false,
-        fields: {
-          'fullName': 'Asha Kumari',
-          'phone': '',
-          'email': '',
-          'city': '',
-          'headline': 'Warehouse Associate',
-          'yearsOfExperience': '2 years',
-          'education': '',
-          'workHistory': '',
-          'skills': '',
-        },
+        fullName: 'Asha Kumari',
+        phone: '',
+        email: '',
+        city: '',
+        headline: 'Warehouse Associate',
+        yearsOfExperience: '2 years',
+        skills: [],
+        education: [],
+        workExperience: [],
+        certifications: [],
+        projects: [],
       ),
     );
   }

@@ -177,10 +177,21 @@ class SupabaseDetailedProfileRepository implements DetailedProfileRepository {
     required List<String> skills,
   }) async {
     try {
+      // Upsert, not update: a resume-driven import can now write these
+      // before the candidate has ever saved anything through the
+      // onboarding wizard (see the post-signup resume-import screen),
+      // meaning no `candidate_profiles` row may exist yet -- an update
+      // against a missing row silently affects zero rows in Postgrest
+      // rather than erroring, which would have looked like a successful
+      // save that actually saved nothing.
       await _client
           .from('candidate_profiles')
-          .update({'phone': phone, 'email': email, 'skills': skills})
-          .eq('candidate_id', candidateId)
+          .upsert({
+            'candidate_id': candidateId,
+            'phone': phone,
+            'email': email,
+            'skills': skills,
+          }, onConflict: 'candidate_id')
           .timeout(_callTimeout);
       return const Success(null);
     } on PostgrestException catch (error, stackTrace) {

@@ -1901,6 +1901,26 @@
   "@onboardingResumeFooterNameFilled": { "description": "Resume-extraction summary footer when a name was extracted." },
   "@onboardingResumeFooterPreviewOnly": { "description": "Resume-extraction summary footer when no name was extracted." },
 
+  "resumeImportScreenTitle": "Import your resume",
+  "@resumeImportScreenTitle": { "description": "Post-signup resume-import screen's AppBar title." },
+
+  "resumeImportHeading": "Build your profile in seconds",
+  "resumeImportDescription": "Paste your resume text below and we will use AI to read your work history, education, skills and contact details. You will get to review everything before it is saved.",
+  "@resumeImportHeading": { "description": "Post-signup resume-import screen heading." },
+  "@resumeImportDescription": { "description": "Post-signup resume-import screen description." },
+
+  "resumeImportSkipButton": "Skip for now",
+  "@resumeImportSkipButton": { "description": "Skips the post-signup resume-import screen without saving anything." },
+
+  "resumeImportConfirmButton": "Save these details to my profile",
+  "@resumeImportConfirmButton": { "description": "Applies a reviewed resume extraction to the candidate's profile and draft." },
+
+  "resumeImportContinueAnywayButton": "Continue anyway",
+  "@resumeImportContinueAnywayButton": { "description": "Shown instead of the confirm button after a partial save failure -- proceeds without retrying." },
+
+  "resumeImportApplyFailedMessage": "Some details could not be saved. You can add them later from your profile.",
+  "@resumeImportApplyFailedMessage": { "description": "Shown when applying a reviewed resume extraction partially or fully fails." },
+
   "onboardingVoiceStepTitle": "Voice introduction",
   "onboardingVoiceStepDescription": "We plan to add a short voice practice here, with clear microphone permission and its own consent step first.",
   "onboardingVoiceStepNote": "This isn't ready yet, and your microphone is not used on this screen.",

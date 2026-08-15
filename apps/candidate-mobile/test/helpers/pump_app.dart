@@ -32,6 +32,7 @@ import 'package:candidate_mobile/features/onboarding/domain/candidate_onboarding
 import 'package:candidate_mobile/features/onboarding/domain/onboarding_entry_repository.dart';
 import 'package:candidate_mobile/features/networking/data/unavailable_networking_repository.dart';
 import 'package:candidate_mobile/features/networking/domain/networking_repository.dart';
+import 'package:candidate_mobile/features/profile_details/domain/detailed_profile_repository.dart';
 import 'package:candidate_mobile/features/resume/data/unavailable_resume_parsing_repository.dart';
 import 'package:candidate_mobile/features/resume/domain/resume_parsing_repository.dart';
 import 'package:candidate_mobile/features/shifts/data/local_mock_shifts_repository.dart';
@@ -64,6 +65,7 @@ extension CandidateAppPump on WidgetTester {
     CertificationExamAttemptRepository? certificationExamAttemptRepository,
     CoachThreadRepository? coachThreadRepository,
     ResumeParsingRepository? resumeParsingRepository,
+    DetailedProfileRepository? detailedProfileRepository,
     NetworkingRepository? networkingRepository,
     JobsRepository? jobsRepository,
     ShiftsRepository? shiftsRepository,
@@ -165,6 +167,10 @@ extension CandidateAppPump on WidgetTester {
             resumeParsingRepository ??
                 const UnavailableResumeParsingRepository(),
           ),
+          if (detailedProfileRepository != null)
+            detailedProfileRepositoryProvider.overrideWithValue(
+              detailedProfileRepository,
+            ),
           // Same rationale as resumeParsingRepositoryProvider above:
           // always overridden so it never falls through to the real
           // network-backed provider in the widget test sandbox.

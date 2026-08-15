@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { AppError } from '../common/app-error';
-import { ResumeAiProvider } from './resume-ai-provider';
+import { ResumeAiParseResult, ResumeAiProvider } from './resume-ai-provider';
 import { RESUME_AI_PROVIDER } from './resume-ai-provider.token';
 
 // A near-empty paste would produce a fabricated-looking extraction (the
@@ -16,21 +16,13 @@ const MAX_RESUME_TEXT_LENGTH = 20000;
 // that file's doc comment for why that trade-off is accepted for v1.
 const RATE_LIMIT_PER_DAY = 10;
 
-// Fields whose absence means the extraction is materially incomplete.
-// Deliberately a deterministic completeness check here, not the model
-// self-reporting a confidence score -- an LLM's own confidence claim
-// isn't something this service can verify, so it isn't trusted as one.
-const REQUIRED_FOR_CONFIDENT_PARSE = ['fullName'] as const;
-
 export interface ResumeParseRequestBody {
   resumeText: string;
   consentVersion: string;
 }
 
-export interface ResumeParseResponse {
-  fields: Record<string, string>;
+export interface ResumeParseResponse extends ResumeAiParseResult {
   requiresCandidateReview: boolean;
-  modelId: string;
   provider: string;
 }
 
@@ -71,13 +63,16 @@ export class ResumeService {
 
     try {
       const result = await this.provider.parseResume({ resumeText });
-      const requiresCandidateReview = REQUIRED_FOR_CONFIDENT_PARSE.some(
-        (key) => !result.fields[key]?.trim(),
-      );
+      // Deterministic completeness check, not the model self-reporting a
+      // confidence score -- an LLM's own confidence claim isn't something
+      // this service can verify, so it isn't trusted as one. fullName is
+      // the one field every other extracted field is presented alongside
+      // in the mobile review UI, so its absence means "look at this
+      // before trusting anything else here."
+      const requiresCandidateReview = !result.fullName.trim();
       return {
-        fields: result.fields,
+        ...result,
         requiresCandidateReview,
-        modelId: result.modelId,
         provider: this.provider.id,
       };
     } catch {

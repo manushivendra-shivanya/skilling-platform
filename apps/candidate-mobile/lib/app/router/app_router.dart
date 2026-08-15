@@ -34,6 +34,7 @@ import '../../features/shifts/presentation/shift_payout_screen.dart';
 import '../../features/shifts/presentation/shift_screen.dart';
 import '../../features/profile/presentation/profile_screen.dart';
 import '../../features/profile_details/presentation/detailed_profile_screen.dart';
+import '../../features/resume/presentation/resume_import_screen.dart';
 import '../../features/splash/presentation/app_startup_screen.dart';
 import '../../features/voice/presentation/voice_interview_screen.dart';
 import '../../features/workplace_simulation/presentation/simulation_entry_screen.dart';
@@ -75,6 +76,15 @@ const otpEntryRoutePath = '/auth/otp';
 const otpEntryRouteName = 'otp-entry';
 const authenticatedRoutePath = '/auth/success';
 const authenticatedRouteName = 'authenticated';
+
+/// Pushed from `authenticatedRoutePath` instead of going straight to
+/// `candidateOnboardingRoutePath` when `_continueFromAuthenticated` finds a
+/// draft that hasn't been started yet (`currentStep == 0`, not completed) --
+/// see that function's own doc comment for the gating rule and its known
+/// trade-off.
+const resumeImportRoutePath = '/onboarding/resume-import';
+const resumeImportRouteName = 'resume-import';
+
 const candidateOnboardingRoutePath = '/onboarding';
 const candidateOnboardingRouteName = 'candidate-onboarding';
 const homeRoutePath = '/home';
@@ -449,9 +459,20 @@ GoRouter createAppRouter({
         path: authenticatedRoutePath,
         name: authenticatedRouteName,
         builder: (context, state) => AuthenticatedPlaceholderScreen(
-          onContinueToOnboarding: () =>
-              context.push(candidateOnboardingRoutePath),
+          onContinueToOnboarding: () => _continueFromAuthenticated(
+            context: context,
+            candidateSessionRepository: candidateSessionRepository,
+            candidateOnboardingRepository: candidateOnboardingRepository,
+          ),
           onLoggedOut: () => context.go(welcomeRoutePath),
+        ),
+      ),
+      GoRoute(
+        path: resumeImportRoutePath,
+        name: resumeImportRouteName,
+        builder: (context, state) => ResumeImportScreen(
+          onContinue: () =>
+              context.pushReplacement(candidateOnboardingRoutePath),
         ),
       ),
       GoRoute(
@@ -941,6 +962,42 @@ GoRouter createAppRouter({
   );
 }
 
+/// Decides whether `authenticatedRoutePath`'s "Continue to profile setup"
+/// goes to the post-signup `resumeImportRoutePath` or straight to the
+/// onboarding wizard. Gated on `draft.currentStep == 0 && !draft.isCompleted`
+/// -- a fresh draft nobody has started yet -- so the screen offers itself
+/// once, the first time a candidate reaches this point, rather than on
+/// every app reopen of an in-progress signup. Known trade-off: a candidate
+/// who starts the wizard (advancing past step 0) without ever visiting this
+/// screen won't see it offered again later, even though nothing stops them
+/// from still using onboarding step 6's own resume-upload step. A read
+/// failure or missing session/draft falls back to the wizard directly --
+/// the screen is a nice-to-have, not a gate anything else depends on.
+Future<void> _continueFromAuthenticated({
+  required BuildContext context,
+  required CandidateSessionRepository candidateSessionRepository,
+  required CandidateOnboardingRepository candidateOnboardingRepository,
+}) async {
+  final session = (await candidateSessionRepository.readSession()).when(
+    success: (value) => value,
+    failure: (_) => null,
+  );
+  final candidateId = session?.candidateId;
+  if (candidateId == null) {
+    if (context.mounted) context.push(candidateOnboardingRoutePath);
+    return;
+  }
+  final draft = (await candidateOnboardingRepository.readDraft(
+    candidateId,
+  )).when(success: (value) => value, failure: (_) => null);
+  if (!context.mounted) return;
+  final offerResumeImport =
+      draft != null && draft.currentStep == 0 && !draft.isCompleted;
+  context.push(
+    offerResumeImport ? resumeImportRoutePath : candidateOnboardingRoutePath,
+  );
+}
+
 /// The candidate id the dev skip signs in as. Fixed, obviously synthetic, and
 /// hex-valid in every group so it passes Postgres's UUID type check rather
 /// than erroring. The redirect recognises it and treats onboarding as done.
@@ -1030,6 +1087,7 @@ Future<String?> _redirectForCandidateState({
   final needsCandidateSession =
       location == authenticatedRoutePath ||
       location == candidateOnboardingRoutePath ||
+      location == resumeImportRoutePath ||
       _mainAndGlobalRoutePaths.contains(location) ||
       location.startsWith('$workplaceSimulationHubRoutePath/');
   if (!needsCandidateSession) {
@@ -1054,7 +1112,8 @@ Future<String?> _redirectForCandidateState({
     return location == authenticatedRoutePath ? homeRoutePath : null;
   }
 
-  if (location == candidateOnboardingRoutePath) {
+  if (location == candidateOnboardingRoutePath ||
+      location == resumeImportRoutePath) {
     return null;
   }
 
