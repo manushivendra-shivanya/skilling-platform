@@ -34,7 +34,20 @@ dependencies:
   # which needs no storage permission on Android -- the system UI hands
   # back a single file the candidate explicitly chose, rather than the app
   # gaining access to their files.
-  file_picker: ^8.3.7
+  #
+  # Floor is 11, not 8: file_picker 8.3.7 hardcodes `compileSdk 34` in its
+  # own android/build.gradle while pulling in
+  # flutter_plugin_android_lifecycle, which requires 36 -- so
+  # `:file_picker:checkDebugAarMetadata` fails the APK build outright, no
+  # matter that this app already compiles against 36. From 11 the plugin
+  # reads `flutter.compileSdkVersion` and inherits ours. `minSdk 21` is
+  # unchanged between the two, so no device loses support.
+  #
+  # Not 12 yet: file_picker 12 pulls in windows_file_picker, which needs
+  # win32 ^6, while flutter_secure_storage 9.2.4 pins win32 ^5. Moving to
+  # 12 means upgrading flutter_secure_storage first -- for a Windows-only
+  # transitive dependency this app never builds for.
+  file_picker: ^11.0.0
 dev_dependencies:
   flutter_test:
     sdk: flutter
