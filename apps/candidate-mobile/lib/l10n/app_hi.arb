@@ -877,7 +877,12 @@
   "resumeImportHeading": "सेकंडों में अपनी प्रोफ़ाइल बनाएं",
   "resumeImportDescription": "नीचे अपने रिज़्यूमे का टेक्स्ट पेस्ट करें और हम AI का उपयोग करके आपका कार्य इतिहास, शिक्षा, कौशल और संपर्क विवरण पढ़ेंगे। सेव करने से पहले आप सब कुछ जांच सकेंगे।",
 
+  "resumeImportReimportHeading": "अपनी प्रोफ़ाइल को रिज़्यूमे से अपडेट करें",
+  "resumeImportReimportDescription": "नीचे अपने रिज़्यूमे का टेक्स्ट पेस्ट करें और हम AI का उपयोग करके आपका कार्य इतिहास, शिक्षा, कौशल और संपर्क विवरण पढ़ेंगे। आपकी प्रोफ़ाइल में पहले से मौजूद जानकारी कभी नहीं बदली जाएगी -- सेव करने से पहले आप सब कुछ जांच सकेंगे।",
+
   "resumeImportSkipButton": "अभी के लिए छोड़ें",
+
+  "resumeImportCancelButton": "रद्द करें",
 
   "resumeImportConfirmButton": "ये विवरण मेरी प्रोफ़ाइल में सेव करें",
 
@@ -934,6 +939,7 @@
 
   "profileDetailsScreenTitle": "मेरी प्रोफ़ाइल",
   "profileDetailsCompletionLabel": "{percent}% पूरा",
+  "profileDetailsImportFromResumeButton": "रिज़्यूमे से इम्पोर्ट करें",
 
   "profileDetailsContactSectionTitle": "संपर्क",
   "profileDetailsPhoneLabel": "फ़ोन",
