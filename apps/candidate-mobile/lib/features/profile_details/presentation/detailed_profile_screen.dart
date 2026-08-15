@@ -8,14 +8,15 @@ import '../../../core/errors/app_failure_localization.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_feedback.dart';
-import '../../../core/widgets/app_meter_bar.dart';
 import '../../../core/widgets/app_skeleton.dart';
 import '../../../core/widgets/app_state_view.dart';
 import '../../../core/widgets/app_text_field.dart';
 import '../../../l10n/generated/app_localizations.dart';
+import '../../onboarding/presentation/candidate_onboarding_controller.dart';
 import '../domain/detailed_candidate_profile.dart';
 import 'detailed_profile_controller.dart';
 import 'detailed_profile_labels.dart';
+import 'profile_hero_header.dart';
 
 /// The LinkedIn-style detailed profile: contact info, skills, and the
 /// candidate's Career Journey (experience, education, certifications,
@@ -24,7 +25,11 @@ import 'detailed_profile_labels.dart';
 /// Unlike Home, every field on this screen is real, backend-persisted data
 /// -- see `DetailedProfileController`/`SupabaseDetailedProfileRepository`.
 class DetailedProfileScreen extends ConsumerWidget {
-  const DetailedProfileScreen({required this.onImportFromResume, super.key});
+  const DetailedProfileScreen({
+    required this.onImportFromResume,
+    required this.onFinishProfile,
+    super.key,
+  });
 
   /// Opens `detailedProfileResumeImportRoutePath` -- the same
   /// `ResumeImportScreen` the post-signup flow uses (with `isReimport:
@@ -32,6 +37,11 @@ class DetailedProfileScreen extends ConsumerWidget {
   /// way back into resume-driven autofill. See that route's own doc
   /// comment for why this needs to exist as a separate entry point.
   final VoidCallback onImportFromResume;
+
+  /// Opens "Finish your profile" -- the gap list plus the assistant. Kept
+  /// separate from [onImportFromResume]: a resume fills history, the
+  /// assistant fills everything a resume structurally can't.
+  final VoidCallback onFinishProfile;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -64,6 +74,7 @@ class DetailedProfileScreen extends ConsumerWidget {
         data: (profile) => _DetailedProfileContent(
           profile: profile,
           onImportFromResume: onImportFromResume,
+          onFinishProfile: onFinishProfile,
         ),
       ),
     );
@@ -74,65 +85,77 @@ class _DetailedProfileContent extends ConsumerWidget {
   const _DetailedProfileContent({
     required this.profile,
     required this.onImportFromResume,
+    required this.onFinishProfile,
   });
 
   final DetailedCandidateProfile profile;
   final VoidCallback onImportFromResume;
+  final VoidCallback onFinishProfile;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final controller = ref.read(detailedProfileControllerProvider.notifier);
 
+    final draft = ref.watch(candidateOnboardingControllerProvider).valueOrNull;
+
     return ListView(
-      padding: const EdgeInsets.all(AppSpacing.lg),
+      padding: EdgeInsets.zero,
       children: [
-        Row(
-          children: [
-            Expanded(
-              child: AppMeterBar(value: profile.completionPercent / 100),
-            ),
-            const SizedBox(width: AppSpacing.sm),
-            Text(
-              l10n.profileDetailsCompletionLabel(profile.completionPercent),
-              style: Theme.of(
-                context,
-              ).textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w700),
-            ),
-          ],
+        ProfileHeroHeader(
+          profile: profile,
+          fullName: draft?.fullName ?? '',
+          location: [
+            draft?.city ?? '',
+            draft?.state ?? '',
+          ].where((part) => part.isNotEmpty).join(', '),
+          certificationCount: profile.certifications.length,
+          onFinishProfile: onFinishProfile,
         ),
-        const SizedBox(height: AppSpacing.sm),
-        AppButton(
-          key: const ValueKey('detailed-profile-import-from-resume-button'),
-          label: l10n.profileDetailsImportFromResumeButton,
-          variant: AppButtonVariant.secondary,
-          leadingIcon: Icons.upload_file_outlined,
-          onPressed: onImportFromResume,
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.lg,
+            AppSpacing.lg,
+            AppSpacing.lg,
+            0,
+          ),
+          child: AppButton(
+            key: const ValueKey('detailed-profile-import-from-resume-button'),
+            label: l10n.profileDetailsImportFromResumeButton,
+            variant: AppButtonVariant.secondary,
+            leadingIcon: Icons.upload_file_outlined,
+            onPressed: onImportFromResume,
+          ),
         ),
-        const SizedBox(height: AppSpacing.lg),
+        Padding(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: Column(
+            children: [
+              _AboutCard(profile: profile, controller: controller),
+              const SizedBox(height: AppSpacing.lg),
 
-        _AboutCard(profile: profile, controller: controller),
-        const SizedBox(height: AppSpacing.lg),
+              _ContactAndSkillsCard(profile: profile, controller: controller),
+              const SizedBox(height: AppSpacing.lg),
 
-        _ContactAndSkillsCard(profile: profile, controller: controller),
-        const SizedBox(height: AppSpacing.lg),
+              _LanguagesSection(profile: profile, controller: controller),
+              const SizedBox(height: AppSpacing.lg),
 
-        _LanguagesSection(profile: profile, controller: controller),
-        const SizedBox(height: AppSpacing.lg),
+              _CareerPreferencesCard(profile: profile, controller: controller),
+              const SizedBox(height: AppSpacing.lg),
 
-        _CareerPreferencesCard(profile: profile, controller: controller),
-        const SizedBox(height: AppSpacing.lg),
+              _ExperienceSection(profile: profile, controller: controller),
+              const SizedBox(height: AppSpacing.lg),
 
-        _ExperienceSection(profile: profile, controller: controller),
-        const SizedBox(height: AppSpacing.lg),
+              _EducationSection(profile: profile, controller: controller),
+              const SizedBox(height: AppSpacing.lg),
 
-        _EducationSection(profile: profile, controller: controller),
-        const SizedBox(height: AppSpacing.lg),
+              _CertificationSection(profile: profile, controller: controller),
+              const SizedBox(height: AppSpacing.lg),
 
-        _CertificationSection(profile: profile, controller: controller),
-        const SizedBox(height: AppSpacing.lg),
-
-        _ProjectSection(profile: profile, controller: controller),
+              _ProjectSection(profile: profile, controller: controller),
+            ],
+          ),
+        ),
       ],
     );
   }

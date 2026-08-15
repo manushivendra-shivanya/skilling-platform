@@ -1,5 +1,6 @@
 import 'package:candidate_mobile/app/dependencies.dart';
 import 'package:candidate_mobile/core/repositories/candidate_session_repository.dart';
+import 'package:candidate_mobile/features/onboarding/data/secure_candidate_onboarding_repository.dart';
 import 'package:candidate_mobile/features/profile_details/data/in_memory_detailed_profile_repository.dart';
 import 'package:candidate_mobile/features/profile_details/domain/detailed_candidate_profile.dart';
 import 'package:candidate_mobile/features/profile_details/presentation/detailed_profile_screen.dart';
@@ -33,11 +34,22 @@ void main() {
           ),
         ),
         detailedProfileRepositoryProvider.overrideWithValue(repository),
+        // The hero header reads the onboarding draft for the candidate's
+        // name and location -- without this the controller falls through
+        // to the real secure-storage repository, whose platform channel
+        // never completes in the test sandbox (surfacing as a pending
+        // Timer at teardown rather than an obvious failure).
+        candidateOnboardingRepositoryProvider.overrideWithValue(
+          InMemoryCandidateOnboardingRepository(),
+        ),
       ],
       child: MaterialApp(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
-        home: DetailedProfileScreen(onImportFromResume: () {}),
+        home: DetailedProfileScreen(
+          onImportFromResume: () {},
+          onFinishProfile: () {},
+        ),
       ),
     );
   }
@@ -49,7 +61,10 @@ void main() {
     await tester.pumpWidget(wrap(InMemoryDetailedProfileRepository()));
     await tester.pumpAndSettle();
 
-    expect(find.text('0% complete'), findsOneWidget);
+    // The hero's field-level strength meter, not the old section-level
+    // "N% complete" row it replaced -- see ProfileHeroHeader.
+    expect(find.text('0%'), findsOneWidget);
+    expect(find.text('PROFILE STRENGTH'), findsOneWidget);
     expect(find.text('No experience added yet'), findsOneWidget);
     expect(find.text('No education added yet'), findsOneWidget);
     expect(find.text('No certifications added yet'), findsOneWidget);
