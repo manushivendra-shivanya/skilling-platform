@@ -2,6 +2,8 @@ import { GoogleGenAI } from '@google/genai';
 import {
   GEMINI_RESUME_MODEL_ID,
   GeminiResumeParser,
+  RESUME_MAX_OUTPUT_TOKENS,
+  ResumeTooLongError,
 } from './gemini-resume-parser';
 
 /**
@@ -9,7 +11,10 @@ import {
  * minimal fake of the one method this parser actually calls.
  */
 function fakeClient(
-  generateContent: (params: unknown) => Promise<{ text: string | undefined }>,
+  generateContent: (params: unknown) => Promise<{
+    text: string | undefined;
+    candidates?: { finishReason?: string }[];
+  }>,
 ): GoogleGenAI {
   return { models: { generateContent } } as unknown as GoogleGenAI;
 }
@@ -123,7 +128,7 @@ describe('GeminiResumeParser', () => {
           parts: [{ text: expect.stringContaining('Asha Kumari') }],
         },
       ],
-      config: { maxOutputTokens: 4000 },
+      config: { maxOutputTokens: RESUME_MAX_OUTPUT_TOKENS },
     });
   });
 
@@ -160,7 +165,7 @@ describe('GeminiResumeParser', () => {
           ],
         },
       ],
-      config: { maxOutputTokens: 4000 },
+      config: { maxOutputTokens: RESUME_MAX_OUTPUT_TOKENS },
     });
   });
 
@@ -302,13 +307,55 @@ describe('GeminiResumeParser', () => {
     expect(result.fullName).toBe('Asha Kumari');
   });
 
+  it('reports a truncated extraction as too-long rather than as invalid JSON', async () => {
+    // A response cut off at the token ceiling still carries text -- just
+    // a JSON document that stops mid-object. Without the finishReason
+    // check this surfaced as "did not return valid JSON", which points
+    // at the model instead of at the resume's length.
+    const client = fakeClient(async () => ({
+      text: '{"fullName": "Asha Kumari", "workExperience": [{"title": "Warehou',
+      candidates: [{ finishReason: 'MAX_TOKENS' }],
+    }));
+    const parser = new GeminiResumeParser(client);
+
+    await expect(
+      parser.parseResume({ resumeText: 'a very long resume' }),
+    ).rejects.toBeInstanceOf(ResumeTooLongError);
+  });
+
+  it('does not mistake a normally-finished response for a truncated one', async () => {
+    const client = fakeClient(async () => ({
+      text: FULL_JSON,
+      candidates: [{ finishReason: 'STOP' }],
+    }));
+    const parser = new GeminiResumeParser(client);
+
+    await expect(
+      parser.parseResume({ resumeText: 'Asha Kumari...' }),
+    ).resolves.toMatchObject({ fullName: 'Asha Kumari' });
+  });
+
+  it('names the finish reason when Gemini returns no text at all', async () => {
+    const client = fakeClient(async () => ({
+      text: undefined,
+      candidates: [{ finishReason: 'SAFETY' }],
+    }));
+    const parser = new GeminiResumeParser(client);
+
+    // Not swallowed as a bare "empty extraction" -- the reason is what
+    // makes the server log worth reading.
+    await expect(
+      parser.parseResume({ resumeText: 'Asha Kumari...' }),
+    ).rejects.toThrow('SAFETY');
+  });
+
   it('throws when Gemini returns an empty response', async () => {
     const client = fakeClient(async () => ({ text: '   ' }));
     const parser = new GeminiResumeParser(client);
 
     await expect(
       parser.parseResume({ resumeText: 'x' }),
-    ).rejects.toThrow('Gemini returned an empty resume extraction.');
+    ).rejects.toThrow('Gemini returned an empty resume extraction');
   });
 
   it('throws when Gemini returns text that is not valid JSON', async () => {

@@ -329,6 +329,83 @@ void main() {
       );
     });
 
+    testWidgets(
+      'a rejection the candidate can act on is shown, not the generic validation copy',
+      (tester) async {
+        // The API returns 400 with candidate-facing wording for every
+        // reason it refuses a specific file. Falling back to the
+        // type-based "That doesn't look right." would leave someone
+        // re-uploading the same unreadable file forever.
+        await tester.pumpCandidateApp(
+          candidateSessionRepository: sessions,
+          candidateOnboardingRepository:
+              InMemoryCandidateOnboardingRepository(),
+          resumeParsingRepository: _RejectingResumeParsingRepository(
+            const ValidationFailure(
+              'Older Word (.doc) files cannot be read. Open it in Word, '
+              'save it as a PDF or .docx, and upload that instead.',
+            ),
+          ),
+          resumeFilePicker: _FakeResumeFilePicker(file: _pickedPdf()),
+        );
+        await continueToAuthenticated(tester);
+        await tapUpload(tester);
+
+        await tester.ensureVisible(find.text('Use AI to read this text'));
+        await tester.tap(find.text('Use AI to read this text'));
+        await tester.pump();
+        final extractButton = find.byKey(
+          const ValueKey('resume-import-extract-button'),
+        );
+        await tester.ensureVisible(extractButton);
+        await tester.tap(extractButton);
+        await tester.pumpAndSettle();
+
+        expect(
+          find.textContaining('save it as a PDF or .docx'),
+          findsOneWidget,
+        );
+        expect(
+          find.text("That doesn't look right. Please check and try again."),
+          findsNothing,
+        );
+      },
+    );
+
+    testWidgets('a failure with nothing specific to say stays localized', (
+      tester,
+    ) async {
+      await tester.pumpCandidateApp(
+        candidateSessionRepository: sessions,
+        candidateOnboardingRepository: InMemoryCandidateOnboardingRepository(),
+        resumeParsingRepository: _RejectingResumeParsingRepository(
+          const ServiceUnavailableFailure('internal, never shown'),
+        ),
+        resumeFilePicker: _FakeResumeFilePicker(file: _pickedPdf()),
+      );
+      await continueToAuthenticated(tester);
+      await tapUpload(tester);
+
+      await tester.ensureVisible(find.text('Use AI to read this text'));
+      await tester.tap(find.text('Use AI to read this text'));
+      await tester.pump();
+      final extractButton = find.byKey(
+        const ValueKey('resume-import-extract-button'),
+      );
+      await tester.ensureVisible(extractButton);
+      await tester.tap(extractButton);
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text(
+          'This service is temporarily unavailable. '
+          'Please try again in a few minutes.',
+        ),
+        findsOneWidget,
+      );
+      expect(find.text('internal, never shown'), findsNothing);
+    });
+
     testWidgets('dismissing the picker changes nothing', (tester) async {
       final picker = _FakeResumeFilePicker();
       await tester.pumpCandidateApp(
@@ -403,6 +480,23 @@ class _FakeResumeParsingRepository implements ResumeParsingRepository {
     documentRequests.add(request);
     return Success(_result);
   }
+}
+
+/// Refuses every parse with one given failure, so the screen's error
+/// presentation can be driven directly.
+class _RejectingResumeParsingRepository implements ResumeParsingRepository {
+  _RejectingResumeParsingRepository(this._failure);
+
+  final AppFailure _failure;
+
+  @override
+  Future<Result<ResumeParseResult>> parse(ResumeParseRequest request) async =>
+      ResultFailure(_failure);
+
+  @override
+  Future<Result<ResumeParseResult>> parseDocument(
+    ResumeDocumentParseRequest request,
+  ) async => ResultFailure(_failure);
 }
 
 /// Stands in for the platform document picker, which never completes

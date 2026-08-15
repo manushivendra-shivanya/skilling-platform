@@ -247,8 +247,24 @@ class ApiResumeParsingRepository implements ResumeParsingRepository {
     if (status == 403 || status == 429) {
       return PermissionFailure(message, cause: error, stackTrace: stackTrace);
     }
-    if (status == 400 || status == 404) {
+    // 400 only -- deliberately no longer bundled with 404. A 400 from
+    // this API is always a deliberate `AppError.validation`-style
+    // rejection whose message is written for the candidate ("that file
+    // is not a resume this app can read", "save it as a PDF or .docx",
+    // "that resume is too long to read in one go"), and
+    // `ResumeImportScreen` shows it verbatim. A 404 is a routing
+    // mistake, whose message is framework text like
+    // "Cannot POST /v1/resume/parse-document" -- never something to put
+    // in front of a candidate, so it keeps the generic fallback below.
+    if (status == 400) {
       return ValidationFailure(message, cause: error, stackTrace: stackTrace);
+    }
+    if (status == 404) {
+      return ValidationFailure(
+        'Your resume could not be parsed. Try again in a moment.',
+        cause: error,
+        stackTrace: stackTrace,
+      );
     }
     const networkErrorTypes = {
       DioExceptionType.connectionTimeout,

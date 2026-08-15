@@ -1,4 +1,4 @@
-import { GoogleGenAI, Part } from '@google/genai';
+import { FinishReason, GoogleGenAI, Part } from '@google/genai';
 import {
   ParsedCertificationEntry,
   ParsedEducationEntry,
@@ -13,6 +13,35 @@ import {
 // Same model as the coach's GeminiCoachProvider -- see that file's doc
 // comment for why 2.5-flash was retired and 3.5-flash is current.
 export const GEMINI_RESUME_MODEL_ID = 'gemini-3.5-flash';
+
+/**
+ * Was 4000. A full extraction is a JSON document with four arrays of
+ * structured entries (education, work history, certifications,
+ * projects) plus a skills array -- for a real multi-page resume that is
+ * a materially larger response than the flat nine-string contract this
+ * number was first chosen for, and hitting the ceiling truncates the
+ * JSON mid-object rather than returning less of it.
+ *
+ * For contrast, GeminiCoachProvider asks for 500: a coach reply is a
+ * couple of sentences. The two numbers are not comparable, and the coach
+ * working has never implied this budget was sufficient.
+ */
+export const RESUME_MAX_OUTPUT_TOKENS = 8192;
+
+/**
+ * The model ran out of output budget before it finished the extraction.
+ *
+ * Its own error type because, unlike every other provider failure, this
+ * one is not transient -- retrying the same resume produces the same
+ * truncation. `ResumeService` maps it to actionable advice instead of
+ * "try again in a moment", which would be a lie.
+ */
+export class ResumeTooLongError extends Error {
+  constructor() {
+    super('The resume was too long to extract within the output budget.');
+    this.name = 'ResumeTooLongError';
+  }
+}
 
 /**
  * Deliberately NOT using Gemini's structured-JSON-output config (a
@@ -67,12 +96,25 @@ export class GeminiResumeParser implements ResumeAiProvider {
     const response = await this.client.models.generateContent({
       model: GEMINI_RESUME_MODEL_ID,
       contents: [{ role: 'user', parts }],
-      config: { maxOutputTokens: 4000 },
+      config: { maxOutputTokens: RESUME_MAX_OUTPUT_TOKENS },
     });
+
+    // Checked before the text is: a response cut off at the token ceiling
+    // still carries text, but it is a JSON document truncated mid-object,
+    // so JSON.parse fails and the real cause ("the resume was bigger than
+    // the budget") is lost behind "the model returned invalid JSON".
+    // `Candidate.finishReason` and its MAX_TOKENS member are both read off
+    // the installed @google/genai typings, not recalled.
+    const finishReason = response.candidates?.[0]?.finishReason;
+    if (finishReason === FinishReason.MAX_TOKENS) {
+      throw new ResumeTooLongError();
+    }
 
     const text = response.text?.trim();
     if (!text) {
-      throw new Error('Gemini returned an empty resume extraction.');
+      throw new Error(
+        `Gemini returned an empty resume extraction (finishReason: ${finishReason ?? 'none'}).`,
+      );
     }
 
     return {
