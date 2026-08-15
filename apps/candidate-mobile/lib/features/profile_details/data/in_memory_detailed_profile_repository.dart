@@ -28,15 +28,31 @@ class InMemoryDetailedProfileRepository implements DetailedProfileRepository {
     required String email,
     required List<String> skills,
   }) async {
-    _profile = DetailedCandidateProfile(
-      phone: phone,
-      email: email,
-      skills: skills,
-      workExperience: _profile.workExperience,
-      education: _profile.education,
-      certifications: _profile.certifications,
-      projects: _profile.projects,
+    _profile = _profile.copyWith(phone: phone, email: email, skills: skills);
+    return const Success(null);
+  }
+
+  @override
+  Future<Result<void>> saveProfileBasics(
+    String candidateId, {
+    required String headline,
+    required String summary,
+    required String totalExperience,
+  }) async {
+    _profile = _profile.copyWith(
+      headline: headline,
+      summary: summary,
+      totalExperience: totalExperience,
     );
+    return const Success(null);
+  }
+
+  @override
+  Future<Result<void>> saveCareerPreferences(
+    String candidateId,
+    CareerPreferences preferences,
+  ) async {
+    _profile = _profile.copyWith(careerPreferences: preferences);
     return const Success(null);
   }
 
@@ -45,19 +61,13 @@ class InMemoryDetailedProfileRepository implements DetailedProfileRepository {
     String candidateId,
     WorkExperienceEntry entry,
   ) async {
-    _profile = DetailedCandidateProfile(
-      phone: _profile.phone,
-      email: _profile.email,
-      skills: _profile.skills,
+    _profile = _profile.copyWith(
       workExperience: _upsertInList(
         _profile.workExperience,
         entry,
         (e) => e.id,
         (id) => entry.copyWith(id: id),
       ),
-      education: _profile.education,
-      certifications: _profile.certifications,
-      projects: _profile.projects,
     );
     return const Success(null);
   }
@@ -67,14 +77,8 @@ class InMemoryDetailedProfileRepository implements DetailedProfileRepository {
     String candidateId,
     String id,
   ) async {
-    _profile = DetailedCandidateProfile(
-      phone: _profile.phone,
-      email: _profile.email,
-      skills: _profile.skills,
+    _profile = _profile.copyWith(
       workExperience: _profile.workExperience.where((e) => e.id != id).toList(),
-      education: _profile.education,
-      certifications: _profile.certifications,
-      projects: _profile.projects,
     );
     return const Success(null);
   }
@@ -84,33 +88,21 @@ class InMemoryDetailedProfileRepository implements DetailedProfileRepository {
     String candidateId,
     EducationEntry entry,
   ) async {
-    _profile = DetailedCandidateProfile(
-      phone: _profile.phone,
-      email: _profile.email,
-      skills: _profile.skills,
-      workExperience: _profile.workExperience,
+    _profile = _profile.copyWith(
       education: _upsertInList(
         _profile.education,
         entry,
         (e) => e.id,
         (id) => entry.copyWith(id: id),
       ),
-      certifications: _profile.certifications,
-      projects: _profile.projects,
     );
     return const Success(null);
   }
 
   @override
   Future<Result<void>> deleteEducation(String candidateId, String id) async {
-    _profile = DetailedCandidateProfile(
-      phone: _profile.phone,
-      email: _profile.email,
-      skills: _profile.skills,
-      workExperience: _profile.workExperience,
+    _profile = _profile.copyWith(
       education: _profile.education.where((e) => e.id != id).toList(),
-      certifications: _profile.certifications,
-      projects: _profile.projects,
     );
     return const Success(null);
   }
@@ -120,19 +112,13 @@ class InMemoryDetailedProfileRepository implements DetailedProfileRepository {
     String candidateId,
     ExternalCertificationEntry entry,
   ) async {
-    _profile = DetailedCandidateProfile(
-      phone: _profile.phone,
-      email: _profile.email,
-      skills: _profile.skills,
-      workExperience: _profile.workExperience,
-      education: _profile.education,
+    _profile = _profile.copyWith(
       certifications: _upsertInList(
         _profile.certifications,
         entry,
         (e) => e.id,
         (id) => entry.copyWith(id: id),
       ),
-      projects: _profile.projects,
     );
     return const Success(null);
   }
@@ -142,14 +128,8 @@ class InMemoryDetailedProfileRepository implements DetailedProfileRepository {
     String candidateId,
     String id,
   ) async {
-    _profile = DetailedCandidateProfile(
-      phone: _profile.phone,
-      email: _profile.email,
-      skills: _profile.skills,
-      workExperience: _profile.workExperience,
-      education: _profile.education,
+    _profile = _profile.copyWith(
       certifications: _profile.certifications.where((e) => e.id != id).toList(),
-      projects: _profile.projects,
     );
     return const Success(null);
   }
@@ -159,13 +139,7 @@ class InMemoryDetailedProfileRepository implements DetailedProfileRepository {
     String candidateId,
     ProjectEntry entry,
   ) async {
-    _profile = DetailedCandidateProfile(
-      phone: _profile.phone,
-      email: _profile.email,
-      skills: _profile.skills,
-      workExperience: _profile.workExperience,
-      education: _profile.education,
-      certifications: _profile.certifications,
+    _profile = _profile.copyWith(
       projects: _upsertInList(
         _profile.projects,
         entry,
@@ -178,14 +152,32 @@ class InMemoryDetailedProfileRepository implements DetailedProfileRepository {
 
   @override
   Future<Result<void>> deleteProject(String candidateId, String id) async {
-    _profile = DetailedCandidateProfile(
-      phone: _profile.phone,
-      email: _profile.email,
-      skills: _profile.skills,
-      workExperience: _profile.workExperience,
-      education: _profile.education,
-      certifications: _profile.certifications,
+    _profile = _profile.copyWith(
       projects: _profile.projects.where((e) => e.id != id).toList(),
+    );
+    return const Success(null);
+  }
+
+  @override
+  Future<Result<void>> upsertLanguage(
+    String candidateId,
+    LanguageEntry entry,
+  ) async {
+    _profile = _profile.copyWith(
+      languages: _upsertInList(
+        _profile.languages,
+        entry,
+        (e) => e.id,
+        (id) => entry.copyWith(id: id),
+      ),
+    );
+    return const Success(null);
+  }
+
+  @override
+  Future<Result<void>> deleteLanguage(String candidateId, String id) async {
+    _profile = _profile.copyWith(
+      languages: _profile.languages.where((e) => e.id != id).toList(),
     );
     return const Success(null);
   }

@@ -9,13 +9,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  // This screen renders five stacked sections -- taller than the default
+  // This screen renders eight stacked sections -- taller than the default
   // 800x600 test surface. ListView only mounts elements within the
   // viewport (plus a small cache extent), so without this, find.text on
   // anything below Experience silently returns zero results instead of
   // scrolling into view.
   void enlargeViewport(WidgetTester tester) {
-    tester.view.physicalSize = const Size(800, 2400);
+    tester.view.physicalSize = const Size(800, 4200);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
@@ -55,6 +55,7 @@ void main() {
     expect(find.text('No certifications added yet'), findsOneWidget);
     expect(find.text('No projects added yet'), findsOneWidget);
     expect(find.text('No skills added yet'), findsOneWidget);
+    expect(find.text('No languages added yet.'), findsOneWidget);
   });
 
   testWidgets('adding a work-experience entry shows it in the list', (
@@ -135,17 +136,117 @@ void main() {
         find.widgetWithText(TextField, 'Phone'),
         '9999999999',
       );
-      await tester.enterText(find.byType(TextField).last, 'forklift');
+      await tester.enterText(
+        find.byKey(const ValueKey('detailed-profile-add-skill-field')),
+        'forklift',
+      );
       await tester.testTextInput.receiveAction(TextInputAction.done);
       await tester.pumpAndSettle();
 
       expect(find.text('forklift'), findsOneWidget);
 
-      await tester.tap(find.text('Save').first);
+      await tester.tap(
+        find.byKey(const ValueKey('detailed-profile-contact-save-button')),
+      );
       await tester.pumpAndSettle();
 
       expect(repository.profile.phone, '9999999999');
       expect(repository.profile.skills, contains('forklift'));
     },
   );
+
+  testWidgets(
+    'saving headline, total experience, and a summary persists through the repository',
+    (tester) async {
+      enlargeViewport(tester);
+      final repository = InMemoryDetailedProfileRepository();
+      await tester.pumpWidget(wrap(repository));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Headline'),
+        'Warehouse Operations Associate',
+      );
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Total experience'),
+        '3 yrs 4 mos',
+      );
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Summary'),
+        'Reliable, WMS-certified associate.',
+      );
+
+      await tester.tap(
+        find.byKey(const ValueKey('detailed-profile-about-save-button')),
+      );
+      await tester.pumpAndSettle();
+
+      expect(repository.profile.headline, 'Warehouse Operations Associate');
+      expect(repository.profile.totalExperience, '3 yrs 4 mos');
+      expect(repository.profile.summary, 'Reliable, WMS-certified associate.');
+    },
+  );
+
+  testWidgets('adding a language shows it in the list', (tester) async {
+    enlargeViewport(tester);
+    final repository = InMemoryDetailedProfileRepository();
+    await tester.pumpWidget(wrap(repository));
+    await tester.pumpAndSettle();
+
+    await tester.ensureVisible(find.text('Add language'));
+    await tester.tap(find.text('Add language'));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.widgetWithText(TextField, 'Language'), 'Hindi');
+    await tester.tap(find.text('Native'));
+    // Two "Save" buttons exist at once here: the bottom sheet's own, and
+    // the (unrelated) always-visible cards' underneath -- same reasoning
+    // as the work-experience test above, `.last` is the sheet's.
+    await tester.tap(find.text('Save').last);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Hindi'), findsOneWidget);
+    expect(find.text('Native'), findsOneWidget);
+    expect(find.text('No languages added yet.'), findsNothing);
+    expect(repository.profile.languages, hasLength(1));
+    expect(repository.profile.languages.single.language, 'Hindi');
+    expect(
+      repository.profile.languages.single.proficiency,
+      LanguageProficiency.native,
+    );
+  });
+
+  testWidgets('saving career preferences persists through the repository', (
+    tester,
+  ) async {
+    enlargeViewport(tester);
+    final repository = InMemoryDetailedProfileRepository();
+    await tester.pumpWidget(wrap(repository));
+    await tester.pumpAndSettle();
+
+    await tester.ensureVisible(
+      find.widgetWithText(TextField, 'Expected CTC (₹/yr)'),
+    );
+    await tester.enterText(
+      find.widgetWithText(TextField, 'Expected CTC (₹/yr)'),
+      '320000',
+    );
+    await tester.tap(find.text('1 month'));
+    await tester.tap(find.text('Full-time'));
+    await tester.tap(find.text('Willing to relocate'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(
+      find.byKey(
+        const ValueKey('detailed-profile-career-preferences-save-button'),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final saved = repository.profile.careerPreferences;
+    expect(saved.expectedCtcAmount, 320000);
+    expect(saved.noticePeriod, NoticePeriod.oneMonth);
+    expect(saved.employmentTypes, {EmploymentType.fullTime});
+    expect(saved.willingToRelocate, isTrue);
+  });
 }

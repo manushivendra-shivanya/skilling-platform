@@ -254,6 +254,187 @@ class ProjectEntry {
   }
 }
 
+/// How soon the candidate could join a new role. Stored as an id string on
+/// `candidate_profiles.notice_period` -- same convention as this table's
+/// existing `goal`/`education_level`/`experience_level` columns, not a
+/// Postgres enum.
+enum NoticePeriod {
+  immediate('immediate'),
+  fifteenDays('fifteen_days'),
+  oneMonth('one_month'),
+  twoMonths('two_months'),
+  threeMonths('three_months'),
+  servingNotice('serving_notice');
+
+  const NoticePeriod(this.id);
+
+  final String id;
+
+  static NoticePeriod? fromId(Object? id) {
+    for (final value in values) {
+      if (value.id == id) return value;
+    }
+    return null;
+  }
+}
+
+enum EmploymentType {
+  fullTime('full_time'),
+  partTime('part_time'),
+  contract('contract'),
+  internship('internship'),
+  temporary('temporary');
+
+  const EmploymentType(this.id);
+
+  final String id;
+
+  static EmploymentType? fromId(Object? id) {
+    for (final value in values) {
+      if (value.id == id) return value;
+    }
+    return null;
+  }
+}
+
+/// A single overall level per language, not separate speak/read/write
+/// scores -- three scores per language is more questions than a quick
+/// voice-driven completion flow should ask, and this candidate base cares
+/// whether they can hold a conversation in a language, not a granular
+/// literacy breakdown.
+enum LanguageProficiency {
+  native('native'),
+  fluent('fluent'),
+  professionalWorking('professional_working'),
+  elementary('elementary');
+
+  const LanguageProficiency(this.id);
+
+  final String id;
+
+  static LanguageProficiency? fromId(Object? id) {
+    for (final value in values) {
+      if (value.id == id) return value;
+    }
+    return null;
+  }
+}
+
+/// One row on `candidate_languages` -- same shape/insert-vs-update rule as
+/// `WorkExperienceEntry` and its siblings (empty [id] means "insert").
+class LanguageEntry {
+  const LanguageEntry({
+    required this.id,
+    required this.language,
+    required this.proficiency,
+    this.sequence = 0,
+  });
+
+  final String id;
+  final String language;
+  final LanguageProficiency proficiency;
+  final int sequence;
+
+  LanguageEntry copyWith({
+    String? id,
+    String? language,
+    LanguageProficiency? proficiency,
+    int? sequence,
+  }) {
+    return LanguageEntry(
+      id: id ?? this.id,
+      language: language ?? this.language,
+      proficiency: proficiency ?? this.proficiency,
+      sequence: sequence ?? this.sequence,
+    );
+  }
+}
+
+/// Naukri-style recruiter filters -- CTC, notice period, employment type,
+/// locations -- deliberately a resume can't reliably supply most of
+/// these, so this is exactly the shape a voice-driven completion flow
+/// will ask about once that exists. Saved as one aggregate (not per-field
+/// upserts like the list sections) because these fields live as plain
+/// columns on `candidate_profiles`, the same row `saveContactAndSkills`
+/// already writes to.
+class CareerPreferences {
+  const CareerPreferences({
+    this.currentCtcAmount,
+    this.currentCtcUndisclosed = false,
+    this.expectedCtcAmount,
+    this.expectedCtcNegotiable = false,
+    this.noticePeriod,
+    this.employmentTypes = const {},
+    this.preferredLocations = const [],
+    this.willingToRelocate = false,
+    this.industry = '',
+    this.functionalArea = '',
+  });
+
+  static const empty = CareerPreferences();
+
+  /// Annual, in the candidate's local currency -- no currency field yet
+  /// since this candidate base is India-only today; add one before this
+  /// screen is ever shown outside India.
+  final double? currentCtcAmount;
+  final bool currentCtcUndisclosed;
+  final double? expectedCtcAmount;
+  final bool expectedCtcNegotiable;
+  final NoticePeriod? noticePeriod;
+  final Set<EmploymentType> employmentTypes;
+  final List<String> preferredLocations;
+  final bool willingToRelocate;
+  final String industry;
+  final String functionalArea;
+
+  bool get isEmpty =>
+      currentCtcAmount == null &&
+      expectedCtcAmount == null &&
+      noticePeriod == null &&
+      employmentTypes.isEmpty &&
+      preferredLocations.isEmpty &&
+      !willingToRelocate &&
+      industry.isEmpty &&
+      functionalArea.isEmpty;
+
+  CareerPreferences copyWith({
+    double? currentCtcAmount,
+    bool clearCurrentCtcAmount = false,
+    bool? currentCtcUndisclosed,
+    double? expectedCtcAmount,
+    bool clearExpectedCtcAmount = false,
+    bool? expectedCtcNegotiable,
+    NoticePeriod? noticePeriod,
+    bool clearNoticePeriod = false,
+    Set<EmploymentType>? employmentTypes,
+    List<String>? preferredLocations,
+    bool? willingToRelocate,
+    String? industry,
+    String? functionalArea,
+  }) {
+    return CareerPreferences(
+      currentCtcAmount: clearCurrentCtcAmount
+          ? null
+          : (currentCtcAmount ?? this.currentCtcAmount),
+      currentCtcUndisclosed:
+          currentCtcUndisclosed ?? this.currentCtcUndisclosed,
+      expectedCtcAmount: clearExpectedCtcAmount
+          ? null
+          : (expectedCtcAmount ?? this.expectedCtcAmount),
+      expectedCtcNegotiable:
+          expectedCtcNegotiable ?? this.expectedCtcNegotiable,
+      noticePeriod: clearNoticePeriod
+          ? null
+          : (noticePeriod ?? this.noticePeriod),
+      employmentTypes: employmentTypes ?? this.employmentTypes,
+      preferredLocations: preferredLocations ?? this.preferredLocations,
+      willingToRelocate: willingToRelocate ?? this.willingToRelocate,
+      industry: industry ?? this.industry,
+      functionalArea: functionalArea ?? this.functionalArea,
+    );
+  }
+}
+
 /// Everything on the LinkedIn-style detailed profile page, as one
 /// aggregate -- the same "one load, not six" shape `HomeDashboard` already
 /// uses, for the same reason: this screen renders all of it at once.
@@ -271,6 +452,11 @@ class DetailedCandidateProfile {
     required this.education,
     required this.certifications,
     required this.projects,
+    this.headline = '',
+    this.summary = '',
+    this.totalExperience = '',
+    this.languages = const [],
+    this.careerPreferences = CareerPreferences.empty,
   });
 
   static const empty = DetailedCandidateProfile(
@@ -283,6 +469,36 @@ class DetailedCandidateProfile {
     projects: [],
   );
 
+  DetailedCandidateProfile copyWith({
+    String? phone,
+    String? email,
+    List<String>? skills,
+    List<WorkExperienceEntry>? workExperience,
+    List<EducationEntry>? education,
+    List<ExternalCertificationEntry>? certifications,
+    List<ProjectEntry>? projects,
+    String? headline,
+    String? summary,
+    String? totalExperience,
+    List<LanguageEntry>? languages,
+    CareerPreferences? careerPreferences,
+  }) {
+    return DetailedCandidateProfile(
+      phone: phone ?? this.phone,
+      email: email ?? this.email,
+      skills: skills ?? this.skills,
+      workExperience: workExperience ?? this.workExperience,
+      education: education ?? this.education,
+      certifications: certifications ?? this.certifications,
+      projects: projects ?? this.projects,
+      headline: headline ?? this.headline,
+      summary: summary ?? this.summary,
+      totalExperience: totalExperience ?? this.totalExperience,
+      languages: languages ?? this.languages,
+      careerPreferences: careerPreferences ?? this.careerPreferences,
+    );
+  }
+
   final String phone;
   final String email;
   final List<String> skills;
@@ -291,6 +507,26 @@ class DetailedCandidateProfile {
   final List<ExternalCertificationEntry> certifications;
   final List<ProjectEntry> projects;
 
+  /// A short "current/most recent role" line. Also lives on the
+  /// on-device onboarding draft (feeds the Professional Persona card) --
+  /// the two are not yet unified into one source of truth; see
+  /// `ResumeImportScreen._confirm`'s doc comment for how resume import
+  /// writes to both today.
+  final String headline;
+
+  /// Free-text professional narrative, ~2,000 characters. Not extracted
+  /// from resumes today -- a resume's own summary paragraph is unreliable
+  /// enough to parse that this is left to manual entry or the future
+  /// voice-driven completion flow.
+  final String summary;
+
+  /// Free text ("3 yrs 4 mos"), matching `ResumeAiParseResult
+  /// .yearsOfExperience`'s own convention -- see that field's doc comment
+  /// for why this is a string, not a number.
+  final String totalExperience;
+  final List<LanguageEntry> languages;
+  final CareerPreferences careerPreferences;
+
   /// Whole-number percent (0-100) of the profile's sections that have at
   /// least one real value -- powers Home's completion banner. Five equally-
   /// weighted sections (contact info, skills, experience, education,
@@ -298,6 +534,12 @@ class DetailedCandidateProfile {
   /// field, so one filled-in work-experience entry counts the same as one
   /// filled-in education entry instead of a candidate with a long resume
   /// scoring higher than one with a short, honest one.
+  ///
+  /// Deliberately NOT re-weighted to include headline/summary/languages/
+  /// career preferences yet -- Home's completion banner (see
+  /// `ProfileCompletionBanner`) already has shipped copy and thresholds
+  /// tuned to five sections; folding in the new ones is its own follow-up
+  /// once they're not brand new.
   int get completionPercent {
     final sections = [
       phone.isNotEmpty || email.isNotEmpty,
