@@ -1909,8 +1909,16 @@
   "@resumeImportHeading": { "description": "Post-signup resume-import screen heading." },
   "@resumeImportDescription": { "description": "Post-signup resume-import screen description." },
 
+  "resumeImportReimportHeading": "Update your profile from a resume",
+  "resumeImportReimportDescription": "Paste your resume text below and we will use AI to read your work history, education, skills and contact details. Anything you already have on your profile is never overwritten -- you will get to review everything before it is saved.",
+  "@resumeImportReimportHeading": { "description": "Detailed-profile-page resume re-import screen heading (isReimport: true)." },
+  "@resumeImportReimportDescription": { "description": "Detailed-profile-page resume re-import screen description (isReimport: true)." },
+
   "resumeImportSkipButton": "Skip for now",
   "@resumeImportSkipButton": { "description": "Skips the post-signup resume-import screen without saving anything." },
+
+  "resumeImportCancelButton": "Cancel",
+  "@resumeImportCancelButton": { "description": "Cancels the resume re-import screen (isReimport: true) without saving anything." },
 
   "resumeImportConfirmButton": "Save these details to my profile",
   "@resumeImportConfirmButton": { "description": "Applies a reviewed resume extraction to the candidate's profile and draft." },
@@ -2011,6 +2019,9 @@
 
   "profileDetailsCompletionLabel": "{percent}% complete",
   "@profileDetailsCompletionLabel": { "description": "Completion badge at the top of the detailed profile screen.", "placeholders": { "percent": { "type": "int" } } },
+
+  "profileDetailsImportFromResumeButton": "Import from resume",
+  "@profileDetailsImportFromResumeButton": { "description": "Button on the detailed profile screen that opens the resume re-import flow." },
 
   "profileDetailsContactSectionTitle": "Contact",
   "profileDetailsPhoneLabel": "Phone",

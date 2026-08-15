@@ -877,7 +877,12 @@
   "resumeImportHeading": "Seconds mein apni profile banayein",
   "resumeImportDescription": "Neeche apne resume ka text paste karein aur hum AI se aapka work history, education, skills aur contact details padhenge. Save karne se pehle aap sab kuch check kar sakenge.",
 
+  "resumeImportReimportHeading": "Apni profile ko resume se update karein",
+  "resumeImportReimportDescription": "Neeche apne resume ka text paste karein aur hum AI se aapka work history, education, skills aur contact details padhenge. Aapki profile mein pehle se maujood jaankari kabhi overwrite nahi hogi -- save karne se pehle aap sab kuch check kar sakenge.",
+
   "resumeImportSkipButton": "Abhi ke liye skip karein",
+
+  "resumeImportCancelButton": "Cancel karein",
 
   "resumeImportConfirmButton": "Yeh details meri profile mein save karein",
 
@@ -934,6 +939,7 @@
 
   "profileDetailsScreenTitle": "Meri profile",
   "profileDetailsCompletionLabel": "{percent}% poora",
+  "profileDetailsImportFromResumeButton": "Resume se import karein",
 
   "profileDetailsContactSectionTitle": "Contact",
   "profileDetailsPhoneLabel": "Phone",

@@ -23,7 +23,14 @@ import 'detailed_profile_controller.dart';
 /// Unlike Home, every field on this screen is real, backend-persisted data
 /// -- see `DetailedProfileController`/`SupabaseDetailedProfileRepository`.
 class DetailedProfileScreen extends ConsumerWidget {
-  const DetailedProfileScreen({super.key});
+  const DetailedProfileScreen({required this.onImportFromResume, super.key});
+
+  /// Opens `detailedProfileResumeImportRoutePath` -- the same
+  /// `ResumeImportScreen` the post-signup flow uses (with `isReimport:
+  /// true`), so a candidate who already finished onboarding still has a
+  /// way back into resume-driven autofill. See that route's own doc
+  /// comment for why this needs to exist as a separate entry point.
+  final VoidCallback onImportFromResume;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -53,16 +60,23 @@ class DetailedProfileScreen extends ConsumerWidget {
           onAction: () =>
               ref.read(detailedProfileControllerProvider.notifier).retry(),
         ),
-        data: (profile) => _DetailedProfileContent(profile: profile),
+        data: (profile) => _DetailedProfileContent(
+          profile: profile,
+          onImportFromResume: onImportFromResume,
+        ),
       ),
     );
   }
 }
 
 class _DetailedProfileContent extends ConsumerWidget {
-  const _DetailedProfileContent({required this.profile});
+  const _DetailedProfileContent({
+    required this.profile,
+    required this.onImportFromResume,
+  });
 
   final DetailedCandidateProfile profile;
+  final VoidCallback onImportFromResume;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -85,6 +99,14 @@ class _DetailedProfileContent extends ConsumerWidget {
               ).textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w700),
             ),
           ],
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        AppButton(
+          key: const ValueKey('detailed-profile-import-from-resume-button'),
+          label: l10n.profileDetailsImportFromResumeButton,
+          variant: AppButtonVariant.secondary,
+          leadingIcon: Icons.upload_file_outlined,
+          onPressed: onImportFromResume,
         ),
         const SizedBox(height: AppSpacing.lg),
 

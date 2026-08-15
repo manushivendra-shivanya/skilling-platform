@@ -26,21 +26,42 @@ import 'resume_extraction_summary.dart';
 /// reaches the wizard without having used this screen -- see its own doc
 /// comment.
 ///
+/// Also reachable *after* onboarding is complete, from the Detailed
+/// Profile page's "Import from resume" action (see
+/// `detailedProfileResumeImportRoutePath`) -- [isReimport] covers what's
+/// different there: the heading/description talk about updating an
+/// existing profile rather than building a first one, and the top-right
+/// action reads "Cancel" rather than "Skip for now" (nothing is being
+/// skipped from a required flow at that point). The underlying apply
+/// logic in [_confirm] needs no branching for this case: the onboarding
+/// draft's fullName/city/headline are already filled by then, so the
+/// existing never-overwrite check naturally leaves the completed draft
+/// alone and only the detailed profile picks up new data.
+///
 /// Nothing is written anywhere until the candidate reviews an extraction
 /// and presses [AppLocalizations.resumeImportConfirmButton] -- pasting
-/// text and extracting is free of side effects, and
-/// [AppLocalizations.resumeImportSkipButton] is available at every point
-/// (before extracting, mid-review, even after a failed save) so a
-/// candidate who doesn't have a resume handy, or changes their mind, is
-/// never blocked from reaching the wizard.
+/// text and extracting is free of side effects, and the top-right action
+/// is available at every point (before extracting, mid-review, even
+/// after a failed save) so a candidate who doesn't have a resume handy,
+/// or changes their mind, is never blocked from moving on.
 class ResumeImportScreen extends ConsumerStatefulWidget {
-  const ResumeImportScreen({required this.onContinue, super.key});
+  const ResumeImportScreen({
+    required this.onContinue,
+    this.isReimport = false,
+    super.key,
+  });
 
-  /// Always means "proceed into the onboarding wizard" -- there is
-  /// nowhere else this screen leads. Called after a skip (nothing
-  /// written), a successful confirm (already applied), or dismissing a
-  /// partial-apply failure via "Continue anyway".
+  /// Post-signup (default, [isReimport] false): always means "proceed
+  /// into the onboarding wizard". Re-import ([isReimport] true): means
+  /// "return to the Detailed Profile page". Called after a skip/cancel
+  /// (nothing written), a successful confirm (already applied), or
+  /// dismissing a partial-apply failure via "Continue anyway".
   final VoidCallback onContinue;
+
+  /// True when reached from the Detailed Profile page's "Import from
+  /// resume" action, after onboarding is already complete. See the class
+  /// doc comment for what this changes.
+  final bool isReimport;
 
   @override
   ConsumerState<ResumeImportScreen> createState() => _ResumeImportScreenState();
@@ -81,7 +102,11 @@ class _ResumeImportScreenState extends ConsumerState<ResumeImportScreen> {
         actions: [
           TextButton(
             onPressed: isBusy ? null : widget.onContinue,
-            child: Text(l10n.resumeImportSkipButton),
+            child: Text(
+              widget.isReimport
+                  ? l10n.resumeImportCancelButton
+                  : l10n.resumeImportSkipButton,
+            ),
           ),
         ],
       ),
@@ -98,13 +123,17 @@ class _ResumeImportScreenState extends ConsumerState<ResumeImportScreen> {
               ),
               const SizedBox(height: AppSpacing.md),
               Text(
-                l10n.resumeImportHeading,
+                widget.isReimport
+                    ? l10n.resumeImportReimportHeading
+                    : l10n.resumeImportHeading,
                 style: Theme.of(context).textTheme.headlineSmall,
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: AppSpacing.sm),
               Text(
-                l10n.resumeImportDescription,
+                widget.isReimport
+                    ? l10n.resumeImportReimportDescription
+                    : l10n.resumeImportDescription,
                 style: Theme.of(context).textTheme.bodyMedium,
                 textAlign: TextAlign.center,
               ),

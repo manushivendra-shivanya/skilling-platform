@@ -37,7 +37,7 @@ void main() {
       child: MaterialApp(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
-        home: const DetailedProfileScreen(),
+        home: DetailedProfileScreen(onImportFromResume: () {}),
       ),
     );
   }

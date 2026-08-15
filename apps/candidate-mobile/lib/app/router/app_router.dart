@@ -107,6 +107,19 @@ const profileRoutePath = '/me';
 const profileRouteName = 'me';
 const detailedProfileRoutePath = '/me/detailed-profile';
 const detailedProfileRouteName = 'detailed-profile';
+
+/// Re-entry point for resume-driven import once onboarding is already
+/// complete -- the post-signup `resumeImportRoutePath` only ever gets
+/// offered once, before onboarding starts (see
+/// `_continueFromAuthenticated`'s doc comment), so a candidate who signed
+/// up before this existed, or skipped it, has no other way back into that
+/// flow. Reuses the same `ResumeImportScreen`, just with a different
+/// `onContinue` (pop back to Detailed Profile, not push into the wizard)
+/// and `isReimport: true` (see that widget's own doc comment for the
+/// copy differences).
+const detailedProfileResumeImportRoutePath =
+    '$detailedProfileRoutePath/import-resume';
+const detailedProfileResumeImportRouteName = 'detailed-profile-import-resume';
 const aiCoachRoutePath = '/coach';
 const aiCoachRouteName = 'ai-coach';
 const aiCoachThreadRoutePattern = '$aiCoachRoutePath/:threadId';
@@ -600,7 +613,19 @@ GoRouter createAppRouter({
         parentNavigatorKey: rootNavigatorKey,
         path: detailedProfileRoutePath,
         name: detailedProfileRouteName,
-        builder: (context, state) => const DetailedProfileScreen(),
+        builder: (context, state) => DetailedProfileScreen(
+          onImportFromResume: () =>
+              context.push(detailedProfileResumeImportRoutePath),
+        ),
+      ),
+      GoRoute(
+        parentNavigatorKey: rootNavigatorKey,
+        path: detailedProfileResumeImportRoutePath,
+        name: detailedProfileResumeImportRouteName,
+        builder: (context, state) => ResumeImportScreen(
+          isReimport: true,
+          onContinue: () => context.pop(),
+        ),
       ),
       GoRoute(
         parentNavigatorKey: rootNavigatorKey,
@@ -1139,6 +1164,7 @@ const _mainAndGlobalRoutePaths = {
   shiftRoutePath,
   profileRoutePath,
   detailedProfileRoutePath,
+  detailedProfileResumeImportRoutePath,
   aiCoachRoutePath,
   notificationsRoutePath,
   diagnosticRoutePath,
